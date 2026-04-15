@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { getAuthStoreState } from '@/store/auth';
 import { isTokenExpired } from '@/lib/token';
-import { environments } from '@/config/environments';
+// import { environments } from '@/config/environments';
 
 const axiosInstance = axios.create({
-	baseURL: environments.API_URL,
+	baseURL: 'http://localhost:3000/api',
 	headers: {
 		'Content-Type': 'application/json',
 	},
