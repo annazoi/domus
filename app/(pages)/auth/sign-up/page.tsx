@@ -51,7 +51,7 @@ export default function SignUpPage() {
         updateUser: () => {}
       });
 
-      router.push("/"); // Redirect to the dashboard after registration
+      router.push("/dashboard");
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setError(err.response?.data?.message || "Could not create account. Please try again.");

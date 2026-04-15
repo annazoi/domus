@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 import axiosInstance from '@/config/api/axios';
 import { ApiRoutes } from '@/config/api/routes';
 import { useAuthStore } from '@/store/auth';
@@ -48,9 +49,13 @@ export default function SignInPage() {
 				updateUser: () => {},
 			});
 
-			router.push('/'); // Redirect to root page after login
-		} catch (err: any) {
-			setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
+			router.push('/dashboard');
+		} catch (err: unknown) {
+			if (axios.isAxiosError(err)) {
+				setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
+			} else {
+				setError('Invalid credentials. Please try again.');
+			}
 		} finally {
 			setIsLoading(false);
 		}
