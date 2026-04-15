@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import axios from "axios";
 import axiosInstance from "@/config/api/axios";
 import { ApiRoutes } from "@/config/api/routes";
 import { useAuthStore } from "@/store/auth";
@@ -25,7 +26,7 @@ export default function SignUpPage() {
     setIsLoading(true);
 
     try {
-      const response = await axiosInstance.post(ApiRoutes.auth.email.register, {
+      const response = await axiosInstance.post(ApiRoutes.auth.register, {
         full_name: fullName,
         email,
         password,
@@ -50,11 +51,13 @@ export default function SignUpPage() {
         updateUser: () => {}
       });
 
-      router.push("/dashboard"); // Redirect to the dashboard after registration
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message || "Could not create account. Please try again."
-      );
+      router.push("/"); // Redirect to the dashboard after registration
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || "Could not create account. Please try again.");
+      } else {
+        setError("Could not create account. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }

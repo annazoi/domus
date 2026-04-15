@@ -48,7 +48,7 @@ export default function SignInPage() {
 				updateUser: () => {},
 			});
 
-			router.push('/dashboard'); // Redirect to the dashboard or home
+			router.push('/'); // Redirect to root page after login
 		} catch (err: any) {
 			setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
 		} finally {

@@ -4,7 +4,8 @@ import { isTokenExpired } from '@/lib/token';
 // import { environments } from '@/config/environments';
 
 const axiosInstance = axios.create({
-	baseURL: 'http://localhost:3000/api',
+	// Always target Next route handlers to avoid hitting page routes like /auth/sign-up.
+	baseURL: '/api',
 	headers: {
 		'Content-Type': 'application/json',
 	},
