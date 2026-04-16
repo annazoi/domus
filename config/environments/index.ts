@@ -1,13 +1,16 @@
-// const APP_NAME = 'Appointmy';
-// const LANDING_URL = import.meta.env.VITE_LANDING_URL;
-// const APP_URL = import.meta.env.VITE_APP_URL;
-// const API_URL = `${import.meta.env.VITE_API_URL}/`;
-// const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+const NEXT_PUBLIC_API_URL = "http://localhost:3000"
+const DATABASE_URL = "postgresql://postgres:2702@127.0.0.1:5432/domus"
+const CLOUDINARY_CLOUD_NAME = "dgaq7ouhr"
+const CLOUDINARY_API_KEY = "651971677934943"
+const CLOUDINARY_API_SECRET = "GkWCC-0jbwILVbYmWs11rf1jUy8"
+const JWT_SECRET = "2001"
 
 export const environments = {
-	// APP_NAME,
-	// LANDING_URL,
-	// APP_URL,
-	// API_URL,
-	// GOOGLE_MAPS_API_KEY,
+NEXT_PUBLIC_API_URL,
+DATABASE_URL,
+CLOUDINARY_CLOUD_NAME,
+CLOUDINARY_API_KEY,
+CLOUDINARY_API_SECRET,
+JWT_SECRET,
 };

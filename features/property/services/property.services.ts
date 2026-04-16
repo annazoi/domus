@@ -45,10 +45,18 @@ export const uploadFilesToCloudinary = async (files: File[]) => {
 	const formData = new FormData();
 	files.forEach((file) => formData.append('files', file));
 
-	const response = await axiosInstance.post<{ urls: string[] }>('/uploads/cloudinary', formData, {
+	const response = await fetch('/api/uploads/cloudinary', {
+		method: 'POST',
 		headers: authHeaders(),
+		body: formData,
 	});
-	return response.data.urls;
+
+	const payload = (await response.json()) as { urls?: string[]; message?: string };
+	if (!response.ok) {
+		throw new Error(payload.message ?? 'Could not upload files.');
+	}
+
+	return payload.urls ?? [];
 };
 
 export const reorderPropertyImages = async (id: string, reorderIds: string[], coverImageId?: string) => {

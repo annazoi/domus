@@ -17,7 +17,7 @@ model User {
 }
 
 
-model Property{
+model Property {
   id String @id @default(uuid())
   title String
   description String?
@@ -40,9 +40,21 @@ model Property{
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  owner User @relation(fields: [ownerId], references: [id])
+  owner   User            @relation(fields: [ownerId], references: [id])
   ownerId String
+  images  PropertyImage[]
+}
 
+model PropertyImage {
+  id         String   @id @default(uuid())
+  propertyId String
+  url        String
+  isCover    Boolean  @default(false)
+  order      Int
+  createdAt  DateTime @default(now())
 
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, order])
 }
 

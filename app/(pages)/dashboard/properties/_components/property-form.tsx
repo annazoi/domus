@@ -80,6 +80,12 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 		try {
 			const saved = await onSubmit(form);
 			await savePropertyAmenities(saved.id, selectedAmenities);
+			if (imageFiles.length) {
+				const urls = await uploadFilesToCloudinary(imageFiles);
+				if (urls.length) {
+					await uploadPropertyImages(saved.id, urls);
+				}
+			}
 			router.push('/dashboard/properties');
 		} catch (submitError) {
 			setError(submitError instanceof Error ? submitError.message : 'Could not save property.');
@@ -88,14 +94,13 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 		}
 	};
 
-	const handleImageUpload = async () => {
-		if (!initialProperty) return;
+	const handleImageUpload = async (propertyId: string) => {
 		if (!imageFiles.length) return;
 
 		const urls = await uploadFilesToCloudinary(imageFiles);
 		if (!urls.length) return;
 
-		const created = await uploadPropertyImages(initialProperty.id, urls);
+		const created = await uploadPropertyImages(propertyId, urls);
 		setImages((previous) => [...previous, ...created].sort((a, b) => a.order - b.order));
 		setImageFiles([]);
 	};
@@ -291,9 +296,11 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 				</div>
 			</section>
 
-			{mode === 'edit' && initialProperty ? (
-				<section className="space-y-4 rounded-2xl bg-white/80 p-5">
-					<h2 className="font-serif text-2xl">Images manager</h2>
+			<section className="space-y-4 rounded-2xl bg-white/80 p-5">
+				<h2 className="font-serif text-2xl">Images manager</h2>
+				{mode === 'create' ? (
+					<p className="text-sm text-[#1A1A1A]/60">Selected images will upload after the property is created.</p>
+				) : null}
 					<input
 						type="file"
 						multiple
@@ -301,14 +308,17 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 						onChange={(event) => setImageFiles(Array.from(event.target.files ?? []))}
 						className="w-full rounded-xl border border-black/10 px-4 py-3"
 					/>
+				{mode === 'edit' && initialProperty ? (
 					<button
 						type="button"
-						onClick={() => void handleImageUpload()}
+						onClick={() => void handleImageUpload(initialProperty.id)}
 						className="rounded-full border border-black/10 px-4 py-2 text-sm hover:border-[#6B705C]/45"
 					>
-						Upload to Cloudinary
+						Upload images
 					</button>
+				) : null}
 
+				{mode === 'edit' && initialProperty ? (
 					<div className="grid gap-3 md:grid-cols-2">
 						{images.map((image) => (
 							<div
@@ -351,8 +361,8 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 							</div>
 						))}
 					</div>
-				</section>
-			) : null}
+				) : null}
+			</section>
 
 			<div className="flex items-center gap-3">
 				<button

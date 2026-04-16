@@ -21,6 +21,13 @@ const mapProperty = (property: {
 	createdAt: Date;
 	updatedAt: Date;
 	ownerId: string;
+	images: Array<{
+		id: string;
+		propertyId: string;
+		url: string;
+		isCover: boolean;
+		order: number;
+	}>;
 }): PropertyDTO => ({
 	id: property.id,
 	hostId: property.ownerId,
@@ -48,7 +55,7 @@ const mapProperty = (property: {
 	amenityIds: [],
 	createdAt: property.createdAt.toISOString(),
 	updatedAt: property.updatedAt.toISOString(),
-	images: [],
+	images: property.images,
 });
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -58,6 +65,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 	const { id } = await params;
 	const property = await prisma.property.findFirst({
 		where: { id, ownerId: hostId },
+		include: { images: { orderBy: { order: 'asc' } } },
 	});
 	if (!property) return Response.json({ message: 'Property not found' }, { status: 404 });
 	return Response.json(mapProperty(property));
@@ -97,6 +105,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 			longitude: body.lng ?? 0,
 			status: body.status,
 		},
+		include: { images: { orderBy: { order: 'asc' } } },
 	});
 	return Response.json(mapProperty(property));
 }
