@@ -14,15 +14,15 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use((config) => {
 	const authState = getAuthStoreState();
 
-	if (authState?.expires_in && isTokenExpired(authState.expires_in)) {
-		authState.logout();
+	// if (authState?.expires_in && isTokenExpired(authState.expires_in)) {
+	// 	authState.logout();
 
-		return Promise.reject(new Error('Token expired'));
-	}
+	// 	return Promise.reject(new Error('Token expired'));
+	// }
 
-	if (authState.access_token) {
-		config.headers.Authorization = `Bearer ${authState.access_token}`;
-	}
+	// if (authState.access_token) {
+	// 	config.headers.Authorization = `Bearer ${authState.access_token}`;
+	// }
 
 	return config;
 });

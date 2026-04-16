@@ -1,28 +1,29 @@
-const bookings = [
-	{
-		guest: 'Sophie Martin',
-		property: 'Villa Azure',
-		dates: 'Apr 20 - Apr 24',
-		status: 'Confirmed',
-		payment: 'Paid',
-	},
-	{
-		guest: 'Ethan Gray',
-		property: 'Maison Cedre',
-		dates: 'Apr 25 - Apr 29',
-		status: 'Pending',
-		payment: 'Pending',
-	},
-	{
-		guest: 'Mia Rossi',
-		property: 'Ridge House',
-		dates: 'May 03 - May 05',
-		status: 'Cancelled',
-		payment: 'Refunded',
-	},
-];
+'use client';
+
+import { useEffect, useState } from 'react';
+import { listBookings } from '@/features/property/services/property.services';
+
+type DashboardBooking = {
+	id: string;
+	guestName: string;
+	propertyTitle: string;
+	startDate: string;
+	endDate: string;
+	status: 'pending' | 'confirmed' | 'cancelled';
+};
 
 export default function BookingsPage() {
+	const [bookings, setBookings] = useState<DashboardBooking[]>([]);
+	const [loading, setLoading] = useState(true);
+
+	useEffect(() => {
+		void (async () => {
+			const data = await listBookings();
+			setBookings(data);
+			setLoading(false);
+		})();
+	}, []);
+
 	return (
 		<div className="space-y-8">
 			<div>
@@ -30,25 +31,33 @@ export default function BookingsPage() {
 				<h1 className="mt-2 font-serif text-4xl tracking-tight">Reservation flow</h1>
 			</div>
 
+			{loading ? <p className="text-sm text-[#1A1A1A]/60">Loading bookings...</p> : null}
+			{!loading && bookings.length === 0 ? (
+				<div className="rounded-2xl bg-white/80 p-8 text-center">
+					<p className="font-serif text-2xl">No bookings yet</p>
+					<p className="mt-2 text-sm text-[#1A1A1A]/60">Bookings will appear once guests reserve your properties.</p>
+				</div>
+			) : null}
+
 			<div className="overflow-hidden rounded-2xl bg-white/80">
-				<div className="hidden grid-cols-5 gap-4 border-b border-black/5 px-5 py-3 text-xs uppercase tracking-wide text-[#1A1A1A]/45 md:grid">
+				<div className="hidden grid-cols-4 gap-4 border-b border-black/5 px-5 py-3 text-xs uppercase tracking-wide text-[#1A1A1A]/45 md:grid">
 					<span>Guest</span>
 					<span>Property</span>
 					<span>Dates</span>
 					<span>Status</span>
-					<span>Payment</span>
 				</div>
 				{bookings.map((booking) => (
 					<button
 						type="button"
-						key={`${booking.guest}-${booking.dates}`}
-						className="grid w-full grid-cols-1 gap-2 border-b border-black/5 px-5 py-4 text-left transition hover:bg-black/[0.02] md:grid-cols-5 md:gap-4"
+						key={booking.id}
+						className="grid w-full grid-cols-1 gap-2 border-b border-black/5 px-5 py-4 text-left transition hover:bg-black/[0.02] md:grid-cols-4 md:gap-4"
 					>
-						<span className="font-medium">{booking.guest}</span>
-						<span className="text-sm text-[#1A1A1A]/65">{booking.property}</span>
-						<span className="text-sm text-[#1A1A1A]/65">{booking.dates}</span>
-						<span className="text-sm">{booking.status}</span>
-						<span className="text-sm text-[#6B705C]">{booking.payment}</span>
+						<span className="font-medium">{booking.guestName}</span>
+						<span className="text-sm text-[#1A1A1A]/65">{booking.propertyTitle}</span>
+						<span className="text-sm text-[#1A1A1A]/65">
+							{booking.startDate} - {booking.endDate}
+						</span>
+						<span className="text-sm capitalize">{booking.status}</span>
 					</button>
 				))}
 			</div>

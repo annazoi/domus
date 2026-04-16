@@ -20,6 +20,18 @@ export const ApiRoutes = {
 		prefix: '/users',
 		me: '/users/me',
 	},
+	properties: {
+		prefix: '/properties',
+		property: (id: string) => `/properties/${id}`,
+		images: (id: string) => `/properties/${id}/images`,
+		amenities: (id: string) => `/properties/${id}/amenities`,
+	},
+	availability: {
+		prefix: '/availability',
+	},
+	amenities: {
+		prefix: '/amenities',
+	},
 	accounts: {
 		prefix: '/accounts',
 		account: (account_uuid: string) => `/accounts/${account_uuid}`,
