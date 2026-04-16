@@ -75,3 +75,4 @@ export interface UpsertPropertyInput {
 	cleaningFee: number;
 	status: PropertyStatus;
 }
+

@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getStaticAmenities } from '@/config/constants/dropdowns/amenities.options';
+import { ApartmentOptions } from '@/config/constants/dropdowns/apartment.options';
 import type {
 	Amenity,
 	Property,
@@ -11,9 +13,9 @@ import type {
 } from '@/features/property/interfaces/property.interface';
 import {
 	deleteImage,
-	getAmenities,
 	reorderPropertyImages,
 	savePropertyAmenities,
+	uploadFilesToCloudinary,
 	uploadPropertyImages,
 } from '@/features/property/services/property.services';
 
@@ -26,7 +28,7 @@ type PropertyFormProps = {
 const defaultValues: UpsertPropertyInput = {
 	title: '',
 	description: '',
-	propertyType: 'Apartment',
+	propertyType: ApartmentOptions[0].value,
 	roomType: 'Entire place',
 	guests: 1,
 	bedrooms: 1,
@@ -52,19 +54,12 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 	const router = useRouter();
 	const [form, setForm] = useState<UpsertPropertyInput>(initialProperty ? { ...initialProperty } : defaultValues);
 	const [images, setImages] = useState<PropertyImage[]>(initialProperty?.images ?? []);
-	const [amenities, setAmenities] = useState<Amenity[]>([]);
+	const amenities = useMemo(() => getStaticAmenities() as Amenity[], []);
 	const [selectedAmenities, setSelectedAmenities] = useState<string[]>(initialProperty?.amenityIds ?? []);
-	const [imageUrls, setImageUrls] = useState('');
+	const [imageFiles, setImageFiles] = useState<File[]>([]);
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState('');
 	const [draggingId, setDraggingId] = useState<string | null>(null);
-
-	useEffect(() => {
-		void (async () => {
-			const amenityList = await getAmenities();
-			setAmenities(amenityList);
-		})();
-	}, []);
 
 	const validationMessage = useMemo(() => {
 		if (!form.title.trim()) return 'Title is required.';
@@ -95,15 +90,14 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 
 	const handleImageUpload = async () => {
 		if (!initialProperty) return;
-		const urls = imageUrls
-			.split('\n')
-			.map((item) => item.trim())
-			.filter(Boolean);
+		if (!imageFiles.length) return;
+
+		const urls = await uploadFilesToCloudinary(imageFiles);
 		if (!urls.length) return;
 
 		const created = await uploadPropertyImages(initialProperty.id, urls);
 		setImages((previous) => [...previous, ...created].sort((a, b) => a.order - b.order));
-		setImageUrls('');
+		setImageFiles([]);
 	};
 
 	const handleImageDelete = async (imageId: string) => {
@@ -149,12 +143,17 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 						placeholder="Title *"
 						className="rounded-xl border border-black/10 px-4 py-3"
 					/>
-					<input
+					<select
 						value={form.propertyType}
 						onChange={(event) => setForm((previous) => ({ ...previous, propertyType: event.target.value }))}
-						placeholder="Property type"
 						className="rounded-xl border border-black/10 px-4 py-3"
-					/>
+					>
+						{ApartmentOptions.map((option) => (
+							<option key={option.value} value={option.value}>
+								{option.label}
+							</option>
+						))}
+					</select>
 					<input
 						value={form.roomType}
 						onChange={(event) => setForm((previous) => ({ ...previous, roomType: event.target.value }))}
@@ -295,18 +294,19 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 			{mode === 'edit' && initialProperty ? (
 				<section className="space-y-4 rounded-2xl bg-white/80 p-5">
 					<h2 className="font-serif text-2xl">Images manager</h2>
-					<textarea
-						value={imageUrls}
-						onChange={(event) => setImageUrls(event.target.value)}
-						placeholder="Paste image URLs, one per line"
-						className="min-h-24 w-full rounded-xl border border-black/10 px-4 py-3"
+					<input
+						type="file"
+						multiple
+						accept="image/*"
+						onChange={(event) => setImageFiles(Array.from(event.target.files ?? []))}
+						className="w-full rounded-xl border border-black/10 px-4 py-3"
 					/>
 					<button
 						type="button"
 						onClick={() => void handleImageUpload()}
 						className="rounded-full border border-black/10 px-4 py-2 text-sm hover:border-[#6B705C]/45"
 					>
-						Upload images
+						Upload to Cloudinary
 					</button>
 
 					<div className="grid gap-3 md:grid-cols-2">
@@ -358,7 +358,7 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 				<button
 					type="submit"
 					disabled={saving}
-					className="rounded-full bg-[#1A1A1A] px-6 py-2.5 text-sm text-white transition hover:-translate-y-0.5 disabled:opacity-60"
+					className="cursor-pointer rounded-full bg-[#1A1A1A] px-6 py-2.5 text-sm text-white transition hover:-translate-y-0.5 disabled:opacity-60"
 				>
 					{saving ? 'Saving...' : mode === 'create' ? 'Create property' : 'Save changes'}
 				</button>

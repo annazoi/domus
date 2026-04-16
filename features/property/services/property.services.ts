@@ -1,5 +1,4 @@
 import axiosInstance from '@/config/api/axios';
-import { getStaticAmenities } from '@/config/constants/dropdowns/amenities.options';
 import { getAuthStoreState } from '@/store/auth';
 import type { Amenity, AvailabilityDay, Booking, Property, PropertyImage, UpsertPropertyInput } from '../interfaces/property.interface';
 
@@ -42,6 +41,16 @@ export const uploadPropertyImages = async (id: string, urls: string[]) => {
 	return response.data;
 };
 
+export const uploadFilesToCloudinary = async (files: File[]) => {
+	const formData = new FormData();
+	files.forEach((file) => formData.append('files', file));
+
+	const response = await axiosInstance.post<{ urls: string[] }>('/uploads/cloudinary', formData, {
+		headers: authHeaders(),
+	});
+	return response.data.urls;
+};
+
 export const reorderPropertyImages = async (id: string, reorderIds: string[], coverImageId?: string) => {
 	const response = await axiosInstance.post<PropertyImage[]>(
 		`/properties/${id}/images`,
@@ -53,19 +62,6 @@ export const reorderPropertyImages = async (id: string, reorderIds: string[], co
 
 export const deleteImage = async (imageId: string) => {
 	await axiosInstance.delete(`/images/${imageId}`, { headers: authHeaders() });
-};
-
-/**
- * Loads amenities from the API. Falls back to `getStaticAmenities()` from config when the request fails
- * (offline, 401, etc.) so the form always matches the canonical dropdown list.
- */
-export const getAmenities = async (): Promise<Amenity[]> => {
-	try {
-		const response = await axiosInstance.get<Amenity[]>('/amenities', { headers: authHeaders() });
-		return response.data;
-	} catch {
-		return getStaticAmenities() as Amenity[];
-	}
 };
 
 export const savePropertyAmenities = async (id: string, amenityIds: string[]) => {

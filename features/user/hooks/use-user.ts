@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createUser, getMe, getUser, getUsers, removeManyUsers, removeUser } from '../services/user.services';
+import { createUser, getMe, getUser, removeManyUsers, removeUser } from '../services/user.services';
 // import { toast } from '@/hooks/use-toast';
 // import type { AccountQuery } from '@/features/account/interfaces/account.interfaces';
 

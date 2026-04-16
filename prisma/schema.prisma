@@ -13,5 +13,36 @@ model User {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  properties Property[]
+}
+
+
+model Property{
+  id String @id @default(uuid())
+  title String
+  description String?
+
+  propertyType String
+
+  maxGuests Int
+  bedrooms Int
+  beds Int
+  bathrooms Int
+  pricePerNight Decimal
+
+  country String
+  city String
+  address String
+  latitude Float
+  longitude Float
+
+  status String @default("draft")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner User @relation(fields: [ownerId], references: [id])
+  ownerId String
+
+
 }
 

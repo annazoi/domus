@@ -1,8 +1,9 @@
 'use client';
 
 import { PropertyForm } from '../_components/property-form';
-import { createProperty } from '@/features/property/services/property.services';
+import { useCreateProperty } from '@/features/property/hooks/use-property';
 
 export default function NewPropertyPage() {
-	return <PropertyForm mode="create" onSubmit={createProperty} />;
+	const { mutateAsync: create } = useCreateProperty();
+	return <PropertyForm mode="create" onSubmit={create} />;
 }

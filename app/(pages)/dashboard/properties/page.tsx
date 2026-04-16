@@ -1,30 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import type { Property } from '@/features/property/interfaces/property.interface';
-import { deleteProperty, listProperties } from '@/features/property/services/property.services';
+import { useDeleteProperty, useProperties } from '@/features/property/hooks/use-property';
 
 export default function PropertiesPage() {
-	const [properties, setProperties] = useState<Property[]>([]);
-	const [loading, setLoading] = useState(true);
-
-	useEffect(() => {
-		void (async () => {
-			const data = await listProperties();
-			setProperties(data);
-			setLoading(false);
-		})();
-	}, []);
+	const { data: properties = [], isLoading: loading } = useProperties();
+	const { mutateAsync: removeProperty } = useDeleteProperty();
 
 	const handleDelete = async (id: string) => {
-		const previous = properties;
-		setProperties((current) => current.filter((property) => property.id !== id));
-		try {
-			await deleteProperty(id);
-		} catch {
-			setProperties(previous);
-		}
+		await removeProperty(id);
 	};
 
 	return (

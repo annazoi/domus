@@ -1,28 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { listBookings } from '@/features/property/services/property.services';
-
-type DashboardBooking = {
-	id: string;
-	guestName: string;
-	propertyTitle: string;
-	startDate: string;
-	endDate: string;
-	status: 'pending' | 'confirmed' | 'cancelled';
-};
+import { useBookings } from '@/features/property/hooks/use-property';
 
 export default function BookingsPage() {
-	const [bookings, setBookings] = useState<DashboardBooking[]>([]);
-	const [loading, setLoading] = useState(true);
-
-	useEffect(() => {
-		void (async () => {
-			const data = await listBookings();
-			setBookings(data);
-			setLoading(false);
-		})();
-	}, []);
+	const { data: bookings = [], isLoading: loading } = useBookings();
 
 	return (
 		<div className="space-y-8">
