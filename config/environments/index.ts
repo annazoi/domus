@@ -1,12 +1,10 @@
-
-const NEXT_PUBLIC_API_URL = "http://localhost:3000"
-const DATABASE_URL = "postgresql://postgres:2702@127.0.0.1:5432/domus"
-const CLOUDINARY_CLOUD_NAME = "dgaq7ouhr"
-const CLOUDINARY_API_KEY = "651971677934943"
-const CLOUDINARY_API_SECRET = "GkWCC-0jbwILVbYmWs11rf1jUy8"
-const JWT_SECRET = "2001"
-const NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = "AIzaSyBk64CNkm6_abZRdpydwT_tAUGGFHM1wbs"
-
+const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL
+const DATABASE_URL = process.env.DATABASE_URL
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME
+const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY
+const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET
+const JWT_SECRET = process.env.JWT_SECRET
+const NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
 export const environments = {
 NEXT_PUBLIC_API_URL,

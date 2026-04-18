@@ -32,41 +32,71 @@ export function LocationSection({
 	return (
 		<PropertyFormSection id="location" title="Location">
 			<div className="grid gap-4 md:grid-cols-2">
-				<input
-					value={form.country}
-					onChange={(event) => onFieldChange('country', event.target.value)}
-					placeholder="Country"
-					className="rounded-xl border border-black/10 px-4 py-3"
-				/>
-				<input
-					value={form.city}
-					onChange={(event) => onFieldChange('city', event.target.value)}
-					placeholder="City"
-					className="rounded-xl border border-black/10 px-4 py-3"
+				<div className="space-y-1.5">
+					<label htmlFor="property-country" className="text-sm font-medium text-[#1A1A1A]">
+						Country
+					</label>
+					<input
+						id="property-country"
+						value={form.country}
+						onChange={(event) => onFieldChange('country', event.target.value)}
+						placeholder="Enter country"
+						className="w-full rounded-xl border border-black/10 px-4 py-3"
+					/>
+				</div>
+				<div className="space-y-1.5">
+					<label htmlFor="property-city" className="text-sm font-medium text-[#1A1A1A]">
+						City
+					</label>
+					<input
+						id="property-city"
+						value={form.city}
+						onChange={(event) => onFieldChange('city', event.target.value)}
+						placeholder="Enter city"
+						className="w-full rounded-xl border border-black/10 px-4 py-3"
+					/>
+				</div>
+			</div>
+			<div className="space-y-1.5">
+				<label htmlFor="property-address" className="text-sm font-medium text-[#1A1A1A]">
+					Address
+				</label>
+				<PlacesAutocompleteInput
+					id="property-address"
+					placesLibraryReady={placesLibraryReady}
+					value={form.address}
+					onChange={(event) => onFieldChange('address', event.target.value)}
+					onPlaceSelect={(place) => applyPlaceToForm(place, onFieldChange, onCoordinateChange)}
+					placeholder="Search or enter address"
+					autoComplete="off"
+					className="w-full rounded-xl border border-black/10 px-4 py-3"
 				/>
 			</div>
-			<PlacesAutocompleteInput
-				placesLibraryReady={placesLibraryReady}
-				value={form.address}
-				onChange={(event) => onFieldChange('address', event.target.value)}
-				onPlaceSelect={(place) => applyPlaceToForm(place, onFieldChange, onCoordinateChange)}
-				placeholder="Address"
-				autoComplete="off"
-				className="w-full rounded-xl border border-black/10 px-4 py-3"
-			/>
 			<div className="grid gap-4 md:grid-cols-2">
-				<input
-					value={form.lat ?? ''}
-					onChange={(event) => onCoordinateChange('lat', event.target.value)}
-					placeholder="Latitude"
-					className="rounded-xl border border-black/10 px-4 py-3"
-				/>
-				<input
-					value={form.lng ?? ''}
-					onChange={(event) => onCoordinateChange('lng', event.target.value)}
-					placeholder="Longitude"
-					className="rounded-xl border border-black/10 px-4 py-3"
-				/>
+				<div className="space-y-1.5">
+					<label htmlFor="property-latitude" className="text-sm font-medium text-[#1A1A1A]">
+						Latitude
+					</label>
+					<input
+						id="property-latitude"
+						value={form.lat ?? ''}
+						onChange={(event) => onCoordinateChange('lat', event.target.value)}
+						placeholder="Enter latitude"
+						className="w-full rounded-xl border border-black/10 px-4 py-3"
+					/>
+				</div>
+				<div className="space-y-1.5">
+					<label htmlFor="property-longitude" className="text-sm font-medium text-[#1A1A1A]">
+						Longitude
+					</label>
+					<input
+						id="property-longitude"
+						value={form.lng ?? ''}
+						onChange={(event) => onCoordinateChange('lng', event.target.value)}
+						placeholder="Enter longitude"
+						className="w-full rounded-xl border border-black/10 px-4 py-3"
+					/>
+				</div>
 			</div>
 		</PropertyFormSection>
 	);

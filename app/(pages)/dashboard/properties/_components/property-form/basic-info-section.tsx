@@ -56,36 +56,60 @@ export function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
 				</button>
 			</div>
 			<div className="grid gap-4 md:grid-cols-2">
-				<input
-					value={form.title}
-					onChange={(event) => onChange('title', event.target.value)}
-					placeholder="Title *"
-					className="rounded-xl border border-black/10 px-4 py-3"
-				/>
-				<select
-					value={form.propertyType}
-					onChange={(event) => onChange('propertyType', event.target.value)}
-					className="rounded-xl border border-black/10 px-4 py-3"
-				>
-					{ApartmentOptions.map((option) => (
-						<option key={option.value} value={option.value}>
-							{option.label}
-						</option>
-					))}
-				</select>
-				<input
-					value={form.roomType}
-					onChange={(event) => onChange('roomType', event.target.value)}
-					placeholder="Room type"
-					className="rounded-xl border border-black/10 px-4 py-3"
+				<div className="space-y-1.5">
+					<label htmlFor="property-title" className="text-sm font-medium text-[#1A1A1A]">
+						Title *
+					</label>
+					<input
+						id="property-title"
+						value={form.title}
+						onChange={(event) => onChange('title', event.target.value)}
+						placeholder="Enter title"
+						className="w-full rounded-xl border border-black/10 px-4 py-3"
+					/>
+				</div>
+				<div className="space-y-1.5">
+					<label htmlFor="property-type" className="text-sm font-medium text-[#1A1A1A]">
+						Property type
+					</label>
+					<select
+						id="property-type"
+						value={form.propertyType}
+						onChange={(event) => onChange('propertyType', event.target.value)}
+						className="w-full rounded-xl border border-black/10 px-4 py-3"
+					>
+						{ApartmentOptions.map((option) => (
+							<option key={option.value} value={option.value}>
+								{option.label}
+							</option>
+						))}
+					</select>
+				</div>
+				<div className="space-y-1.5">
+					<label htmlFor="property-room-type" className="text-sm font-medium text-[#1A1A1A]">
+						Room type
+					</label>
+					<input
+						id="property-room-type"
+						value={form.roomType}
+						onChange={(event) => onChange('roomType', event.target.value)}
+						placeholder="Enter room type"
+						className="w-full rounded-xl border border-black/10 px-4 py-3"
+					/>
+				</div>
+			</div>
+			<div className="space-y-1.5">
+				<label htmlFor="property-description" className="text-sm font-medium text-[#1A1A1A]">
+					Description
+				</label>
+				<textarea
+					id="property-description"
+					value={form.description}
+					onChange={(event) => onChange('description', event.target.value)}
+					placeholder="Write a short description"
+					className="min-h-28 w-full rounded-xl border border-black/10 px-4 py-3"
 				/>
 			</div>
-			<textarea
-				value={form.description}
-				onChange={(event) => onChange('description', event.target.value)}
-				placeholder="Description"
-				className="min-h-28 w-full rounded-xl border border-black/10 px-4 py-3"
-			/>
 		</PropertyFormSection>
 	);
 }

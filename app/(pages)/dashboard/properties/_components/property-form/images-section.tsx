@@ -34,13 +34,19 @@ export function ImagesSection({
 					below.
 				</p>
 			) : null}
-			<input
-				type="file"
-				multiple
-				accept="image/*"
-				onChange={(event) => onImageFilesChange(Array.from(event.target.files ?? []))}
-				className="w-full rounded-xl border border-black/10 px-4 py-3"
-			/>
+			<div className="space-y-1.5">
+				<label htmlFor="property-images-upload" className="text-sm font-medium text-[#1A1A1A]">
+					Upload images
+				</label>
+				<input
+					id="property-images-upload"
+					type="file"
+					multiple
+					accept="image/*"
+					onChange={(event) => onImageFilesChange(Array.from(event.target.files ?? []))}
+					className="w-full rounded-xl border border-black/10 px-4 py-3"
+				/>
+			</div>
 			{mode === 'edit' && initialPropertyId ? (
 				<div className="grid gap-3 md:grid-cols-2">
 					{images.map((image) => (

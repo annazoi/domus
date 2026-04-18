@@ -18,15 +18,20 @@ export function CapacitySection({ form, onChange }: CapacitySectionProps) {
 		<PropertyFormSection id="capacity" title="Capacity">
 			<div className="grid gap-4 md:grid-cols-4">
 				{capacityFields.map((field) => (
-					<input
-						key={field.key}
-						type="number"
-						min={0}
-						value={form[field.key]}
-						onChange={(event) => onChange(field.key, Number(event.target.value))}
-						placeholder={field.label}
-						className="rounded-xl border border-black/10 px-4 py-3"
-					/>
+					<div key={field.key} className="space-y-1.5">
+						<label htmlFor={`capacity-${field.key}`} className="text-sm font-medium text-[#1A1A1A]">
+							{field.label}
+						</label>
+						<input
+							id={`capacity-${field.key}`}
+							type="number"
+							min={0}
+							value={form[field.key]}
+							onChange={(event) => onChange(field.key, Number(event.target.value))}
+							placeholder={`Enter ${field.label.replace(' *', '').toLowerCase()}`}
+							className="w-full rounded-xl border border-black/10 px-4 py-3"
+						/>
+					</div>
 				))}
 			</div>
 		</PropertyFormSection>

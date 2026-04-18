@@ -31,7 +31,7 @@ export function AmenitiesSection({ amenities, selectedAmenities, onToggleAmenity
 	return (
 		<PropertyFormSection id="amenities" title="Amenities">
 			<div className="mb-4">
-				<label htmlFor="amenities-search" className="sr-only">
+				<label htmlFor="amenities-search" className="mb-1.5 block text-sm font-medium text-[#1A1A1A]">
 					Search amenities
 				</label>
 				<div className="flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2">

@@ -50,7 +50,7 @@ export function PropertyFormSidebar({
 							aria-selected={selected}
 							onClick={() => onTabChange(item.id as PropertyFormTabId)}
 							className={[
-								'block w-full rounded-lg px-3 py-2 text-left text-sm transition',
+								'cursor-pointer block w-full rounded-lg px-3 py-2 text-left text-sm transition',
 								selected
 									? 'bg-black/5 text-[#1A1A1A]'
 									: 'text-[#1A1A1A]/70 hover:bg-black/5 hover:text-[#1A1A1A]',
