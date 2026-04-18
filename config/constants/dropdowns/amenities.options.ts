@@ -27,6 +27,13 @@ export const AmenitiesOptionsLabels: Record<AmenityId, string> = {
 	[Amenities.WORKSPACE]: 'Dedicated workspace',
 };
 
+export function searchAmenitiesOptions(search: string) {
+	const normalizedSearch = search.trim().toLowerCase();
+	if (!normalizedSearch) return AmenitiesOptions;
+
+	return AmenitiesOptions.filter((option) => option.label.toLowerCase().includes(normalizedSearch));
+}
+
 export function getStaticAmenities(): Array<{ id: string; label: string }> {
 	return AmenitiesOptions.map((option) => ({
 		id: option.value,

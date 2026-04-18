@@ -52,7 +52,7 @@ export default function SubscriptionPage() {
 						<button
 							type="button"
 							className={[
-								'mt-6 rounded-full px-5 py-2.5 text-sm transition',
+								'mt-6 rounded-full px-5 py-2.5 text-sm transition cursor-pointer',
 								plan.current
 									? 'bg-black/5 text-[#1A1A1A]/50'
 									: 'bg-[#1A1A1A] text-white hover:-translate-y-0.5 hover:bg-[#1A1A1A]/90',

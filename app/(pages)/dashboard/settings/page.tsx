@@ -28,7 +28,7 @@ export default function SettingsPage() {
 
 				<button
 					type="button"
-					className="rounded-full bg-[#1A1A1A] px-5 py-2.5 text-sm text-white transition hover:-translate-y-0.5 hover:bg-[#1A1A1A]/90"
+					className="cursor-pointer rounded-full bg-[#1A1A1A] px-5 py-2.5 text-sm text-white transition hover:-translate-y-0.5 hover:bg-[#1A1A1A]/90"
 				>
 					Save changes
 				</button>

@@ -1,16 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { GoogleMapsPlacesScript } from '@/components/google-maps';
+import { useSetDashboardPageIntro } from '@/app/(pages)/dashboard/_components/dashboard-shell';
 import { getStaticAmenities } from '@/config/constants/dropdowns/amenities.options';
 import { ApartmentOptions } from '@/config/constants/dropdowns/apartment.options';
-import type {
-	Amenity,
-	Property,
-	PropertyImage,
-	PropertyStatus,
-	UpsertPropertyInput,
-} from '@/features/property/interfaces/property.interface';
+import type { Amenity, Property, PropertyImage, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import {
 	deleteImage,
 	reorderPropertyImages,
@@ -18,6 +14,13 @@ import {
 	uploadFilesToCloudinary,
 	uploadPropertyImages,
 } from '@/features/property/services/property.services';
+import { AmenitiesSection } from './property-form/amenities-section';
+import { BasicInfoSection } from './property-form/basic-info-section';
+import { CapacitySection } from './property-form/capacity-section';
+import { ImagesSection } from './property-form/images-section';
+import { LocationSection } from './property-form/location-section';
+import { PricingSection } from './property-form/pricing-section';
+import { PropertyFormSidebar, type PropertyFormTabId } from './property-form/property-form-sidebar';
 
 type PropertyFormProps = {
 	mode: 'create' | 'edit';
@@ -50,6 +53,31 @@ const numberOrNull = (value: string) => {
 	return Number.isNaN(numeric) ? null : numeric;
 };
 
+function TabSaveFooter({
+	label,
+	onSave,
+	disabled,
+	saving,
+}: {
+	label: string;
+	onSave: () => void | Promise<void>;
+	disabled?: boolean;
+	saving: boolean;
+}) {
+	return (
+		<div className="mt-6 flex justify-end border-t border-black/5 pt-5">
+			<button
+				type="button"
+				onClick={() => void onSave()}
+				disabled={disabled || saving}
+				className="cursor-pointer rounded-full bg-[#1A1A1A] px-6 py-2.5 text-sm text-white transition hover:-translate-y-0.5 disabled:opacity-60"
+			>
+				{saving ? 'Saving...' : label}
+			</button>
+		</div>
+	);
+}
+
 export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormProps) {
 	const router = useRouter();
 	const [form, setForm] = useState<UpsertPropertyInput>(initialProperty ? { ...initialProperty } : defaultValues);
@@ -59,48 +87,121 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 	const [imageFiles, setImageFiles] = useState<File[]>([]);
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState('');
+	const [success, setSuccess] = useState('');
 	const [draggingId, setDraggingId] = useState<string | null>(null);
+	const [activeTab, setActiveTab] = useState<PropertyFormTabId>('basic-info');
+	const [googleMapsReady, setGoogleMapsReady] = useState(false);
+	const setPageIntro = useSetDashboardPageIntro();
 
-	const validationMessage = useMemo(() => {
-		if (!form.title.trim()) return 'Title is required.';
-		if (form.pricePerNight <= 0) return 'Price must be greater than 0.';
-		if (form.guests <= 0) return 'Guests must be greater than 0.';
-		return '';
-	}, [form]);
+	const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+	const placesLibraryReady = Boolean(mapsApiKey && googleMapsReady);
 
-	const handleSubmit = async (event: React.FormEvent) => {
-		event.preventDefault();
-		if (validationMessage) {
-			setError(validationMessage);
-			return;
+	const propertyId = initialProperty?.id ?? null;
+
+	// useEffect(() => {
+	// 	setPageIntro(
+	// 		<div className="min-w-0 mt-10 flex flex-col gap-2 mb-4">
+	// 			<p className="text-[10px] uppercase tracking-[0.2em] text-[#6B705C] sm:text-xs">
+	// 				{mode === 'create' ? 'Create property' : 'Edit property'}
+	// 			</p>
+	// 			<h1 className="truncate font-serif text-xl leading-tight text-[#1A1A1A] sm:text-2xl md:text-3xl">
+	// 				{mode === 'create' ? 'New listing' : 'Property details'}
+	// 			</h1>
+	// 		</div>,
+	// 	);
+	// 	return () => setPageIntro(null);
+	// }, [mode, setPageIntro]);
+
+	useEffect(() => {
+		setError('');
+		setSuccess('');
+	}, [activeTab]);
+
+	const handleSaveTab = async (tab: PropertyFormTabId) => {
+		setError('');
+		setSuccess('');
+
+		const needTitleForCreate = mode === 'create' && !form.title.trim();
+
+		if (tab === 'basic-info') {
+			if (!form.title.trim()) {
+				setError('Title is required.');
+				return;
+			}
+		} else if (tab === 'capacity') {
+			if (needTitleForCreate) {
+				setError('Add a title under Basic info first.');
+				return;
+			}
+			if (form.guests <= 0) {
+				setError('Guests must be greater than 0.');
+				return;
+			}
+		} else if (tab === 'location') {
+			if (needTitleForCreate) {
+				setError('Add a title under Basic info first.');
+				return;
+			}
+		} else if (tab === 'pricing') {
+			if (needTitleForCreate) {
+				setError('Add a title under Basic info first.');
+				return;
+			}
+			if (form.pricePerNight <= 0) {
+				setError('Price must be greater than 0.');
+				return;
+			}
+		} else if (tab === 'amenities') {
+			if (!propertyId) {
+				setError('Save basic info or another section first to create the property.');
+				return;
+			}
+		} else if (tab === 'images') {
+			if (!propertyId) {
+				setError('Save basic info or another section first to create the property.');
+				return;
+			}
+			if (!imageFiles.length) {
+				setError('Select one or more images to upload.');
+				return;
+			}
 		}
 
 		setSaving(true);
-		setError('');
 		try {
-			const saved = await onSubmit(form);
-			await savePropertyAmenities(saved.id, selectedAmenities);
-			if (imageFiles.length) {
-				const urls = await uploadFilesToCloudinary(imageFiles);
-				if (urls.length) {
-					await uploadPropertyImages(saved.id, urls);
+			if (
+				tab === 'basic-info' ||
+				tab === 'capacity' ||
+				tab === 'location' ||
+				tab === 'pricing'
+			) {
+				const saved = await onSubmit(form);
+				if (mode === 'create') {
+					router.replace(`/dashboard/properties/${saved.id}`);
+					return;
 				}
+				setSuccess('Saved.');
+			} else if (tab === 'amenities') {
+				await savePropertyAmenities(propertyId as string, selectedAmenities);
+				setSuccess('Amenities saved.');
+			} else if (tab === 'images' && propertyId) {
+				await handleImageUpload(propertyId);
+				setSuccess('Images uploaded.');
 			}
-			router.push('/dashboard/properties');
 		} catch (submitError) {
-			setError(submitError instanceof Error ? submitError.message : 'Could not save property.');
+			setError(submitError instanceof Error ? submitError.message : 'Could not save.');
 		} finally {
 			setSaving(false);
 		}
 	};
 
-	const handleImageUpload = async (propertyId: string) => {
+	const handleImageUpload = async (id: string) => {
 		if (!imageFiles.length) return;
 
 		const urls = await uploadFilesToCloudinary(imageFiles);
 		if (!urls.length) return;
 
-		const created = await uploadPropertyImages(propertyId, urls);
+		const created = await uploadPropertyImages(id, urls);
 		setImages((previous) => [...previous, ...created].sort((a, b) => a.order - b.order));
 		setImageFiles([]);
 	};
@@ -128,260 +229,141 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 		setImages(reordered);
 	};
 
+	const updateForm = <K extends keyof UpsertPropertyInput>(field: K, value: UpsertPropertyInput[K]) => {
+		setForm((previous) => ({ ...previous, [field]: value }));
+	};
+
 	return (
-		<form onSubmit={handleSubmit} className="space-y-8">
-			<div className="space-y-2">
-				<p className="text-xs uppercase tracking-[0.2em] text-[#6B705C]">
+		<>
+			<GoogleMapsPlacesScript
+				apiKey={mapsApiKey}
+				loadWhen={activeTab === 'location'}
+				onLoaded={() => setGoogleMapsReady(true)}
+			/>
+		<div className="min-w-0 flex flex-col gap-2 mb-10">
+				<p className="text-[10px] uppercase tracking-[0.2em] text-[#6B705C] sm:text-xs">
 					{mode === 'create' ? 'Create property' : 'Edit property'}
 				</p>
-				<h1 className="font-serif text-4xl">{mode === 'create' ? 'New listing' : 'Property details'}</h1>
-			</div>
-
-			{error ? <p className="rounded-xl bg-red-100/70 px-4 py-3 text-sm text-red-700">{error}</p> : null}
-
-			<section className="space-y-4 rounded-2xl bg-white/80 p-5">
-				<h2 className="font-serif text-2xl">Basic info</h2>
-				<div className="grid gap-4 md:grid-cols-2">
-					<input
-						value={form.title}
-						onChange={(event) => setForm((previous) => ({ ...previous, title: event.target.value }))}
-						placeholder="Title *"
-						className="rounded-xl border border-black/10 px-4 py-3"
-					/>
-					<select
-						value={form.propertyType}
-						onChange={(event) => setForm((previous) => ({ ...previous, propertyType: event.target.value }))}
-						className="rounded-xl border border-black/10 px-4 py-3"
-					>
-						{ApartmentOptions.map((option) => (
-							<option key={option.value} value={option.value}>
-								{option.label}
-							</option>
-						))}
-					</select>
-					<input
-						value={form.roomType}
-						onChange={(event) => setForm((previous) => ({ ...previous, roomType: event.target.value }))}
-						placeholder="Room type"
-						className="rounded-xl border border-black/10 px-4 py-3"
-					/>
-				</div>
-				<textarea
-					value={form.description}
-					onChange={(event) => setForm((previous) => ({ ...previous, description: event.target.value }))}
-					placeholder="Description"
-					className="min-h-28 w-full rounded-xl border border-black/10 px-4 py-3"
+				<h1 className="truncate font-serif text-xl leading-tight text-[#1A1A1A] sm:text-2xl md:text-3xl">
+					{mode === 'create' ? 'New listing' : 'Property details'}
+				</h1>
+		</div>
+		<div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+			<PropertyFormSidebar
+				mode={mode}
+				activeTab={activeTab}
+				onTabChange={setActiveTab}
+				onEditAvailability={
+					mode === 'edit' && initialProperty
+					? () => router.push(`/dashboard/properties/${initialProperty.id}/calendar`)
+					: undefined
+				}
 				/>
-			</section>
 
-			<section className="space-y-4 rounded-2xl bg-white/80 p-5">
-				<h2 className="font-serif text-2xl">Capacity</h2>
-				<div className="grid gap-4 md:grid-cols-4">
-					{[
-						['guests', 'Guests *'],
-						['bedrooms', 'Bedrooms'],
-						['beds', 'Beds'],
-						['bathrooms', 'Bathrooms'],
-					].map(([key, label]) => (
-						<input
-							key={key}
-							type="number"
-							min={0}
-							value={form[key as keyof UpsertPropertyInput] as number}
-							onChange={(event) => setForm((previous) => ({ ...previous, [key]: Number(event.target.value) }))}
-							placeholder={label}
-							className="rounded-xl border border-black/10 px-4 py-3"
-						/>
-					))}
-				</div>
-			</section>
+			<div className="min-h-[320px] space-y-6">
+				{error ? <p className="rounded-xl bg-red-100/70 px-4 py-3 text-sm text-red-700">{error}</p> : null}
+				{success ? <p className="rounded-xl bg-emerald-100/70 px-4 py-3 text-sm text-emerald-800">{success}</p> : null}
 
-			<section className="space-y-4 rounded-2xl bg-white/80 p-5">
-				<h2 className="font-serif text-2xl">Location</h2>
-				<div className="grid gap-4 md:grid-cols-2">
-					<input
-						value={form.country}
-						onChange={(event) => setForm((previous) => ({ ...previous, country: event.target.value }))}
-						placeholder="Country"
-						className="rounded-xl border border-black/10 px-4 py-3"
-					/>
-					<input
-						value={form.city}
-						onChange={(event) => setForm((previous) => ({ ...previous, city: event.target.value }))}
-						placeholder="City"
-						className="rounded-xl border border-black/10 px-4 py-3"
-					/>
-				</div>
-				<input
-					value={form.address}
-					onChange={(event) => setForm((previous) => ({ ...previous, address: event.target.value }))}
-					placeholder="Address"
-					className="w-full rounded-xl border border-black/10 px-4 py-3"
-				/>
-				<div className="grid gap-4 md:grid-cols-2">
-					<input
-						value={form.lat ?? ''}
-						onChange={(event) => setForm((previous) => ({ ...previous, lat: numberOrNull(event.target.value) }))}
-						placeholder="Latitude"
-						className="rounded-xl border border-black/10 px-4 py-3"
-					/>
-					<input
-						value={form.lng ?? ''}
-						onChange={(event) => setForm((previous) => ({ ...previous, lng: numberOrNull(event.target.value) }))}
-						placeholder="Longitude"
-						className="rounded-xl border border-black/10 px-4 py-3"
-					/>
-				</div>
-			</section>
-
-			<section className="space-y-4 rounded-2xl bg-white/80 p-5">
-				<h2 className="font-serif text-2xl">Pricing and status</h2>
-				<div className="grid gap-4 md:grid-cols-3">
-					<input
-						type="number"
-						min={0}
-						value={form.pricePerNight}
-						onChange={(event) =>
-							setForm((previous) => ({ ...previous, pricePerNight: Number(event.target.value) }))
-						}
-						placeholder="Price per night *"
-						className="rounded-xl border border-black/10 px-4 py-3"
-					/>
-					<input
-						type="number"
-						min={0}
-						value={form.cleaningFee}
-						onChange={(event) =>
-							setForm((previous) => ({ ...previous, cleaningFee: Number(event.target.value) }))
-						}
-						placeholder="Cleaning fee"
-						className="rounded-xl border border-black/10 px-4 py-3"
-					/>
-					<select
-						value={form.status}
-						onChange={(event) =>
-							setForm((previous) => ({ ...previous, status: event.target.value as PropertyStatus }))
-						}
-						className="rounded-xl border border-black/10 px-4 py-3"
-					>
-						<option value="draft">Draft</option>
-						<option value="published">Published</option>
-					</select>
-				</div>
-			</section>
-
-			<section className="space-y-4 rounded-2xl bg-white/80 p-5">
-				<h2 className="font-serif text-2xl">Amenities</h2>
-				<div className="flex flex-wrap gap-2">
-					{amenities.map((amenity) => {
-						const active = selectedAmenities.includes(amenity.id);
-						return (
-							<button
-								key={amenity.id}
-								type="button"
-								onClick={() =>
+				<div role="tabpanel" id={`property-form-panel-${activeTab}`} aria-labelledby={`property-form-tab-${activeTab}`}>
+					{activeTab === 'basic-info' ? (
+						<>
+							<BasicInfoSection form={form} onChange={(field, value) => updateForm(field, value)} />
+							<TabSaveFooter
+								label={mode === 'create' ? 'Create property' : 'Save basic info'}
+								onSave={() => handleSaveTab('basic-info')}
+								saving={saving}
+								/>
+						</>
+					) : null}
+					{activeTab === 'capacity' ? (
+						<>
+							<CapacitySection form={form} onChange={(field, value) => updateForm(field, value)} />
+							<TabSaveFooter
+								label={mode === 'create' ? 'Continue' : 'Save capacity'}
+								onSave={() => handleSaveTab('capacity')}
+								saving={saving}
+								/>
+						</>
+					) : null}
+					{activeTab === 'location' ? (
+						<>
+							<LocationSection
+								form={form}
+								placesLibraryReady={placesLibraryReady}
+								onFieldChange={(field, value) => updateForm(field, value)}
+								onCoordinateChange={(field, value) => updateForm(field, numberOrNull(value))}
+								/>
+							<TabSaveFooter
+								label={mode === 'create' ? 'Continue' : 'Save location'}
+								onSave={() => handleSaveTab('location')}
+								saving={saving}
+								/>
+						</>
+					) : null}
+					{activeTab === 'pricing' ? (
+						<>
+							<PricingSection form={form} onNumberChange={(field, value) => updateForm(field, value)} />
+							<TabSaveFooter
+								label={mode === 'create' ? 'Continue' : 'Save pricing'}
+								onSave={() => handleSaveTab('pricing')}
+								saving={saving}
+								/>
+						</>
+					) : null}
+					{activeTab === 'amenities' ? (
+						<>
+							<AmenitiesSection
+								amenities={amenities}
+								selectedAmenities={selectedAmenities}
+								onToggleAmenity={(amenityId) =>
 									setSelectedAmenities((previous) =>
-										active ? previous.filter((id) => id !== amenity.id) : [...previous, amenity.id],
-									)
-								}
-								className={[
-									'rounded-full px-3 py-1.5 text-sm transition',
-									active ? 'bg-[#6B705C] text-white' : 'bg-black/5 text-[#1A1A1A]/70 hover:bg-black/10',
-								].join(' ')}
-							>
-								{amenity.label}
-							</button>
-						);
-					})}
-				</div>
-			</section>
-
-			<section className="space-y-4 rounded-2xl bg-white/80 p-5">
-				<h2 className="font-serif text-2xl">Images manager</h2>
-				{mode === 'create' ? (
-					<p className="text-sm text-[#1A1A1A]/60">Selected images will upload after the property is created.</p>
-				) : null}
-					<input
-						type="file"
-						multiple
-						accept="image/*"
-						onChange={(event) => setImageFiles(Array.from(event.target.files ?? []))}
-						className="w-full rounded-xl border border-black/10 px-4 py-3"
-					/>
-				{mode === 'edit' && initialProperty ? (
-					<button
-						type="button"
-						onClick={() => void handleImageUpload(initialProperty.id)}
-						className="rounded-full border border-black/10 px-4 py-2 text-sm hover:border-[#6B705C]/45"
-					>
-						Upload images
-					</button>
-				) : null}
-
-				{mode === 'edit' && initialProperty ? (
-					<div className="grid gap-3 md:grid-cols-2">
-						{images.map((image) => (
-							<div
-								key={image.id}
-								draggable
-								onDragStart={() => setDraggingId(image.id)}
-								onDragOver={(event) => event.preventDefault()}
-								onDrop={() => {
-									if (!draggingId || draggingId === image.id) return;
+										previous.includes(amenityId)
+								? previous.filter((id) => id !== amenityId)
+								: [...previous, amenityId],
+							)
+						}
+						/>
+							<TabSaveFooter
+								label="Save amenities"
+								onSave={() => handleSaveTab('amenities')}
+								saving={saving}
+								/>
+						</>
+					) : null}
+					{activeTab === 'images' ? (
+						<>
+							<ImagesSection
+								mode={mode}
+								initialPropertyId={initialProperty?.id}
+								images={images}
+								imageFiles={imageFiles}
+								draggingId={draggingId}
+								onImageFilesChange={setImageFiles}
+								onDragStart={setDraggingId}
+								onDrop={(targetImageId) => {
+									if (!draggingId || draggingId === targetImageId) return;
 									const from = images.findIndex((item) => item.id === draggingId);
-									const to = images.findIndex((item) => item.id === image.id);
+									const to = images.findIndex((item) => item.id === targetImageId);
 									const next = [...images];
 									const [moved] = next.splice(from, 1);
 									next.splice(to, 0, moved);
 									const normalized = next.map((item, index) => ({ ...item, order: index }));
 									void persistOrder(normalized);
 								}}
-								className="space-y-2 rounded-xl border border-black/10 p-3"
-							>
-								<div
-									className="h-36 rounded-lg bg-black/5 bg-cover bg-center"
-									style={{ backgroundImage: `url(${image.url})` }}
+								onSetCover={(imageId) => void handleCoverSelect(imageId)}
+								onDelete={(imageId) => void handleImageDelete(imageId)}
 								/>
-								<div className="flex items-center justify-between text-xs">
-									<button
-										type="button"
-										onClick={() => void handleCoverSelect(image.id)}
-										className={image.isCover ? 'text-[#6B705C]' : 'text-[#1A1A1A]/50'}
-									>
-										{image.isCover ? 'Cover image' : 'Set as cover'}
-									</button>
-									<button
-										type="button"
-										onClick={() => void handleImageDelete(image.id)}
-										className="text-red-600"
-									>
-										Delete
-									</button>
-								</div>
-							</div>
-						))}
-					</div>
-				) : null}
-			</section>
-
-			<div className="flex items-center gap-3">
-				<button
-					type="submit"
-					disabled={saving}
-					className="cursor-pointer rounded-full bg-[#1A1A1A] px-6 py-2.5 text-sm text-white transition hover:-translate-y-0.5 disabled:opacity-60"
-				>
-					{saving ? 'Saving...' : mode === 'create' ? 'Create property' : 'Save changes'}
-				</button>
-				{mode === 'edit' && initialProperty ? (
-					<button
-						type="button"
-						className="rounded-full border border-black/10 px-5 py-2.5 text-sm"
-						onClick={() => router.push(`/dashboard/properties/${initialProperty.id}/calendar`)}
-					>
-						Edit availability
-					</button>
-				) : null}
+							<TabSaveFooter
+								label="Upload images"
+								onSave={() => handleSaveTab('images')}
+								disabled={saving || (Boolean(propertyId) && !imageFiles.length)}
+								saving={saving}
+								/>
+						</>
+					) : null}
+				</div>
 			</div>
-		</form>
+		</div>
+					</>
 	);
 }

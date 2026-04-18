@@ -123,7 +123,7 @@ export default function SignInPage() {
 				<button
 					type="submit"
 					disabled={isLoading}
-					className="w-full bg-stone-900 text-stone-50 py-3.5 rounded-sm text-sm font-medium hover:bg-stone-800 transition-colors flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
+					className="cursor-pointer w-full bg-stone-900 text-stone-50 py-3.5 rounded-sm text-sm font-medium hover:bg-stone-800 transition-colors flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
 				>
 					{isLoading ? (
 						<Loader2 className="w-4 h-4 animate-spin" />

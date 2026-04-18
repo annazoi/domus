@@ -12,7 +12,7 @@ export default function WebsiteBuilderPage() {
 					<div className="mt-4 h-64 rounded-xl bg-gradient-to-br from-[#6B705C]/15 to-white" />
 					<button
 						type="button"
-						className="mt-5 rounded-full bg-[#1A1A1A] px-5 py-2.5 text-sm text-white transition hover:-translate-y-0.5 hover:bg-[#1A1A1A]/90"
+						className="cursor-pointer mt-5 rounded-full bg-[#1A1A1A] px-5 py-2.5 text-sm text-white transition hover:-translate-y-0.5 hover:bg-[#1A1A1A]/90"
 					>
 						Edit Website
 					</button>
@@ -21,13 +21,13 @@ export default function WebsiteBuilderPage() {
 				<div className="rounded-2xl bg-white/80 p-6">
 					<p className="font-serif text-2xl">Builder options</p>
 					<div className="mt-5 space-y-3">
-						<button type="button" className="w-full rounded-xl border border-black/10 px-4 py-3 text-left text-sm hover:border-[#6B705C]/40">
+						<button type="button" className="w-full cursor-pointer rounded-xl border border-black/10 px-4 py-3 text-left text-sm hover:border-[#6B705C]/40">
 							Change theme
 						</button>
-						<button type="button" className="w-full rounded-xl border border-black/10 px-4 py-3 text-left text-sm hover:border-[#6B705C]/40">
+						<button type="button" className="w-full cursor-pointer rounded-xl border border-black/10 px-4 py-3 text-left text-sm hover:border-[#6B705C]/40">
 							Update branding
 						</button>
-						<button type="button" className="w-full rounded-xl border border-black/10 px-4 py-3 text-left text-sm hover:border-[#6B705C]/40">
+						<button type="button" className="w-full cursor-pointer rounded-xl border border-black/10 px-4 py-3 text-left text-sm hover:border-[#6B705C]/40">
 							Manage sections
 						</button>
 					</div>

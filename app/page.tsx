@@ -5,6 +5,7 @@ import { motion, Variants } from 'framer-motion';
 import { ArrowRight, Check, ChevronRight } from 'lucide-react';
 import { ApiRoutes } from '@/config/api/routes';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 const fadeIn: Variants = {
 	hidden: { opacity: 0, y: 20 },
@@ -16,10 +17,28 @@ const stagger: Variants = {
 };
 
 export default function Home() {
+	const [isNavScrolled, setIsNavScrolled] = useState(false);
+
+	useEffect(() => {
+		const onScroll = () => {
+			setIsNavScrolled(window.scrollY > 12);
+		};
+
+		onScroll();
+		window.addEventListener('scroll', onScroll, { passive: true });
+
+		return () => window.removeEventListener('scroll', onScroll);
+	}, []);
+
 	return (
 		<div className="bg-stone-50 text-stone-900 font-sans min-h-screen selection:bg-stone-200">
 			{/* Navigation */}
-			<nav className="absolute top-0 w-full z-50 px-8 py-6 flex justify-between items-center text-stone-100 mix-blend-difference">
+			<nav
+				className={[
+					'fixed top-0 left-0 w-full z-50 px-8 py-6 flex justify-between items-center text-stone-100 mix-blend-difference transition-[backdrop-filter] duration-300',
+					isNavScrolled ? 'backdrop-blur-md border-b border-stone-200/5' : 'backdrop-blur-none',
+				].join(' ')}
+			>
 				<div className="font-serif text-2xl tracking-wide">Domus</div>
 				<div className="hidden md:flex gap-8 text-sm font-light tracking-wide">
 					<a href="#" className="hover:opacity-70 transition-opacity">
@@ -70,7 +89,7 @@ export default function Home() {
 					</motion.p>
 					<motion.button
 						variants={fadeIn}
-						className="bg-stone-50 text-stone-900 px-8 py-4 rounded-full text-sm font-medium tracking-wide hover:bg-stone-200 transition-colors flex items-center gap-2 group"
+						className="cursor-pointer bg-stone-50 text-stone-900 px-8 py-4 rounded-full text-sm font-medium tracking-wide hover:bg-stone-200 transition-colors flex items-center gap-2 group"
 					>
 						Start building
 						<ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -299,7 +318,7 @@ export default function Home() {
 									<Check className="w-4 h-4 text-stone-800" /> 0% booking fees
 								</li>
 							</ul>
-							<button className="w-full border border-stone-800 text-stone-900 py-3 rounded-full text-sm hover:bg-stone-50 transition-colors">
+							<button className="cursor-pointer w-full border border-stone-800 text-stone-900 py-3 rounded-full text-sm hover:bg-stone-50 transition-colors">
 								Select Essential
 							</button>
 						</motion.div>
@@ -328,7 +347,7 @@ export default function Home() {
 									<Check className="w-4 h-4" /> Priority support
 								</li>
 							</ul>
-							<button className="w-full bg-stone-50 text-stone-900 py-3 rounded-full text-sm hover:bg-stone-200 transition-colors">
+							<button className="w-full bg-stone-50 text-stone-900 py-3 rounded-full text-sm hover:bg-stone-200 transition-colors cursor-pointer">	
 								Select Portfolio
 							</button>
 						</motion.div>
@@ -342,7 +361,7 @@ export default function Home() {
 					<h2 className="font-serif text-5xl md:text-7xl mb-12 text-stone-800 max-w-3xl leading-[1.1]">
 						Start building your rental brand today.
 					</h2>
-					<button className="bg-stone-900 text-stone-50 px-10 py-5 rounded-full text-sm font-medium tracking-wide hover:bg-stone-800 transition-colors flex items-center gap-2 group mx-auto">
+					<button className="cursor-pointer bg-stone-900 text-stone-50 px-10 py-5 rounded-full text-sm font-medium tracking-wide hover:bg-stone-800 transition-colors flex items-center gap-2 group mx-auto">
 						Get started
 						<ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
 					</button>

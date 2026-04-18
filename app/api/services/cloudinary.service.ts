@@ -1,9 +1,6 @@
 import { environments } from "@/config/environments";
-
-interface CloudinaryUploadResponse {
-	secure_url?: string;
-	error?: { message?: string };
-}
+import { CloudinaryUploadResponse } from "./interfaces/cloudinary.interface";
+	
 
 const getCloudinaryConfig = () => {
 	const cloudName = environments.CLOUDINARY_CLOUD_NAME;

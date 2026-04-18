@@ -2,7 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, type ReactNode } from 'react';
+import {
+	createContext,
+	useContext,
+	useState,
+	type Dispatch,
+	type ReactNode,
+	type SetStateAction,
+} from 'react';
 import {
 	BarChart3,
 	CalendarDays,
@@ -37,14 +44,23 @@ const navItems: NavItem[] = [
 const isItemActive = (pathname: string, href: string) =>
 	href === '/dashboard' ? pathname === href : pathname.startsWith(href);
 
+const DashboardPageIntroContext = createContext<Dispatch<SetStateAction<ReactNode | null>> | null>(null);
+
+/** Sets page intro (eyebrow + title) in the top bar beside the menu. Clear on unmount. */
+export function useSetDashboardPageIntro() {
+	const setIntro = useContext(DashboardPageIntroContext);
+	return setIntro ?? ((_value: ReactNode | null) => {});
+}
+
 export function DashboardShell({ children }: { children: ReactNode }) {
 	const pathname = usePathname();
 	const [isCollapsed, setIsCollapsed] = useState(false);
 	const [isMobileOpen, setIsMobileOpen] = useState(false);
+	const [pageIntro, setPageIntro] = useState<ReactNode | null>(null);
 
 	return (
 		<div className="min-h-screen bg-[#F7F5F2] text-[#1A1A1A]">
-			<div className="mx-auto flex w-full max-w-[1600px]">
+			<div className="flex w-full">
 				<aside
 					className={[
 						'fixed inset-y-0 left-0 z-40 border-r border-black/5 bg-[#F7F5F2] px-3 py-6 transition-all duration-200',
@@ -97,37 +113,53 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 					</nav>
 				</aside>
 
-				<div className={['w-full transition-all duration-200', isCollapsed ? 'md:ml-[84px]' : 'md:ml-[250px]'].join(' ')}>
-					<header className="sticky top-0 z-30 flex h-16 items-center justify-between px-5 md:px-10">
-						<button
-							type="button"
-							onClick={() => setIsMobileOpen(true)}
-							className="inline-flex rounded-md p-2 text-[#6B705C] hover:bg-black/5 md:hidden"
-							aria-label="Open sidebar"
-						>
-							<Menu className="h-4 w-4" />
-						</button>
+				<DashboardPageIntroContext.Provider value={setPageIntro}>
+					<div
+						className={[
+							'min-w-0 w-full transition-[margin] duration-200',
+							isCollapsed ? 'md:ml-[84px]' : 'md:ml-[250px]',
+						].join(' ')}
+					>
+						<div className="mx-auto w-full max-w-[1600px]">
+							<header className="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 px-5 py-2 md:gap-6 md:px-10">
+								<div className="flex min-w-0 flex-1 items-center gap-3 md:gap-5">
+									<button
+										type="button"
+										onClick={() => setIsMobileOpen(true)}
+										className="inline-flex shrink-0 rounded-md p-2 text-[#6B705C] hover:bg-black/5 md:hidden"
+										aria-label="Open sidebar"
+									>
+										<Menu className="h-4 w-4" />
+									</button>
+									{pageIntro ? (
+										<div className="min-w-0 flex-1 border-l border-black/10 pl-3 md:border-l-0 md:pl-0">
+											{pageIntro}
+										</div>
+									) : null}
+								</div>
 
-						<div className="ml-auto flex items-center gap-3">
-							<span className="hidden rounded-full bg-[#6B705C]/10 px-3 py-1 text-xs font-medium text-[#6B705C] sm:inline-flex">
-								Portfolio Plan
-							</span>
-							<button
-								type="button"
-								className="flex items-center gap-2 rounded-full bg-white/80 px-2 py-1.5 text-sm hover:bg-white"
-							>
-								<span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#6B705C] text-xs font-semibold text-white">
-									ZA
-								</span>
-								<span className="hidden pr-1 text-[#1A1A1A]/70 sm:inline">Account</span>
-							</button>
+								<div className="flex shrink-0 items-center gap-3">
+									<span className="hidden rounded-full bg-[#6B705C]/10 px-3 py-1 text-xs font-medium text-[#6B705C] sm:inline-flex">
+										Portfolio Plan
+									</span>
+									<button
+										type="button"
+										className="flex items-center gap-2 rounded-full bg-white/80 px-2 py-1.5 text-sm hover:bg-white"
+									>
+										<span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#6B705C] text-xs font-semibold text-white">
+											ZA
+										</span>
+										<span className="hidden pr-1 text-[#1A1A1A]/70 sm:inline">Account</span>
+									</button>
+								</div>
+							</header>
+
+							<main className="px-5 pb-14 pt-2 md:px-10">
+								<div className="mx-auto w-full">{children}</div>
+							</main>
 						</div>
-					</header>
-
-					<main className="px-5 pb-14 pt-2 md:px-10">
-						<div className="mx-auto w-full max-w-6xl">{children}</div>
-					</main>
-				</div>
+					</div>
+				</DashboardPageIntroContext.Provider>
 			</div>
 		</div>
 	);

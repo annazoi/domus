@@ -51,7 +51,7 @@ export default function DashboardOverviewPage() {
 						<button
 							key={action}
 							type="button"
-							className="rounded-full border border-black/10 bg-white px-5 py-2.5 text-sm transition hover:-translate-y-0.5 hover:border-[#6B705C]/40 hover:text-[#6B705C]"
+							className="cursor-pointer rounded-full border border-black/10 bg-white px-5 py-2.5 text-sm transition hover:-translate-y-0.5 hover:border-[#6B705C]/40 hover:text-[#6B705C]"
 						>
 							{action}
 						</button>
