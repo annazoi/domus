@@ -1,0 +1,47 @@
+import { z } from 'zod';
+
+export const basicInfoFormSchema = z.object({
+	title: z.string().trim().min(1, 'Title is required.'),
+	slug: z.string().trim(),
+	description: z.string(),
+	short_description: z.string().optional(),
+	check_in_time: z.string(),
+	check_out_time: z.string(),
+	property_type: z.string(),
+	room_type: z.string(),
+	status: z.enum(['draft', 'published']),
+});
+
+export const capacityFormSchema = z.object({
+	max_guests: z.number().min(1, 'Guests must be greater than 0.'),
+	bedrooms: z.number().min(0),
+	beds: z.number().min(0),
+	bathrooms: z.number().min(0),
+});
+
+export const locationFormSchema = z.object({
+	address: z.string(),
+	country: z.string(),
+	city: z.string(),
+	lat: z.number().nullable().optional(),
+	lng: z.number().nullable().optional(),
+});
+
+export const pricingFormSchema = z.object({
+	cleaning_fee: z.number().min(0, 'Cleaning fee cannot be negative.'),
+});
+
+export const amenitiesFormSchema = z.object({
+	amenity_ids: z.array(z.string()),
+});
+
+export const imagesFormSchema = z.object({
+	imageFiles: z.array(z.instanceof(File)).min(1, 'Select one or more images to upload.'),
+});
+
+export type BasicInfoFormValues = z.infer<typeof basicInfoFormSchema>;
+export type CapacityFormValues = z.infer<typeof capacityFormSchema>;
+export type LocationFormValues = z.infer<typeof locationFormSchema>;
+export type PricingFormValues = z.infer<typeof pricingFormSchema>;
+export type AmenitiesFormValues = z.infer<typeof amenitiesFormSchema>;
+export type ImagesFormValues = z.infer<typeof imagesFormSchema>;

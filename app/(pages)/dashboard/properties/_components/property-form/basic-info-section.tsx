@@ -1,24 +1,83 @@
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Controller, useForm } from 'react-hook-form';
 import { Button, Input, MinimalRichText, Select } from '@/components/ui';
 import { ApartmentOptions } from '@/config/constants/dropdowns/apartment.options';
-import type { PropertyStatus, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
+import { useCreateProperty, useUpdateProperty } from '@/features/property/hooks/use-property';
+import type { Property, PropertyStatus, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
+import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
 import { PropertyFormSection } from './property-form-section';
+import { basicInfoFormSchema, type BasicInfoFormValues } from './schemas';
 
 type BasicInfoSectionProps = {
-	form: UpsertPropertyInput;
-	onChange: <K extends keyof UpsertPropertyInput>(field: K, value: UpsertPropertyInput[K]) => void;
+	mode: 'create' | 'edit';
+	initialProperty?: Property | null;
 };
 
-export function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
-	const isPublished = form.status === 'published';
+export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProps) {
+	const router = useRouter();
+	const [error, setError] = useState('');
+	const [success, setSuccess] = useState('');
+	const { mutateAsync: create, isPending: creating } = useCreateProperty();
+	const { mutateAsync: update, isPending: updating } = useUpdateProperty(initialProperty?.id ?? '');
+	const saving = creating || updating;
+	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
+
+	const {
+		control,
+		register,
+		handleSubmit,
+		setValue,
+		watch,
+		formState: { errors },
+	} = useForm<BasicInfoFormValues>({
+		resolver: zodResolver(basicInfoFormSchema),
+		defaultValues: {
+			title: defaultValues.title,
+			slug: defaultValues.slug,
+			description: defaultValues.description,
+			short_description: defaultValues.short_description,
+			check_in_time: defaultValues.check_in_time,
+			check_out_time: defaultValues.check_out_time,
+			property_type: defaultValues.property_type,
+			room_type: defaultValues.room_type,
+			status: defaultValues.status,
+		},
+	});
+
+	const status = (watch('status') ?? defaultValues.status) as PropertyStatus;
+	const isPublished = status === 'published';
 
 	const toggleStatus = () => {
 		const next: PropertyStatus = isPublished ? 'draft' : 'published';
-		onChange('status', next);
+		setValue('status', next, { shouldValidate: true, shouldDirty: true });
 	};
+
+	const handleSave = handleSubmit(async (formValues) => {
+		setError('');
+		setSuccess('');
+		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
+		try {
+			if (mode === 'create') {
+				const saved = await create(payload);
+				router.replace(`/dashboard/properties/${saved.id}?saved=1`, { scroll: false });
+				return;
+			}
+
+			if (!initialProperty?.id) return;
+			await update(payload);
+			setSuccess('Saved.');
+		} catch (submitError) {
+			setError(submitError instanceof Error ? submitError.message : 'Could not save.');
+		}
+	});
 
 	return (
 		<PropertyFormSection id="basic-info" title="Basic info">
+			{error ? <p className="rounded-xl bg-red-100/70 px-4 py-3 text-sm text-red-700">{error}</p> : null}
+			{success ? <p className="rounded-xl bg-emerald-100/70 px-4 py-3 text-sm text-emerald-800">{success}</p> : null}
 			<div className="flex flex-col gap-3 rounded-xl border border-black/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
 				<div className="min-w-0">
 					<p className="text-sm font-medium text-[#1A1A1A]">Listing status</p>
@@ -64,10 +123,10 @@ export function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
 					</label>
 					<Input
 						id="property-title"
-						value={form.title}
-						onChange={(event) => onChange('title', event.target.value)}
+						{...register('title')}
 						placeholder="Enter title"
 					/>
+					{errors.title?.message ? <p className="text-xs text-red-700">{errors.title.message}</p> : null}
 				</div>
 				<div className="space-y-1.5">
 					<label htmlFor="property-slug" className="text-sm font-medium text-[#1A1A1A]">
@@ -75,8 +134,7 @@ export function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
 					</label>
 					<Input
 						id="property-slug"
-						value={form.slug}
-						onChange={(event) => onChange('slug', event.target.value)}
+						{...register('slug')}
 						placeholder="Enter slug"
 					/>
 				</div>
@@ -87,8 +145,7 @@ export function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
 					<Select
 						id="property-type"
 						variant="default"
-						value={form.property_type}
-						onChange={(event) => onChange('property_type', event.target.value)}
+						{...register('property_type')}
 					>
 						{ApartmentOptions.map((option) => (
 							<option key={option.value} value={option.value}>
@@ -103,27 +160,38 @@ export function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
 					</label>
 					<Input
 						id="property-room-type"
-						value={form.room_type}
-						onChange={(event) => onChange('room_type', event.target.value)}
+						{...register('room_type')}
 						placeholder="Enter room type"
 					/>
 				</div>
 			</div>
-			<MinimalRichText
-				id="property-description"
-				label="Description"
-				value={form.description}
-				onChange={(html) => onChange('description', html)}
-				placeholder="Describe your space…"
-				editorMinHeight="min-h-[160px]"
+			<Controller
+				control={control}
+				name="description"
+				render={({ field }) => (
+					<MinimalRichText
+						id="property-description"
+						label="Description"
+						value={field.value}
+						onChange={field.onChange}
+						placeholder="Describe your space…"
+						editorMinHeight="min-h-[160px]"
+					/>
+				)}
 			/>
-			<MinimalRichText
-				id="property-short-description"
-				label="Short description"
-				value={form.short_description ?? ''}
-				onChange={(html) => onChange('short_description', html)}
-				placeholder="A line or two for cards and search…"
-				editorMinHeight="min-h-[100px]"
+			<Controller
+				control={control}
+				name="short_description"
+				render={({ field }) => (
+					<MinimalRichText
+						id="property-short-description"
+						label="Short description"
+						value={field.value ?? ''}
+						onChange={field.onChange}
+						placeholder="A line or two for cards and search…"
+						editorMinHeight="min-h-[100px]"
+					/>
+				)}
 			/>
 
 			<div className="grid gap-4 md:grid-cols-2">
@@ -135,8 +203,7 @@ export function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
 						id="property-check-in-time"
 						type="time"
 						step={300}
-						value={form.check_in_time}
-						onChange={(event) => onChange('check_in_time', event.target.value)}
+						{...register('check_in_time')}
 					/>
 				</div>
 				<div className="space-y-1.5">
@@ -147,10 +214,14 @@ export function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
 						id="property-check-out-time"
 						type="time"
 						step={300}
-						value={form.check_out_time}
-						onChange={(event) => onChange('check_out_time', event.target.value)}
+						{...register('check_out_time')}
 					/>
 				</div>
+			</div>
+			<div className="mt-2 flex justify-end border-t border-black/5 pt-5">
+				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
+					{saving ? 'Saving...' : 'Save'}
+				</Button>
 			</div>
 		</PropertyFormSection>
 	);

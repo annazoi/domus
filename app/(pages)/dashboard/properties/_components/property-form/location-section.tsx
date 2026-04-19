@@ -1,49 +1,116 @@
 'use client';
 
+import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
 import { PlacesAutocompleteInput, type PlaceSelection } from '@/components/google-maps';
-import { Input } from '@/components/ui';
-import type { UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
+import { Button, Input } from '@/components/ui';
+import { useUpdateProperty } from '@/features/property/hooks/use-property';
+import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
+import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
 import { PropertyFormSection } from './property-form-section';
+import { locationFormSchema, type LocationFormValues } from './schemas';
 
 type LocationSectionProps = {
-	form: UpsertPropertyInput;
+	mode: 'create' | 'edit';
+	initialProperty?: Property | null;
 	placesLibraryReady?: boolean;
-	onFieldChange: (field: 'country' | 'city' | 'address', value: string) => void;
-	onCoordinateChange: (field: 'lat' | 'lng', value: string) => void;
 };
 
-function applyPlaceToForm(place: PlaceSelection, onFieldChange: LocationSectionProps['onFieldChange'], onCoordinateChange: LocationSectionProps['onCoordinateChange']) {
+const numberOrNull = (value: string) => {
+	if (!value.trim()) return null;
+	const numeric = Number(value);
+	return Number.isNaN(numeric) ? null : numeric;
+};
+
+function applyPlaceToForm(
+	place: PlaceSelection,
+	onFieldChange: (field: 'country' | 'city' | 'address', value: string) => void,
+	onCoordinateChange: (field: 'lat' | 'lng', value: number | null) => void,
+) {
 	onFieldChange('country', place.country);
 	onFieldChange('city', place.city);
 	onFieldChange('address', place.formattedAddress);
 	if (place.lat != null) {
-		onCoordinateChange('lat', String(place.lat));
+		onCoordinateChange('lat', place.lat);
 	}
 	if (place.lng != null) {
-		onCoordinateChange('lng', String(place.lng));
+		onCoordinateChange('lng', place.lng);
 	}
 }
 
 export function LocationSection({
-	form,
+	mode,
+	initialProperty,
 	placesLibraryReady = false,
-	onFieldChange,
-	onCoordinateChange,
 }: LocationSectionProps) {
+	const [error, setError] = useState('');
+	const [success, setSuccess] = useState('');
+	const { mutateAsync: update, isPending: saving } = useUpdateProperty(initialProperty?.id ?? '');
+	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
+	const {
+		register,
+		control,
+		handleSubmit,
+		setValue,
+		formState: { errors },
+	} = useForm<LocationFormValues>({
+		resolver: zodResolver(locationFormSchema),
+		defaultValues: {
+			address: defaultValues.address,
+			country: defaultValues.country,
+			city: defaultValues.city,
+			lat: defaultValues.lat,
+			lng: defaultValues.lng,
+		},
+	});
+
+	const handleSave = handleSubmit(async (formValues: LocationFormValues) => {
+		setError('');
+		setSuccess('');
+		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
+
+		if (mode === 'create' || !initialProperty?.id) {
+			setError('Save Basic info first to create the property.');
+			return;
+		}
+
+		try {
+			await update(payload);
+			setSuccess('Saved.');
+		} catch (submitError) {
+			setError(submitError instanceof Error ? submitError.message : 'Could not save.');
+		}
+	});
+
 	return (
 		<PropertyFormSection id="location" title="Location">
+			{error ? <p className="rounded-xl bg-red-100/70 px-4 py-3 text-sm text-red-700">{error}</p> : null}
+			{success ? <p className="rounded-xl bg-emerald-100/70 px-4 py-3 text-sm text-emerald-800">{success}</p> : null}
 			<div className="space-y-1.5">
 				<label htmlFor="property-address" className="text-sm font-medium text-[#1A1A1A]">
 					Address
 				</label>
-				<PlacesAutocompleteInput
-					id="property-address"
-					placesLibraryReady={placesLibraryReady}
-					value={form.address}
-					onChange={(event) => onFieldChange('address', event.target.value)}
-					onPlaceSelect={(place) => applyPlaceToForm(place, onFieldChange, onCoordinateChange)}
-					placeholder="Search or enter address"
-					autoComplete="off"
+				<Controller
+					control={control}
+					name="address"
+					render={({ field }) => (
+						<PlacesAutocompleteInput
+							id="property-address"
+							placesLibraryReady={placesLibraryReady}
+							value={field.value}
+							onChange={field.onChange}
+							onPlaceSelect={(place) =>
+								applyPlaceToForm(
+									place,
+									(name, value) => setValue(name, value, { shouldValidate: true, shouldDirty: true }),
+									(name, value) => setValue(name, value, { shouldValidate: true, shouldDirty: true }),
+								)
+							}
+							placeholder="Search or enter address"
+							autoComplete="off"
+						/>
+					)}
 				/>
 			</div>
 			<div className="grid gap-4 md:grid-cols-2">
@@ -53,8 +120,7 @@ export function LocationSection({
 					</label>
 					<Input
 						id="property-country"
-						value={form.country}
-						onChange={(event) => onFieldChange('country', event.target.value)}
+						{...register('country')}
 						placeholder="Enter country"
 					/>
 				</div>
@@ -64,8 +130,7 @@ export function LocationSection({
 					</label>
 					<Input
 						id="property-city"
-						value={form.city}
-						onChange={(event) => onFieldChange('city', event.target.value)}
+						{...register('city')}
 						placeholder="Enter city"
 					/>
 				</div>
@@ -76,24 +141,43 @@ export function LocationSection({
 					<label htmlFor="property-latitude" className="text-sm font-medium text-[#1A1A1A]">
 						Latitude
 					</label>
-					<Input
-						id="property-latitude"
-						value={form.lat ?? ''}
-						onChange={(event) => onCoordinateChange('lat', event.target.value)}
-						placeholder="Enter latitude"
+					<Controller
+						control={control}
+						name="lat"
+						render={({ field }) => (
+							<Input
+								id="property-latitude"
+								value={field.value ?? ''}
+								onChange={(event) => field.onChange(numberOrNull(event.target.value))}
+								placeholder="Enter latitude"
+							/>
+						)}
 					/>
+					{errors.lat?.message ? <p className="text-xs text-red-700">{errors.lat.message}</p> : null}
 				</div>
 				<div className="space-y-1.5">
 					<label htmlFor="property-longitude" className="text-sm font-medium text-[#1A1A1A]">
 						Longitude
 					</label>
-					<Input
-						id="property-longitude"
-						value={form.lng ?? ''}
-						onChange={(event) => onCoordinateChange('lng', event.target.value)}
-						placeholder="Enter longitude"
+					<Controller
+						control={control}
+						name="lng"
+						render={({ field }) => (
+							<Input
+								id="property-longitude"
+								value={field.value ?? ''}
+								onChange={(event) => field.onChange(numberOrNull(event.target.value))}
+								placeholder="Enter longitude"
+							/>
+						)}
 					/>
+					{errors.lng?.message ? <p className="text-xs text-red-700">{errors.lng.message}</p> : null}
 				</div>
+			</div>
+			<div className="mt-2 flex justify-end border-t border-black/5 pt-5">
+				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
+					{saving ? 'Saving...' : 'Save'}
+				</Button>
 			</div>
 		</PropertyFormSection>
 	);

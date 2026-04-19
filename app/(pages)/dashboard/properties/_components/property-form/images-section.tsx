@@ -1,21 +1,23 @@
 'use client';
 
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ImageIcon, Maximize2, Trash2 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui';
+import {
+	useDeletePropertyImage,
+	useReorderPropertyImages,
+	useUploadPropertyImages,
+} from '@/features/property-images/hooks/use-property-images';
 import type { PropertyImage } from '@/features/property-images/interfaces/property-image.interfaces';
+import type { Property } from '@/features/property/interfaces/property.interface';
+import { PropertyFormSection } from './property-form-section';
+import { imagesFormSchema } from './schemas';
 
 type ImagesSectionProps = {
 	mode: 'create' | 'edit';
-	initialPropertyId?: string;
-	images: PropertyImage[];
-	imageFiles: File[];
-	draggingId: string | null;
-	onImageFilesChange: (files: File[]) => void;
-	onDragStart: (imageId: string) => void;
-	onDrop: (targetImageId: string) => void;
-	onSetCover: (imageId: string) => void;
-	onDelete: (imageId: string) => void;
+	initialProperty?: Property | null;
 };
 
 const SUBLABELS = [
@@ -36,44 +38,120 @@ function displayImages(images: PropertyImage[]) {
 
 export function ImagesSection({
 	mode,
-	initialPropertyId,
-	images,
-	imageFiles,
-	draggingId,
-	onImageFilesChange,
-	onDragStart,
-	onDrop,
-	onSetCover,
-	onDelete,
+	initialProperty,
 }: ImagesSectionProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [fileZoneOver, setFileZoneOver] = useState(false);
+	const [images, setImages] = useState<PropertyImage[]>(initialProperty?.images ?? []);
+	const [draggingId, setDraggingId] = useState<string | null>(null);
+	const [error, setError] = useState('');
+	const [success, setSuccess] = useState('');
+	const {
+		setValue,
+		handleSubmit,
+		watch,
+		formState: { errors },
+	} = useForm<{ imageFiles: File[] }>({
+		resolver: zodResolver(imagesFormSchema),
+		defaultValues: { imageFiles: [] },
+	});
+	const imageFiles = watch('imageFiles');
+	const propertyId = initialProperty?.id ?? '';
+	const { mutateAsync: uploadImages, isPending: uploading } = useUploadPropertyImages(propertyId);
+	const { mutateAsync: reorderImages, isPending: reordering } = useReorderPropertyImages(propertyId);
+	const { mutateAsync: removeImage, isPending: deleting } = useDeletePropertyImage(propertyId);
+	const saving = uploading || reordering || deleting;
 
 	const ordered = useMemo(() => displayImages(images), [images]);
 
 	const addFiles = useCallback(
 		(fileList: FileList | File[]) => {
 			const next = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
-			if (next.length) onImageFilesChange(next);
+			if (next.length) setValue('imageFiles', next, { shouldValidate: true, shouldDirty: true });
 		},
-		[onImageFilesChange],
+		[setValue],
 	);
 
+	const handleSave = handleSubmit(async ({ imageFiles: files }) => {
+		setError('');
+		setSuccess('');
+
+		if (mode === 'create' || !propertyId) {
+			setError('Save Basic info first to create the property.');
+			return;
+		}
+		try {
+			const created = await uploadImages(files);
+			setImages((previous) => [...previous, ...created].sort((a, b) => a.order - b.order));
+			setValue('imageFiles', []);
+			setSuccess('Images uploaded.');
+		} catch (submitError) {
+			setError(submitError instanceof Error ? submitError.message : 'Could not upload images.');
+		}
+	});
+
+	const onDrop = async (targetImageId: string) => {
+		if (!draggingId || draggingId === targetImageId || !propertyId) return;
+		const from = images.findIndex((item) => item.id === draggingId);
+		const to = images.findIndex((item) => item.id === targetImageId);
+		if (from < 0 || to < 0) return;
+
+		const next = [...images];
+		const [moved] = next.splice(from, 1);
+		next.splice(to, 0, moved);
+		const normalized = next.map((item, index) => ({ ...item, order: index }));
+		const coverImageId = normalized.find((image) => image.is_cover)?.id;
+
+		setError('');
+		try {
+			const reordered = await reorderImages({
+				reorder_ids: normalized.map((image) => image.id),
+				cover_image_id: coverImageId,
+			});
+			setImages(reordered);
+		} catch (submitError) {
+			setError(submitError instanceof Error ? submitError.message : 'Could not reorder images.');
+		}
+	};
+
+	const onSetCover = async (imageId: string) => {
+		if (!propertyId) return;
+		setError('');
+		try {
+			const reordered = await reorderImages({
+				reorder_ids: images.map((image) => image.id),
+				cover_image_id: imageId,
+			});
+			setImages(reordered);
+		} catch (submitError) {
+			setError(submitError instanceof Error ? submitError.message : 'Could not update cover image.');
+		}
+	};
+
+	const onDelete = async (imageId: string) => {
+		setError('');
+		try {
+			await removeImage(imageId);
+			setImages((previous) => previous.filter((image) => image.id !== imageId));
+		} catch (submitError) {
+			setError(submitError instanceof Error ? submitError.message : 'Could not remove image.');
+		}
+	};
+
 	return (
-		<section id="images" className="scroll-mt-24">
+		<PropertyFormSection id="images" title="Images">
+			{error ? <p className="rounded-xl bg-red-100/70 px-4 py-3 text-sm text-red-700">{error}</p> : null}
+			{success ? <p className="rounded-xl bg-emerald-100/70 px-4 py-3 text-sm text-emerald-800">{success}</p> : null}
 			<div className="flex flex-col gap-8 lg:flex-row lg:gap-10">
 				<div className="min-w-0 flex-1 space-y-8">
-					<header className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+					<header className="flex flex-col gap-2">
 						<div>
-							<h2 className="font-serif text-3xl tracking-tight text-[#1A1A1A] md:text-4xl">
-								Curation Workshop
-							</h2>
 							<p className="mt-2 max-w-xl text-sm leading-relaxed text-[#1A1A1A]/65">
 								Curate high-resolution visuals that define the atmosphere. Order sets the story visitors
 								follow: lead with your strongest impression.
 							</p>
 						</div>
-						<p className="shrink-0 text-[10px] font-medium uppercase tracking-[0.2em] text-[#1A1A1A]/45">
+						<p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#1A1A1A]/45">
 							Recommended 1920×1080
 						</p>
 					</header>
@@ -128,9 +206,10 @@ export function ImagesSection({
 								{imageFiles.length} file{imageFiles.length === 1 ? '' : 's'} ready - save to upload.
 							</p>
 						) : null}
+						{errors.imageFiles?.message ? <p className="mt-2 text-xs text-red-700">{errors.imageFiles.message}</p> : null}
 					</div>
 
-					{mode === 'edit' && initialPropertyId && ordered.length > 0 ? (
+					{mode === 'edit' && propertyId && ordered.length > 0 ? (
 						<div className="grid gap-8 sm:grid-cols-2">
 							{ordered.map((image, i) => (
 								<figure
@@ -142,7 +221,7 @@ export function ImagesSection({
 										index={i + 1}
 										variant={i === 0 ? 'hero' : 'grid'}
 										draggingId={draggingId}
-										onDragStart={onDragStart}
+										onDragStart={setDraggingId}
 										onDrop={onDrop}
 										onSetCover={onSetCover}
 										onDelete={onDelete}
@@ -185,7 +264,17 @@ export function ImagesSection({
 					</div>
 				</aside> */}
 			</div>
-		</section>
+			<div className="mt-2 flex justify-end border-t border-black/5 pt-5">
+				<Button
+					type="button"
+					onClick={() => void handleSave()}
+					disabled={saving || (Boolean(propertyId) && !imageFiles.length)}
+					variant="primary"
+				>
+					{saving ? 'Saving...' : 'Save'}
+				</Button>
+			</div>
+		</PropertyFormSection>
 	);
 }
 

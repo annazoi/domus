@@ -1,16 +1,21 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 import { DayPicker, type DateRange } from 'react-day-picker';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button, Checkbox, Input } from '@/components/ui';
-import type { UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
+import { useUpdateProperty } from '@/features/property/hooks/use-property';
+import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
+import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
 import { PropertyFormSection } from './property-form-section';
+import { pricingFormSchema, type PricingFormValues } from './schemas';
 
 type PricingSectionProps = {
-	form: UpsertPropertyInput;
-	onNumberChange: (field: 'cleaning_fee', value: number) => void;
+	mode: 'create' | 'edit';
+	initialProperty?: Property | null;
 };
 
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -23,7 +28,21 @@ function addMonths(d: Date, n: number) {
 	return new Date(d.getFullYear(), d.getMonth() + n, 1);
 }
 
-export function PricingSection({ form, onNumberChange }: PricingSectionProps) {
+export function PricingSection({ mode, initialProperty }: PricingSectionProps) {
+	const [error, setError] = useState('');
+	const [success, setSuccess] = useState('');
+	const { mutateAsync: update, isPending: saving } = useUpdateProperty(initialProperty?.id ?? '');
+	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+	} = useForm<PricingFormValues>({
+		resolver: zodResolver(pricingFormSchema),
+		defaultValues: {
+			cleaning_fee: defaultValues.cleaning_fee,
+		},
+	});
 	const [viewMonth, setViewMonth] = useState(() => startOfMonth(new Date()));
 	const [modalOpen, setModalOpen] = useState(false);
 	const [range, setRange] = useState<DateRange | undefined>();
@@ -35,6 +54,23 @@ export function PricingSection({ form, onNumberChange }: PricingSectionProps) {
 	const [rangePrice, setRangePrice] = useState('');
 	const [isAvailable, setIsAvailable] = useState(true);
 	const [calOpen, setCalOpen] = useState(false);
+
+	const handleSave = handleSubmit(async (formValues) => {
+		setError('');
+		setSuccess('');
+		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
+
+		if (mode === 'create' || !initialProperty?.id) {
+			setError('Save Basic info first to create the property.');
+			return;
+		}
+		try {
+			await update(payload);
+			setSuccess('Saved.');
+		} catch (submitError) {
+			setError(submitError instanceof Error ? submitError.message : 'Could not save.');
+		}
+	});
 
 	const closeModal = useCallback(() => {
 		setModalOpen(false);
@@ -58,9 +94,24 @@ export function PricingSection({ form, onNumberChange }: PricingSectionProps) {
 
 	return (
 		<PropertyFormSection id="pricing-availability" title="Pricing & availability">
+			{error ? <p className="rounded-xl bg-red-100/70 px-4 py-3 text-sm text-red-700">{error}</p> : null}
+			{success ? <p className="rounded-xl bg-emerald-100/70 px-4 py-3 text-sm text-emerald-800">{success}</p> : null}
 			<p className="text-sm text-[#1A1A1A]/65">
 				Nightly rates are set per day on the property calendar.
 			</p>
+			<div className="space-y-1.5">
+				<label htmlFor="property-cleaning-fee" className="text-sm font-medium text-[#1A1A1A]">
+					Cleaning fee
+				</label>
+				<Input
+					id="property-cleaning-fee"
+					type="number"
+					min={0}
+					{...register('cleaning_fee', { valueAsNumber: true })}
+					placeholder="0"
+				/>
+				{errors.cleaning_fee?.message ? <p className="text-xs text-red-700">{errors.cleaning_fee.message}</p> : null}
+			</div>
 
 			<div className="mt-4 grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
 				<div className="rounded-2xl bg-white/75 p-5">
@@ -226,6 +277,11 @@ export function PricingSection({ form, onNumberChange }: PricingSectionProps) {
 					</div>
 				</div>
 			) : null}
+			<div className="mt-2 flex justify-end border-t border-black/5 pt-5">
+				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
+					{saving ? 'Saving...' : 'Save'}
+				</Button>
+			</div>
 		</PropertyFormSection>
 	);
 }

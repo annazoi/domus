@@ -1,19 +1,56 @@
 import { useMemo, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { Search, Wifi } from 'lucide-react';
 import { Button, cn, Input } from '@/components/ui';
 import {
 	amenityOptionByValue,
 	PROPERTY_FORM_AMENITY_CATEGORIES,
 } from '@/config/constants/dropdowns/amenities.options';
+import { useSavePropertyAmenities } from '@/features/property-amenities/hooks/use-property-amenities';
+import type { Property } from '@/features/property/interfaces/property.interface';
 import { PropertyFormSection } from './property-form-section';
+import { amenitiesFormSchema } from './schemas';
 
 type AmenitiesSectionProps = {
-	selectedAmenities: string[];
-	onToggleAmenity: (amenityId: string) => void;
+	mode: 'create' | 'edit';
+	initialProperty?: Property | null;
 };
 
-export function AmenitiesSection({ selectedAmenities, onToggleAmenity }: AmenitiesSectionProps) {
+export function AmenitiesSection({ mode, initialProperty }: AmenitiesSectionProps) {
 	const [search, setSearch] = useState('');
+	const [error, setError] = useState('');
+	const [success, setSuccess] = useState('');
+	const { mutateAsync: saveAmenities, isPending: saving } = useSavePropertyAmenities(initialProperty?.id ?? '');
+	const { handleSubmit, watch, setValue } = useForm<{ amenity_ids: string[] }>({
+		resolver: zodResolver(amenitiesFormSchema),
+		defaultValues: { amenity_ids: initialProperty?.amenity_ids ?? [] },
+	});
+	const selectedAmenities = watch('amenity_ids');
+
+	const onToggleAmenity = (amenityId: string) => {
+		const next = selectedAmenities.includes(amenityId)
+			? selectedAmenities.filter((id) => id !== amenityId)
+			: [...selectedAmenities, amenityId];
+		setValue('amenity_ids', next, { shouldValidate: true, shouldDirty: true });
+	};
+
+	const handleSave = handleSubmit(async ({ amenity_ids }) => {
+		setError('');
+		setSuccess('');
+
+		if (mode === 'create' || !initialProperty?.id) {
+			setError('Save Basic info first to create the property.');
+			return;
+		}
+
+		try {
+			await saveAmenities(amenity_ids);
+			setSuccess('Amenities saved.');
+		} catch (submitError) {
+			setError(submitError instanceof Error ? submitError.message : 'Could not save amenities.');
+		}
+	});
 
 	const categories = useMemo(() => {
 		const q = search.trim().toLowerCase();
@@ -26,6 +63,8 @@ export function AmenitiesSection({ selectedAmenities, onToggleAmenity }: Ameniti
 
 	return (
 		<PropertyFormSection id="amenities" title="Amenities">
+			{error ? <p className="rounded-xl bg-red-100/70 px-4 py-3 text-sm text-red-700">{error}</p> : null}
+			{success ? <p className="rounded-xl bg-emerald-100/70 px-4 py-3 text-sm text-emerald-800">{success}</p> : null}
 			<div className="mb-6">
 				<label htmlFor="amenities-search" className="mb-1.5 block text-sm font-medium text-[#1A1A1A]">
 					Search amenities
@@ -76,6 +115,11 @@ export function AmenitiesSection({ selectedAmenities, onToggleAmenity }: Ameniti
 			{search.trim() && !categories.length ? (
 				<p className="mt-3 text-sm text-[#1A1A1A]/55">No amenities found for &quot;{search}&quot;.</p>
 			) : null}
+			<div className="mt-2 flex justify-end border-t border-black/5 pt-5">
+				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
+					{saving ? 'Saving...' : 'Save'}
+				</Button>
+			</div>
 		</PropertyFormSection>
 	);
 }

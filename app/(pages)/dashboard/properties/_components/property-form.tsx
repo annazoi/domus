@@ -1,18 +1,9 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { GoogleMapsPlacesScript } from '@/components/google-maps';
-import { Button } from '@/components/ui';
-import { useSetDashboardPageIntro } from '@/app/(pages)/dashboard/_components/dashboard-shell';
-import { ApartmentOptions } from '@/config/constants/dropdowns/apartment.options';
-import type { PropertyImage } from '@/features/property-images/interfaces/property-image.interfaces';
-import { deleteImage, reorderPropertyImages, uploadPropertyImages } from '@/features/property-images/services/property-images.services';
-import { savePropertyAmenities } from '@/features/property-amenities/services/property-amenities.services';
-import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
-import { propertyQueryKey } from '@/features/property/hooks/use-property';
-import { updateProperty } from '@/features/property/services/property.services';
+import type { Property } from '@/features/property/interfaces/property.interface';
 import { AmenitiesSection } from './property-form/amenities-section';
 import { BasicInfoSection } from './property-form/basic-info-section';
 import { CapacitySection } from './property-form/capacity-section';
@@ -24,250 +15,15 @@ import { PropertyFormSidebar, type PropertyFormTabId } from './property-form/sid
 type PropertyFormProps = {
 	mode: 'create' | 'edit';
 	initialProperty?: Property | null;
-	/** Used for the first save on the create flow (basic info). */
-	onSubmit?: (payload: UpsertPropertyInput) => Promise<Property>;
 };
 
-const defaultValues: UpsertPropertyInput = {
-	title: '',
-	short_description: '',
-	description: '',
-	slug: '',
-	check_in_time: '15:00',
-	check_out_time: '11:00',
-	property_type: ApartmentOptions[0].value,
-	room_type: 'Entire place',
-	max_guests: 1,
-	bedrooms: 1,
-	beds: 1,
-	bathrooms: 1,
-	country: '',
-	city: '',
-	address: '',
-	lat: null,
-	lng: null,
-	cleaning_fee: 0,
-	status: 'draft',
-};
-
-const numberOrNull = (value: string) => {
-	if (!value.trim()) return null;
-	const numeric = Number(value);
-	return Number.isNaN(numeric) ? null : numeric;
-};
-
-function TabSaveFooter({
-	onSave,
-	disabled,
-	saving,
-}: {
-	onSave: () => void | Promise<void>;
-	disabled?: boolean;
-	saving: boolean;
-}) {
-	return (
-		<div className="mt-6 flex justify-end border-t border-black/5 pt-5">
-			<Button type="button" onClick={() => void onSave()} disabled={disabled || saving} variant="primary">
-				{saving ? 'Saving...' : 'Save'}
-			</Button>
-		</div>
-	);
-}
-
-export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormProps) {
+export function PropertyForm({ mode, initialProperty }: PropertyFormProps) {
 	const router = useRouter();
-	const pathname = usePathname();
-	const queryClient = useQueryClient();
-	const [form, setForm] = useState<UpsertPropertyInput>(initialProperty ? { ...initialProperty } : defaultValues);
-	const [images, setImages] = useState<PropertyImage[]>(initialProperty?.images ?? []);
-	const [selectedAmenities, setSelectedAmenities] = useState<string[]>(initialProperty?.amenity_ids ?? []);
-	const [imageFiles, setImageFiles] = useState<File[]>([]);
-	const [saving, setSaving] = useState(false);
-	const [error, setError] = useState('');
-	const [success, setSuccess] = useState('');
-	const [draggingId, setDraggingId] = useState<string | null>(null);
 	const [activeTab, setActiveTab] = useState<PropertyFormTabId>('basic-info');
 	const [googleMapsReady, setGoogleMapsReady] = useState(false);
-	const saveInFlightRef = useRef(false);
-	const setPageIntro = useSetDashboardPageIntro();
 
 	const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 	const placesLibraryReady = Boolean(mapsApiKey && googleMapsReady);
-
-	const propertyId = initialProperty?.id ?? null;
-
-	// useEffect(() => {
-	// 	setPageIntro(
-	// 		<div className="min-w-0 mt-10 flex flex-col gap-2 mb-4">
-	// 			<p className="text-[10px] uppercase tracking-[0.2em] text-[#6B705C] sm:text-xs">
-	// 				{mode === 'create' ? 'Create property' : 'Edit property'}
-	// 			</p>
-	// 			<h1 className="truncate font-serif text-xl leading-tight text-[#1A1A1A] sm:text-2xl md:text-3xl">
-	// 				{mode === 'create' ? 'New listing' : 'Property details'}
-	// 			</h1>
-	// 		</div>,
-	// 	);
-	// 	return () => setPageIntro(null);
-	// }, [mode, setPageIntro]);
-
-	useEffect(() => {
-		setError('');
-		setSuccess('');
-	}, [activeTab]);
-
-	useEffect(() => {
-		if (mode !== 'edit' || !initialProperty?.id || typeof window === 'undefined') return;
-		const params = new URLSearchParams(window.location.search);
-		if (params.get('saved') !== '1') return;
-		setSuccess('Saved.');
-		router.replace(pathname, { scroll: false });
-	}, [mode, initialProperty?.id, pathname, router]);
-
-	const handleSaveTab = async (tab: PropertyFormTabId) => {
-		if (saveInFlightRef.current) return;
-
-		setError('');
-		setSuccess('');
-
-		const needTitleForCreate = mode === 'create' && !form.title.trim();
-
-		if (tab === 'basic-info') {
-			if (!form.title.trim()) {
-				setError('Title is required.');
-				return;
-			}
-		} else if (tab === 'capacity') {
-			if (needTitleForCreate) {
-				setError('Add a title under Basic info first.');
-				return;
-			}
-			if (form.max_guests <= 0) {
-				setError('Guests must be greater than 0.');
-				return;
-			}
-		} else if (tab === 'location') {
-			if (needTitleForCreate) {
-				setError('Add a title under Basic info first.');
-				return;
-			}
-		} else if (tab === 'pricing-availability') {
-			if (needTitleForCreate) {
-				setError('Add a title under Basic info first.');
-				return;
-			}
-			if (form.cleaning_fee < 0) {
-				setError('Cleaning fee cannot be negative.');
-				return;
-			}
-		} else if (tab === 'amenities') {
-			if (!propertyId) {
-				setError('Save basic info or another section first to create the property.');
-				return;
-			}
-		} else if (tab === 'images') {
-			if (!propertyId) {
-				setError('Save basic info or another section first to create the property.');
-				return;
-			}
-			if (!imageFiles.length) {
-				setError('Select one or more images to upload.');
-				return;
-			}
-		}
-
-		saveInFlightRef.current = true;
-		setSaving(true);
-		try {
-			const persistId = initialProperty?.id;
-
-			if (tab === 'basic-info') {
-				if (mode === 'create') {
-					if (!onSubmit) {
-						setError('Create handler is missing.');
-						return;
-					}
-					const saved = await onSubmit(form);
-					queryClient.setQueryData(propertyQueryKey.detail(saved.id), saved);
-					void queryClient.invalidateQueries({ queryKey: propertyQueryKey.all });
-					router.replace(`/dashboard/properties/${saved.id}?saved=1`, { scroll: false });
-					return;
-				}
-				if (!persistId) return;
-				const saved = await updateProperty(persistId, form);
-				setForm((prev) => ({ ...prev, ...saved, room_type: prev.room_type }));
-				queryClient.setQueryData(propertyQueryKey.detail(persistId), saved);
-				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.all });
-				setSuccess('Saved.');
-			} else if (tab === 'capacity') {
-				if (!persistId) return;
-				const saved = await updateProperty(persistId, form);
-				setForm((prev) => ({ ...prev, ...saved, room_type: prev.room_type }));
-				queryClient.setQueryData(propertyQueryKey.detail(persistId), saved);
-				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.all });
-				setSuccess('Saved.');
-			} else if (tab === 'location') {
-				if (!persistId) return;
-				const saved = await updateProperty(persistId, form);
-				setForm((prev) => ({ ...prev, ...saved, room_type: prev.room_type }));
-				queryClient.setQueryData(propertyQueryKey.detail(persistId), saved);
-				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.all });
-				setSuccess('Saved.');
-			} else if (tab === 'pricing-availability') {
-				if (!persistId) return;
-				const saved = await updateProperty(persistId, form);
-				setForm((prev) => ({ ...prev, ...saved, room_type: prev.room_type }));
-				queryClient.setQueryData(propertyQueryKey.detail(persistId), saved);
-				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.all });
-				setSuccess('Saved.');
-			} else if (tab === 'amenities') {
-				await savePropertyAmenities(propertyId as string, selectedAmenities);
-				setSuccess('Amenities saved.');
-			} else if (tab === 'images' && propertyId) {
-				await handleImageUpload(propertyId);
-				setSuccess('Images uploaded.');
-			}
-		} catch (submitError) {
-			setError(submitError instanceof Error ? submitError.message : 'Could not save.');
-		} finally {
-			saveInFlightRef.current = false;
-			setSaving(false);
-		}
-	};
-
-	const handleImageUpload = async (id: string) => {
-		if (!imageFiles.length) return;
-
-		const created = await uploadPropertyImages(id, imageFiles);
-		setImages((previous) => [...previous, ...created].sort((a, b) => a.order - b.order));
-		setImageFiles([]);
-	};
-
-	const handleImageDelete = async (imageId: string) => {
-		await deleteImage(imageId);
-		setImages((previous) => previous.filter((image) => image.id !== imageId));
-	};
-
-	const handleCoverSelect = async (imageId: string) => {
-		if (!initialProperty) return;
-		const order = images.map((image) => image.id);
-		const reordered = await reorderPropertyImages(initialProperty.id, order, imageId);
-		setImages(reordered);
-	};
-
-	const persistOrder = async (nextImages: PropertyImage[]) => {
-		if (!initialProperty) return;
-		const cover_id = nextImages.find((image) => image.is_cover)?.id;
-		const reordered = await reorderPropertyImages(
-			initialProperty.id,
-			nextImages.map((image) => image.id),
-			cover_id,
-		);
-		setImages(reordered);
-	};
-
-	const updateForm = <K extends keyof UpsertPropertyInput>(field: K, value: UpsertPropertyInput[K]) => {
-		setForm((previous) => ({ ...previous, [field]: value }));
-	};
 
 	return (
 		<>
@@ -297,83 +53,24 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 				/>
 
 			<div className="min-h-[320px] space-y-6">
-				{error ? <p className="rounded-xl bg-red-100/70 px-4 py-3 text-sm text-red-700">{error}</p> : null}
-				{success ? <p className="rounded-xl bg-emerald-100/70 px-4 py-3 text-sm text-emerald-800">{success}</p> : null}
-
 				<div role="tabpanel" id={`property-form-panel-${activeTab}`} aria-labelledby={`property-form-tab-${activeTab}`}>
 					{activeTab === 'basic-info' ? (
-						<>
-							<BasicInfoSection form={form} onChange={(field, value) => updateForm(field, value)} />
-							<TabSaveFooter onSave={() => handleSaveTab('basic-info')} saving={saving} />
-						</>
+						<BasicInfoSection mode={mode} initialProperty={initialProperty} />
 					) : null}
 					{activeTab === 'capacity' ? (
-						<>
-							<CapacitySection form={form} onChange={(field, value) => updateForm(field, value)} />
-							<TabSaveFooter onSave={() => handleSaveTab('capacity')} saving={saving} />
-						</>
+						<CapacitySection mode={mode} initialProperty={initialProperty} />
 					) : null}
 					{activeTab === 'location' ? (
-						<>
-							<LocationSection
-								form={form}
-								placesLibraryReady={placesLibraryReady}
-								onFieldChange={(field, value) => updateForm(field, value)}
-								onCoordinateChange={(field, value) => updateForm(field, numberOrNull(value))}
-								/>
-							<TabSaveFooter onSave={() => handleSaveTab('location')} saving={saving} />
-						</>
+						<LocationSection mode={mode} initialProperty={initialProperty} placesLibraryReady={placesLibraryReady} />
 					) : null}
 					{activeTab === 'pricing-availability' ? (
-						<>
-							<PricingSection form={form} onNumberChange={(field, value) => updateForm(field, value)} />
-							<TabSaveFooter onSave={() => handleSaveTab('pricing-availability')} saving={saving} />
-						</>
+						<PricingSection mode={mode} initialProperty={initialProperty} />
 					) : null}
 					{activeTab === 'amenities' ? (
-						<>
-							<AmenitiesSection
-								selectedAmenities={selectedAmenities}
-								onToggleAmenity={(amenityId) =>
-									setSelectedAmenities((previous) =>
-										previous.includes(amenityId)
-								? previous.filter((id) => id !== amenityId)
-								: [...previous, amenityId],
-							)
-						}
-						/>
-							<TabSaveFooter onSave={() => handleSaveTab('amenities')} saving={saving} />
-						</>
+						<AmenitiesSection mode={mode} initialProperty={initialProperty} />
 					) : null}
 					{activeTab === 'images' ? (
-						<>
-							<ImagesSection
-								mode={mode}
-								initialPropertyId={initialProperty?.id}
-								images={images}
-								imageFiles={imageFiles}
-								draggingId={draggingId}
-								onImageFilesChange={setImageFiles}
-								onDragStart={setDraggingId}
-								onDrop={(targetImageId) => {
-									if (!draggingId || draggingId === targetImageId) return;
-									const from = images.findIndex((item) => item.id === draggingId);
-									const to = images.findIndex((item) => item.id === targetImageId);
-									const next = [...images];
-									const [moved] = next.splice(from, 1);
-									next.splice(to, 0, moved);
-									const normalized = next.map((item, index) => ({ ...item, order: index }));
-									void persistOrder(normalized);
-								}}
-								onSetCover={(imageId) => void handleCoverSelect(imageId)}
-								onDelete={(imageId) => void handleImageDelete(imageId)}
-								/>
-							<TabSaveFooter
-								onSave={() => handleSaveTab('images')}
-								disabled={saving || (Boolean(propertyId) && !imageFiles.length)}
-								saving={saving}
-								/>
-						</>
+						<ImagesSection mode={mode} initialProperty={initialProperty} />
 					) : null}
 				</div>
 			</div>
