@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Button, Input, cn } from '@/components/ui';
-import type { AvailabilityDay } from '@/features/property/interfaces/property.interface';
-import { listAvailability, upsertAvailability } from '@/features/property/services/property.services';
+import type { AvailabilityDay } from '@/features/property-availability/interfaces/property-availability.interface';
+import { listAvailability, upsertAvailability } from '@/features/property-availability/services/property-availability.services';
 
 const toDate = (day: number) => `2026-04-${String(day).padStart(2, '0')}`;
 

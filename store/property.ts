@@ -1,5 +1,9 @@
 import { getStaticAmenities } from '@/config/constants/dropdowns/amenities.options';
-import type { Amenity, AvailabilityDay, Booking, Property, PropertyImage, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
+import type { Booking } from '@/features/bookings/interfaces/booking.interface';
+import type { Amenity } from '@/features/property-amenities/interfaces/property-amenities.interfaces';
+import type { AvailabilityDay } from '@/features/property-availability/interfaces/property-availability.interface';
+import type { PropertyImage } from '@/features/property-images/interfaces/property-image.interfaces';
+import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 
 type PropertyStore = {
 	properties: Property[];
@@ -102,8 +106,25 @@ export const propertyStore = {
 
 		const created = urls.map((url, index) => ({
 			id: crypto.randomUUID(),
+			user_id: hostId,
 			property_id: propertyId,
-			url,
+			document_id: null,
+			description: null,
+			created_at: new Date().toISOString(),
+			document: {
+				id: crypto.randomUUID(),
+				user_id: hostId,
+				filename: `property-image-${startOrder + index + 1}.jpg`,
+				mimetype: 'image/jpeg',
+				size: 0,
+				url,
+				path: url,
+				type: 'IMAGE' as const,
+				order: startOrder + index,
+				created_at: new Date().toISOString(),
+				updated_at: new Date().toISOString(),
+				property_amenity_id: null,
+			},
 			is_cover: currentImages.length === 0 && index === 0,
 			order: startOrder + index,
 		}));

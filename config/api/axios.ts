@@ -13,6 +13,7 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use((config) => {
 	const authState = getAuthStoreState();
+	const userId = authState?.user_uuid;
 
 	// if (authState?.expires_in && isTokenExpired(authState.expires_in)) {
 	// 	authState.logout();
@@ -23,6 +24,10 @@ axiosInstance.interceptors.request.use((config) => {
 	// if (authState.access_token) {
 	// 	config.headers.Authorization = `Bearer ${authState.access_token}`;
 	// }
+
+	if (userId) {
+		config.headers['x-user-id'] = userId;
+	}
 
 	return config;
 });

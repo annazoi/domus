@@ -7,17 +7,16 @@ import { GoogleMapsPlacesScript } from '@/components/google-maps';
 import { Button } from '@/components/ui';
 import { useSetDashboardPageIntro } from '@/app/(pages)/dashboard/_components/dashboard-shell';
 import { ApartmentOptions } from '@/config/constants/dropdowns/apartment.options';
-import type { Property, PropertyImage, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
+import type { PropertyImage } from '@/features/property-images/interfaces/property-image.interfaces';
+import { deleteImage, reorderPropertyImages, uploadPropertyImages } from '@/features/property-images/services/property-images.services';
+import { savePropertyAmenities } from '@/features/property-amenities/services/property-amenities.services';
+import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { propertyQueryKey } from '@/features/property/hooks/use-property';
 import {
-	deleteImage,
 	patchPropertyBasicInfo,
 	patchPropertyCapacity,
 	patchPropertyLocation,
 	patchPropertyPricing,
-	reorderPropertyImages,
-	savePropertyAmenities,
-	uploadPropertyImages,
 } from '@/features/property/services/property.services';
 import { AmenitiesSection } from './property-form/amenities-section';
 import { BasicInfoSection } from './property-form/basic-info-section';

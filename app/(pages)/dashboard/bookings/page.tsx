@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui';
-import { useBookings } from '@/features/property/hooks/use-property';
+import { useBookings } from '@/features/bookings/hooks/use-bookings';
 
 export default function BookingsPage() {
 	const { data: bookings = [], isLoading: loading } = useBookings();

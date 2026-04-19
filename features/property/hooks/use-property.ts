@@ -1,18 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UpsertPropertyInput } from '../interfaces/property.interface';
-import {
-	createProperty,
-	deleteProperty,
-	getPropertyById,
-	listBookings,
-	listProperties,
-	updateProperty,
-} from '../services/property.services';
+import { createProperty, deleteProperty, getPropertyById, listProperties, updateProperty } from '../services/property.services';
 
 export const propertyQueryKey = {
 	all: ['properties'] as const,
 	detail: (id: string) => ['properties', id] as const,
-	bookings: ['bookings'] as const,
 };
 
 export const useProperties = () => {
@@ -63,9 +55,3 @@ export const useDeleteProperty = () => {
 	});
 };
 
-export const useBookings = () => {
-	return useQuery({
-		queryKey: propertyQueryKey.bookings,
-		queryFn: listBookings,
-	});
-};

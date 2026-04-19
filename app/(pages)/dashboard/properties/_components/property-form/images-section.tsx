@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { ImageIcon, Maximize2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui';
-import type { PropertyImage } from '@/features/property/interfaces/property.interface';
+import type { PropertyImage } from '@/features/property-images/interfaces/property-image.interfaces';
 
 type ImagesSectionProps = {
 	mode: 'create' | 'edit';
