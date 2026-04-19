@@ -1,197 +1,55 @@
-export const ApiRoutes = {
-	// auth: {
-	// 	email: {
-	// 		login: '/auth/sign-in',
-	// 		register: '/auth/sign-up',
-	// 		refresh_token: '/auth/email/refresh-token',
-	// 		admin_login_to_account: (account_uuid: string) => `/auth/email/${account_uuid}/admin-login`,
-	// 		forgot_password: '/auth/forgot-password',
-	// 		reset_password: '/auth/reset-password',
-	// 		verify_email: '/auth/verify-email',
-	// 		resend_verification_email: '/auth/resend-verification-email',
-	// 	},
-	// },
+import type { PropertyAmenityQuery } from '@/features/property-amenities/interfaces/property-amenities.interfaces';
+import type { PropertyImageQuery } from '@/features/property-images/interfaces/property-image.interfaces';
 
+const toSearchParams = <T extends object>(query: T) =>
+	new URLSearchParams(
+		Object.entries(query as Record<string, unknown>)
+			.filter(([, value]) => value !== undefined && value !== null)
+			.map(([key, value]) => [key, String(value)]),
+	).toString();
+
+export const ApiRoutes = {
 	auth: {
 		login: '/auth/sign-in',
 		register: '/auth/sign-up',
 	},
 	users: {
 		prefix: '/users',
+		user: (id: string) => `/users/${id}`,
 		me: '/users/me',
 	},
 	properties: {
 		prefix: '/properties',
 		property: (id: string) => `/properties/${id}`,
-		images: (id: string) => `/properties/${id}/images`,
-		amenities: (id: string) => `/properties/${id}/amenities`,
+		listMine: '/properties?host_id=me',
+	},
+	images: {
+		prefix: '/images',
+		image: (id: string) => `/images/${id}`,
 	},
 	availability: {
 		prefix: '/availability',
-	},
-	amenities: {
-		prefix: '/amenities',
-	},
-	accounts: {
-		prefix: '/accounts',
-		account: (account_uuid: string) => `/accounts/${account_uuid}`,
-		current: '/accounts/current',
-		me: '/accounts/user',
-		providers: (uuid_or_slug: string) => `/accounts/providers/${uuid_or_slug}`,
-		providers_booking: (uuid_or_slug: string) => `/accounts/providers/booking/${uuid_or_slug}`,
-		logo: '/accounts/logo',
-		banner: '/accounts/banner',
-		images: '/accounts/images',
-		analytics: '/accounts/analytics',
-		onboarding_status: '/accounts/onboarding-status',
-	},
-	opening_hours: {
-		prefix: '/opening-hours',
-		grouped: '/opening-hours/grouped',
-	},
-	closure_periods: {
-		prefix: '/closure-periods',
-	},
-	services: {
-		prefix: '/services',
-		service: (service_uuid: string) => `/services/${service_uuid}`,
-		visibility: (service_uuid: string) => `/services/${service_uuid}/visibility`,
-		images: (service_uuid: string) => `/services/${service_uuid}/images`,
-		image: (service_uuid: string, image_uuid: string) => `/services/${service_uuid}/images/${image_uuid}`,
-	},
-	coupons: {
-		prefix: '/coupons',
-		coupon: (coupon_uuid: string) => `/coupons/${coupon_uuid}`,
-		service_promotion_codes: (service_uuid: string) => `/coupons/promotion-codes/service/${service_uuid}`,
-		promotion_codes: '/coupons/promotion-codes',
-		create_promotion_code: (coupon_uuid: string) => `/coupons/${coupon_uuid}/promotion-codes`,
-		promotion_code: (promotion_code_uuid: string) => `/coupons/promotion-codes/${promotion_code_uuid}`,
-		validate_promotion_code: '/coupons/promotion-codes/validate',
+		availability: '/availability',
+		listByProperty: (property_id: string) => `/availability?property_id=${property_id}`,
 	},
 	bookings: {
 		prefix: '/bookings',
-		status: (uuid: string) => `/bookings/${uuid}/status`,
-		provider: '/bookings/provider',
-		client_bookings: `/bookings/client`,
-		availability: '/bookings/availability',
-		chart: '/bookings/chart',
-		peak: '/bookings/peak',
-		export_excel: '/bookings/export/excel',
+		listMine: '/bookings?host_id=me',
 	},
-	google_maps: {
-		prefix: '/google-maps',
-		timezone: '/google-maps/timezone',
-	},
-	stripe: {
-		account: '/stripe/accounts',
-		onboarding_link: '/stripe/accounts/onboarding-link',
-		login_link: '/stripe/accounts/login-link',
-		payment_methods: '/stripe/customers/payment-methods',
-		billing_portal: '/stripe/customers/billing-portal',
-	},
-	payments: {
-		prefix: '/payments',
-		refund: (uuid: string) => `/payments/refund/${uuid}`,
-	},
-	customers: {
-		prefix: '/customers',
-		analytics: '/customers/analytics',
-		search: '/customers/search',
-	},
-	provider_employees: {
-		prefix: '/provider-employees',
-		employee: (employee_uuid: string) => `/provider-employees/${employee_uuid}`,
-		services: (employee_uuid: string) => `/provider-employees/${employee_uuid}/services`,
-		employee_logo: (employee_account_uuid: string) => `/provider-employees/${employee_account_uuid}/logo`,
-	},
-	customer_notes: {
-		prefix: '/customer-notes',
-		documents: (customer_note_uuid: string) => `/customer-notes/${customer_note_uuid}/documents`,
-		document: (customer_note_uuid: string, document_uuid: string) =>
-			`/customer-notes/${customer_note_uuid}/documents/${document_uuid}`,
-	},
-	analytics_events: {
-		prefix: 'analytics-events',
-	},
-	account_themes: {
-		prefix: '/account-themes',
-		provider: (uuid_or_slug: string) => `/account-themes/providers/${uuid_or_slug}`,
-	},
-	ratings: {
-		prefix: '/ratings',
-		rating: (uuid: string) => `/ratings/${uuid}`,
-		average: (provider_uuid: string) => `/ratings/average/${provider_uuid}`,
-		booking: (booking_uuid: string) => `/ratings/booking/${booking_uuid}`,
-		ai_response: (uuid: string) => `/ratings/ai-response/${uuid}`,
-	},
-	chats: {
-		prefix: '/chats',
-		get: (chat_uuid: string) => `/chats/${chat_uuid}`,
-		messages: (chat_uuid: string) => `/chats/${chat_uuid}/messages`,
-		documents: (chat_uuid: string) => `/chats/${chat_uuid}/messages/documents`,
-		delete: (chat_uuid: string) => `/chats/${chat_uuid}`,
-		delete_message: (message_uuid: string) => `/chats/messages/${message_uuid}`,
-		delete_message_document: (document_uuid: string) => `/chats/messages/documents/${document_uuid}`,
-		update: (chat_uuid: string) => `/chats/${chat_uuid}`,
-		client: '/chats/client',
-		provider_client: '/chats/provider-client',
-		create_message_client: (chat_uuid: string) => `/chats/${chat_uuid}/messages/client`,
-		unread_count: '/chats/unread-count',
-		participants: (chat_uuid: string, account_uuid: string) => `/chats/${chat_uuid}/participants/${account_uuid}`,
-	},
-	campaigns: {
-		prefix: '/campaigns',
-		campaign: (uuid: string) => `/campaigns/${uuid}`,
-		duplicate: (uuid: string) => `/campaigns/${uuid}/duplicate`,
-		run: (uuid: string) => `/campaigns/${uuid}/run`,
-		analytics: '/campaigns/analytics',
-		segment: '/campaigns/segment',
-		generate_content: '/campaigns/generate-content',
-	},
-	message_templates: {
-		prefix: '/message-templates',
-		message_template: (uuid: string) => `/message-templates/${uuid}`,
-		duplicate: (uuid: string) => `/message-templates/${uuid}/duplicate`,
+	property_images: {
+		prefix: '/property-images',
+		property_image: (id: string) => `/property-images/${id}`,
+		property_images: (query: PropertyImageQuery) => `/property-images?${toSearchParams(query)}`,
+		byProperty: (id: string) => `/properties/${id}/images`,
 	},
 	documents: {
 		prefix: '/documents',
-		document: (uuid: string) => `/documents/${uuid}`,
-		base64: (uuid: string) => `/documents/${uuid}/base64`,
+		document: (id: string) => `/documents/${id}`,
 	},
-	helper_documents: {
-		prefix: '/helper-documents',
-		document: (uuid: string) => `/helper-documents/${uuid}`,
-	},
-	faqs: {
-		prefix: '/faq',
-		faq: (uuid: string) => `/faq/${uuid}`,
-		helper_document: (helper_document_uuid: string) => `/faq/helper-document/${helper_document_uuid}`,
-	},
-	provider_analytics: {
-		prefix: '/provider-analytics',
-	},
-	credits_usage: {
-		prefix: '/credits-usage',
-		credits: '/credits-usage/credits',
-		estimate: '/credits-usage/estimate',
-	},
-	voices: {
-		prefix: '/voices',
-		voice: (uuid: string) => `/voices/${uuid}`,
-		search: '/voices/search',
-		text_to_speech: (uuid: string) => `/voices/${uuid}/text-to-speech`,
-		clone_voice: `/voices/clone`,
-	},
-	feature_flags: {
-		prefix: '/feature-flags',
-		feature_flag: (uuid: string) => `/feature-flags/${uuid}`,
-		grouped: '/feature-flags/grouped',
-	},
-	admin: {
-		prefix: '/admin',
-		indexing: {
-			upsert: '/admin/indexing/upsert-providers',
-			delete: (account_uuid?: string) => `/admin/indexing/delete-provider/${account_uuid}`,
-		},
+	property_amenities: {
+		prefix: '/property-amenities',
+		property_amenity: (id: string) => `/property-amenities/${id}`,
+		property_amenities: (query: PropertyAmenityQuery) => `/property-amenities?${toSearchParams(query)}`,
+		byProperty: (id: string) => `/properties/${id}/amenities`,
 	},
 };

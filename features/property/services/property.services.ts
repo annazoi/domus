@@ -1,59 +1,40 @@
 import axiosInstance from '@/config/api/axios';
+import { ApiRoutes } from '@/config/api/routes';
 import type { Property, UpsertPropertyInput } from '../interfaces/property.interface';
 
+const inFlightPropertyUpdates = new Map<string, Promise<Property>>();
+
 export const listProperties = async () => {
-	const response = await axiosInstance.get<Property[]>('/properties?host_id=me');
+	const response = await axiosInstance.get<Property[]>(ApiRoutes.properties.listMine);
 	return response.data;
 };
 
 export const getPropertyById = async (id: string) => {
-	const response = await axiosInstance.get<Property>(`/properties/${id}`);
+	const response = await axiosInstance.get<Property>(ApiRoutes.properties.property(id));
 	return response.data;
 };
 
 export const createProperty = async (input: UpsertPropertyInput) => {
-	const response = await axiosInstance.post<Property>('/properties', input);
+	const response = await axiosInstance.post<Property>(ApiRoutes.properties.prefix, input);
 	return response.data;
 };
 
 export const updateProperty = async (id: string, input: UpsertPropertyInput) => {
-	const response = await axiosInstance.put<Property>(`/properties/${id}`, input);
-	return response.data;
-};
+	const existingRequest = inFlightPropertyUpdates.get(id);
+	if (existingRequest) return existingRequest;
 
-export const patchPropertyBasicInfo = async (
-	id: string,
-	input: Pick<
-		UpsertPropertyInput,
-		'title' | 'slug' | 'description' | 'short_description' | 'property_type' | 'status' | 'check_in_time' | 'check_out_time'
-	>,
-) => {
-	const response = await axiosInstance.patch<Property>(`/properties/${id}/basic-info`, input);
-	return response.data;
-};
+	const request = axiosInstance
+		.put<Property>(ApiRoutes.properties.property(id), input)
+		.then((response) => response.data)
+		.finally(() => {
+			inFlightPropertyUpdates.delete(id);
+		});
 
-export const patchPropertyCapacity = async (
-	id: string,
-	input: Pick<UpsertPropertyInput, 'max_guests' | 'bedrooms' | 'beds' | 'bathrooms'>,
-) => {
-	const response = await axiosInstance.patch<Property>(`/properties/${id}/capacity`, input);
-	return response.data;
-};
-
-export const patchPropertyLocation = async (
-	id: string,
-	input: Pick<UpsertPropertyInput, 'country' | 'city' | 'address' | 'lat' | 'lng'>,
-) => {
-	const response = await axiosInstance.patch<Property>(`/properties/${id}/location`, input);
-	return response.data;
-};
-
-export const patchPropertyPricing = async (id: string, input: Pick<UpsertPropertyInput, 'cleaning_fee' | 'status'>) => {
-	const response = await axiosInstance.patch<Property>(`/properties/${id}/pricing`, input);
-	return response.data;
+	inFlightPropertyUpdates.set(id, request);
+	return request;
 };
 
 export const deleteProperty = async (id: string) => {
-	await axiosInstance.delete(`/properties/${id}`);
+	await axiosInstance.delete(ApiRoutes.properties.property(id));
 };
 

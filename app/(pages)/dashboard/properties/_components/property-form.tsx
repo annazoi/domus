@@ -1,7 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { GoogleMapsPlacesScript } from '@/components/google-maps';
 import { Button } from '@/components/ui';
@@ -12,19 +12,14 @@ import { deleteImage, reorderPropertyImages, uploadPropertyImages } from '@/feat
 import { savePropertyAmenities } from '@/features/property-amenities/services/property-amenities.services';
 import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { propertyQueryKey } from '@/features/property/hooks/use-property';
-import {
-	patchPropertyBasicInfo,
-	patchPropertyCapacity,
-	patchPropertyLocation,
-	patchPropertyPricing,
-} from '@/features/property/services/property.services';
+import { updateProperty } from '@/features/property/services/property.services';
 import { AmenitiesSection } from './property-form/amenities-section';
 import { BasicInfoSection } from './property-form/basic-info-section';
 import { CapacitySection } from './property-form/capacity-section';
 import { ImagesSection } from './property-form/images-section';
 import { LocationSection } from './property-form/location-section';
 import { PricingSection } from './property-form/pricing-section';
-import { PropertyFormSidebar, type PropertyFormTabId } from './property-form/property-form-sidebar';
+import { PropertyFormSidebar, type PropertyFormTabId } from './property-form/sidebar';
 
 type PropertyFormProps = {
 	mode: 'create' | 'edit';
@@ -93,6 +88,7 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 	const [draggingId, setDraggingId] = useState<string | null>(null);
 	const [activeTab, setActiveTab] = useState<PropertyFormTabId>('basic-info');
 	const [googleMapsReady, setGoogleMapsReady] = useState(false);
+	const saveInFlightRef = useRef(false);
 	const setPageIntro = useSetDashboardPageIntro();
 
 	const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -128,6 +124,8 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 	}, [mode, initialProperty?.id, pathname, router]);
 
 	const handleSaveTab = async (tab: PropertyFormTabId) => {
+		if (saveInFlightRef.current) return;
+
 		setError('');
 		setSuccess('');
 
@@ -177,6 +175,7 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 			}
 		}
 
+		saveInFlightRef.current = true;
 		setSaving(true);
 		try {
 			const persistId = initialProperty?.id;
@@ -194,54 +193,31 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 					return;
 				}
 				if (!persistId) return;
-				const saved = await patchPropertyBasicInfo(persistId, {
-					title: form.title,
-					slug: form.slug,
-					description: form.description,
-					short_description: form.short_description,
-					property_type: form.property_type,
-					status: form.status,
-					check_in_time: form.check_in_time,
-					check_out_time: form.check_out_time,
-				});
+				const saved = await updateProperty(persistId, form);
 				setForm((prev) => ({ ...prev, ...saved, room_type: prev.room_type }));
+				queryClient.setQueryData(propertyQueryKey.detail(persistId), saved);
 				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.all });
-				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.detail(persistId) });
 				setSuccess('Saved.');
 			} else if (tab === 'capacity') {
 				if (!persistId) return;
-				const saved = await patchPropertyCapacity(persistId, {
-					max_guests: form.max_guests,
-					bedrooms: form.bedrooms,
-					beds: form.beds,
-					bathrooms: form.bathrooms,
-				});
+				const saved = await updateProperty(persistId, form);
 				setForm((prev) => ({ ...prev, ...saved, room_type: prev.room_type }));
+				queryClient.setQueryData(propertyQueryKey.detail(persistId), saved);
 				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.all });
-				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.detail(persistId) });
 				setSuccess('Saved.');
 			} else if (tab === 'location') {
 				if (!persistId) return;
-				const saved = await patchPropertyLocation(persistId, {
-					country: form.country,
-					city: form.city,
-					address: form.address,
-					lat: form.lat,
-					lng: form.lng,
-				});
+				const saved = await updateProperty(persistId, form);
 				setForm((prev) => ({ ...prev, ...saved, room_type: prev.room_type }));
+				queryClient.setQueryData(propertyQueryKey.detail(persistId), saved);
 				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.all });
-				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.detail(persistId) });
 				setSuccess('Saved.');
 			} else if (tab === 'pricing-availability') {
 				if (!persistId) return;
-				const saved = await patchPropertyPricing(persistId, {
-					cleaning_fee: form.cleaning_fee,
-					status: form.status,
-				});
+				const saved = await updateProperty(persistId, form);
 				setForm((prev) => ({ ...prev, ...saved, room_type: prev.room_type }));
+				queryClient.setQueryData(propertyQueryKey.detail(persistId), saved);
 				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.all });
-				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.detail(persistId) });
 				setSuccess('Saved.');
 			} else if (tab === 'amenities') {
 				await savePropertyAmenities(propertyId as string, selectedAmenities);
@@ -253,6 +229,7 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 		} catch (submitError) {
 			setError(submitError instanceof Error ? submitError.message : 'Could not save.');
 		} finally {
+			saveInFlightRef.current = false;
 			setSaving(false);
 		}
 	};

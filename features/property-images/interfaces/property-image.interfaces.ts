@@ -11,3 +11,13 @@ export interface PropertyImage {
 	is_cover: boolean;
 	order: number;
 }
+
+export interface PropertyImageQuery {
+	property_id: string;
+}
+
+export interface PropertyImageQuery {
+	property_id: string;
+	is_cover: boolean;
+	order: number;
+}

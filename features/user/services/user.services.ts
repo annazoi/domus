@@ -14,7 +14,7 @@ export const createUser = async (user: CreateUserDto): Promise<User> => {
 
 export const getUser = async (uuid: string): Promise<User> => {
 	try {
-		const response = await axiosInstance.get(`${ApiRoutes.users.prefix}/${uuid}`);
+		const response = await axiosInstance.get(ApiRoutes.users.user(uuid));
 		return response.data;
 	} catch (error) {
 		throw new Error('Failed to get user. Please try again.');
@@ -32,7 +32,7 @@ export const getMe = async (): Promise<User> => {
 
 export const updateUser = async (uuid: string, user: UpdateUserDto): Promise<User> => {
 	try {
-		const response = await axiosInstance.put(`${ApiRoutes.users.prefix}/${uuid}`, user);
+		const response = await axiosInstance.put(ApiRoutes.users.user(uuid), user);
 		return response.data;
 	} catch (error) {
 		throw new Error('Failed to update user. Please try again.');
@@ -50,7 +50,7 @@ export const updateUser = async (uuid: string, user: UpdateUserDto): Promise<Use
 
 export const removeUser = async (uuid: string): Promise<void> => {
 	try {
-		const response = await axiosInstance.delete(`${ApiRoutes.users.prefix}/${uuid}`);
+		const response = await axiosInstance.delete(ApiRoutes.users.user(uuid));
 		return response.data;
 	} catch (error) {
 		throw new Error('Failed to remove user. Please try again.');

@@ -1,9 +1,7 @@
 import { Button } from '@/components/ui';
+import { sidebarItems } from './constants';
 
-type SidebarItem = {
-	id: string;
-	label: string;
-};
+
 
 export const PROPERTY_FORM_TAB_IDS = [
 	'basic-info',
@@ -23,14 +21,6 @@ type PropertyFormSidebarProps = {
 	onEditAvailability?: () => void;
 };
 
-const sidebarItems: SidebarItem[] = [
-	{ id: 'basic-info', label: 'Basic info' },
-	{ id: 'capacity', label: 'Capacity' },
-	{ id: 'location', label: 'Location' },
-	{ id: 'pricing-availability', label: 'Pricing & Availability' },
-	{ id: 'amenities', label: 'Amenities' },
-	{ id: 'images', label: 'Images' },
-];
 
 export function PropertyFormSidebar({
 	mode,
