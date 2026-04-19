@@ -73,7 +73,6 @@ model Property {
   address       String
   latitude      Float
   longitude     Float
-  cleaning_fee  Float    @default(0)
   status        String   @default("  ") //do delete
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt

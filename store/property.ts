@@ -53,7 +53,6 @@ export const propertyStore = {
 		const property: Property = {
 			id: crypto.randomUUID(),
 			host_id: hostId,
-			slug: input.title.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
 			...input,
 			lat: input.lat ?? null,
 			lng: input.lng ?? null,

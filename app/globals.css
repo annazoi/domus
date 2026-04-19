@@ -28,3 +28,12 @@
 .rdp-month_grid{
   width: 100% !important;
 }
+
+/* TipTap placeholder (minimal rich text) */
+.minimal-rich-text-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: rgb(26 26 26 / 0.38);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

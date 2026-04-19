@@ -4,3 +4,4 @@ export { Input, type InputProps, type InputVariant } from './input';
 export { Textarea, type TextareaProps } from './textarea';
 export { Select, type SelectProps, type SelectVariant } from './select';
 export { Checkbox, type CheckboxProps } from './checkbox';
+export { MinimalRichText } from './minimal-rich-text';

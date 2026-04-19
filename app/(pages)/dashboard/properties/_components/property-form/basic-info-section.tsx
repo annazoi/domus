@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button, Input, Select, Textarea } from '@/components/ui';
+import { Button, Input, MinimalRichText, Select } from '@/components/ui';
 import { ApartmentOptions } from '@/config/constants/dropdowns/apartment.options';
 import type { PropertyStatus, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { PropertyFormSection } from './property-form-section';
@@ -109,28 +109,22 @@ export function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
 					/>
 				</div>
 			</div>
-			<div className="space-y-1.5">
-				<label htmlFor="property-description" className="text-sm font-medium text-[#1A1A1A]">
-					Description
-				</label>
-				<Textarea
-					id="property-description"
-					value={form.description}
-					onChange={(event) => onChange('description', event.target.value)}
-					placeholder="Write a short description"
-				/>
-			</div>
-			<div className="space-y-1.5">	
-				<label htmlFor="property-short-description" className="text-sm font-medium text-[#1A1A1A]">
-					Short description
-				</label>
-				<Textarea
-					id="property-short-description"
-					value={form.short_description}
-					onChange={(event) => onChange('short_description', event.target.value)}
-					placeholder="Write a short description"
-				/>
-			</div>
+			<MinimalRichText
+				id="property-description"
+				label="Description"
+				value={form.description}
+				onChange={(html) => onChange('description', html)}
+				placeholder="Describe your space…"
+				editorMinHeight="min-h-[160px]"
+			/>
+			<MinimalRichText
+				id="property-short-description"
+				label="Short description"
+				value={form.short_description ?? ''}
+				onChange={(html) => onChange('short_description', html)}
+				placeholder="A line or two for cards and search…"
+				editorMinHeight="min-h-[100px]"
+			/>
 		</PropertyFormSection>
 	);
 }

@@ -2,7 +2,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { GoogleMapsPlacesScript } from '@/components/google-maps';
 import { Button } from '@/components/ui';
 import { useSetDashboardPageIntro } from '@/app/(pages)/dashboard/_components/dashboard-shell';
@@ -81,6 +81,7 @@ function TabSaveFooter({
 
 export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormProps) {
 	const router = useRouter();
+	const pathname = usePathname();
 	const queryClient = useQueryClient();
 	const [form, setForm] = useState<UpsertPropertyInput>(initialProperty ? { ...initialProperty } : defaultValues);
 	const [images, setImages] = useState<PropertyImage[]>(initialProperty?.images ?? []);
@@ -117,6 +118,14 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 		setError('');
 		setSuccess('');
 	}, [activeTab]);
+
+	useEffect(() => {
+		if (mode !== 'edit' || !initialProperty?.id || typeof window === 'undefined') return;
+		const params = new URLSearchParams(window.location.search);
+		if (params.get('saved') !== '1') return;
+		setSuccess('Saved.');
+		router.replace(pathname, { scroll: false });
+	}, [mode, initialProperty?.id, pathname, router]);
 
 	const handleSaveTab = async (tab: PropertyFormTabId) => {
 		setError('');
@@ -179,7 +188,9 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 						return;
 					}
 					const saved = await onSubmit(form);
-					router.replace(`/dashboard/properties/${saved.id}`);
+					queryClient.setQueryData(propertyQueryKey.detail(saved.id), saved);
+					void queryClient.invalidateQueries({ queryKey: propertyQueryKey.all });
+					router.replace(`/dashboard/properties/${saved.id}?saved=1`, { scroll: false });
 					return;
 				}
 				if (!persistId) return;
