@@ -30,7 +30,10 @@ export const updateProperty = async (id: string, input: UpsertPropertyInput) => 
 
 export const patchPropertyBasicInfo = async (
 	id: string,
-	input: Pick<UpsertPropertyInput, 'title' | 'slug' | 'description' | 'short_description' | 'property_type' | 'status'>,
+	input: Pick<
+		UpsertPropertyInput,
+		'title' | 'slug' | 'description' | 'short_description' | 'property_type' | 'status' | 'check_in_time' | 'check_out_time'
+	>,
 ) => {
 	const response = await axiosInstance.patch<Property>(`/properties/${id}/basic-info`, input, { headers: authHeaders() });
 	return response.data;

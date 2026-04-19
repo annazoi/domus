@@ -1,6 +1,7 @@
 import { getHostIdFromRequest } from '@/app/api/_utils/auth';
 import { mapProperty } from '@/app/api/_utils/property-map';
 import { uniquePropertySlug } from '@/app/api/_utils/property-slug';
+import { parseTimeToUtcDate } from '@/app/api/_utils/time-of-day';
 import type { UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { prisma } from '@/lib/prisma';
 
@@ -42,6 +43,8 @@ export async function POST(request: Request) {
 		const slug = await uniquePropertySlug(body.slug?.trim() ? body.slug : body.title);
 		const cleaningRaw = Number(body.cleaning_fee);
 		const cleaning_fee = Number.isFinite(cleaningRaw) ? Math.max(0, cleaningRaw) : 0;
+		const check_in_time = parseTimeToUtcDate(body.check_in_time, '15:00');
+		const check_out_time = parseTimeToUtcDate(body.check_out_time, '11:00');
 
 		const created = await prisma.property.create({
 			data: {
@@ -50,6 +53,8 @@ export async function POST(request: Request) {
 				description: body.description?.trim() || null,
 				short_description: body.short_description?.trim() || null,
 				property_type: (body.property_type ?? '').trim() || 'property',
+				check_in_time,
+				check_out_time,
 				max_guests: maxGuests,
 				bedrooms: Math.max(0, intOr(body.bedrooms, 1)),
 				beds: Math.max(0, intOr(body.beds, 1)),

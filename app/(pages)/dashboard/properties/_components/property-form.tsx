@@ -39,7 +39,9 @@ const defaultValues: UpsertPropertyInput = {
 	title: '',
 	short_description: '',
 	description: '',
-    slug: '',
+	slug: '',
+	check_in_time: '15:00',
+	check_out_time: '11:00',
 	property_type: ApartmentOptions[0].value,
 	room_type: 'Entire place',
 	max_guests: 1,
@@ -201,6 +203,8 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 					short_description: form.short_description,
 					property_type: form.property_type,
 					status: form.status,
+					check_in_time: form.check_in_time,
+					check_out_time: form.check_out_time,
 				});
 				setForm((prev) => ({ ...prev, ...saved, room_type: prev.room_type }));
 				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.all });

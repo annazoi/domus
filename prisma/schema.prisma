@@ -75,7 +75,8 @@ model Property {
   address       String
   latitude      Float
   longitude     Float
-  status        String   @default("  ") //do delete
+  cleaning_fee  Float    @default(0)
+  status        String   @default("draft")
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
@@ -111,6 +112,7 @@ model PropertyAvailability {
 model PropertyAmenity {
   id          String   @id @default(uuid())
   property_id String
+  quantity    Int?
   value       String
   description String?
   created_at  DateTime @default(now())

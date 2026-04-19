@@ -1,4 +1,5 @@
 import type { Property as PropertyDTO } from '@/features/property/interfaces/property.interface';
+import { formatUtcTimeOfDay } from '@/app/api/_utils/time-of-day';
 
 export type PropertyWithImages = {
 	id: string;
@@ -17,6 +18,8 @@ export type PropertyWithImages = {
 	latitude: number;
 	longitude: number;
 	cleaning_fee: number;
+	check_in_time: Date;
+	check_out_time: Date;
 	status: string;
 	created_at: Date;
 	updated_at: Date;
@@ -37,6 +40,8 @@ export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 	slug: property.slug,
 	description: property.description ?? '',
 	short_description: property.short_description ?? '',
+	check_in_time: formatUtcTimeOfDay(property.check_in_time),
+	check_out_time: formatUtcTimeOfDay(property.check_out_time),
 	property_type: property.property_type,
 	room_type: '',
 	max_guests: property.max_guests,

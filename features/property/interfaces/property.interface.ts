@@ -38,6 +38,8 @@ export interface Property {
 	slug: string;
 	description: string;
 	short_description?: string;
+	check_in_time: string;
+	check_out_time: string;
 	property_type: string;
 	room_type: string;
 	max_guests: number;
@@ -62,6 +64,8 @@ export interface UpsertPropertyInput {
 	slug: string;
 	description: string;
 	short_description?: string;
+	check_in_time: string;
+	check_out_time: string;
 	property_type: string;
 	room_type: string;
 	max_guests: number;

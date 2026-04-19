@@ -125,6 +125,33 @@ export function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
 				placeholder="A line or two for cards and search…"
 				editorMinHeight="min-h-[100px]"
 			/>
+
+			<div className="grid gap-4 md:grid-cols-2">
+				<div className="space-y-1.5">
+					<label htmlFor="property-check-in-time" className="text-sm font-medium text-[#1A1A1A]">
+						Check-in time
+					</label>
+					<Input
+						id="property-check-in-time"
+						type="time"
+						step={300}
+						value={form.check_in_time}
+						onChange={(event) => onChange('check_in_time', event.target.value)}
+					/>
+				</div>
+				<div className="space-y-1.5">
+					<label htmlFor="property-check-out-time" className="text-sm font-medium text-[#1A1A1A]">
+						Check-out time
+					</label>
+					<Input
+						id="property-check-out-time"
+						type="time"
+						step={300}
+						value={form.check_out_time}
+						onChange={(event) => onChange('check_out_time', event.target.value)}
+					/>
+				</div>
+			</div>
 		</PropertyFormSection>
 	);
 }
