@@ -1,4 +1,5 @@
 import { getHostIdFromRequest } from '@/app/api/_utils/auth';
+import { removeDocumentWithCloudinaryAsset } from '@/app/api/services/documents/documents.service';
 import { prisma } from '@/lib/prisma';
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -8,10 +9,13 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 	const { id } = await params;
 	const image = await prisma.propertyImage.findFirst({
 		where: { id, property: { user_id: hostId } },
-		select: { id: true, property_id: true },
+		select: { id: true, property_id: true, document_id: true },
 	});
 	if (!image) return Response.json({ message: 'Image not found' }, { status: 404 });
 
+	if (image.document_id) {
+		await removeDocumentWithCloudinaryAsset(image.document_id, hostId);
+	}
 	await prisma.propertyImage.delete({ where: { id } });
 	const remaining = await prisma.propertyImage.findMany({
 		where: { property_id: image.property_id },

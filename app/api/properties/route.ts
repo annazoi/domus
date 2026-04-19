@@ -23,7 +23,7 @@ export async function GET(request: Request) {
 	const properties = await prisma.property.findMany({
 		where: { user_id: hostId },
 		orderBy: { created_at: 'desc' },
-		include: { images: { orderBy: { order: 'asc' } } },
+		include: { images: { orderBy: { order: 'asc' }, include: { document: true } } },
 	});
 	return Response.json(properties.map(mapProperty));
 }
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
 				status: body.status ?? 'draft',
 				user_id: hostId,
 			},
-			include: { images: { orderBy: { order: 'asc' } } },
+			include: { images: { orderBy: { order: 'asc' }, include: { document: true } } },
 		});
 
 		return Response.json(mapProperty(created), { status: 201 });

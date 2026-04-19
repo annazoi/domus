@@ -36,7 +36,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 			beds: Math.max(0, intOr(body.beds, existing.beds)),
 			bathrooms: Math.max(0, intOr(body.bathrooms, existing.bathrooms)),
 		},
-		include: { images: { orderBy: { order: 'asc' } } },
+		include: { images: { orderBy: { order: 'asc' }, include: { document: true } } },
 	});
 
 	return Response.json(mapProperty(updated));

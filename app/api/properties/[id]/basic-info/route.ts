@@ -42,7 +42,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 			check_in_time: parseTimeToUtcDate(body.check_in_time, '15:00'),
 			check_out_time: parseTimeToUtcDate(body.check_out_time, '11:00'),
 		},
-		include: { images: { orderBy: { order: 'asc' } } },
+		include: { images: { orderBy: { order: 'asc' }, include: { document: true } } },
 	});
 
 	return Response.json(mapProperty(updated));

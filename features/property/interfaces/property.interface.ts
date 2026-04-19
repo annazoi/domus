@@ -1,9 +1,28 @@
 export type PropertyStatus = 'draft' | 'published';
 
+export interface PropertyDocument {
+	id: string;
+	user_id: string;
+	filename: string;
+	mimetype: string;
+	size: number;
+	url: string;
+	path: string;
+	type: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'DOCUMENT';
+	order: number;
+	created_at: string;
+	updated_at: string;
+	property_amenity_id: string | null;
+}
+
 export interface PropertyImage {
 	id: string;
+	user_id: string;
 	property_id: string;
-	url: string;
+	document_id: string | null;
+	description: string | null;
+	created_at: string;
+	document: PropertyDocument | null;
 	is_cover: boolean;
 	order: number;
 }

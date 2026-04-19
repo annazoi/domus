@@ -64,31 +64,17 @@ export const deleteProperty = async (id: string) => {
 	await axiosInstance.delete(`/properties/${id}`, { headers: authHeaders() });
 };
 
-export const uploadPropertyImages = async (id: string, urls: string[]) => {
-	const response = await axiosInstance.post<PropertyImage[]>(
-		`/properties/${id}/images`,
-		{ urls },
-		{ headers: authHeaders() },
-	);
-	return response.data;
-};
-
-export const uploadFilesToCloudinary = async (files: File[]) => {
+export const uploadPropertyImages = async (id: string, files: File[]) => {
 	const formData = new FormData();
 	files.forEach((file) => formData.append('files', file));
 
-	const response = await fetch('/api/uploads/cloudinary', {
-		method: 'POST',
-		headers: authHeaders(),
-		body: formData,
+	const response = await axiosInstance.post<PropertyImage[]>(`/properties/${id}/images`, formData, {
+		headers: {
+			...authHeaders(),
+			'Content-Type': 'multipart/form-data',
+		},
 	});
-
-	const payload = (await response.json()) as { urls?: string[]; message?: string };
-	if (!response.ok) {
-		throw new Error(payload.message ?? 'Could not upload files.');
-	}
-
-	return payload.urls ?? [];
+	return response.data;
 };
 
 export const reorderPropertyImages = async (id: string, reorder_ids: string[], cover_image_id?: string) => {

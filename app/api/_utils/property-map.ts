@@ -1,6 +1,33 @@
 import type { Property as PropertyDTO } from '@/features/property/interfaces/property.interface';
 import { formatUtcTimeOfDay } from '@/app/api/_utils/time-of-day';
 
+export type PropertyImageDocument = {
+	id: string;
+	user_id: string;
+	filename: string;
+	mimetype: string;
+	size: number;
+	url: string;
+	path: string;
+	type: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'DOCUMENT';
+	order: number;
+	created_at: Date;
+	updated_at: Date;
+	property_amenity_id: string | null;
+};
+
+export type PropertyImageWithDocument = {
+	id: string;
+	user_id: string;
+	property_id: string;
+	document_id: string | null;
+	description: string | null;
+	created_at: Date;
+	document: PropertyImageDocument | null;
+	is_cover: boolean;
+	order: number;
+};
+
 export type PropertyWithImages = {
 	id: string;
 	title: string;
@@ -24,14 +51,20 @@ export type PropertyWithImages = {
 	created_at: Date;
 	updated_at: Date;
 	user_id: string;
-	images: Array<{
-		id: string;
-		property_id: string;
-		url: string;
-		is_cover: boolean;
-		order: number;
-	}>;
+	images: PropertyImageWithDocument[];
 };
+
+const mapPropertyImage = (image: PropertyImageWithDocument) => ({
+	...image,
+	created_at: image.created_at.toISOString(),
+	document: image.document
+		? {
+				...image.document,
+				created_at: image.document.created_at.toISOString(),
+				updated_at: image.document.updated_at.toISOString(),
+		  }
+		: null,
+});
 
 export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 	id: property.id,
@@ -58,5 +91,5 @@ export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 	amenity_ids: [],
 	created_at: property.created_at.toISOString(),
 	updated_at: property.updated_at.toISOString(),
-	images: property.images,
+	images: property.images.map(mapPropertyImage),
 });

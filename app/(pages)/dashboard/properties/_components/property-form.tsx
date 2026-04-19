@@ -17,7 +17,6 @@ import {
 	patchPropertyPricing,
 	reorderPropertyImages,
 	savePropertyAmenities,
-	uploadFilesToCloudinary,
 	uploadPropertyImages,
 } from '@/features/property/services/property.services';
 import { AmenitiesSection } from './property-form/amenities-section';
@@ -262,10 +261,7 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 	const handleImageUpload = async (id: string) => {
 		if (!imageFiles.length) return;
 
-		const urls = await uploadFilesToCloudinary(imageFiles);
-		if (!urls.length) return;
-
-		const created = await uploadPropertyImages(id, urls);
+		const created = await uploadPropertyImages(id, imageFiles);
 		setImages((previous) => [...previous, ...created].sort((a, b) => a.order - b.order));
 		setImageFiles([]);
 	};

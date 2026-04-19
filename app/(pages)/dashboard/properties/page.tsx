@@ -35,11 +35,12 @@ export default function PropertiesPage() {
 			<div className="space-y-4">
 				{properties.map((property) => {
 					const cover = property.images.find((image) => image.is_cover) ?? property.images[0];
+					const coverUrl = cover?.document?.url;
 					return (
 						<div key={property.id} className="grid grid-cols-1 gap-4 rounded-2xl bg-white/80 p-4 md:grid-cols-[140px_1fr_auto]">
 							<div
 								className="h-24 rounded-xl bg-[#6B705C]/10 bg-cover bg-center"
-								style={cover ? { backgroundImage: `url(${cover.url})` } : undefined}
+								style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
 							/>
 							<div className="py-1">
 								<p className="font-medium">{property.title}</p>

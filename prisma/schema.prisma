@@ -130,7 +130,7 @@ model PropertyImage {
   id           String   @id @default(uuid())
   user_id      String
   property_id  String
-  url          String   @default("")
+  document_id  String? @unique
   description  String?
   is_cover     Boolean  @default(false)
   order        Int
@@ -138,7 +138,7 @@ model PropertyImage {
 
   property  Property   @relation(fields: [property_id], references: [id], onDelete: Cascade)
   user      User       @relation(fields: [user_id], references: [id])
-  documents Document[]
+  document Document? @relation(fields: [document_id], references: [id])
 
   @@map("property_images")
   @@index([property_id, order])
@@ -147,7 +147,6 @@ model PropertyImage {
 model Document {
   id                  String         @id @default(uuid())
   user_id             String
-  property_image_id   String?
   filename            String
   mimetype            String
   size                Int
@@ -160,10 +159,10 @@ model Document {
   property_amenity_id String?
 
   user             User             @relation("UserDocuments", fields: [user_id], references: [id])
-  property_image   PropertyImage?   @relation(fields: [property_image_id], references: [id])
+  property_image   PropertyImage?
   property_amenity PropertyAmenity? @relation(fields: [property_amenity_id], references: [id])
-  user_as_avatar   User?            @relation("UserAvatar")
-  user_as_banner   User?            @relation("UserBanner")
+  user_avatar   User?            @relation("UserAvatar")
+  user_banner   User?            @relation("UserBanner")
 
   @@index([user_id])
   @@map("documents")

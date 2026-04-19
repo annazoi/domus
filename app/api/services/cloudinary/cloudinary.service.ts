@@ -1,6 +1,14 @@
 import { environments } from "@/config/environments";
 import { CloudinaryUploadResponse } from "./interfaces/cloudinary.interface";
-	
+
+export type UploadedCloudinaryFile = {
+	url: string;
+	public_id: string;
+	size: number;
+	format: string;
+	resource_type: string;
+	original_filename: string;
+};
 
 const getCloudinaryConfig = () => {
 	const cloudName = environments.CLOUDINARY_CLOUD_NAME;
@@ -30,7 +38,7 @@ export const uploadFiles = async (files: File[]) => {
 	}
 
 	const { cloudName, apiKey, apiSecret } = getCloudinaryConfig();
-	const uploadedUrls: string[] = [];
+	const uploadedFiles: UploadedCloudinaryFile[] = [];
 
 	for (const file of files) {
 		const timestamp = Math.floor(Date.now() / 1000);
@@ -48,12 +56,50 @@ export const uploadFiles = async (files: File[]) => {
 		});
 
 		const data = (await uploadResponse.json()) as CloudinaryUploadResponse;
-		if (!uploadResponse.ok || !data.secure_url) {
+		if (
+			!uploadResponse.ok ||
+			!data.secure_url ||
+			!data.public_id ||
+			typeof data.bytes !== 'number' ||
+			!data.format
+		) {
 			throw new Error(data.error?.message ?? 'Could not upload image to Cloudinary.');
 		}
 
-		uploadedUrls.push(data.secure_url);
+		uploadedFiles.push({
+			url: data.secure_url,
+			public_id: data.public_id,
+			size: data.bytes,
+			format: data.format,
+			resource_type: data.resource_type ?? 'image',
+			original_filename: data.original_filename ?? data.public_id,
+		});
 	}
 
-	return uploadedUrls;
+	return uploadedFiles;
+};
+
+export const deleteFile = async (publicId: string) => {
+	if (!publicId.trim()) {
+		throw new Error('Missing cloudinary public id.');
+	}
+
+	const { cloudName, apiKey, apiSecret } = getCloudinaryConfig();
+	const timestamp = Math.floor(Date.now() / 1000);
+	const signature = await buildSignature(`public_id=${publicId}&timestamp=${timestamp}`, apiSecret);
+	const payload = new FormData();
+	payload.append('public_id', publicId);
+	payload.append('api_key', apiKey);
+	payload.append('timestamp', `${timestamp}`);
+	payload.append('signature', signature);
+
+	const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, {
+		method: 'POST',
+		body: payload,
+	});
+
+	const data = (await response.json()) as { result?: string; error?: { message?: string } };
+	if (!response.ok || (data.result !== 'ok' && data.result !== 'not found')) {
+		throw new Error(data.error?.message ?? 'Could not remove image from Cloudinary.');
+	}
 };

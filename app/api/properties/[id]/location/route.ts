@@ -31,7 +31,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 			latitude: typeof lat === 'number' && Number.isFinite(lat) ? lat : 0,
 			longitude: typeof lng === 'number' && Number.isFinite(lng) ? lng : 0,
 		},
-		include: { images: { orderBy: { order: 'asc' } } },
+		include: { images: { orderBy: { order: 'asc' }, include: { document: true } } },
 	});
 
 	return Response.json(mapProperty(updated));

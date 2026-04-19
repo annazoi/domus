@@ -25,7 +25,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 			cleaning_fee,
 			...(body.status !== undefined ? { status: body.status } : {}),
 		},
-		include: { images: { orderBy: { order: 'asc' } } },
+		include: { images: { orderBy: { order: 'asc' }, include: { document: true } } },
 	});
 
 	return Response.json(mapProperty(updated));

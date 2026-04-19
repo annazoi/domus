@@ -17,7 +17,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 	const { id } = await params;
 	const property = await prisma.property.findFirst({
 		where: { id, user_id: hostId },
-		include: { images: { orderBy: { order: 'asc' } } },
+		include: { images: { orderBy: { order: 'asc' }, include: { document: true } } },
 	});
 	if (!property) return Response.json({ message: 'Property not found' }, { status: 404 });
 	return Response.json(mapProperty(property));
@@ -69,7 +69,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 			cleaning_fee,
 			status: body.status ?? 'draft',
 		},
-		include: { images: { orderBy: { order: 'asc' } } },
+		include: { images: { orderBy: { order: 'asc' }, include: { document: true } } },
 	});
 	return Response.json(mapProperty(property));
 }

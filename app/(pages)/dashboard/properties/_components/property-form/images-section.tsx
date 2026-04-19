@@ -211,6 +211,7 @@ function ImageTile({
 	sublabel: string;
 }) {
 	const padded = String(index).padStart(2, '0');
+	const imageUrl = image.document?.url ?? '';
 	const title =
 		index === 1 ? 'Main facade' : index === 2 ? 'Interior detail' : index === 3 ? 'Living space' : 'Gallery moment';
 
@@ -229,7 +230,7 @@ function ImageTile({
 			>
 				<div
 					className="pointer-events-none absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-[1.02]"
-					style={{ backgroundImage: `url(${image.url})` }}
+					style={imageUrl ? { backgroundImage: `url(${imageUrl})` } : undefined}
 				/>
 				<div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 opacity-80" />
 				{image.is_cover ? (
@@ -242,7 +243,7 @@ function ImageTile({
 						type="button"
 						variant="ghostIcon"
 						className="h-9 w-9 rounded-full bg-white/90 text-[#1A1A1A] shadow-sm hover:bg-white"
-						onClick={() => window.open(image.url, '_blank', 'noopener,noreferrer')}
+						onClick={() => imageUrl && window.open(imageUrl, '_blank', 'noopener,noreferrer')}
 						aria-label="Open full size"
 					>
 						<Maximize2 className="h-4 w-4" />
