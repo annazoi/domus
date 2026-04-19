@@ -64,6 +64,8 @@ model Property {
   description   String?
   short_description String?
   property_type String
+  check_in_time DateTime @default(now())
+  check_out_time DateTime @default(now())
   max_guests    Int
   bedrooms      Int
   beds          Int

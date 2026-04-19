@@ -19,20 +19,19 @@ type ImagesSectionProps = {
 };
 
 const SUBLABELS = [
-	'EXTERIOR — GOLDEN HOUR',
-	'INTERIOR — NATURAL LIGHT',
-	'GALLERY — DETAIL',
-	'AMBIENT — EVENING',
-	'SPACE — WIDE ANGLE',
+	'EXTERIOR - GOLDEN HOUR',
+	'INTERIOR - NATURAL LIGHT',
+	'GALLERY - DETAIL',
+	'AMBIENT - EVENING',
+	'SPACE - WIDE ANGLE',
 ];
 
-function visualOrder(images: PropertyImage[]) {
-	const cover = images.find((i) => i.is_cover) ?? images[0];
-	if (!cover) return { hero: null as PropertyImage | null, grid: [] as PropertyImage[] };
-	const grid = images
-		.filter((i) => i.id !== cover.id)
-		.sort((a, b) => a.order - b.order);
-	return { hero: cover, grid };
+/** Cover first, then remaining by `order` — every image appears exactly once. */
+function displayImages(images: PropertyImage[]) {
+	if (!images.length) return [];
+	const byOrder = [...images].sort((a, b) => a.order - b.order);
+	const cover = byOrder.find((i) => i.is_cover) ?? byOrder[0];
+	return [cover, ...byOrder.filter((i) => i.id !== cover.id)];
 }
 
 export function ImagesSection({
@@ -50,7 +49,7 @@ export function ImagesSection({
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [fileZoneOver, setFileZoneOver] = useState(false);
 
-	const { hero, grid } = useMemo(() => visualOrder(images), [images]);
+	const ordered = useMemo(() => displayImages(images), [images]);
 
 	const addFiles = useCallback(
 		(fileList: FileList | File[]) => {
@@ -59,8 +58,6 @@ export function ImagesSection({
 		},
 		[onImageFilesChange],
 	);
-
-	const tiles = useMemo(() => (hero ? [hero, ...grid] : []), [hero, grid]);
 
 	return (
 		<section id="images" className="scroll-mt-24">
@@ -114,7 +111,7 @@ export function ImagesSection({
 								addFiles(e.dataTransfer.files);
 							}}
 							className={[
-								'flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-16 transition',
+								'cursor-pointer flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-16 transition',
 								fileZoneOver ? 'border-[#C45C26]/60 bg-[#C45C26]/[0.04]' : 'border-black/15 bg-stone-50/80',
 							].join(' ')}
 						>
@@ -133,50 +130,31 @@ export function ImagesSection({
 						) : null}
 					</div>
 
-					{mode === 'edit' && initialPropertyId && tiles.length > 0 ? (
-						<div className="space-y-10">
-							{hero ? (
-								<figure className="group relative">
+					{mode === 'edit' && initialPropertyId && ordered.length > 0 ? (
+						<div className="grid gap-8 sm:grid-cols-2">
+							{ordered.map((image, i) => (
+								<figure
+									key={image.id}
+									className={['group relative', i === 0 ? 'sm:col-span-2' : ''].join(' ')}
+								>
 									<ImageTile
-										image={hero}
-										index={1}
-										variant="hero"
+										image={image}
+										index={i + 1}
+										variant={i === 0 ? 'hero' : 'grid'}
 										draggingId={draggingId}
 										onDragStart={onDragStart}
 										onDrop={onDrop}
 										onSetCover={onSetCover}
 										onDelete={onDelete}
-										sublabel={SUBLABELS[0]}
+										sublabel={SUBLABELS[i % SUBLABELS.length]}
 									/>
 								</figure>
-							) : null}
-							{grid.length > 0 ? (
-								<div className="grid gap-8 sm:grid-cols-2">
-									{grid.map((image, i) => {
-										const idx = i + 2;
-										return (
-											<figure key={image.id} className="group relative">
-												<ImageTile
-													image={image}
-													index={idx}
-													variant="grid"
-													draggingId={draggingId}
-													onDragStart={onDragStart}
-													onDrop={onDrop}
-													onSetCover={onSetCover}
-													onDelete={onDelete}
-													sublabel={SUBLABELS[(idx - 1) % SUBLABELS.length]}
-												/>
-											</figure>
-										);
-									})}
-								</div>
-							) : null}
+							))}
 						</div>
 					) : null}
 				</div>
 
-				<aside className="w-full shrink-0 space-y-8 lg:w-[min(100%,280px)]">
+				{/* <aside className="w-full shrink-0 space-y-8 lg:w-[min(100%,280px)]">
 					<div className="rounded-xl bg-stone-100/90 p-5">
 						<h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#1A1A1A]/55">
 							Image health
@@ -205,7 +183,7 @@ export function ImagesSection({
 							set so the listing feels like one coherent space.
 						</p>
 					</div>
-				</aside>
+				</aside> */}
 			</div>
 		</section>
 	);

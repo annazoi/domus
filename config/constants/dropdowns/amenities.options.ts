@@ -1,4 +1,30 @@
-import { AirVent, CookingPot, Pickaxe, SquareParking, Waves, Wifi,WavesLadder,Mountain, Heater ,PawPrint ,TowelRack ,Bed,SoapDispenserDroplet,Dumbbell ,Microwave ,Refrigerator,Siren ,Coffee, type LucideIcon } from 'lucide-react';
+import {
+	AirVent,
+	Bed,
+	Coffee,
+	CookingPot,
+	Droplets,
+	Dumbbell,
+	Flame,
+	Heater,
+	LayoutGrid,
+	Microwave,
+	Mountain,
+	Music,
+	PawPrint,
+	Pickaxe,
+	Refrigerator,
+	Siren,
+	SoapDispenserDroplet,
+	SquareParking,
+	TowelRack,
+	TreePalm,
+	UtensilsCrossed,
+	Waves,
+	WavesLadder,
+	Wifi,
+	type LucideIcon,
+} from 'lucide-react';
 
 export const Amenities = {
 	WIFI: 'wifi',
@@ -73,6 +99,16 @@ export const Amenities = {
 	JACUZZI: 'jacuzzi',
 	SMART_LOCK: 'smart_lock',
 	SMART_HOME_FEATURES: 'smart_home_features',
+	OUTDOOR_DINING_AREA: 'outdoor_dining_area',
+	FIRE_PIT: 'fire_pit',
+	POOL_TABLE: 'pool_table',
+	INDOOR_FIREPLACE: 'indoor_fireplace',
+	PIANO: 'piano',
+	EXERCISE_EQUIPMENT: 'exercise_equipment',
+	LAKE_ACCESS: 'lake_access',
+	BEACH_ACCESS: 'beach_access',
+	SKI_IN_SKI_OUT: 'ski_in_ski_out',
+	OUTDOOR_SHOWER: 'outdoor_shower',
 } as const;
 
 export type AmenityId = (typeof Amenities)[keyof typeof Amenities];
@@ -151,6 +187,16 @@ const amenitiesBaseOptions: Array<{ label: string; value: AmenityId }> = [
 	{ label: 'Jacuzzi', value: Amenities.JACUZZI },
 	{ label: 'Smart lock', value: Amenities.SMART_LOCK },
 	{ label: 'Smart home features', value: Amenities.SMART_HOME_FEATURES },
+	{ label: 'Outdoor dining area', value: Amenities.OUTDOOR_DINING_AREA },
+	{ label: 'Fire pit', value: Amenities.FIRE_PIT },
+	{ label: 'Pool table', value: Amenities.POOL_TABLE },
+	{ label: 'Indoor fireplace', value: Amenities.INDOOR_FIREPLACE },
+	{ label: 'Piano', value: Amenities.PIANO },
+	{ label: 'Exercise equipment', value: Amenities.EXERCISE_EQUIPMENT },
+	{ label: 'Lake access', value: Amenities.LAKE_ACCESS },
+	{ label: 'Beach access', value: Amenities.BEACH_ACCESS },
+	{ label: 'Ski-in/Ski-out', value: Amenities.SKI_IN_SKI_OUT },
+	{ label: 'Outdoor shower', value: Amenities.OUTDOOR_SHOWER },
 ] as const;
 
 const amenityIconByValue: Record<AmenityId, LucideIcon> = {
@@ -226,6 +272,16 @@ const amenityIconByValue: Record<AmenityId, LucideIcon> = {
 	[Amenities.JACUZZI]: Waves,
 	[Amenities.SMART_LOCK]: Wifi,
 	[Amenities.SMART_HOME_FEATURES]: Wifi,
+	[Amenities.OUTDOOR_DINING_AREA]: UtensilsCrossed,
+	[Amenities.FIRE_PIT]: Flame,
+	[Amenities.POOL_TABLE]: LayoutGrid,
+	[Amenities.INDOOR_FIREPLACE]: Flame,
+	[Amenities.PIANO]: Music,
+	[Amenities.EXERCISE_EQUIPMENT]: Dumbbell,
+	[Amenities.LAKE_ACCESS]: Waves,
+	[Amenities.BEACH_ACCESS]: TreePalm,
+	[Amenities.SKI_IN_SKI_OUT]: Mountain,
+	[Amenities.OUTDOOR_SHOWER]: Droplets,
 };
 
 export const AmenitiesOptions: AmenityOption[] = amenitiesBaseOptions.map((option) => ({
@@ -233,15 +289,19 @@ export const AmenitiesOptions: AmenityOption[] = amenitiesBaseOptions.map((optio
 	icon: amenityIconByValue[option.value],
 }));
 
+export const amenityOptionByValue = Object.fromEntries(
+	AmenitiesOptions.map((o) => [o.value, o]),
+) as Record<AmenityId, AmenityOption>;
+
 export const AmenitiesOptionsLabels: Record<AmenityId, string> = {
-	[Amenities.WIFI]: 'Wi-Fi',
+	[Amenities.WIFI]: 'Wifi',
 	[Amenities.POOL]: 'Pool',
 	[Amenities.PARKING]: 'Free parking',
-	[Amenities.AC]: 'Air conditioning',
+	[Amenities.AC]: 'Air conditioning (AC)',
 	[Amenities.KITCHEN]: 'Kitchen',
 	[Amenities.WORKSPACE]: 'Dedicated workspace',
 	[Amenities.HEATING]: 'Heating',
-	[Amenities.AIR_CONDITIONING]: 'Air conditioning (full)',
+	[Amenities.AIR_CONDITIONING]: 'Air conditioning',
 	[Amenities.TOWELS]: 'Towels',
 	[Amenities.BED_SHEETS]: 'Bed sheets',
 	[Amenities.SOAP]: 'Soap',
@@ -275,8 +335,8 @@ export const AmenitiesOptionsLabels: Record<AmenityId, string> = {
 	[Amenities.SOUND_SYSTEM]: 'Sound system',
 	[Amenities.BOOKS]: 'Books',
 	[Amenities.BOARD_GAMES]: 'Board games',
-	[Amenities.FREE_PARKING]: 'Free parking (dedicated)',
-	[Amenities.PAID_PARKING]: 'Paid parking',
+	[Amenities.FREE_PARKING]: 'Free parking on premises',
+	[Amenities.PAID_PARKING]: 'Paid parking on premises',
 	[Amenities.ELEVATOR]: 'Elevator',
 	[Amenities.HOT_TUB]: 'Hot tub',
 	[Amenities.GYM]: 'Gym',
@@ -297,7 +357,7 @@ export const AmenitiesOptionsLabels: Record<AmenityId, string> = {
 	[Amenities.CARBON_MONOXIDE_ALARM]: 'Carbon monoxide alarm',
 	[Amenities.FIRST_AID_KIT]: 'First aid kit',
 	[Amenities.FIRE_EXTINGUISHER]: 'Fire extinguisher',
-	[Amenities.DEDICATED_WORKSPACE]: 'Dedicated workspace (full)',
+	[Amenities.DEDICATED_WORKSPACE]: 'Dedicated workspace',
 	[Amenities.DESK]: 'Desk',
 	[Amenities.CHAIR]: 'Chair',
 	[Amenities.SEA_VIEW]: 'Sea view',
@@ -306,7 +366,72 @@ export const AmenitiesOptionsLabels: Record<AmenityId, string> = {
 	[Amenities.JACUZZI]: 'Jacuzzi',
 	[Amenities.SMART_LOCK]: 'Smart lock',
 	[Amenities.SMART_HOME_FEATURES]: 'Smart home features',
+	[Amenities.OUTDOOR_DINING_AREA]: 'Outdoor dining area',
+	[Amenities.FIRE_PIT]: 'Fire pit',
+	[Amenities.POOL_TABLE]: 'Pool table',
+	[Amenities.INDOOR_FIREPLACE]: 'Indoor fireplace',
+	[Amenities.PIANO]: 'Piano',
+	[Amenities.EXERCISE_EQUIPMENT]: 'Exercise equipment',
+	[Amenities.LAKE_ACCESS]: 'Lake access',
+	[Amenities.BEACH_ACCESS]: 'Beach access',
+	[Amenities.SKI_IN_SKI_OUT]: 'Ski-in/Ski-out',
+	[Amenities.OUTDOOR_SHOWER]: 'Outdoor shower',
 };
+
+/** Grouped list for the property form (subset of all amenity ids). */
+export const PROPERTY_FORM_AMENITY_CATEGORIES: {
+	id: string;
+	title: string;
+	description?: string;
+	values: AmenityId[];
+}[] = [
+	{
+		id: 'essentials',
+		title: 'Essentials',
+		values: [
+			Amenities.WIFI,
+			Amenities.TV,
+			Amenities.KITCHEN,
+			Amenities.WASHER,
+			Amenities.FREE_PARKING,
+			Amenities.PAID_PARKING,
+			Amenities.AIR_CONDITIONING,
+			Amenities.DEDICATED_WORKSPACE,
+		],
+	},
+	{
+		id: 'standout',
+		title: 'Standout',
+		description: 'Do you have any standout amenities?',
+		values: [
+			Amenities.POOL,
+			Amenities.HOT_TUB,
+			Amenities.PATIO,
+			Amenities.BBQ_GRILL,
+			Amenities.OUTDOOR_DINING_AREA,
+			Amenities.FIRE_PIT,
+			Amenities.POOL_TABLE,
+			Amenities.INDOOR_FIREPLACE,
+			Amenities.PIANO,
+			Amenities.EXERCISE_EQUIPMENT,
+			Amenities.LAKE_ACCESS,
+			Amenities.BEACH_ACCESS,
+			Amenities.SKI_IN_SKI_OUT,
+			Amenities.OUTDOOR_SHOWER,
+		],
+	},
+	{
+		id: 'safety',
+		title: 'Safety',
+		description: 'Do you have any of these safety items?',
+		values: [
+			Amenities.SMOKE_ALARM,
+			Amenities.FIRST_AID_KIT,
+			Amenities.FIRE_EXTINGUISHER,
+			Amenities.CARBON_MONOXIDE_ALARM,
+		],
+	},
+];
 
 export function searchAmenitiesOptions(search: string) {
 	const normalizedSearch = search.trim().toLowerCase();
