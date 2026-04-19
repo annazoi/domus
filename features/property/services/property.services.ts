@@ -59,10 +59,10 @@ export const uploadFilesToCloudinary = async (files: File[]) => {
 	return payload.urls ?? [];
 };
 
-export const reorderPropertyImages = async (id: string, reorderIds: string[], coverImageId?: string) => {
+export const reorderPropertyImages = async (id: string, reorder_ids: string[], cover_image_id?: string) => {
 	const response = await axiosInstance.post<PropertyImage[]>(
 		`/properties/${id}/images`,
-		{ reorderIds, coverImageId },
+		{ reorder_ids, cover_image_id },
 		{ headers: authHeaders() },
 	);
 	return response.data;
@@ -72,38 +72,38 @@ export const deleteImage = async (imageId: string) => {
 	await axiosInstance.delete(`/images/${imageId}`, { headers: authHeaders() });
 };
 
-export const savePropertyAmenities = async (id: string, amenityIds: string[]) => {
+export const savePropertyAmenities = async (id: string, amenity_ids: string[]) => {
 	const response = await axiosInstance.post<Property>(
 		`/properties/${id}/amenities`,
-		{ amenityIds },
+		{ amenity_ids },
 		{ headers: authHeaders() },
 	);
 	return response.data;
 };
 
-export const listAvailability = async (propertyId: string) => {
-	const response = await axiosInstance.get<AvailabilityDay[]>(`/availability?property_id=${propertyId}`, {
+export const listAvailability = async (property_id: string) => {
+	const response = await axiosInstance.get<AvailabilityDay[]>(`/availability?property_id=${property_id}`, {
 		headers: authHeaders(),
 	});
 	return response.data;
 };
 
 export const upsertAvailability = async (
-	propertyId: string,
+	property_id: string,
 	date: string,
-	isAvailable: boolean,
-	customPrice: number | null,
+	is_available: boolean,
+	custom_price: number | null,
 ) => {
 	const response = await axiosInstance.post<AvailabilityDay>(
 		'/availability',
-		{ propertyId, date, isAvailable, customPrice },
+		{ property_id, date, is_available, custom_price },
 		{ headers: authHeaders() },
 	);
 	return response.data;
 };
 
 export const listBookings = async () => {
-	const response = await axiosInstance.get<(Booking & { propertyTitle: string })[]>('/bookings?host_id=me', {
+	const response = await axiosInstance.get<(Booking & { property_title: string })[]>('/bookings?host_id=me', {
 		headers: authHeaders(),
 	});
 	return response.data;

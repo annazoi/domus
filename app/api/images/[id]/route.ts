@@ -7,17 +7,17 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
 	const { id } = await params;
 	const image = await prisma.propertyImage.findFirst({
-		where: { id, property: { ownerId: hostId } },
-		select: { id: true, propertyId: true },
+		where: { id, property: { user_id: hostId } },
+		select: { id: true, property_id: true },
 	});
 	if (!image) return Response.json({ message: 'Image not found' }, { status: 404 });
 
 	await prisma.propertyImage.delete({ where: { id } });
 	const remaining = await prisma.propertyImage.findMany({
-		where: { propertyId: image.propertyId },
+		where: { property_id: image.property_id },
 		orderBy: { order: 'asc' },
 	});
-	const existingCoverId = remaining.find((candidate) => candidate.isCover)?.id;
+	const existingCoverId = remaining.find((candidate) => candidate.is_cover)?.id;
 	const coverId = existingCoverId ?? remaining[0]?.id;
 	await prisma.$transaction(
 		remaining.map((item, index) =>
@@ -25,7 +25,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 				where: { id: item.id },
 				data: {
 					order: index,
-					isCover: item.id === coverId,
+					is_cover: item.id === coverId,
 				},
 			}),
 		),

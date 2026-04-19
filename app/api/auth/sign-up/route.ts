@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/prisma';
 
 interface RegisterPayload {
-	full_name?: string;
+	first_name?: string;
+	last_name?: string;
 	email?: string;
 	password?: string;
 }
@@ -11,12 +12,13 @@ const isValidEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 export async function POST(request: Request) {
 	try {
 		const body = (await request.json()) as RegisterPayload;
-		const fullName = body.full_name?.trim();
+		const first_name = body.first_name?.trim() || undefined;
+		const last_name = body.last_name?.trim() || undefined;
 		const email = body.email?.trim().toLowerCase();
 		const password = body.password;
 
-		if (!fullName || !email || !password) {
-			return Response.json({ message: 'full_name, email and password are required.' }, { status: 400 });
+		if (!email || !password) {
+			return Response.json({ message: 'email and password are required.' }, { status: 400 });
 		}
 
 		if (!isValidEmail(email)) {
@@ -38,31 +40,34 @@ export async function POST(request: Request) {
 
 		const user = await prisma.user.create({
 			data: {
-				fullName,
+				...(first_name ? { first_name } : {}),
+				...(last_name ? { last_name } : {}),
 				email,
 				password,
 			},
 			select: {
 				id: true,
 				email: true,
-				fullName: true,
-				createdAt: true,
+				first_name: true,
+				last_name: true,
+				created_at: true,
 			},
 		});
 
 		return Response.json(
 			{
+				id: user.id,
 				user_uuid: user.id,
 				uuid: user.id,
 				email: user.email,
-				full_name: user.fullName,
-				role: 'USER',
+				first_name: user.first_name,
+				last_name: user.last_name,
+				created_at: user.created_at,
 				access_token: null,
 				expires_in: null,
 				account_uuid: null,
 				avatar: null,
 				account: null,
-				created_at: user.createdAt,
 			},
 			{ status: 201 },
 		);

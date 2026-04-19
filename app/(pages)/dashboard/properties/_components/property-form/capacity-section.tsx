@@ -3,11 +3,11 @@ import { PropertyFormSection } from './property-form-section';
 
 type CapacitySectionProps = {
 	form: UpsertPropertyInput;
-	onChange: (field: 'guests' | 'bedrooms' | 'beds' | 'bathrooms', value: number) => void;
+	onChange: (field: 'max_guests' | 'bedrooms' | 'beds' | 'bathrooms', value: number) => void;
 };
 
-const capacityFields: Array<{ key: 'guests' | 'bedrooms' | 'beds' | 'bathrooms'; label: string }> = [
-	{ key: 'guests', label: 'Guests *' },
+const capacityFields: Array<{ key: 'max_guests' | 'bedrooms' | 'beds' | 'bathrooms'; label: string }> = [
+	{ key: 'max_guests', label: 'Guests *' },
 	{ key: 'bedrooms', label: 'Bedrooms' },
 	{ key: 'beds', label: 'Beds' },
 	{ key: 'bathrooms', label: 'Bathrooms' },

@@ -1,3 +1,5 @@
+import '../load-env';
+
 const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL
 const DATABASE_URL = process.env.DATABASE_URL
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME

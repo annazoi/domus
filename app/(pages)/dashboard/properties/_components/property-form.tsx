@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { GoogleMapsPlacesScript } from '@/components/google-maps';
 import { useSetDashboardPageIntro } from '@/app/(pages)/dashboard/_components/dashboard-shell';
-import { getStaticAmenities } from '@/config/constants/dropdowns/amenities.options';
 import { ApartmentOptions } from '@/config/constants/dropdowns/apartment.options';
-import type { Amenity, Property, PropertyImage, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
+import type { Property, PropertyImage, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import {
 	deleteImage,
 	reorderPropertyImages,
@@ -31,9 +30,9 @@ type PropertyFormProps = {
 const defaultValues: UpsertPropertyInput = {
 	title: '',
 	description: '',
-	propertyType: ApartmentOptions[0].value,
-	roomType: 'Entire place',
-	guests: 1,
+	property_type: ApartmentOptions[0].value,
+	room_type: 'Entire place',
+	max_guests: 1,
 	bedrooms: 1,
 	beds: 1,
 	bathrooms: 1,
@@ -42,8 +41,7 @@ const defaultValues: UpsertPropertyInput = {
 	address: '',
 	lat: null,
 	lng: null,
-	pricePerNight: 120,
-	cleaningFee: 0,
+	cleaning_fee: 0,
 	status: 'draft',
 };
 
@@ -82,8 +80,7 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 	const router = useRouter();
 	const [form, setForm] = useState<UpsertPropertyInput>(initialProperty ? { ...initialProperty } : defaultValues);
 	const [images, setImages] = useState<PropertyImage[]>(initialProperty?.images ?? []);
-	const amenities = useMemo(() => getStaticAmenities() as Amenity[], []);
-	const [selectedAmenities, setSelectedAmenities] = useState<string[]>(initialProperty?.amenityIds ?? []);
+	const [selectedAmenities, setSelectedAmenities] = useState<string[]>(initialProperty?.amenity_ids ?? []);
 	const [imageFiles, setImageFiles] = useState<File[]>([]);
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState('');
@@ -133,7 +130,7 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 				setError('Add a title under Basic info first.');
 				return;
 			}
-			if (form.guests <= 0) {
+			if (form.max_guests <= 0) {
 				setError('Guests must be greater than 0.');
 				return;
 			}
@@ -147,8 +144,8 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 				setError('Add a title under Basic info first.');
 				return;
 			}
-			if (form.pricePerNight <= 0) {
-				setError('Price must be greater than 0.');
+			if (form.cleaning_fee < 0) {
+				setError('Cleaning fee cannot be negative.');
 				return;
 			}
 		} else if (tab === 'amenities') {
@@ -220,11 +217,11 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 
 	const persistOrder = async (nextImages: PropertyImage[]) => {
 		if (!initialProperty) return;
-		const coverId = nextImages.find((image) => image.isCover)?.id;
+		const cover_id = nextImages.find((image) => image.is_cover)?.id;
 		const reordered = await reorderPropertyImages(
 			initialProperty.id,
 			nextImages.map((image) => image.id),
-			coverId,
+			cover_id,
 		);
 		setImages(reordered);
 	};
@@ -313,7 +310,6 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 					{activeTab === 'amenities' ? (
 						<>
 							<AmenitiesSection
-								amenities={amenities}
 								selectedAmenities={selectedAmenities}
 								onToggleAmenity={(amenityId) =>
 									setSelectedAmenities((previous) =>

@@ -1,32 +1,19 @@
 import { useMemo, useState } from 'react';
-import { AirVent, CookingPot, Search, SquareParking, Waves, Wifi, Pickaxe } from 'lucide-react';
-import { Amenities, searchAmenitiesOptions } from '@/config/constants/dropdowns/amenities.options';
-import type { Amenity } from '@/features/property/interfaces/property.interface';
+import { Search, Wifi } from 'lucide-react';
+import { searchAmenitiesOptions } from '@/config/constants/dropdowns/amenities.options';
 import { PropertyFormSection } from './property-form-section';
 
 type AmenitiesSectionProps = {
-	amenities: Amenity[];
 	selectedAmenities: string[];
 	onToggleAmenity: (amenityId: string) => void;
 };
 
-export function AmenitiesSection({ amenities, selectedAmenities, onToggleAmenity }: AmenitiesSectionProps) {
+export function AmenitiesSection({ selectedAmenities, onToggleAmenity }: AmenitiesSectionProps) {
 	const [search, setSearch] = useState('');
 
 	const filteredAmenities = useMemo(() => {
-		const options = searchAmenitiesOptions(search);
-		const optionIds = new Set<string>(options.map((option) => option.value));
-		return amenities.filter((amenity) => optionIds.has(amenity.id));
-	}, [amenities, search]);
-
-	const iconByAmenity: Record<string, typeof Wifi> = {
-		[Amenities.WIFI]: Wifi,
-		[Amenities.POOL]: Waves,
-		[Amenities.PARKING]: SquareParking,
-		[Amenities.AC]: AirVent,
-		[Amenities.KITCHEN]: CookingPot,
-		[Amenities.WORKSPACE]: Pickaxe,
-	};
+		return searchAmenitiesOptions(search);
+	}, [search]);
 
 	return (
 		<PropertyFormSection id="amenities" title="Amenities">
@@ -48,13 +35,13 @@ export function AmenitiesSection({ amenities, selectedAmenities, onToggleAmenity
 			</div>
 			<div className="flex flex-wrap gap-2">
 				{filteredAmenities.map((amenity) => {
-					const active = selectedAmenities.includes(amenity.id);
-					const Icon = iconByAmenity[amenity.id] ?? Wifi;
+					const active = selectedAmenities.includes(amenity.value);
+					const Icon = amenity.icon ?? Wifi;
 					return (
 						<button
-							key={amenity.id}
+							key={amenity.value}
 							type="button"
-							onClick={() => onToggleAmenity(amenity.id)}
+							onClick={() => onToggleAmenity(amenity.value)}
 							className={[
 								'cursor-pointer inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition',
 								active ? 'bg-[#6B705C] text-white' : 'bg-black/5 text-[#1A1A1A]/70 hover:bg-black/10',

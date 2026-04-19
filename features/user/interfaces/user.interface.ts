@@ -3,7 +3,8 @@
 
 export interface User {
 	id: string;
-	fullName: string;
+	first_name: string | null;
+	last_name: string | null;
 	uuid: string;
 	email: string;
 	phone?: string;
@@ -14,12 +15,15 @@ export interface User {
 }
 
 export interface CreateUserDto {
-	fullName: string;
+	first_name?: string;
+	last_name?: string;
 	email: string;
+	password: string;
 }
 
 export interface UpdateUserDto {
-	fullName?: string;
+	first_name?: string;
+	last_name?: string;
 	email?: string;
 	phone?: string;
 }
@@ -32,7 +36,8 @@ export interface UsersResponse {
 export interface LoggedInUser {
 	user_uuid: string | null;
 	email: string | null;
-	fullName?: string | null;
+	first_name?: string | null;
+	last_name?: string | null;
 	isLoggedIn?: boolean | null;
 }
 

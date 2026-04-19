@@ -3,8 +3,8 @@ import { prisma } from '@/lib/prisma';
 
 interface ImagePayload {
 	urls?: string[];
-	reorderIds?: string[];
-	coverImageId?: string;
+	reorder_ids?: string[];
+	cover_image_id?: string;
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -14,34 +14,34 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 	const { id } = await params;
 	const body = (await request.json()) as ImagePayload;
 	const property = await prisma.property.findFirst({
-		where: { id, ownerId: hostId },
+		where: { id, user_id: hostId },
 		select: { id: true },
 	});
 	if (!property) return Response.json({ message: 'Property not found' }, { status: 404 });
 
-	if (body.reorderIds?.length) {
+	if (body.reorder_ids?.length) {
 		await prisma.$transaction(async (tx) => {
-			for (const [index, imageId] of body.reorderIds!.entries()) {
+			for (const [index, imageId] of body.reorder_ids!.entries()) {
 				await tx.propertyImage.updateMany({
-					where: { id: imageId, propertyId: id },
+					where: { id: imageId, property_id: id },
 					data: { order: index },
 				});
 			}
 
-			if (body.coverImageId) {
+			if (body.cover_image_id) {
 				await tx.propertyImage.updateMany({
-					where: { propertyId: id },
-					data: { isCover: false },
+					where: { property_id: id },
+					data: { is_cover: false },
 				});
 				await tx.propertyImage.updateMany({
-					where: { id: body.coverImageId, propertyId: id },
-					data: { isCover: true },
+					where: { id: body.cover_image_id, property_id: id },
+					data: { is_cover: true },
 				});
 			}
 		});
 
 		const reordered = await prisma.propertyImage.findMany({
-			where: { propertyId: id },
+			where: { property_id: id },
 			orderBy: { order: 'asc' },
 		});
 		return Response.json(reordered);
@@ -50,15 +50,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 	if (!body.urls?.length) {
 		return Response.json({ message: 'At least one image url is required' }, { status: 400 });
 	}
-	const existingCount = await prisma.propertyImage.count({ where: { propertyId: id } });
+	const existingCount = await prisma.propertyImage.count({ where: { property_id: id } });
 	const created = await prisma.$transaction(
 		body.urls.map((url, index) =>
 			prisma.propertyImage.create({
 				data: {
-					propertyId: id,
+					property_id: id,
+					user_id: hostId,
 					url,
 					order: existingCount + index,
-					isCover: existingCount === 0 && index === 0,
+					is_cover: existingCount === 0 && index === 0,
 				},
 			}),
 		),

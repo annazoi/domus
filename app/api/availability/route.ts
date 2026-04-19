@@ -2,10 +2,10 @@ import { getHostIdFromRequest } from '@/app/api/_utils/auth';
 import { propertyStore } from '@/store/property';
 
 interface AvailabilityPayload {
-	propertyId: string;
+	property_id: string;
 	date: string;
-	isAvailable: boolean;
-	customPrice: number | null;
+	is_available: boolean;
+	custom_price: number | null;
 }
 
 export async function GET(request: Request) {
@@ -13,10 +13,10 @@ export async function GET(request: Request) {
 	if (!hostId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
 
 	const url = new URL(request.url);
-	const propertyId = url.searchParams.get('property_id');
-	if (!propertyId) return Response.json({ message: 'property_id is required' }, { status: 400 });
+	const property_id = url.searchParams.get('property_id');
+	if (!property_id) return Response.json({ message: 'property_id is required' }, { status: 400 });
 
-	const days = propertyStore.getAvailability(hostId, propertyId);
+	const days = propertyStore.getAvailability(hostId, property_id);
 	if (!days) return Response.json({ message: 'Property not found' }, { status: 404 });
 	return Response.json(days);
 }
@@ -28,10 +28,10 @@ export async function POST(request: Request) {
 	const body = (await request.json()) as AvailabilityPayload;
 	const result = propertyStore.upsertAvailability(
 		hostId,
-		body.propertyId,
+		body.property_id,
 		body.date,
-		body.isAvailable,
-		body.customPrice ?? null,
+		body.is_available,
+		body.custom_price ?? null,
 	);
 
 	if ('error' in result) {

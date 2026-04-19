@@ -36,7 +36,7 @@ export default function PropertiesPage() {
 
 			<div className="space-y-4">
 				{properties.map((property) => {
-					const cover = property.images.find((image) => image.isCover) ?? property.images[0];
+					const cover = property.images.find((image) => image.is_cover) ?? property.images[0];
 					return (
 						<div key={property.id} className="grid grid-cols-1 gap-4 rounded-2xl bg-white/80 p-4 md:grid-cols-[140px_1fr_auto]">
 							<div
@@ -45,9 +45,7 @@ export default function PropertiesPage() {
 							/>
 							<div className="py-1">
 								<p className="font-medium">{property.title}</p>
-								<p className="text-sm text-[#1A1A1A]/55">
-									{property.city || 'City not set'} - ${property.pricePerNight}/night
-								</p>
+								<p className="text-sm text-[#1A1A1A]/55">{property.city || 'City not set'}</p>
 							</div>
 							<div className="flex items-center gap-2 md:justify-end">
 								<span className="rounded-full bg-black/5 px-3 py-1 text-xs capitalize">{property.status}</span>

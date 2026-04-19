@@ -2,9 +2,9 @@ export type PropertyStatus = 'draft' | 'published';
 
 export interface PropertyImage {
 	id: string;
-	propertyId: string;
+	property_id: string;
 	url: string;
-	isCover: boolean;
+	is_cover: boolean;
 	order: number;
 }
 
@@ -15,31 +15,31 @@ export interface Amenity {
 
 export interface AvailabilityDay {
 	id: string;
-	propertyId: string;
+	property_id: string;
 	date: string;
-	isAvailable: boolean;
-	customPrice: number | null;
+	is_available: boolean;
+	custom_price: number | null;
 }
 
 export interface Booking {
 	id: string;
-	propertyId: string;
-	hostId: string;
-	guestName: string;
-	startDate: string;
-	endDate: string;
+	property_id: string;
+	host_id: string;
+	guest_name: string;
+	start_date: string;
+	end_date: string;
 	status: 'pending' | 'confirmed' | 'cancelled';
 }
 
 export interface Property {
 	id: string;
-	hostId: string;
+	host_id: string;
 	title: string;
 	slug: string;
 	description: string;
-	propertyType: string;
-	roomType: string;
-	guests: number;
+	property_type: string;
+	room_type: string;
+	max_guests: number;
 	bedrooms: number;
 	beds: number;
 	bathrooms: number;
@@ -48,21 +48,20 @@ export interface Property {
 	address: string;
 	lat: number | null;
 	lng: number | null;
-	pricePerNight: number;
-	cleaningFee: number;
+	cleaning_fee: number;
 	status: PropertyStatus;
-	amenityIds: string[];
-	createdAt: string;
-	updatedAt: string;
+	amenity_ids: string[];
+	created_at: string;
+	updated_at: string;
 	images: PropertyImage[];
 }
 
 export interface UpsertPropertyInput {
 	title: string;
 	description: string;
-	propertyType: string;
-	roomType: string;
-	guests: number;
+	property_type: string;
+	room_type: string;
+	max_guests: number;
 	bedrooms: number;
 	beds: number;
 	bathrooms: number;
@@ -71,8 +70,6 @@ export interface UpsertPropertyInput {
 	address: string;
 	lat?: number | null;
 	lng?: number | null;
-	pricePerNight: number;
-	cleaningFee: number;
+	cleaning_fee: number;
 	status: PropertyStatus;
 }
-

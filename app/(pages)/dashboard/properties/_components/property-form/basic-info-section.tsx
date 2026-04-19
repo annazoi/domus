@@ -74,8 +74,8 @@ export function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
 					</label>
 					<select
 						id="property-type"
-						value={form.propertyType}
-						onChange={(event) => onChange('propertyType', event.target.value)}
+						value={form.property_type}
+						onChange={(event) => onChange('property_type', event.target.value)}
 						className="w-full rounded-xl border border-black/10 px-4 py-3"
 					>
 						{ApartmentOptions.map((option) => (
@@ -91,8 +91,8 @@ export function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
 					</label>
 					<input
 						id="property-room-type"
-						value={form.roomType}
-						onChange={(event) => onChange('roomType', event.target.value)}
+						value={form.room_type}
+						onChange={(event) => onChange('room_type', event.target.value)}
 						placeholder="Enter room type"
 						className="w-full rounded-xl border border-black/10 px-4 py-3"
 					/>

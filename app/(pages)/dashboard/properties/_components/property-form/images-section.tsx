@@ -69,9 +69,9 @@ export function ImagesSection({
 								<button
 									type="button"
 									onClick={() => onSetCover(image.id)}
-									className={image.isCover ? 'text-[#6B705C]' : 'text-[#1A1A1A]/50'}
+									className={image.is_cover ? 'text-[#6B705C]' : 'text-[#1A1A1A]/50'}
 								>
-									{image.isCover ? 'Cover image' : 'Set as cover'}
+									{image.is_cover ? 'Cover image' : 'Set as cover'}
 								</button>
 								<button type="button" onClick={() => onDelete(image.id)} className="text-red-600">
 									Delete

@@ -31,6 +31,21 @@ export function LocationSection({
 }: LocationSectionProps) {
 	return (
 		<PropertyFormSection id="location" title="Location">
+			<div className="space-y-1.5">
+				<label htmlFor="property-address" className="text-sm font-medium text-[#1A1A1A]">
+					Address
+				</label>
+				<PlacesAutocompleteInput
+					id="property-address"
+					placesLibraryReady={placesLibraryReady}
+					value={form.address}
+					onChange={(event) => onFieldChange('address', event.target.value)}
+					onPlaceSelect={(place) => applyPlaceToForm(place, onFieldChange, onCoordinateChange)}
+					placeholder="Search or enter address"
+					autoComplete="off"
+					className="w-full rounded-xl border border-black/10 px-4 py-3"
+				/>
+			</div>
 			<div className="grid gap-4 md:grid-cols-2">
 				<div className="space-y-1.5">
 					<label htmlFor="property-country" className="text-sm font-medium text-[#1A1A1A]">
@@ -57,21 +72,7 @@ export function LocationSection({
 					/>
 				</div>
 			</div>
-			<div className="space-y-1.5">
-				<label htmlFor="property-address" className="text-sm font-medium text-[#1A1A1A]">
-					Address
-				</label>
-				<PlacesAutocompleteInput
-					id="property-address"
-					placesLibraryReady={placesLibraryReady}
-					value={form.address}
-					onChange={(event) => onFieldChange('address', event.target.value)}
-					onPlaceSelect={(place) => applyPlaceToForm(place, onFieldChange, onCoordinateChange)}
-					placeholder="Search or enter address"
-					autoComplete="off"
-					className="w-full rounded-xl border border-black/10 px-4 py-3"
-				/>
-			</div>
+		
 			<div className="grid gap-4 md:grid-cols-2">
 				<div className="space-y-1.5">
 					<label htmlFor="property-latitude" className="text-sm font-medium text-[#1A1A1A]">

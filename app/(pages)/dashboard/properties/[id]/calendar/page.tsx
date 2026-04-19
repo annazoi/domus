@@ -61,14 +61,14 @@ export default function PropertyCalendarPage() {
 						{Array.from({ length: 30 }, (_, index) => index + 1).map((day) => {
 							const date = toDate(day);
 							const item = dayMap.get(date);
-							const unavailable = item?.isAvailable === false;
+							const unavailable = item?.is_available === false;
 							return (
 								<button
 									key={date}
 									type="button"
 									onClick={() => {
 										setSelectedDate(date);
-										setCustomPrice(item?.customPrice ? String(item.customPrice) : '');
+										setCustomPrice(item?.custom_price ? String(item.custom_price) : '');
 										setMessage('');
 									}}
 									className={[

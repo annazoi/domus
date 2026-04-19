@@ -6,31 +6,30 @@ const mapProperty = (property: {
 	id: string;
 	title: string;
 	description: string | null;
-	propertyType: string;
-	maxGuests: number;
+	property_type: string;
+	max_guests: number;
 	bedrooms: number;
 	beds: number;
 	bathrooms: number;
-	pricePerNight: { toNumber(): number };
 	country: string;
 	city: string;
 	address: string;
 	latitude: number;
 	longitude: number;
 	status: string;
-	createdAt: Date;
-	updatedAt: Date;
-	ownerId: string;
+	created_at: Date;
+	updated_at: Date;
+	user_id: string;
 	images: Array<{
 		id: string;
-		propertyId: string;
+		property_id: string;
 		url: string;
-		isCover: boolean;
+		is_cover: boolean;
 		order: number;
 	}>;
 }): PropertyDTO => ({
 	id: property.id,
-	hostId: property.ownerId,
+	host_id: property.user_id,
 	title: property.title,
 	slug: property.title
 		.trim()
@@ -38,9 +37,9 @@ const mapProperty = (property: {
 		.replace(/\s+/g, '-')
 		.replace(/[^a-z0-9-]/g, ''),
 	description: property.description ?? '',
-	propertyType: property.propertyType,
-	roomType: '',
-	guests: property.maxGuests,
+	property_type: property.property_type,
+	room_type: '',
+	max_guests: property.max_guests,
 	bedrooms: property.bedrooms,
 	beds: property.beds,
 	bathrooms: property.bathrooms,
@@ -49,12 +48,11 @@ const mapProperty = (property: {
 	address: property.address,
 	lat: property.latitude,
 	lng: property.longitude,
-	pricePerNight: property.pricePerNight.toNumber(),
-	cleaningFee: 0,
+	cleaning_fee: 0,
 	status: property.status as PropertyDTO['status'],
-	amenityIds: [],
-	createdAt: property.createdAt.toISOString(),
-	updatedAt: property.updatedAt.toISOString(),
+	amenity_ids: [],
+	created_at: property.created_at.toISOString(),
+	updated_at: property.updated_at.toISOString(),
 	images: property.images,
 });
 
@@ -69,8 +67,8 @@ export async function GET(request: Request) {
 	}
 
 	const properties = await prisma.property.findMany({
-		where: { ownerId: hostId },
-		orderBy: { createdAt: 'desc' },
+		where: { user_id: hostId },
+		orderBy: { created_at: 'desc' },
 		include: { images: { orderBy: { order: 'asc' } } },
 	});
 	return Response.json(properties.map(mapProperty));
@@ -81,8 +79,8 @@ export async function POST(request: Request) {
 	if (!hostId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
 
 	const body = (await request.json()) as UpsertPropertyInput;
-	if (!body.title || body.pricePerNight <= 0 || body.guests <= 0) {
-		return Response.json({ message: 'Invalid payload. Title, price and guests are required.' }, { status: 400 });
+	if (!body.title || body.max_guests <= 0) {
+		return Response.json({ message: 'Invalid payload. Title and max_guests are required.' }, { status: 400 });
 	}
 
 	try {
@@ -90,19 +88,18 @@ export async function POST(request: Request) {
 			data: {
 				title: body.title.trim(),
 				description: body.description?.trim() || null,
-				propertyType: body.propertyType.trim() || 'Property',
-				maxGuests: body.guests,
+				property_type: body.property_type.trim() || 'Property',
+				max_guests: body.max_guests,
 				bedrooms: body.bedrooms,
 				beds: body.beds,
 				bathrooms: body.bathrooms,
-				pricePerNight: body.pricePerNight,
 				country: body.country.trim(),
 				city: body.city.trim(),
 				address: body.address.trim(),
 				latitude: body.lat ?? 0,
 				longitude: body.lng ?? 0,
 				status: body.status,
-				ownerId: hostId,
+				user_id: hostId,
 			},
 			include: { images: { orderBy: { order: 'asc' } } },
 		});

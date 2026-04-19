@@ -33,10 +33,10 @@ export default function BookingsPage() {
 						key={booking.id}
 						className="grid w-full grid-cols-1 gap-2 border-b border-black/5 px-5 py-4 text-left transition hover:bg-black/[0.02] md:grid-cols-4 md:gap-4"
 					>
-						<span className="font-medium">{booking.guestName}</span>
-						<span className="text-sm text-[#1A1A1A]/65">{booking.propertyTitle}</span>
+						<span className="font-medium">{booking.guest_name}</span>
+						<span className="text-sm text-[#1A1A1A]/65">{booking.property_title}</span>
 						<span className="text-sm text-[#1A1A1A]/65">
-							{booking.startDate} - {booking.endDate}
+							{booking.start_date} - {booking.end_date}
 						</span>
 						<span className="text-sm capitalize">{booking.status}</span>
 					</button>

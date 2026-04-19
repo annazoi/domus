@@ -14,7 +14,8 @@ export default function SignUpPage() {
   const router = useRouter();
   const setLogin = useAuthStore((state) => state.login);
   
-  const [fullName, setFullName] = useState("");
+  const [first_name, setFirstName] = useState("");
+  const [last_name, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,7 +28,8 @@ export default function SignUpPage() {
 
     try {
       const response = await axiosInstance.post(ApiRoutes.auth.register, {
-        full_name: fullName,
+        first_name: first_name.trim() || undefined,
+        last_name: last_name.trim() || undefined,
         email,
         password,
       });
@@ -39,8 +41,8 @@ export default function SignUpPage() {
         isLoggedIn: true,
         user_uuid: userData.user_uuid || userData.uuid,
         account_uuid: userData.account_uuid,
-        role: userData.role,
-        full_name: userData.full_name,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
         email: userData.email,
         access_token: userData.access_token || userData.token,
         expires_in: userData.expires_in,
@@ -88,15 +90,27 @@ export default function SignUpPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1.5">
-              Full Name
+              First name <span className="text-stone-400 font-normal">(optional)</span>
             </label>
             <input
               type="text"
-              required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              value={first_name}
+              onChange={(e) => setFirstName(e.target.value)}
               className="w-full px-4 py-3 bg-white border border-stone-200 rounded-sm focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-400 transition-colors font-light text-stone-900 placeholder:text-stone-300"
-              placeholder="Jane Doe"
+              placeholder="Jane"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1.5">
+              Last name <span className="text-stone-400 font-normal">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={last_name}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full px-4 py-3 bg-white border border-stone-200 rounded-sm focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-400 transition-colors font-light text-stone-900 placeholder:text-stone-300"
+              placeholder="Doe"
             />
           </div>
 

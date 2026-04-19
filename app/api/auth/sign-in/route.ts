@@ -26,7 +26,8 @@ export async function POST(request: Request) {
 			select: {
 				id: true,
 				email: true,
-				fullName: true,
+				first_name: true,
+				last_name: true,
 				password: true,
 			},
 		});
@@ -37,11 +38,12 @@ export async function POST(request: Request) {
 
 		return Response.json(
 			{
+				id: user.id,
 				user_uuid: user.id,
 				uuid: user.id,
 				email: user.email,
-				full_name: user.fullName,
-				role: 'USER',
+				first_name: user.first_name,
+				last_name: user.last_name,
 				access_token: null,
 				expires_in: null,
 				account_uuid: null,
