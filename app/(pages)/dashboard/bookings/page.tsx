@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@/components/ui';
 import { useBookings } from '@/features/property/hooks/use-property';
 
 export default function BookingsPage() {
@@ -28,10 +29,11 @@ export default function BookingsPage() {
 					<span>Status</span>
 				</div>
 				{bookings.map((booking) => (
-					<button
+					<Button
 						type="button"
 						key={booking.id}
-						className="grid w-full grid-cols-1 gap-2 border-b border-black/5 px-5 py-4 text-left transition hover:bg-black/[0.02] md:grid-cols-4 md:gap-4"
+						variant="custom"
+						className="grid w-full grid-cols-1 gap-2 border-b border-black/5 px-5 py-4 text-left font-normal transition hover:bg-black/[0.02] md:grid-cols-4 md:gap-4"
 					>
 						<span className="font-medium">{booking.guest_name}</span>
 						<span className="text-sm text-[#1A1A1A]/65">{booking.property_title}</span>
@@ -39,7 +41,7 @@ export default function BookingsPage() {
 							{booking.start_date} - {booking.end_date}
 						</span>
 						<span className="text-sm capitalize">{booking.status}</span>
-					</button>
+					</Button>
 				))}
 			</div>
 		</div>

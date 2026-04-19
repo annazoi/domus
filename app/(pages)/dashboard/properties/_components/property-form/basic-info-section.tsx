@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button, Input, Select, Textarea } from '@/components/ui';
 import { ApartmentOptions } from '@/config/constants/dropdowns/apartment.options';
 import type { PropertyStatus, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { PropertyFormSection } from './property-form-section';
@@ -36,8 +37,9 @@ export function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
 						</AnimatePresence>
 					</div>
 				</div>
-				<button
+				<Button
 					type="button"
+					variant="custom"
 					role="switch"
 					aria-checked={isPublished}
 					aria-label={isPublished ? 'Published: click to unpublish' : 'Draft: click to publish'}
@@ -53,48 +55,57 @@ export function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
 							isPublished ? 'translate-x-5' : 'translate-x-0',
 						].join(' ')}
 					/>
-				</button>
+				</Button>
 			</div>
 			<div className="grid gap-4 md:grid-cols-2">
 				<div className="space-y-1.5">
 					<label htmlFor="property-title" className="text-sm font-medium text-[#1A1A1A]">
 						Title *
 					</label>
-					<input
+					<Input
 						id="property-title"
 						value={form.title}
 						onChange={(event) => onChange('title', event.target.value)}
 						placeholder="Enter title"
-						className="w-full rounded-xl border border-black/10 px-4 py-3"
+					/>
+				</div>
+				<div className="space-y-1.5">
+					<label htmlFor="property-slug" className="text-sm font-medium text-[#1A1A1A]">
+						Slug *
+					</label>
+					<Input
+						id="property-slug"
+						value={form.slug}
+						onChange={(event) => onChange('slug', event.target.value)}
+						placeholder="Enter slug"
 					/>
 				</div>
 				<div className="space-y-1.5">
 					<label htmlFor="property-type" className="text-sm font-medium text-[#1A1A1A]">
 						Property type
 					</label>
-					<select
+					<Select
 						id="property-type"
+						variant="default"
 						value={form.property_type}
 						onChange={(event) => onChange('property_type', event.target.value)}
-						className="w-full rounded-xl border border-black/10 px-4 py-3"
 					>
 						{ApartmentOptions.map((option) => (
 							<option key={option.value} value={option.value}>
 								{option.label}
 							</option>
 						))}
-					</select>
+					</Select>
 				</div>
 				<div className="space-y-1.5">
 					<label htmlFor="property-room-type" className="text-sm font-medium text-[#1A1A1A]">
 						Room type
 					</label>
-					<input
+					<Input
 						id="property-room-type"
 						value={form.room_type}
 						onChange={(event) => onChange('room_type', event.target.value)}
 						placeholder="Enter room type"
-						className="w-full rounded-xl border border-black/10 px-4 py-3"
 					/>
 				</div>
 			</div>
@@ -102,12 +113,22 @@ export function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
 				<label htmlFor="property-description" className="text-sm font-medium text-[#1A1A1A]">
 					Description
 				</label>
-				<textarea
+				<Textarea
 					id="property-description"
 					value={form.description}
 					onChange={(event) => onChange('description', event.target.value)}
 					placeholder="Write a short description"
-					className="min-h-28 w-full rounded-xl border border-black/10 px-4 py-3"
+				/>
+			</div>
+			<div className="space-y-1.5">	
+				<label htmlFor="property-short-description" className="text-sm font-medium text-[#1A1A1A]">
+					Short description
+				</label>
+				<Textarea
+					id="property-short-description"
+					value={form.short_description}
+					onChange={(event) => onChange('short_description', event.target.value)}
+					placeholder="Write a short description"
 				/>
 			</div>
 		</PropertyFormSection>

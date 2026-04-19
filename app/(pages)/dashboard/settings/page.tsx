@@ -1,3 +1,5 @@
+import { Button, Input } from '@/components/ui';
+
 const fields = [
 	{ label: 'Profile name', placeholder: 'Zoian A.' },
 	{ label: 'Business email', placeholder: 'host@domus.com' },
@@ -18,20 +20,13 @@ export default function SettingsPage() {
 				{fields.map((field) => (
 					<label key={field.label} className="block space-y-2">
 						<span className="text-sm text-[#1A1A1A]/65">{field.label}</span>
-						<input
-							type="text"
-							placeholder={field.placeholder}
-							className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#6B705C]/45 focus:ring-2 focus:ring-[#6B705C]/15"
-						/>
+						<Input variant="settings" type="text" placeholder={field.placeholder} />
 					</label>
 				))}
 
-				<button
-					type="button"
-					className="cursor-pointer rounded-full bg-[#1A1A1A] px-5 py-2.5 text-sm text-white transition hover:-translate-y-0.5 hover:bg-[#1A1A1A]/90"
-				>
+				<Button type="button" variant="primarySm">
 					Save changes
-				</button>
+				</Button>
 			</form>
 		</div>
 	);

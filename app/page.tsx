@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { motion, Variants } from 'framer-motion';
 import { ArrowRight, Check, ChevronRight } from 'lucide-react';
 import { ApiRoutes } from '@/config/api/routes';
+import { buttonClassName, Button } from '@/components/ui';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -51,10 +52,7 @@ export default function Home() {
 						Pricing
 					</a>
 				</div>
-				<Link
-					className="cursor-pointer text-sm font-medium border border-stone-100/30 px-5 py-2 rounded-full hover:bg-stone-100 hover:text-stone-900 transition-colors"
-					href={ApiRoutes.auth.login}
-				>
+				<Link className={buttonClassName('navLogin')} href={ApiRoutes.auth.login}>
 					Log In
 				</Link>
 			</nav>
@@ -89,7 +87,7 @@ export default function Home() {
 					</motion.p>
 					<motion.button
 						variants={fadeIn}
-						className="cursor-pointer bg-stone-50 text-stone-900 px-8 py-4 rounded-full text-sm font-medium tracking-wide hover:bg-stone-200 transition-colors flex items-center gap-2 group"
+						className={buttonClassName('hero', 'flex items-center gap-2 group')}
 					>
 						Start building
 						<ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -318,9 +316,9 @@ export default function Home() {
 									<Check className="w-4 h-4 text-stone-800" /> 0% booking fees
 								</li>
 							</ul>
-							<button className="cursor-pointer w-full border border-stone-800 text-stone-900 py-3 rounded-full text-sm hover:bg-stone-50 transition-colors">
+							<Button type="button" variant="pricingOutline">
 								Select Essential
-							</button>
+							</Button>
 						</motion.div>
 
 						{/* Plan 2 */}
@@ -347,9 +345,9 @@ export default function Home() {
 									<Check className="w-4 h-4" /> Priority support
 								</li>
 							</ul>
-							<button className="w-full bg-stone-50 text-stone-900 py-3 rounded-full text-sm hover:bg-stone-200 transition-colors cursor-pointer">	
+							<Button type="button" variant="pricingInverse">
 								Select Portfolio
-							</button>
+							</Button>
 						</motion.div>
 					</div>
 				</div>
@@ -361,10 +359,10 @@ export default function Home() {
 					<h2 className="font-serif text-5xl md:text-7xl mb-12 text-stone-800 max-w-3xl leading-[1.1]">
 						Start building your rental brand today.
 					</h2>
-					<button className="cursor-pointer bg-stone-900 text-stone-50 px-10 py-5 rounded-full text-sm font-medium tracking-wide hover:bg-stone-800 transition-colors flex items-center gap-2 group mx-auto">
+					<Button type="button" variant="heroDark" className="mx-auto flex items-center gap-2 group">
 						Get started
 						<ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-					</button>
+					</Button>
 				</motion.div>
 			</section>
 

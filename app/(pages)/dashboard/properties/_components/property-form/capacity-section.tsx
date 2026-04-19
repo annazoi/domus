@@ -1,3 +1,4 @@
+import { Input } from '@/components/ui';
 import type { UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { PropertyFormSection } from './property-form-section';
 
@@ -22,14 +23,13 @@ export function CapacitySection({ form, onChange }: CapacitySectionProps) {
 						<label htmlFor={`capacity-${field.key}`} className="text-sm font-medium text-[#1A1A1A]">
 							{field.label}
 						</label>
-						<input
+						<Input
 							id={`capacity-${field.key}`}
 							type="number"
 							min={0}
 							value={form[field.key]}
 							onChange={(event) => onChange(field.key, Number(event.target.value))}
 							placeholder={`Enter ${field.label.replace(' *', '').toLowerCase()}`}
-							className="w-full rounded-xl border border-black/10 px-4 py-3"
 						/>
 					</div>
 				))}

@@ -37,6 +37,7 @@ export interface Property {
 	title: string;
 	slug: string;
 	description: string;
+	short_description?: string;
 	property_type: string;
 	room_type: string;
 	max_guests: number;
@@ -58,7 +59,9 @@ export interface Property {
 
 export interface UpsertPropertyInput {
 	title: string;
+	slug: string;
 	description: string;
+	short_description?: string;
 	property_type: string;
 	room_type: string;
 	max_guests: number;

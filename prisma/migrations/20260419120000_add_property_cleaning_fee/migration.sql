@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "properties" ADD COLUMN IF NOT EXISTS "cleaning_fee" DOUBLE PRECISION NOT NULL DEFAULT 0;

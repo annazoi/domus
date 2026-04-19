@@ -20,8 +20,7 @@ enum Reason {
 }
 
 enum UserRole {
-  HOST
-  GUEST
+  USER
   SUPPORT
   ADMIN
   SUPER_ADMIN
@@ -30,16 +29,27 @@ enum UserRole {
 model User {
   id         String   @id @default(uuid())
   email      String   @unique
-  first_name String?
-  last_name  String?
+  first_name String
+  last_name  String
+  role       UserRole @default(USER)
+  vat_number String?
   password   String
+  phone        String?
+  bio          String?
+  avatar_id    String? @unique
+  banner_id    String? @unique
+  is_verified  Boolean @default(false)
+  is_host     Boolean  @default(true)
+  is_archived Boolean  @default(true)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
+  avatar   Document? @relation("UserAvatar", fields: [avatar_id], references: [id])
+  banner   Document? @relation("UserBanner", fields: [banner_id], references: [id])
   properties              Property[]
   property_images         PropertyImage[]
   property_availability   PropertyAvailability[]
-  documents               Document[]
+  documents               Document[] @relation("UserDocuments")
 
   @@map("users")
   @@index([email])
@@ -50,7 +60,9 @@ model Property {
   id            String   @id @default(uuid())
   user_id       String
   title         String
+  slug          String   @unique
   description   String?
+  short_description String?
   property_type String
   max_guests    Int
   bedrooms      Int
@@ -61,7 +73,8 @@ model Property {
   address       String
   latitude      Float
   longitude     Float
-  status        String   @default("  ")
+  cleaning_fee  Float    @default(0)
+  status        String   @default("  ") //do delete
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
@@ -131,7 +144,7 @@ model PropertyImage {
 model Document {
   id                  String         @id @default(uuid())
   user_id             String
-  property_image_id   String
+  property_image_id   String?
   filename            String
   mimetype            String
   size                Int
@@ -143,9 +156,11 @@ model Document {
   updated_at          DateTime       @updatedAt
   property_amenity_id String?
 
-  user            User             @relation(fields: [user_id], references: [id])
-  property_image  PropertyImage    @relation(fields: [property_image_id], references: [id])
+  user             User             @relation("UserDocuments", fields: [user_id], references: [id])
+  property_image   PropertyImage?   @relation(fields: [property_image_id], references: [id])
   property_amenity PropertyAmenity? @relation(fields: [property_amenity_id], references: [id])
+  user_as_avatar   User?            @relation("UserAvatar")
+  user_as_banner   User?            @relation("UserBanner")
 
   @@index([user_id])
   @@map("documents")

@@ -1,13 +1,20 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { GoogleMapsPlacesScript } from '@/components/google-maps';
+import { Button } from '@/components/ui';
 import { useSetDashboardPageIntro } from '@/app/(pages)/dashboard/_components/dashboard-shell';
 import { ApartmentOptions } from '@/config/constants/dropdowns/apartment.options';
 import type { Property, PropertyImage, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
+import { propertyQueryKey } from '@/features/property/hooks/use-property';
 import {
 	deleteImage,
+	patchPropertyBasicInfo,
+	patchPropertyCapacity,
+	patchPropertyLocation,
+	patchPropertyPricing,
 	reorderPropertyImages,
 	savePropertyAmenities,
 	uploadFilesToCloudinary,
@@ -24,12 +31,15 @@ import { PropertyFormSidebar, type PropertyFormTabId } from './property-form/pro
 type PropertyFormProps = {
 	mode: 'create' | 'edit';
 	initialProperty?: Property | null;
-	onSubmit: (payload: UpsertPropertyInput) => Promise<Property>;
+	/** Used for the first save on the create flow (basic info). */
+	onSubmit?: (payload: UpsertPropertyInput) => Promise<Property>;
 };
 
 const defaultValues: UpsertPropertyInput = {
 	title: '',
+	short_description: '',
 	description: '',
+    slug: '',
 	property_type: ApartmentOptions[0].value,
 	room_type: 'Entire place',
 	max_guests: 1,
@@ -52,32 +62,26 @@ const numberOrNull = (value: string) => {
 };
 
 function TabSaveFooter({
-	label,
 	onSave,
 	disabled,
 	saving,
 }: {
-	label: string;
 	onSave: () => void | Promise<void>;
 	disabled?: boolean;
 	saving: boolean;
 }) {
 	return (
 		<div className="mt-6 flex justify-end border-t border-black/5 pt-5">
-			<button
-				type="button"
-				onClick={() => void onSave()}
-				disabled={disabled || saving}
-				className="cursor-pointer rounded-full bg-[#1A1A1A] px-6 py-2.5 text-sm text-white transition hover:-translate-y-0.5 disabled:opacity-60"
-			>
-				{saving ? 'Saving...' : label}
-			</button>
+			<Button type="button" onClick={() => void onSave()} disabled={disabled || saving} variant="primary">
+				{saving ? 'Saving...' : 'Save'}
+			</Button>
 		</div>
 	);
 }
 
 export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormProps) {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const [form, setForm] = useState<UpsertPropertyInput>(initialProperty ? { ...initialProperty } : defaultValues);
 	const [images, setImages] = useState<PropertyImage[]>(initialProperty?.images ?? []);
 	const [selectedAmenities, setSelectedAmenities] = useState<string[]>(initialProperty?.amenity_ids ?? []);
@@ -139,7 +143,7 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 				setError('Add a title under Basic info first.');
 				return;
 			}
-		} else if (tab === 'pricing') {
+		} else if (tab === 'pricing-availability') {
 			if (needTitleForCreate) {
 				setError('Add a title under Basic info first.');
 				return;
@@ -166,17 +170,65 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 
 		setSaving(true);
 		try {
-			if (
-				tab === 'basic-info' ||
-				tab === 'capacity' ||
-				tab === 'location' ||
-				tab === 'pricing'
-			) {
-				const saved = await onSubmit(form);
+			const persistId = initialProperty?.id;
+
+			if (tab === 'basic-info') {
 				if (mode === 'create') {
+					if (!onSubmit) {
+						setError('Create handler is missing.');
+						return;
+					}
+					const saved = await onSubmit(form);
 					router.replace(`/dashboard/properties/${saved.id}`);
 					return;
 				}
+				if (!persistId) return;
+				const saved = await patchPropertyBasicInfo(persistId, {
+					title: form.title,
+					slug: form.slug,
+					description: form.description,
+					short_description: form.short_description,
+					property_type: form.property_type,
+					status: form.status,
+				});
+				setForm((prev) => ({ ...prev, ...saved, room_type: prev.room_type }));
+				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.all });
+				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.detail(persistId) });
+				setSuccess('Saved.');
+			} else if (tab === 'capacity') {
+				if (!persistId) return;
+				const saved = await patchPropertyCapacity(persistId, {
+					max_guests: form.max_guests,
+					bedrooms: form.bedrooms,
+					beds: form.beds,
+					bathrooms: form.bathrooms,
+				});
+				setForm((prev) => ({ ...prev, ...saved, room_type: prev.room_type }));
+				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.all });
+				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.detail(persistId) });
+				setSuccess('Saved.');
+			} else if (tab === 'location') {
+				if (!persistId) return;
+				const saved = await patchPropertyLocation(persistId, {
+					country: form.country,
+					city: form.city,
+					address: form.address,
+					lat: form.lat,
+					lng: form.lng,
+				});
+				setForm((prev) => ({ ...prev, ...saved, room_type: prev.room_type }));
+				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.all });
+				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.detail(persistId) });
+				setSuccess('Saved.');
+			} else if (tab === 'pricing-availability') {
+				if (!persistId) return;
+				const saved = await patchPropertyPricing(persistId, {
+					cleaning_fee: form.cleaning_fee,
+					status: form.status,
+				});
+				setForm((prev) => ({ ...prev, ...saved, room_type: prev.room_type }));
+				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.all });
+				void queryClient.invalidateQueries({ queryKey: propertyQueryKey.detail(persistId) });
 				setSuccess('Saved.');
 			} else if (tab === 'amenities') {
 				await savePropertyAmenities(propertyId as string, selectedAmenities);
@@ -265,21 +317,13 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 					{activeTab === 'basic-info' ? (
 						<>
 							<BasicInfoSection form={form} onChange={(field, value) => updateForm(field, value)} />
-							<TabSaveFooter
-								label={mode === 'create' ? 'Create property' : 'Save basic info'}
-								onSave={() => handleSaveTab('basic-info')}
-								saving={saving}
-								/>
+							<TabSaveFooter onSave={() => handleSaveTab('basic-info')} saving={saving} />
 						</>
 					) : null}
 					{activeTab === 'capacity' ? (
 						<>
 							<CapacitySection form={form} onChange={(field, value) => updateForm(field, value)} />
-							<TabSaveFooter
-								label={mode === 'create' ? 'Continue' : 'Save capacity'}
-								onSave={() => handleSaveTab('capacity')}
-								saving={saving}
-								/>
+							<TabSaveFooter onSave={() => handleSaveTab('capacity')} saving={saving} />
 						</>
 					) : null}
 					{activeTab === 'location' ? (
@@ -290,21 +334,13 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 								onFieldChange={(field, value) => updateForm(field, value)}
 								onCoordinateChange={(field, value) => updateForm(field, numberOrNull(value))}
 								/>
-							<TabSaveFooter
-								label={mode === 'create' ? 'Continue' : 'Save location'}
-								onSave={() => handleSaveTab('location')}
-								saving={saving}
-								/>
+							<TabSaveFooter onSave={() => handleSaveTab('location')} saving={saving} />
 						</>
 					) : null}
-					{activeTab === 'pricing' ? (
+					{activeTab === 'pricing-availability' ? (
 						<>
 							<PricingSection form={form} onNumberChange={(field, value) => updateForm(field, value)} />
-							<TabSaveFooter
-								label={mode === 'create' ? 'Continue' : 'Save pricing'}
-								onSave={() => handleSaveTab('pricing')}
-								saving={saving}
-								/>
+							<TabSaveFooter onSave={() => handleSaveTab('pricing-availability')} saving={saving} />
 						</>
 					) : null}
 					{activeTab === 'amenities' ? (
@@ -319,11 +355,7 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 							)
 						}
 						/>
-							<TabSaveFooter
-								label="Save amenities"
-								onSave={() => handleSaveTab('amenities')}
-								saving={saving}
-								/>
+							<TabSaveFooter onSave={() => handleSaveTab('amenities')} saving={saving} />
 						</>
 					) : null}
 					{activeTab === 'images' ? (
@@ -350,7 +382,6 @@ export function PropertyForm({ mode, initialProperty, onSubmit }: PropertyFormPr
 								onDelete={(imageId) => void handleImageDelete(imageId)}
 								/>
 							<TabSaveFooter
-								label="Upload images"
 								onSave={() => handleSaveTab('images')}
 								disabled={saving || (Boolean(propertyId) && !imageFiles.length)}
 								saving={saving}

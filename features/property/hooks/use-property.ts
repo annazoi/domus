@@ -9,7 +9,7 @@ import {
 	updateProperty,
 } from '../services/property.services';
 
-const propertyQueryKey = {
+export const propertyQueryKey = {
 	all: ['properties'] as const,
 	detail: (id: string) => ['properties', id] as const,
 	bookings: ['bookings'] as const,

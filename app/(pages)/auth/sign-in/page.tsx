@@ -9,6 +9,7 @@ import axios from 'axios';
 import axiosInstance from '@/config/api/axios';
 import { ApiRoutes } from '@/config/api/routes';
 import { useAuthStore } from '@/store/auth';
+import { Button, Input } from '@/components/ui';
 
 export default function SignInPage() {
 	const router = useRouter();
@@ -39,6 +40,7 @@ export default function SignInPage() {
 				account_uuid: userData.account_uuid,
 				first_name: userData.first_name,
 				last_name: userData.last_name,
+				vat_number: userData.vat_number ?? null,
 				email: userData.email,
 				access_token: userData.access_token || userData.token,
 				expires_in: userData.expires_in,
@@ -82,12 +84,12 @@ export default function SignInPage() {
 				<div className="space-y-4">
 					<div>
 						<label className="block text-sm font-medium text-stone-700 mb-1.5">Email Address</label>
-						<input
+						<Input
+							variant="auth"
 							type="email"
 							required
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
-							className="w-full px-4 py-3 bg-white border border-stone-200 rounded-sm focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-400 transition-colors font-light text-stone-900 placeholder:text-stone-300"
 							placeholder="you@example.com"
 						/>
 					</div>
@@ -102,12 +104,12 @@ export default function SignInPage() {
 								Forgot password?
 							</Link>
 						</div>
-						<input
+						<Input
+							variant="auth"
 							type="password"
 							required
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
-							className="w-full px-4 py-3 bg-white border border-stone-200 rounded-sm focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-400 transition-colors font-light text-stone-900"
 							placeholder="••••••••"
 						/>
 					</div>
@@ -120,11 +122,7 @@ export default function SignInPage() {
 					</Link>
 				</div>
 
-				<button
-					type="submit"
-					disabled={isLoading}
-					className="cursor-pointer w-full bg-stone-900 text-stone-50 py-3.5 rounded-sm text-sm font-medium hover:bg-stone-800 transition-colors flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
-				>
+				<Button type="submit" variant="auth" disabled={isLoading} className="group">
 					{isLoading ? (
 						<Loader2 className="w-4 h-4 animate-spin" />
 					) : (
@@ -133,7 +131,7 @@ export default function SignInPage() {
 							<ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
 						</>
 					)}
-				</button>
+				</Button>
 			</form>
 
 			<div className="mt-8 text-center text-sm text-stone-500 font-light">

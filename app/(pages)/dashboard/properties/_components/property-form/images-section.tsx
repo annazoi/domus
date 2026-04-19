@@ -1,3 +1,4 @@
+import { Button, Input } from '@/components/ui';
 import type { PropertyImage } from '@/features/property/interfaces/property.interface';
 import { PropertyFormSection } from './property-form-section';
 
@@ -30,7 +31,7 @@ export function ImagesSection({
 		<PropertyFormSection id="images" title="Images manager">
 			{mode === 'create' ? (
 				<p className="text-sm text-[#1A1A1A]/60">
-					Create the property from Basic info (or another section), then return here and use &quot;Upload images&quot;
+					Create the property from Basic info (or another section), then return here, select images, and click Save
 					below.
 				</p>
 			) : null}
@@ -38,13 +39,12 @@ export function ImagesSection({
 				<label htmlFor="property-images-upload" className="text-sm font-medium text-[#1A1A1A]">
 					Upload images
 				</label>
-				<input
+				<Input
 					id="property-images-upload"
 					type="file"
 					multiple
 					accept="image/*"
 					onChange={(event) => onImageFilesChange(Array.from(event.target.files ?? []))}
-					className="w-full rounded-xl border border-black/10 px-4 py-3"
 				/>
 			</div>
 			{mode === 'edit' && initialPropertyId ? (
@@ -66,16 +66,22 @@ export function ImagesSection({
 								style={{ backgroundImage: `url(${image.url})` }}
 							/>
 							<div className="flex items-center justify-between text-xs">
-								<button
+								<Button
 									type="button"
+									variant="custom"
 									onClick={() => onSetCover(image.id)}
 									className={image.is_cover ? 'text-[#6B705C]' : 'text-[#1A1A1A]/50'}
 								>
 									{image.is_cover ? 'Cover image' : 'Set as cover'}
-								</button>
-								<button type="button" onClick={() => onDelete(image.id)} className="text-red-600">
+								</Button>
+								<Button
+									type="button"
+									variant="custom"
+									onClick={() => onDelete(image.id)}
+									className="text-red-600 hover:text-red-700"
+								>
 									Delete
-								</button>
+								</Button>
 							</div>
 						</div>
 					))}

@@ -12,10 +12,14 @@ const isValidEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 export async function POST(request: Request) {
 	try {
 		const body = (await request.json()) as RegisterPayload;
-		const first_name = body.first_name?.trim() || undefined;
-		const last_name = body.last_name?.trim() || undefined;
+		const first_name = body.first_name?.trim() ?? '';
+		const last_name = body.last_name?.trim() ?? '';
 		const email = body.email?.trim().toLowerCase();
 		const password = body.password;
+
+		if (!first_name || !last_name) {
+			return Response.json({ message: 'first_name and last_name are required.' }, { status: 400 });
+		}
 
 		if (!email || !password) {
 			return Response.json({ message: 'email and password are required.' }, { status: 400 });
@@ -40,8 +44,8 @@ export async function POST(request: Request) {
 
 		const user = await prisma.user.create({
 			data: {
-				...(first_name ? { first_name } : {}),
-				...(last_name ? { last_name } : {}),
+				first_name,
+				last_name,
 				email,
 				password,
 			},

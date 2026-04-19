@@ -28,6 +28,7 @@ export async function POST(request: Request) {
 				email: true,
 				first_name: true,
 				last_name: true,
+				vat_number: true,
 				password: true,
 			},
 		});
@@ -44,6 +45,7 @@ export async function POST(request: Request) {
 				email: user.email,
 				first_name: user.first_name,
 				last_name: user.last_name,
+				vat_number: user.vat_number,
 				access_token: null,
 				expires_in: null,
 				account_uuid: null,

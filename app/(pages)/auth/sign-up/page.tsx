@@ -9,6 +9,7 @@ import axios from "axios";
 import axiosInstance from "@/config/api/axios";
 import { ApiRoutes } from "@/config/api/routes";
 import { useAuthStore } from "@/store/auth";
+import { Button, Input } from "@/components/ui";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -28,8 +29,8 @@ export default function SignUpPage() {
 
     try {
       const response = await axiosInstance.post(ApiRoutes.auth.register, {
-        first_name: first_name.trim() || undefined,
-        last_name: last_name.trim() || undefined,
+        first_name: first_name.trim(),
+        last_name: last_name.trim(),
         email,
         password,
       });
@@ -43,6 +44,7 @@ export default function SignUpPage() {
         account_uuid: userData.account_uuid,
         first_name: userData.first_name,
         last_name: userData.last_name,
+        vat_number: null,
         email: userData.email,
         access_token: userData.access_token || userData.token,
         expires_in: userData.expires_in,
@@ -90,26 +92,28 @@ export default function SignUpPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1.5">
-              First name <span className="text-stone-400 font-normal">(optional)</span>
+              First name
             </label>
-            <input
+            <Input
+              variant="auth"
               type="text"
+              required
               value={first_name}
               onChange={(e) => setFirstName(e.target.value)}
-              className="w-full px-4 py-3 bg-white border border-stone-200 rounded-sm focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-400 transition-colors font-light text-stone-900 placeholder:text-stone-300"
               placeholder="Jane"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1.5">
-              Last name <span className="text-stone-400 font-normal">(optional)</span>
+              Last name
             </label>
-            <input
+            <Input
+              variant="auth"
               type="text"
+              required
               value={last_name}
               onChange={(e) => setLastName(e.target.value)}
-              className="w-full px-4 py-3 bg-white border border-stone-200 rounded-sm focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-400 transition-colors font-light text-stone-900 placeholder:text-stone-300"
               placeholder="Doe"
             />
           </div>
@@ -118,12 +122,12 @@ export default function SignUpPage() {
             <label className="block text-sm font-medium text-stone-700 mb-1.5">
               Email Address
             </label>
-            <input
+            <Input
+              variant="auth"
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-white border border-stone-200 rounded-sm focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-400 transition-colors font-light text-stone-900 placeholder:text-stone-300"
               placeholder="you@example.com"
             />
           </div>
@@ -132,22 +136,23 @@ export default function SignUpPage() {
             <label className="block text-sm font-medium text-stone-700 mb-1.5">
               Password
             </label>
-            <input
+            <Input
+              variant="auth"
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-white border border-stone-200 rounded-sm focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-400 transition-colors font-light text-stone-900"
               placeholder="Create a strong password"
               minLength={8}
             />
           </div>
         </div>
 
-        <button
+        <Button
           type="submit"
+          variant="auth"
           disabled={isLoading}
-          className="w-full bg-stone-900 text-stone-50 py-3.5 rounded-sm text-sm font-medium hover:bg-stone-800 transition-colors flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed mt-4"
+          className="mt-4 group"
         >
           {isLoading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -157,7 +162,7 @@ export default function SignUpPage() {
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </>
           )}
-        </button>
+        </Button>
 
         <p className="text-xs text-stone-400 font-light text-center mt-4">
           By signing up, you agree to our Terms of Service and Privacy Policy.

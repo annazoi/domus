@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, type ChangeEvent, type ComponentPropsWithoutRef } from 'react';
+import { Input } from '@/components/ui/input';
 import { placeResultToSelection, type PlaceSelection } from './place-selection';
 
 type PlacesAutocompleteInputProps = Omit<ComponentPropsWithoutRef<'input'>, 'onChange'> & {
@@ -49,5 +50,5 @@ export function PlacesAutocompleteInput({
 		};
 	}, [placesLibraryReady]);
 
-	return <input ref={inputRef} {...inputProps} onChange={onChange} />;
+	return <Input ref={inputRef} variant="default" {...inputProps} onChange={onChange} />;
 }

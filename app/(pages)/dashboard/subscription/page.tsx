@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui';
+
 const plans = [
 	{
 		name: 'Essential',
@@ -49,18 +51,14 @@ export default function SubscriptionPage() {
 							))}
 						</ul>
 
-						<button
+						<Button
 							type="button"
-							className={[
-								'mt-6 rounded-full px-5 py-2.5 text-sm transition cursor-pointer',
-								plan.current
-									? 'bg-black/5 text-[#1A1A1A]/50'
-									: 'bg-[#1A1A1A] text-white hover:-translate-y-0.5 hover:bg-[#1A1A1A]/90',
-							].join(' ')}
+							variant={plan.current ? 'subscriptionInactive' : 'primarySm'}
+							className="mt-6"
 							disabled={plan.current}
 						>
 							{plan.current ? 'Current plan' : 'Switch plan'}
-						</button>
+						</Button>
 					</div>
 				))}
 			</div>

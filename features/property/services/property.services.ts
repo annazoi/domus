@@ -28,6 +28,35 @@ export const updateProperty = async (id: string, input: UpsertPropertyInput) => 
 	return response.data;
 };
 
+export const patchPropertyBasicInfo = async (
+	id: string,
+	input: Pick<UpsertPropertyInput, 'title' | 'slug' | 'description' | 'short_description' | 'property_type' | 'status'>,
+) => {
+	const response = await axiosInstance.patch<Property>(`/properties/${id}/basic-info`, input, { headers: authHeaders() });
+	return response.data;
+};
+
+export const patchPropertyCapacity = async (
+	id: string,
+	input: Pick<UpsertPropertyInput, 'max_guests' | 'bedrooms' | 'beds' | 'bathrooms'>,
+) => {
+	const response = await axiosInstance.patch<Property>(`/properties/${id}/capacity`, input, { headers: authHeaders() });
+	return response.data;
+};
+
+export const patchPropertyLocation = async (
+	id: string,
+	input: Pick<UpsertPropertyInput, 'country' | 'city' | 'address' | 'lat' | 'lng'>,
+) => {
+	const response = await axiosInstance.patch<Property>(`/properties/${id}/location`, input, { headers: authHeaders() });
+	return response.data;
+};
+
+export const patchPropertyPricing = async (id: string, input: Pick<UpsertPropertyInput, 'cleaning_fee' | 'status'>) => {
+	const response = await axiosInstance.patch<Property>(`/properties/${id}/pricing`, input, { headers: authHeaders() });
+	return response.data;
+};
+
 export const deleteProperty = async (id: string) => {
 	await axiosInstance.delete(`/properties/${id}`, { headers: authHeaders() });
 };

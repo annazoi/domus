@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui';
+
 const recentBookings = [
 	{ guest: 'Amelia Ford', dates: 'Apr 19 - Apr 24', status: 'Confirmed' },
 	{ guest: 'Luca Moretti', dates: 'Apr 25 - Apr 28', status: 'Pending' },
@@ -48,13 +50,9 @@ export default function DashboardOverviewPage() {
 				<h2 className="font-serif text-2xl">Quick actions</h2>
 				<div className="flex flex-wrap gap-3">
 					{quickActions.map((action) => (
-						<button
-							key={action}
-							type="button"
-							className="cursor-pointer rounded-full border border-black/10 bg-white px-5 py-2.5 text-sm transition hover:-translate-y-0.5 hover:border-[#6B705C]/40 hover:text-[#6B705C]"
-						>
+						<Button key={action} type="button" variant="quickAction">
 							{action}
-						</button>
+						</Button>
 					))}
 				</div>
 			</section>

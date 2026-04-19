@@ -1,3 +1,5 @@
+import { Button, cn } from '@/components/ui';
+
 const days = Array.from({ length: 30 }, (_, index) => index + 1);
 const booked = new Set([2, 3, 8, 9, 15, 16, 21, 22, 23]);
 
@@ -21,18 +23,19 @@ export default function CalendarPage() {
 					{days.map((day) => {
 						const isBooked = booked.has(day);
 						return (
-							<button
+							<Button
 								type="button"
 								key={day}
-								className={[
+								variant="custom"
+								className={cn(
 									'h-16 rounded-xl border text-sm transition',
 									isBooked
 										? 'border-[#6B705C]/25 bg-[#6B705C]/10 text-[#6B705C]'
 										: 'border-black/5 bg-white text-[#1A1A1A]/70 hover:border-[#6B705C]/30',
-								].join(' ')}
+								)}
 							>
 								{day}
-							</button>
+							</Button>
 						);
 					})}
 				</div>

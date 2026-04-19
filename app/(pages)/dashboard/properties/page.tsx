@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Button, buttonClassName } from '@/components/ui';
 import { useDeleteProperty, useProperties } from '@/features/property/hooks/use-property';
 
 export default function PropertiesPage() {
@@ -18,10 +19,7 @@ export default function PropertiesPage() {
 					<p className="text-xs uppercase tracking-[0.2em] text-[#6B705C]">Properties</p>
 					<h1 className="mt-2 font-serif text-4xl tracking-tight">Your homes, curated.</h1>
 				</div>
-				<Link
-					href="/dashboard/properties/new"
-					className="rounded-full bg-[#1A1A1A] px-5 py-2.5 text-sm text-white transition hover:-translate-y-0.5 hover:bg-[#1A1A1A]/90"
-				>
+				<Link href="/dashboard/properties/new" className={buttonClassName('primarySm')}>
 					Add Property
 				</Link>
 			</div>
@@ -55,13 +53,9 @@ export default function PropertiesPage() {
 								<Link href={`/dashboard/properties/${property.id}`} className="text-sm text-[#1A1A1A]/70 hover:text-[#6B705C]">
 									View
 								</Link>
-								<button
-									type="button"
-									onClick={() => void handleDelete(property.id)}
-									className="text-sm text-[#1A1A1A]/70 hover:text-red-700"
-								>
+								<Button type="button" variant="dangerLink" onClick={() => void handleDelete(property.id)}>
 									Delete
-								</button>
+								</Button>
 							</div>
 						</div>
 					);

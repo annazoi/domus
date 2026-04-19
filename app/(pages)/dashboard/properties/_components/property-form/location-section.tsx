@@ -1,6 +1,7 @@
 'use client';
 
 import { PlacesAutocompleteInput, type PlaceSelection } from '@/components/google-maps';
+import { Input } from '@/components/ui';
 import type { UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { PropertyFormSection } from './property-form-section';
 
@@ -43,7 +44,6 @@ export function LocationSection({
 					onPlaceSelect={(place) => applyPlaceToForm(place, onFieldChange, onCoordinateChange)}
 					placeholder="Search or enter address"
 					autoComplete="off"
-					className="w-full rounded-xl border border-black/10 px-4 py-3"
 				/>
 			</div>
 			<div className="grid gap-4 md:grid-cols-2">
@@ -51,24 +51,22 @@ export function LocationSection({
 					<label htmlFor="property-country" className="text-sm font-medium text-[#1A1A1A]">
 						Country
 					</label>
-					<input
+					<Input
 						id="property-country"
 						value={form.country}
 						onChange={(event) => onFieldChange('country', event.target.value)}
 						placeholder="Enter country"
-						className="w-full rounded-xl border border-black/10 px-4 py-3"
 					/>
 				</div>
 				<div className="space-y-1.5">
 					<label htmlFor="property-city" className="text-sm font-medium text-[#1A1A1A]">
 						City
 					</label>
-					<input
+					<Input
 						id="property-city"
 						value={form.city}
 						onChange={(event) => onFieldChange('city', event.target.value)}
 						placeholder="Enter city"
-						className="w-full rounded-xl border border-black/10 px-4 py-3"
 					/>
 				</div>
 			</div>
@@ -78,24 +76,22 @@ export function LocationSection({
 					<label htmlFor="property-latitude" className="text-sm font-medium text-[#1A1A1A]">
 						Latitude
 					</label>
-					<input
+					<Input
 						id="property-latitude"
 						value={form.lat ?? ''}
 						onChange={(event) => onCoordinateChange('lat', event.target.value)}
 						placeholder="Enter latitude"
-						className="w-full rounded-xl border border-black/10 px-4 py-3"
 					/>
 				</div>
 				<div className="space-y-1.5">
 					<label htmlFor="property-longitude" className="text-sm font-medium text-[#1A1A1A]">
 						Longitude
 					</label>
-					<input
+					<Input
 						id="property-longitude"
 						value={form.lng ?? ''}
 						onChange={(event) => onCoordinateChange('lng', event.target.value)}
 						placeholder="Enter longitude"
-						className="w-full rounded-xl border border-black/10 px-4 py-3"
 					/>
 				</div>
 			</div>

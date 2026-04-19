@@ -1,0 +1,57 @@
+import type { Property as PropertyDTO } from '@/features/property/interfaces/property.interface';
+
+export type PropertyWithImages = {
+	id: string;
+	title: string;
+	slug: string;
+	description: string | null;
+	short_description: string | null;
+	property_type: string;
+	max_guests: number;
+	bedrooms: number;
+	beds: number;
+	bathrooms: number;
+	country: string;
+	city: string;
+	address: string;
+	latitude: number;
+	longitude: number;
+	cleaning_fee: number;
+	status: string;
+	created_at: Date;
+	updated_at: Date;
+	user_id: string;
+	images: Array<{
+		id: string;
+		property_id: string;
+		url: string;
+		is_cover: boolean;
+		order: number;
+	}>;
+};
+
+export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
+	id: property.id,
+	host_id: property.user_id,
+	title: property.title,
+	slug: property.slug,
+	description: property.description ?? '',
+	short_description: property.short_description ?? '',
+	property_type: property.property_type,
+	room_type: '',
+	max_guests: property.max_guests,
+	bedrooms: property.bedrooms,
+	beds: property.beds,
+	bathrooms: property.bathrooms,
+	country: property.country,
+	city: property.city,
+	address: property.address,
+	lat: property.latitude,
+	lng: property.longitude,
+	cleaning_fee: property.cleaning_fee,
+	status: property.status as PropertyDTO['status'],
+	amenity_ids: [],
+	created_at: property.created_at.toISOString(),
+	updated_at: property.updated_at.toISOString(),
+	images: property.images,
+});

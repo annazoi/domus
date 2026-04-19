@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { Button, Input, cn } from '@/components/ui';
 import type { AvailabilityDay } from '@/features/property/interfaces/property.interface';
 import { listAvailability, upsertAvailability } from '@/features/property/services/property.services';
 
@@ -63,25 +64,26 @@ export default function PropertyCalendarPage() {
 							const item = dayMap.get(date);
 							const unavailable = item?.is_available === false;
 							return (
-								<button
+								<Button
 									key={date}
 									type="button"
+									variant="custom"
 									onClick={() => {
 										setSelectedDate(date);
 										setCustomPrice(item?.custom_price ? String(item.custom_price) : '');
 										setMessage('');
 									}}
-									className={[
+									className={cn(
 										'h-14 rounded-xl border text-sm',
 										selectedDate === date
 											? 'border-[#6B705C] bg-[#6B705C]/10'
 											: unavailable
 												? 'border-red-200 bg-red-50 text-red-700'
 												: 'border-black/10 bg-white hover:border-[#6B705C]/40',
-									].join(' ')}
+									)}
 								>
 									{day}
-								</button>
+								</Button>
 							);
 						})}
 					</div>
@@ -92,27 +94,18 @@ export default function PropertyCalendarPage() {
 					<p className="text-sm text-[#1A1A1A]/60">
 						{selectedDate ? `Selected: ${selectedDate}` : 'Select a date to update availability.'}
 					</p>
-					<input
+					<Input
 						value={customPrice}
 						onChange={(event) => setCustomPrice(event.target.value)}
 						placeholder="Custom price"
-						className="w-full rounded-xl border border-black/10 px-4 py-3"
 					/>
 					<div className="flex gap-2">
-						<button
-							type="button"
-							onClick={() => void saveDay(true)}
-							className="rounded-full border border-black/10 px-4 py-2 text-sm"
-						>
+						<Button type="button" variant="calendarPill" onClick={() => void saveDay(true)}>
 							Set available
-						</button>
-						<button
-							type="button"
-							onClick={() => void saveDay(false)}
-							className="rounded-full border border-black/10 px-4 py-2 text-sm"
-						>
+						</Button>
+						<Button type="button" variant="calendarPill" onClick={() => void saveDay(false)}>
 							Block date
-						</button>
+						</Button>
 					</div>
 					{message ? <p className="text-sm text-[#6B705C]">{message}</p> : null}
 				</div>
