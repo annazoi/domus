@@ -19,7 +19,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 		description?: string;
 		short_description?: string;
 		property_type?: string;
-		status?: string;
+		isVisible?: boolean;
 		check_in_time?: string;
 		check_out_time?: string;
 	};
@@ -38,7 +38,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 			description: body.description?.trim() || null,
 			short_description: body.short_description?.trim() || null,
 			property_type: body.property_type?.trim() || existing.property_type,
-			status: body.status ?? existing.status,
+			isPublished: body.isVisible ?? existing.isPublished,
 			check_in_time: parseTimeToUtcDate(body.check_in_time, '15:00'),
 			check_out_time: parseTimeToUtcDate(body.check_out_time, '11:00'),
 		},

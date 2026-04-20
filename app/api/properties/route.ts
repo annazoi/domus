@@ -31,6 +31,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
 	const hostId = getHostIdFromRequest(request);
 	if (!hostId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
+	const host = await prisma.user.findUnique({ where: { id: hostId }, select: { id: true } });
+	if (!host) return Response.json({ message: 'Invalid host session. Please sign in again.' }, { status: 401 });
 
 	const body = (await request.json()) as UpsertPropertyInput;
 	if (!body.title?.trim()) {
@@ -41,8 +43,6 @@ export async function POST(request: Request) {
 
 	try {
 		const slug = await uniquePropertySlug(body.slug?.trim() ? body.slug : body.title);
-		const cleaningRaw = Number(body.cleaning_fee);
-		const cleaning_fee = Number.isFinite(cleaningRaw) ? Math.max(0, cleaningRaw) : 0;
 		const check_in_time = parseTimeToUtcDate(body.check_in_time, '15:00');
 		const check_out_time = parseTimeToUtcDate(body.check_out_time, '11:00');
 
@@ -64,8 +64,7 @@ export async function POST(request: Request) {
 				address: (body.address ?? '').trim(),
 				latitude: body.lat ?? 0,
 				longitude: body.lng ?? 0,
-				cleaning_fee,
-				status: body.status ?? 'draft',
+				isPublished: body.isVisible ?? false,
 				user_id: hostId,
 			},
 			include: { images: { orderBy: { order: 'asc' }, include: { document: true } } },
@@ -73,6 +72,7 @@ export async function POST(request: Request) {
 
 		return Response.json(mapProperty(created), { status: 201 });
 	} catch (error) {
+		console.error('POST /api/properties failed', error);
 		return Response.json(
 			{ message: error instanceof Error ? error.message : 'Could not create property.' },
 			{ status: 500 },

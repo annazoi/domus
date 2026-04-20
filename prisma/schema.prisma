@@ -75,8 +75,7 @@ model Property {
   address       String
   latitude      Float
   longitude     Float
-  cleaning_fee  Float    @default(0)
-  status        String   @default("draft")
+  isPublished   Boolean  @default(false)
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
@@ -85,7 +84,7 @@ model Property {
   availability PropertyAvailability[]
   images       PropertyImage[]
 
-  @@index([user_id, status])
+  @@index([user_id, isPublished])
   @@map("properties")
 }
 

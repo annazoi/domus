@@ -42,8 +42,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 	if (!existing) return Response.json({ message: 'Property not found' }, { status: 404 });
 
 	const slug = await uniquePropertySlug(body.slug?.trim() ? body.slug : body.title, id);
-	const cleaningRaw = Number(body.cleaning_fee);
-	const cleaning_fee = Number.isFinite(cleaningRaw) ? Math.max(0, cleaningRaw) : 0;
 	const check_in_time = parseTimeToUtcDate(body.check_in_time, '15:00');
 	const check_out_time = parseTimeToUtcDate(body.check_out_time, '11:00');
 
@@ -66,8 +64,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 			address: (body.address ?? '').trim(),
 			latitude: body.lat ?? 0,
 			longitude: body.lng ?? 0,
-			cleaning_fee,
-			status: body.status ?? 'draft',
+			isPublished: body.isVisible ?? false,
 		},
 		include: { images: { orderBy: { order: 'asc' }, include: { document: true } } },
 	});

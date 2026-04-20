@@ -19,6 +19,5 @@ export const PROPERTY_FORM_DEFAULT_VALUES: UpsertPropertyInput = {
 	address: '',
 	lat: null,
 	lng: null,
-	cleaning_fee: 0,
-	status: 'draft',
+	isVisible: false,
 };

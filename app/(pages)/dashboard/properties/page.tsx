@@ -47,7 +47,9 @@ export default function PropertiesPage() {
 								<p className="text-sm text-[#1A1A1A]/55">{property.city || 'City not set'}</p>
 							</div>
 							<div className="flex items-center gap-2 md:justify-end">
-								<span className="rounded-full bg-black/5 px-3 py-1 text-xs capitalize">{property.status}</span>
+								<span className="rounded-full bg-black/5 px-3 py-1 text-xs capitalize">
+									{property.isVisible ? 'published' : 'draft'}
+								</span>
 								<Link href={`/dashboard/properties/${property.id}`} className="text-sm text-[#1A1A1A]/70 hover:text-[#6B705C]">
 									Edit
 								</Link>

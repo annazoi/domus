@@ -44,10 +44,9 @@ export type PropertyWithImages = {
 	address: string;
 	latitude: number;
 	longitude: number;
-	cleaning_fee: number;
 	check_in_time: Date;
 	check_out_time: Date;
-	status: string;
+	isPublished: boolean;
 	created_at: Date;
 	updated_at: Date;
 	user_id: string;
@@ -86,8 +85,7 @@ export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 	address: property.address,
 	lat: property.latitude,
 	lng: property.longitude,
-	cleaning_fee: property.cleaning_fee,
-	status: property.status as PropertyDTO['status'],
+	isVisible: property.isPublished,
 	amenity_ids: [],
 	created_at: property.created_at.toISOString(),
 	updated_at: property.updated_at.toISOString(),

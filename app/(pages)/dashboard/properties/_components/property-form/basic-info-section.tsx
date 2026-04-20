@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Controller, useForm } from 'react-hook-form';
 import { Button, Input, MinimalRichText, Select } from '@/components/ui';
 import { ApartmentOptions } from '@/config/constants/dropdowns/apartment.options';
 import { useCreateProperty, useUpdateProperty } from '@/features/property/hooks/use-property';
-import type { Property, PropertyStatus, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
+import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
 import { PropertyFormSection } from './property-form-section';
 import { basicInfoFormSchema, type BasicInfoFormValues } from './schemas';
@@ -17,11 +16,12 @@ type BasicInfoSectionProps = {
 };
 
 export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProps) {
-	const router = useRouter();
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
+	const [createdPropertyId, setCreatedPropertyId] = useState<string | null>(null);
 	const { mutateAsync: create, isPending: creating } = useCreateProperty();
-	const { mutateAsync: update, isPending: updating } = useUpdateProperty(initialProperty?.id ?? '');
+	const targetPropertyId = initialProperty?.id ?? createdPropertyId ?? '';
+	const { mutateAsync: update, isPending: updating } = useUpdateProperty(targetPropertyId);
 	const saving = creating || updating;
 	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
 
@@ -43,16 +43,14 @@ export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProp
 			check_out_time: defaultValues.check_out_time,
 			property_type: defaultValues.property_type,
 			room_type: defaultValues.room_type,
-			status: defaultValues.status,
+			isVisible: defaultValues.isVisible,
 		},
 	});
 
-	const status = (watch('status') ?? defaultValues.status) as PropertyStatus;
-	const isPublished = status === 'published';
+	const isVisible = watch('isVisible') ?? defaultValues.isVisible;
 
-	const toggleStatus = () => {
-		const next: PropertyStatus = isPublished ? 'draft' : 'published';
-		setValue('status', next, { shouldValidate: true, shouldDirty: true });
+	const toggleIsVisible = () => {
+		setValue('isVisible', !isVisible, { shouldValidate: true, shouldDirty: true });
 	};
 
 	const handleSave = handleSubmit(async (formValues) => {
@@ -60,17 +58,19 @@ export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProp
 		setSuccess('');
 		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
 		try {
-			if (mode === 'create') {
+			if (mode === 'create' && !createdPropertyId && !initialProperty?.id) {
 				const saved = await create(payload);
-				router.replace(`/dashboard/properties/${saved.id}?saved=1`, { scroll: false });
+				setCreatedPropertyId(saved.id);
+				setSuccess('Saved.');
 				return;
 			}
 
-			if (!initialProperty?.id) return;
+			if (!targetPropertyId) return;
 			await update(payload);
 			setSuccess('Saved.');
 		} catch (submitError) {
-			setError(submitError instanceof Error ? submitError.message : 'Could not save.');
+			console.error('Basic info save failed', submitError);
+			setError('Could not save property. Please try again.');
 		}
 	});
 
@@ -84,14 +84,14 @@ export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProp
 					<div className="overflow-hidden">
 						<AnimatePresence mode="wait" initial={false}>
 							<motion.p
-								key={isPublished ? 'published' : 'draft'}
+								key={isVisible ? 'published' : 'draft'}
 								initial={{ opacity: 0, x: 12 }}
 								animate={{ opacity: 1, x: 0 }}
 								exit={{ opacity: 0, x: -12 }}
 								transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
 								className="text-xs text-[#1A1A1A]/55"
 							>
-								{isPublished ? 'Published: visible to guests.' : 'Draft: hidden from search and listings.'}
+								{isVisible ? 'Published: visible to guests.' : 'Draft: hidden from search and listings.'}
 							</motion.p>
 						</AnimatePresence>
 					</div>
@@ -100,18 +100,18 @@ export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProp
 					type="button"
 					variant="custom"
 					role="switch"
-					aria-checked={isPublished}
-					aria-label={isPublished ? 'Published: click to unpublish' : 'Draft: click to publish'}
-					onClick={toggleStatus}
+					aria-checked={isVisible}
+					aria-label={isVisible ? 'Published: click to unpublish' : 'Draft: click to publish'}
+					onClick={toggleIsVisible}
 					className={[
 						'relative inline-flex h-9 w-14 shrink-0 items-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1A1A]',
-						isPublished ? 'bg-emerald-600' : 'bg-black/15',
+						isVisible ? 'bg-emerald-600' : 'bg-black/15',
 					].join(' ')}
 				>
 					<span
 						className={[
 							'ml-1 inline-block h-7 w-7 rounded-full bg-white shadow transition-transform',
-							isPublished ? 'translate-x-5' : 'translate-x-0',
+							isVisible ? 'translate-x-5' : 'translate-x-0',
 						].join(' ')}
 					/>
 				</Button>
@@ -146,6 +146,8 @@ export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProp
 						id="property-type"
 						variant="default"
 						{...register('property_type')}
+						value={defaultValues.property_type}
+						className='z-10'
 					>
 						{ApartmentOptions.map((option) => (
 							<option key={option.value} value={option.value}>

@@ -1,5 +1,3 @@
-export type PropertyStatus = 'draft' | 'published';
-
 import type { PropertyImage } from '@/features/property-images/interfaces/property-image.interfaces';
 
 export interface Property {
@@ -22,8 +20,7 @@ export interface Property {
 	address: string;
 	lat: number | null;
 	lng: number | null;
-	cleaning_fee: number;
-	status: PropertyStatus;
+	isVisible: boolean;
 	amenity_ids: string[];
 	created_at: string;
 	updated_at: string;
@@ -48,6 +45,5 @@ export interface UpsertPropertyInput {
 	address: string;
 	lat?: number | null;
 	lng?: number | null;
-	cleaning_fee: number;
-	status: PropertyStatus;
+	isVisible: boolean;
 }

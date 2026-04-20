@@ -12,18 +12,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 	if (!existing) return Response.json({ message: 'Property not found' }, { status: 404 });
 
 	const body = (await request.json()) as {
-		cleaning_fee?: number;
-		status?: string;
+		isVisible?: boolean;
 	};
-
-	const cleaningRaw = body.cleaning_fee !== undefined ? Number(body.cleaning_fee) : existing.cleaning_fee;
-	const cleaning_fee = Number.isFinite(cleaningRaw) ? Math.max(0, cleaningRaw) : existing.cleaning_fee;
 
 	const updated = await prisma.property.update({
 		where: { id },
 		data: {
-			cleaning_fee,
-			...(body.status !== undefined ? { status: body.status } : {}),
+			...(body.isVisible !== undefined ? { isPublished: body.isVisible } : {}),
 		},
 		include: { images: { orderBy: { order: 'asc' }, include: { document: true } } },
 	});

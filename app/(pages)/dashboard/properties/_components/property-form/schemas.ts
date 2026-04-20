@@ -9,7 +9,7 @@ export const basicInfoFormSchema = z.object({
 	check_out_time: z.string(),
 	property_type: z.string(),
 	room_type: z.string(),
-	status: z.enum(['draft', 'published']),
+	isVisible: z.boolean(),
 });
 
 export const capacityFormSchema = z.object({
@@ -27,9 +27,7 @@ export const locationFormSchema = z.object({
 	lng: z.number().nullable().optional(),
 });
 
-export const pricingFormSchema = z.object({
-	cleaning_fee: z.number().min(0, 'Cleaning fee cannot be negative.'),
-});
+export const pricingFormSchema = z.object({});
 
 export const amenitiesFormSchema = z.object({
 	amenity_ids: z.array(z.string()),

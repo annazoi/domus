@@ -34,14 +34,10 @@ export function PricingSection({ mode, initialProperty }: PricingSectionProps) {
 	const { mutateAsync: update, isPending: saving } = useUpdateProperty(initialProperty?.id ?? '');
 	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
 	const {
-		register,
 		handleSubmit,
-		formState: { errors },
 	} = useForm<PricingFormValues>({
 		resolver: zodResolver(pricingFormSchema),
-		defaultValues: {
-			cleaning_fee: defaultValues.cleaning_fee,
-		},
+		defaultValues: {},
 	});
 	const [viewMonth, setViewMonth] = useState(() => startOfMonth(new Date()));
 	const [modalOpen, setModalOpen] = useState(false);
@@ -99,20 +95,6 @@ export function PricingSection({ mode, initialProperty }: PricingSectionProps) {
 			<p className="text-sm text-[#1A1A1A]/65">
 				Nightly rates are set per day on the property calendar.
 			</p>
-			<div className="space-y-1.5">
-				<label htmlFor="property-cleaning-fee" className="text-sm font-medium text-[#1A1A1A]">
-					Cleaning fee
-				</label>
-				<Input
-					id="property-cleaning-fee"
-					type="number"
-					min={0}
-					{...register('cleaning_fee', { valueAsNumber: true })}
-					placeholder="0"
-				/>
-				{errors.cleaning_fee?.message ? <p className="text-xs text-red-700">{errors.cleaning_fee.message}</p> : null}
-			</div>
-
 			<div className="mt-4 grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
 				<div className="rounded-2xl bg-white/75 p-5">
 					<div className="mb-5 flex items-center justify-between gap-3 border-b border-black/5 pb-4">
