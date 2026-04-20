@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Clock3 } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { Button, Input, MinimalRichText, Select } from '@/components/ui';
 import { ApartmentOptions } from '@/config/constants/dropdowns/apartment.options';
@@ -15,6 +16,32 @@ type BasicInfoSectionProps = {
 	initialProperty?: Property | null;
 };
 
+function formatTimeLabel(value: string) {
+	const [rawHour, rawMinute] = value.split(':');
+	const hour = Number(rawHour);
+	const minute = Number(rawMinute);
+	const suffix = hour >= 12 ? 'PM' : 'AM';
+	const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+	return `${hour12}:${String(minute).padStart(2, '0')} ${suffix}`;
+}
+
+function normalizeTimeValue(value: string | null | undefined, fallback: string) {
+	if (!value) return fallback;
+	const match = value.match(/^(\d{1,2}):(\d{2})/);
+	if (!match) return fallback;
+	const hour = Number(match[1]);
+	const minute = Number(match[2]);
+	if (Number.isNaN(hour) || Number.isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) return fallback;
+	return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+const TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
+	const hour = Math.floor(index / 2);
+	const minute = index % 2 === 0 ? 0 : 30;
+	const value = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+	return { value, label: formatTimeLabel(value) };
+});
+
 export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProps) {
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
@@ -24,6 +51,8 @@ export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProp
 	const { mutateAsync: update, isPending: updating } = useUpdateProperty(targetPropertyId);
 	const saving = creating || updating;
 	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
+	const normalizedCheckIn = normalizeTimeValue(defaultValues.check_in_time, PROPERTY_FORM_DEFAULT_VALUES.check_in_time);
+	const normalizedCheckOut = normalizeTimeValue(defaultValues.check_out_time, PROPERTY_FORM_DEFAULT_VALUES.check_out_time);
 
 	const {
 		control,
@@ -39,8 +68,8 @@ export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProp
 			slug: defaultValues.slug,
 			description: defaultValues.description,
 			short_description: defaultValues.short_description,
-			check_in_time: defaultValues.check_in_time,
-			check_out_time: defaultValues.check_out_time,
+			check_in_time: normalizedCheckIn,
+			check_out_time: normalizedCheckOut,
 			property_type: defaultValues.property_type,
 			room_type: defaultValues.room_type,
 			isVisible: defaultValues.isVisible,
@@ -201,22 +230,54 @@ export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProp
 					<label htmlFor="property-check-in-time" className="text-sm font-medium text-[#1A1A1A]">
 						Check-in time
 					</label>
-					<Input
-						id="property-check-in-time"
-						type="time"
-						step={300}
-						{...register('check_in_time')}
+					<Controller
+						control={control}
+						name="check_in_time"
+						render={({ field }) => (
+							<div className="relative">
+								<Select
+									id="property-check-in-time"
+									variant="default"
+									className="[&_button]:pr-16"
+									value={field.value}
+									onChange={(event) => field.onChange(event.target.value)}
+								>
+									{TIME_OPTIONS.map((option) => (
+										<option key={option.value} value={option.value}>
+											{option.label}
+										</option>
+									))}
+								</Select>
+								<Clock3 className="pointer-events-none absolute right-9 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B705C]/45" />
+							</div>
+						)}
 					/>
 				</div>
 				<div className="space-y-1.5">
 					<label htmlFor="property-check-out-time" className="text-sm font-medium text-[#1A1A1A]">
 						Check-out time
 					</label>
-					<Input
-						id="property-check-out-time"
-						type="time"
-						step={300}
-						{...register('check_out_time')}
+					<Controller
+						control={control}
+						name="check_out_time"
+						render={({ field }) => (
+							<div className="relative">
+								<Select
+									id="property-check-out-time"
+									variant="default"
+									className="[&_button]:pr-16"
+									value={field.value}
+									onChange={(event) => field.onChange(event.target.value)}
+								>
+									{TIME_OPTIONS.map((option) => (
+										<option key={option.value} value={option.value}>
+											{option.label}
+										</option>
+									))}
+								</Select>
+								<Clock3 className="pointer-events-none absolute right-9 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B705C]/45" />
+							</div>
+						)}
 					/>
 				</div>
 			</div>
