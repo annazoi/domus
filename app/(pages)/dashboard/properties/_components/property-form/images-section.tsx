@@ -1,10 +1,8 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ImageIcon, Maximize2, Trash2 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui';
+import { Button, Textarea } from '@/components/ui';
 import {
 	useDeletePropertyImage,
 	useReorderPropertyImages,
@@ -13,7 +11,13 @@ import {
 import type { PropertyImage } from '@/features/property-images/interfaces/property-image.interfaces';
 import type { Property } from '@/features/property/interfaces/property.interface';
 import { PropertyFormSection } from './property-form-section';
-import { imagesFormSchema } from './schemas';
+
+type StagedImage = {
+	id: string;
+	file: File;
+	previewUrl: string;
+	description: string;
+};
 
 type ImagesSectionProps = {
 	mode: 'create' | 'edit';
@@ -21,14 +25,6 @@ type ImagesSectionProps = {
 	/** Set after Basic info creates the property (create flow). */
 	propertyId?: string;
 };
-
-const SUBLABELS = [
-	'EXTERIOR - GOLDEN HOUR',
-	'INTERIOR - NATURAL LIGHT',
-	'GALLERY - DETAIL',
-	'AMBIENT - EVENING',
-	'SPACE - WIDE ANGLE',
-];
 
 /** Cover first, then remaining by `order` — every image appears exactly once. */
 function displayImages(images: PropertyImage[]) {
@@ -49,16 +45,8 @@ export function ImagesSection({
 	const [draggingId, setDraggingId] = useState<string | null>(null);
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
-	const {
-		setValue,
-		handleSubmit,
-		watch,
-		formState: { errors },
-	} = useForm<{ imageFiles: File[] }>({
-		resolver: zodResolver(imagesFormSchema),
-		defaultValues: { imageFiles: [] },
-	});
-	const imageFiles = watch('imageFiles');
+	const [staged, setStaged] = useState<StagedImage[]>([]);
+	const stagedPreviewUrlsRef = useRef(new Set<string>());
 	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
 	const { mutateAsync: uploadImages, isPending: uploading } = useUploadPropertyImages(propertyId);
 	const { mutateAsync: reorderImages, isPending: reordering } = useReorderPropertyImages(propertyId);
@@ -67,15 +55,56 @@ export function ImagesSection({
 
 	const ordered = useMemo(() => displayImages(images), [images]);
 
+	const revokePreview = useCallback((url: string) => {
+		URL.revokeObjectURL(url);
+		stagedPreviewUrlsRef.current.delete(url);
+	}, []);
+
 	const addFiles = useCallback(
 		(fileList: FileList | File[]) => {
 			const next = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
-			if (next.length) setValue('imageFiles', next, { shouldValidate: true, shouldDirty: true });
+			if (!next.length) return;
+			setStaged((previous) => {
+				const added: StagedImage[] = next.map((file) => {
+					const previewUrl = URL.createObjectURL(file);
+					stagedPreviewUrlsRef.current.add(previewUrl);
+					return {
+						id: crypto.randomUUID(),
+						file,
+						previewUrl,
+						description: '',
+					};
+				});
+				return [...previous, ...added];
+			});
 		},
-		[setValue],
+		[],
 	);
 
-	const handleSave = handleSubmit(async ({ imageFiles: files }) => {
+	const removeStaged = useCallback(
+		(id: string) => {
+			setStaged((previous) => {
+				const item = previous.find((s) => s.id === id);
+				if (item) revokePreview(item.previewUrl);
+				return previous.filter((s) => s.id !== id);
+			});
+		},
+		[revokePreview],
+	);
+
+	const setStagedDescription = useCallback((id: string, description: string) => {
+		setStaged((previous) => previous.map((s) => (s.id === id ? { ...s, description } : s)));
+	}, []);
+
+	useEffect(
+		() => () => {
+			stagedPreviewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+			stagedPreviewUrlsRef.current.clear();
+		},
+		[],
+	);
+
+	const handleSave = async () => {
 		setError('');
 		setSuccess('');
 
@@ -83,15 +112,23 @@ export function ImagesSection({
 			setError('Save Basic info first to create the property.');
 			return;
 		}
+		if (!staged.length) {
+			setError('Select one or more images to upload.');
+			return;
+		}
 		try {
-			const created = await uploadImages(files);
+			const created = await uploadImages({
+				files: staged.map((s) => s.file),
+				descriptions: staged.map((s) => s.description),
+			});
+			staged.forEach((s) => revokePreview(s.previewUrl));
+			setStaged([]);
 			setImages((previous) => [...previous, ...created].sort((a, b) => a.order - b.order));
-			setValue('imageFiles', []);
 			setSuccess('Images uploaded.');
 		} catch (submitError) {
 			setError(submitError instanceof Error ? submitError.message : 'Could not upload images.');
 		}
-	});
+	};
 
 	const onDrop = async (targetImageId: string) => {
 		if (!draggingId || draggingId === targetImageId || !propertyId) return;
@@ -204,16 +241,58 @@ export function ImagesSection({
 								</p>
 							</div>
 						</button>
-						{imageFiles.length > 0 ? (
+						{staged.length > 0 ? (
 							<p className="mt-2 text-xs text-[#1A1A1A]/55">
-								{imageFiles.length} file{imageFiles.length === 1 ? '' : 's'} ready - save to upload.
+								{staged.length} image{staged.length === 1 ? '' : 's'} staged — add captions below, then Save.
 							</p>
 						) : null}
-						{errors.imageFiles?.message ? <p className="mt-2 text-xs text-red-700">{errors.imageFiles.message}</p> : null}
 					</div>
 
-					{mode === 'edit' && propertyId && ordered.length > 0 ? (
-						<div className="grid gap-8 sm:grid-cols-2">
+					{staged.length > 0 ? (
+						<div className="grid gap-4 sm:grid-cols-2">
+							{staged.map((item) => (
+								<div
+									key={item.id}
+									className="overflow-hidden rounded-xl border border-black/10 bg-white shadow-sm shadow-black/5"
+								>
+									<div className="relative aspect-[4/3] bg-black/5">
+										<img
+											src={item.previewUrl}
+											alt=""
+											className="h-full w-full object-cover"
+										/>
+										<Button
+											type="button"
+											variant="ghostIcon"
+											className="absolute right-2 top-2 h-9 w-9 rounded-full bg-white/90 text-[#1A1A1A] shadow-sm"
+											onClick={() => removeStaged(item.id)}
+											aria-label="Remove from upload queue"
+										>
+											<Trash2 className="h-4 w-4" />
+										</Button>
+									</div>
+									<div className="space-y-1.5 p-3">
+										<label className="text-xs font-medium text-[#1A1A1A]" htmlFor={`staged-desc-${item.id}`}>
+											Description
+										</label>
+										<Textarea
+											id={`staged-desc-${item.id}`}
+											value={item.description}
+											onChange={(e) => setStagedDescription(item.id, e.target.value)}
+											placeholder="Optional caption for this photo…"
+											rows={2}
+											className="min-h-[72px] resize-y text-sm"
+										/>
+									</div>
+								</div>
+							))}
+						</div>
+					) : null}
+
+					{propertyId && ordered.length > 0 ? (
+						<div className="space-y-4">
+							<h3 className="font-serif text-lg text-[#1A1A1A]">Uploaded images</h3>
+							<div className="grid gap-8 sm:grid-cols-2">
 							{ordered.map((image, i) => (
 								<figure
 									key={image.id}
@@ -221,17 +300,16 @@ export function ImagesSection({
 								>
 									<ImageTile
 										image={image}
-										index={i + 1}
 										variant={i === 0 ? 'hero' : 'grid'}
 										draggingId={draggingId}
 										onDragStart={setDraggingId}
 										onDrop={onDrop}
 										onSetCover={onSetCover}
 										onDelete={onDelete}
-										sublabel={SUBLABELS[i % SUBLABELS.length]}
 									/>
 								</figure>
 							))}
+							</div>
 						</div>
 					) : null}
 				</div>
@@ -271,7 +349,7 @@ export function ImagesSection({
 				<Button
 					type="button"
 					onClick={() => void handleSave()}
-					disabled={saving || (Boolean(propertyId) && !imageFiles.length)}
+					disabled={saving || (Boolean(propertyId) && !staged.length)}
 					variant="primary"
 				>
 					{saving ? 'Saving...' : 'Save'}
@@ -283,29 +361,23 @@ export function ImagesSection({
 
 function ImageTile({
 	image,
-	index,
 	variant,
 	draggingId,
 	onDragStart,
 	onDrop,
 	onSetCover,
 	onDelete,
-	sublabel,
 }: {
 	image: PropertyImage;
-	index: number;
 	variant: 'hero' | 'grid';
 	draggingId: string | null;
 	onDragStart: (id: string) => void;
 	onDrop: (id: string) => void;
 	onSetCover: (id: string) => void;
 	onDelete: (id: string) => void;
-	sublabel: string;
 }) {
-	const padded = String(index).padStart(2, '0');
 	const imageUrl = image.document?.url ?? '';
-	const title =
-		index === 1 ? 'Main facade' : index === 2 ? 'Interior detail' : index === 3 ? 'Living space' : 'Gallery moment';
+	const description = image.description?.trim();
 
 	return (
 		<>
@@ -363,12 +435,11 @@ function ImageTile({
 					</div>
 				) : null}
 			</div>
-			<figcaption className="mt-4 space-y-1">
-				<p className="font-serif text-lg text-[#1A1A1A]">
-					{padded}. {title}
-				</p>
-				<p className="text-[10px] font-medium uppercase tracking-[0.22em] text-[#1A1A1A]/45">{sublabel}</p>
-			</figcaption>
+			{description ? (
+				<figcaption className="mt-4">
+					<p className="text-sm leading-relaxed text-[#1A1A1A]/80">{description}</p>
+				</figcaption>
+			) : null}
 		</>
 	);
 }

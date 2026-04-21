@@ -60,6 +60,19 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 		return Response.json({ message: 'At least one image is required' }, { status: 400 });
 	}
 
+	const descriptionsRaw = formData.get('descriptions');
+	let descriptions: string[] = [];
+	if (typeof descriptionsRaw === 'string' && descriptionsRaw.trim()) {
+		try {
+			const parsed = JSON.parse(descriptionsRaw) as unknown;
+			if (Array.isArray(parsed)) {
+				descriptions = parsed.map((d) => (typeof d === 'string' ? d : ''));
+			}
+		} catch {
+			// ignore invalid JSON
+		}
+	}
+
 	const uploadedFiles = await uploadFiles(files);
 	const existingCount = await prisma.propertyImage.count({ where: { property_id: id } });
 	const created = await prisma.$transaction(async (tx) => {
@@ -70,6 +83,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 				data: buildImageDocumentCreateInput(hostId, file, nextOrder),
 			});
 
+			const description = descriptions[index]?.trim() || null;
 			const image = await tx.propertyImage.create({
 				data: {
 					property_id: id,
@@ -77,6 +91,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 					document_id: document.id,
 					order: nextOrder,
 					is_cover: existingCount === 0 && index === 0,
+					description,
 				},
 				include: { document: true },
 			});

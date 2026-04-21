@@ -6,7 +6,8 @@ export const useUploadPropertyImages = (propertyId: string) => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: (files: File[]) => uploadPropertyImages(propertyId, files),
+		mutationFn: (input: { files: File[]; descriptions?: string[] }) =>
+			uploadPropertyImages(propertyId, input.files, input.descriptions),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ['properties', propertyId] });
 		},
