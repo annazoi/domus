@@ -36,6 +36,20 @@ function normalizeTimeValue(value: string | null | undefined, fallback: string) 
 	return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
 
+function normalizePropertyType(value: string | null | undefined, fallback: string) {
+	if (!value) return fallback;
+	return ApartmentOptions.some((option) => option.value === value)
+		? value
+		: fallback;
+}
+
+function normalizeRoomType(value: string | null | undefined, fallback: string) {
+	if (!value) return fallback;
+	return RoomTypeOptions.some((option) => option.value === value)
+		? value
+		: fallback;
+}
+
 const TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
 	const hour = Math.floor(index / 2);
 	const minute = index % 2 === 0 ? 0 : 30;
@@ -54,6 +68,8 @@ export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProp
 	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
 	const normalizedCheckIn = normalizeTimeValue(defaultValues.check_in_time, PROPERTY_FORM_DEFAULT_VALUES.check_in_time);
 	const normalizedCheckOut = normalizeTimeValue(defaultValues.check_out_time, PROPERTY_FORM_DEFAULT_VALUES.check_out_time);
+	const normalizedPropertyType = normalizePropertyType(defaultValues.property_type, PROPERTY_FORM_DEFAULT_VALUES.property_type);
+	const normalizedRoomType = normalizeRoomType(defaultValues.room_type, PROPERTY_FORM_DEFAULT_VALUES.room_type);
 
 	const {
 		control,
@@ -71,18 +87,27 @@ export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProp
 			short_description: defaultValues.short_description,
 			check_in_time: normalizedCheckIn,
 			check_out_time: normalizedCheckOut,
-			property_type: defaultValues.property_type,
-			room_type: defaultValues.room_type,
+			property_type: normalizedPropertyType,
+			room_type: normalizedRoomType,
 			isVisible: defaultValues.isVisible,
 		},
 	});
 
 	const isVisible = watch('isVisible') ?? defaultValues.isVisible;
 	const selectedRoomType = watch('room_type');
+	const selectedPropertyType = watch('property_type');
 	const selectedRoomTypeOption = RoomTypeOptions.find((option) => option.value === selectedRoomType);
 
 	const toggleIsVisible = () => {
 		setValue('isVisible', !isVisible, { shouldValidate: true, shouldDirty: true });
+	};
+
+	const handlePropertyTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+		setValue('property_type', event.target.value);
+	};
+
+	const handleRoomTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+		setValue('room_type', event.target.value);
 	};
 
 	const handleSave = handleSubmit(async (formValues) => {
@@ -178,7 +203,8 @@ export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProp
 						id="property-type"
 						variant="default"
 						{...register('property_type')}
-						value={defaultValues.property_type}
+						value={selectedPropertyType}
+						onChange={handlePropertyTypeChange}
 						className='z-10'
 					>
 						{ApartmentOptions.map((option) => (
@@ -197,7 +223,7 @@ export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProp
 						variant="default"
 						{...register('room_type')}
 						value={selectedRoomType}
-						onChange={(event) => setValue('room_type', event.target.value)}
+						onChange={handleRoomTypeChange}
 					>
 						{RoomTypeOptions.map((option) => (
 							<option key={option.value} value={option.value}>
