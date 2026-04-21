@@ -14,6 +14,7 @@ import { locationFormSchema, type LocationFormValues } from './schemas';
 type LocationSectionProps = {
 	mode: 'create' | 'edit';
 	initialProperty?: Property | null;
+	propertyId?: string;
 	placesLibraryReady?: boolean;
 };
 
@@ -40,13 +41,14 @@ function applyPlaceToForm(
 }
 
 export function LocationSection({
-	mode,
 	initialProperty,
+	propertyId: propertyIdProp,
 	placesLibraryReady = false,
 }: LocationSectionProps) {
+	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
-	const { mutateAsync: update, isPending: saving } = useUpdateProperty(initialProperty?.id ?? '');
+	const { mutateAsync: update, isPending: saving } = useUpdateProperty(propertyId);
 	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
 	const {
 		register,
@@ -70,7 +72,7 @@ export function LocationSection({
 		setSuccess('');
 		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
 
-		if (mode === 'create' || !initialProperty?.id) {
+		if (!propertyId) {
 			setError('Save Basic info first to create the property.');
 			return;
 		}

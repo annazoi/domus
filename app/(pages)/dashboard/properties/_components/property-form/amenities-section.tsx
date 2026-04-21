@@ -15,13 +15,15 @@ import { amenitiesFormSchema } from './schemas';
 type AmenitiesSectionProps = {
 	mode: 'create' | 'edit';
 	initialProperty?: Property | null;
+	propertyId?: string;
 };
 
-export function AmenitiesSection({ mode, initialProperty }: AmenitiesSectionProps) {
+export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }: AmenitiesSectionProps) {
+	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
 	const [search, setSearch] = useState('');
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
-	const { mutateAsync: saveAmenities, isPending: saving } = useSavePropertyAmenities(initialProperty?.id ?? '');
+	const { mutateAsync: saveAmenities, isPending: saving } = useSavePropertyAmenities(propertyId);
 	const { handleSubmit, watch, setValue } = useForm<{ amenity_ids: string[] }>({
 		resolver: zodResolver(amenitiesFormSchema),
 		defaultValues: { amenity_ids: initialProperty?.amenity_ids ?? [] },
@@ -39,7 +41,7 @@ export function AmenitiesSection({ mode, initialProperty }: AmenitiesSectionProp
 		setError('');
 		setSuccess('');
 
-		if (mode === 'create' || !initialProperty?.id) {
+		if (!propertyId) {
 			setError('Save Basic info first to create the property.');
 			return;
 		}

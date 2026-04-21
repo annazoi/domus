@@ -16,6 +16,7 @@ import { pricingFormSchema, type PricingFormValues } from './schemas';
 type PricingSectionProps = {
 	mode: 'create' | 'edit';
 	initialProperty?: Property | null;
+	propertyId?: string;
 };
 
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -28,10 +29,11 @@ function addMonths(d: Date, n: number) {
 	return new Date(d.getFullYear(), d.getMonth() + n, 1);
 }
 
-export function PricingSection({ mode, initialProperty }: PricingSectionProps) {
+export function PricingSection({ mode, initialProperty, propertyId: propertyIdProp }: PricingSectionProps) {
+	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
-	const { mutateAsync: update, isPending: saving } = useUpdateProperty(initialProperty?.id ?? '');
+	const { mutateAsync: update, isPending: saving } = useUpdateProperty(propertyId);
 	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
 	const {
 		handleSubmit,
@@ -56,7 +58,7 @@ export function PricingSection({ mode, initialProperty }: PricingSectionProps) {
 		setSuccess('');
 		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
 
-		if (mode === 'create' || !initialProperty?.id) {
+		if (!propertyId) {
 			setError('Save Basic info first to create the property.');
 			return;
 		}

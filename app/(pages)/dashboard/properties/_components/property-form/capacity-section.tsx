@@ -12,6 +12,7 @@ import { capacityFormSchema, type CapacityFormValues } from './schemas';
 type CapacitySectionProps = {
 	mode: 'create' | 'edit';
 	initialProperty?: Property | null;
+	propertyId?: string;
 };
 
 const capacityFields: Array<{ key: 'max_guests' | 'bedrooms' | 'beds' | 'bathrooms'; label: string }> = [
@@ -21,10 +22,11 @@ const capacityFields: Array<{ key: 'max_guests' | 'bedrooms' | 'beds' | 'bathroo
 	{ key: 'bathrooms', label: 'Bathrooms' },
 ];
 
-export function CapacitySection({ mode, initialProperty }: CapacitySectionProps) {
+export function CapacitySection({ initialProperty, propertyId: propertyIdProp }: CapacitySectionProps) {
+	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
-	const { mutateAsync: update, isPending: saving } = useUpdateProperty(initialProperty?.id ?? '');
+	const { mutateAsync: update, isPending: saving } = useUpdateProperty(propertyId);
 	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
 	const {
 		register,
@@ -46,7 +48,7 @@ export function CapacitySection({ mode, initialProperty }: CapacitySectionProps)
 		setSuccess('');
 		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
 
-		if (mode === 'create' || !initialProperty?.id) {
+		if (!propertyId) {
 			setError('Save Basic info first to create the property.');
 			return;
 		}

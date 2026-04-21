@@ -21,6 +21,8 @@ export function PropertyForm({ mode, initialProperty }: PropertyFormProps) {
 	const router = useRouter();
 	const [activeTab, setActiveTab] = useState<PropertyFormTabId>('basic-info');
 	const [googleMapsReady, setGoogleMapsReady] = useState(false);
+	const [createdPropertyId, setCreatedPropertyId] = useState<string | null>(null);
+	const resolvedPropertyId = initialProperty?.id ?? createdPropertyId ?? '';
 
 	const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 	const placesLibraryReady = Boolean(mapsApiKey && googleMapsReady);
@@ -50,27 +52,37 @@ export function PropertyForm({ mode, initialProperty }: PropertyFormProps) {
 					? () => router.push(`/dashboard/properties/${initialProperty.id}/calendar`)
 					: undefined
 				}
-				/>
+			/>
 
 			<div className="min-h-[320px] space-y-6">
 				<div role="tabpanel" id={`property-form-panel-${activeTab}`} aria-labelledby={`property-form-tab-${activeTab}`}>
 					{activeTab === 'basic-info' ? (
-						<BasicInfoSection mode={mode} initialProperty={initialProperty} />
+						<BasicInfoSection
+							mode={mode}
+							initialProperty={initialProperty}
+							createdPropertyId={createdPropertyId}
+							onPropertyCreated={setCreatedPropertyId}
+						/>
 					) : null}
 					{activeTab === 'capacity' ? (
-						<CapacitySection mode={mode} initialProperty={initialProperty} />
+						<CapacitySection mode={mode} initialProperty={initialProperty} propertyId={resolvedPropertyId} />
 					) : null}
 					{activeTab === 'location' ? (
-						<LocationSection mode={mode} initialProperty={initialProperty} placesLibraryReady={placesLibraryReady} />
+						<LocationSection
+							mode={mode}
+							initialProperty={initialProperty}
+							propertyId={resolvedPropertyId}
+							placesLibraryReady={placesLibraryReady}
+						/>
 					) : null}
 					{activeTab === 'pricing-availability' ? (
-						<PricingSection mode={mode} initialProperty={initialProperty} />
+						<PricingSection mode={mode} initialProperty={initialProperty} propertyId={resolvedPropertyId} />
 					) : null}
 					{activeTab === 'amenities' ? (
-						<AmenitiesSection mode={mode} initialProperty={initialProperty} />
+						<AmenitiesSection mode={mode} initialProperty={initialProperty} propertyId={resolvedPropertyId} />
 					) : null}
 					{activeTab === 'images' ? (
-						<ImagesSection mode={mode} initialProperty={initialProperty} />
+						<ImagesSection mode={mode} initialProperty={initialProperty} propertyId={resolvedPropertyId} />
 					) : null}
 				</div>
 			</div>

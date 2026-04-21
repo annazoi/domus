@@ -15,6 +15,8 @@ import { basicInfoFormSchema, type BasicInfoFormValues } from './schemas';
 type BasicInfoSectionProps = {
 	mode: 'create' | 'edit';
 	initialProperty?: Property | null;
+	createdPropertyId?: string | null;
+	onPropertyCreated?: (id: string) => void;
 };
 
 function formatTimeLabel(value: string) {
@@ -57,10 +59,14 @@ const TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
 	return { value, label: formatTimeLabel(value) };
 });
 
-export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProps) {
+export function BasicInfoSection({
+	mode,
+	initialProperty,
+	createdPropertyId = null,
+	onPropertyCreated,
+}: BasicInfoSectionProps) {
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
-	const [createdPropertyId, setCreatedPropertyId] = useState<string | null>(null);
 	const { mutateAsync: create, isPending: creating } = useCreateProperty();
 	const targetPropertyId = initialProperty?.id ?? createdPropertyId ?? '';
 	const { mutateAsync: update, isPending: updating } = useUpdateProperty(targetPropertyId);
@@ -117,7 +123,7 @@ export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProp
 		try {
 			if (mode === 'create' && !createdPropertyId && !initialProperty?.id) {
 				const saved = await create(payload);
-				setCreatedPropertyId(saved.id);
+				onPropertyCreated?.(saved.id);
 				setSuccess('Saved.');
 				return;
 			}

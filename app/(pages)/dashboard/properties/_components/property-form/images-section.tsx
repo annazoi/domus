@@ -18,6 +18,8 @@ import { imagesFormSchema } from './schemas';
 type ImagesSectionProps = {
 	mode: 'create' | 'edit';
 	initialProperty?: Property | null;
+	/** Set after Basic info creates the property (create flow). */
+	propertyId?: string;
 };
 
 const SUBLABELS = [
@@ -39,6 +41,7 @@ function displayImages(images: PropertyImage[]) {
 export function ImagesSection({
 	mode,
 	initialProperty,
+	propertyId: propertyIdProp,
 }: ImagesSectionProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [fileZoneOver, setFileZoneOver] = useState(false);
@@ -56,7 +59,7 @@ export function ImagesSection({
 		defaultValues: { imageFiles: [] },
 	});
 	const imageFiles = watch('imageFiles');
-	const propertyId = initialProperty?.id ?? '';
+	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
 	const { mutateAsync: uploadImages, isPending: uploading } = useUploadPropertyImages(propertyId);
 	const { mutateAsync: reorderImages, isPending: reordering } = useReorderPropertyImages(propertyId);
 	const { mutateAsync: removeImage, isPending: deleting } = useDeletePropertyImage(propertyId);
@@ -76,7 +79,7 @@ export function ImagesSection({
 		setError('');
 		setSuccess('');
 
-		if (mode === 'create' || !propertyId) {
+		if (!propertyId) {
 			setError('Save Basic info first to create the property.');
 			return;
 		}
@@ -156,7 +159,7 @@ export function ImagesSection({
 						</p>
 					</header>
 
-					{mode === 'create' ? (
+					{mode === 'create' && !propertyId ? (
 						<p className="text-sm italic text-[#1A1A1A]/60">
 							Save the property from Basic info first, then return here to import assets.
 						</p>
