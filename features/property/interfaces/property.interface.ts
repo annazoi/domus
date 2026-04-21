@@ -1,5 +1,10 @@
 import type { PropertyImage } from '@/features/property-images/interfaces/property-image.interfaces';
 
+export interface PropertyAmenityEntry {
+	value: string;
+	description: string | null;
+}
+
 export interface Property {
 	id: string;
 	host_id: string;
@@ -22,6 +27,7 @@ export interface Property {
 	lng: number | null;
 	isVisible: boolean;
 	amenity_ids: string[];
+	amenities: PropertyAmenityEntry[];
 	created_at: string;
 	updated_at: string;
 	images: PropertyImage[];

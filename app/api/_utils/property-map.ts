@@ -28,6 +28,11 @@ export type PropertyImageWithDocument = {
 	order: number;
 };
 
+export type PropertyAmenityRow = {
+	value: string;
+	description: string | null;
+};
+
 export type PropertyWithImages = {
 	id: string;
 	title: string;
@@ -51,6 +56,7 @@ export type PropertyWithImages = {
 	updated_at: Date;
 	user_id: string;
 	images: PropertyImageWithDocument[];
+	amenities?: PropertyAmenityRow[];
 };
 
 const mapPropertyImage = (image: PropertyImageWithDocument) => ({
@@ -86,7 +92,11 @@ export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 	lat: property.latitude,
 	lng: property.longitude,
 	isVisible: property.isPublished,
-	amenity_ids: [],
+	amenities: (property.amenities ?? []).map((a) => ({
+		value: a.value,
+		description: a.description ?? null,
+	})),
+	amenity_ids: (property.amenities ?? []).map((a) => a.value),
 	created_at: property.created_at.toISOString(),
 	updated_at: property.updated_at.toISOString(),
 	images: property.images.map(mapPropertyImage),

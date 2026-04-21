@@ -61,6 +61,7 @@ export const propertyStore = {
 			lat: input.lat ?? null,
 			lng: input.lng ?? null,
 			amenity_ids: [],
+			amenities: [],
 			created_at: now,
 			updated_at: now,
 			images: [],
