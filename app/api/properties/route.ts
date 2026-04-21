@@ -2,6 +2,7 @@ import { getHostIdFromRequest } from '@/app/api/_utils/auth';
 import { mapProperty } from '@/app/api/_utils/property-map';
 import { uniquePropertySlug } from '@/app/api/_utils/property-slug';
 import { parseTimeToUtcDate } from '@/app/api/_utils/time-of-day';
+import { RoomTypes } from '@/config/constants/dropdowns/room-type.options';
 import type { UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { prisma } from '@/lib/prisma';
 
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
 				description: body.description?.trim() || null,
 				short_description: body.short_description?.trim() || null,
 				property_type: (body.property_type ?? '').trim() || 'property',
+				room_type: (body.room_type ?? '').trim() || RoomTypes.ENTIRE_PLACE,
 				check_in_time,
 				check_out_time,
 				max_guests: maxGuests,

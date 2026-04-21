@@ -5,6 +5,7 @@ import { Clock3 } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { Button, Input, MinimalRichText, Select } from '@/components/ui';
 import { ApartmentOptions } from '@/config/constants/dropdowns/apartment.options';
+import { RoomTypeOptions } from '@/config/constants/dropdowns/room-type.options';
 import { useCreateProperty, useUpdateProperty } from '@/features/property/hooks/use-property';
 import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
@@ -77,6 +78,8 @@ export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProp
 	});
 
 	const isVisible = watch('isVisible') ?? defaultValues.isVisible;
+	const selectedRoomType = watch('room_type');
+	const selectedRoomTypeOption = RoomTypeOptions.find((option) => option.value === selectedRoomType);
 
 	const toggleIsVisible = () => {
 		setValue('isVisible', !isVisible, { shouldValidate: true, shouldDirty: true });
@@ -189,11 +192,22 @@ export function BasicInfoSection({ mode, initialProperty }: BasicInfoSectionProp
 					<label htmlFor="property-room-type" className="text-sm font-medium text-[#1A1A1A]">
 						Room type
 					</label>
-					<Input
+					<Select
 						id="property-room-type"
+						variant="default"
 						{...register('room_type')}
-						placeholder="Enter room type"
-					/>
+						value={selectedRoomType}
+						onChange={(event) => setValue('room_type', event.target.value)}
+					>
+						{RoomTypeOptions.map((option) => (
+							<option key={option.value} value={option.value}>
+								{option.label}
+							</option>
+						))}
+					</Select>
+					{selectedRoomTypeOption ? (
+						<p className="text-xs text-[#1A1A1A]/55">{selectedRoomTypeOption.description}</p>
+					) : null}
 				</div>
 			</div>
 			<Controller
