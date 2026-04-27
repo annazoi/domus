@@ -1,13 +1,19 @@
 import { getStaticAmenities } from '@/config/constants/dropdowns/amenities.options';
 import type { Booking } from '@/features/bookings/interfaces/booking.interface';
-import type { Amenity } from '@/features/property-amenities/interfaces/property-amenities.interfaces';
 import type { AvailabilityDay } from '@/features/property-availability/interfaces/property-availability.interface';
 import type { PropertyImage } from '@/features/property-images/interfaces/property-image.interfaces';
 import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
+import type { LucideIcon } from 'lucide-react';
+
+type StoreAmenity = {
+	id: string;
+	label: string;
+	icon: LucideIcon;
+};
 
 type PropertyStore = {
 	properties: Property[];
-	amenities: Amenity[];
+	amenities: StoreAmenity[];
 	availability: AvailabilityDay[];
 	bookings: Booking[];
 	images: PropertyImage[];
@@ -19,7 +25,7 @@ declare global {
 
 const createInitialStore = (): PropertyStore => ({
 	properties: [],
-	amenities: getStaticAmenities() as Amenity[],
+	amenities: getStaticAmenities(),
 	availability: [],
 	bookings: [],
 	images: [],
