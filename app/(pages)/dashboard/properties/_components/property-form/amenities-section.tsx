@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import {  ImageIcon, Pencil, Search, Wifi, X,NotebookPen  } from 'lucide-react';
+import {  ImageIcon, Pencil, Search, Wifi, X, NotepadText   } from 'lucide-react';
 import { Button, cn, Input, Textarea } from '@/components/ui';
 import {
 	amenityOptionByValue,
@@ -25,10 +25,12 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
 	const [descByValue, setDescByValue] = useState<Record<string, string>>({});
+	const [quantityByValue, setQuantityByValue] = useState<Record<string, string>>({});
 	const [imageUrlByValue, setImageUrlByValue] = useState<Record<string, string>>({});
 	const [imageFileByValue, setImageFileByValue] = useState<Record<string, File | null>>({});
 	const [editingValue, setEditingValue] = useState<AmenityId | null>(null);
 	const [draftDescription, setDraftDescription] = useState('');
+	const [draftQuantity, setDraftQuantity] = useState('');
 	const [draftImageFile, setDraftImageFile] = useState<File | null>(null);
 	const [draftImagePreviewUrl, setDraftImagePreviewUrl] = useState('');
 	const [removeDraftImage, setRemoveDraftImage] = useState(false);
@@ -42,12 +44,17 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 
 	useEffect(() => {
 		const next: Record<string, string> = {};
+		const nextQuantities: Record<string, string> = {};
 		const nextImageUrls: Record<string, string> = {};
 		for (const a of initialProperty?.amenities ?? []) {
 			if (a.description) next[a.value] = a.description;
+			if (typeof a.quantity === 'number' && Number.isFinite(a.quantity) && a.quantity > 0) {
+				nextQuantities[a.value] = String(a.quantity);
+			}
 			if (a.image_url) nextImageUrls[a.value] = a.image_url;
 		}
 		setDescByValue(next);
+		setQuantityByValue(nextQuantities);
 		setImageUrlByValue(nextImageUrls);
 		setImageFileByValue({});
 	}, [initialProperty?.id, initialProperty?.updated_at]);
@@ -73,27 +80,11 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 			? selectedAmenities.filter((id) => id !== amenityId)
 			: [...selectedAmenities, amenityId];
 		setValue('amenity_ids', next, { shouldValidate: true, shouldDirty: true });
-		if (removing) {
-			setDescByValue((prev) => {
-				const copy = { ...prev };
-				delete copy[amenityId];
-				return copy;
-			});
-			setImageUrlByValue((prev) => {
-				const copy = { ...prev };
-				delete copy[amenityId];
-				return copy;
-			});
-			setImageFileByValue((prev) => {
-				const copy = { ...prev };
-				delete copy[amenityId];
-				return copy;
-			});
-		}
 	};
 
 	const openEdit = (value: AmenityId) => {
 		setDraftDescription(descByValue[value] ?? '');
+		setDraftQuantity(quantityByValue[value] ?? '');
 		const selectedFile = imageFileByValue[value];
 		setDraftImageFile(selectedFile ?? null);
 		setDraftImagePreviewUrl(selectedFile ? URL.createObjectURL(selectedFile) : '');
@@ -107,6 +98,13 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 			const next = { ...prev };
 			const t = draftDescription.trim();
 			if (t) next[editingValue] = t;
+			else delete next[editingValue];
+			return next;
+		});
+		setQuantityByValue((prev) => {
+			const next = { ...prev };
+			const parsed = Number.parseInt(draftQuantity.trim(), 10);
+			if (Number.isFinite(parsed) && parsed > 0) next[editingValue] = String(parsed);
 			else delete next[editingValue];
 			return next;
 		});
@@ -126,6 +124,7 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 		if (draftImagePreviewUrl) URL.revokeObjectURL(draftImagePreviewUrl);
 		setDraftImagePreviewUrl('');
 		setDraftImageFile(null);
+		setDraftQuantity('');
 		setEditingValue(null);
 	};
 
@@ -142,6 +141,7 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 			const amenities = amenity_ids.map((value) => ({
 				value,
 				description: descByValue[value]?.trim() || null,
+				quantity: Number.parseInt(quantityByValue[value] ?? '', 10) || null,
 				image_url: imageUrlByValue[value] ?? null,
 			}));
 			const clearImageValues = amenity_ids.filter((value) => imageFileByValue[value] === null);
@@ -164,6 +164,8 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 	const editingLabel = editingValue ? amenityOptionByValue[editingValue]?.label ?? editingValue : '';
 	const savedDescriptionForEditing = editingValue ? (descByValue[editingValue] ?? '') : '';
 	const isDescriptionDirty = editingValue ? draftDescription.trim() !== savedDescriptionForEditing.trim() : false;
+	const savedQuantityForEditing = editingValue ? (quantityByValue[editingValue] ?? '') : '';
+	const isQuantityDirty = editingValue ? draftQuantity.trim() !== savedQuantityForEditing.trim() : false;
 	const editingImageUrl = editingValue ? (imageUrlByValue[editingValue] ?? '') : '';
 	const editingImagePreview = removeDraftImage ? '' : (draftImagePreviewUrl || editingImageUrl);
 	const isImageDirty = Boolean(removeDraftImage || draftImageFile);
@@ -201,6 +203,8 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 								const active = selectedAmenities.includes(amenity.value);
 								const Icon = amenity.icon ?? Wifi;
 								const hasNote = Boolean(descByValue[amenity.value]?.trim());
+								const quantity = quantityByValue[amenity.value]?.trim();
+								const hasQuantity = Boolean(quantity);
 								const hasImage = Boolean(imageUrlByValue[amenity.value] || imageFileByValue[amenity.value] instanceof File);
 								return (
 									<div
@@ -222,7 +226,12 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 										>
 											<Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
 											<span>{amenity.label}</span>
-											{hasNote ? <NotebookPen className="h-3.5 w-3.5 opacity-80" aria-hidden="true" /> : null}
+											{hasNote ? <NotepadText  className="h-3.5 w-3.5 opacity-80" aria-hidden="true" /> : null}
+											{hasQuantity ? (
+												<span className="rounded-full bg-black/15 px-1.5 py-0.5 text-[10px] font-semibold leading-none">
+													{quantity}
+												</span>
+											) : null}
 											{hasImage ? <ImageIcon className="h-3.5 w-3.5 opacity-80" aria-hidden="true" /> : null}
 										</button>
 										<button
@@ -265,6 +274,7 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 						if (draftImagePreviewUrl) URL.revokeObjectURL(draftImagePreviewUrl);
 						setDraftImagePreviewUrl('');
 						setDraftImageFile(null);
+						setDraftQuantity('');
 						setEditingValue(null);
 					}}
 				>
@@ -286,6 +296,20 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 						<div className="mt-1 flex items-center justify-between text-xs text-[#1A1A1A]/55">
 							<span>{isDescriptionDirty ? 'Typing changes...' : 'Saved value'}</span>
 							<span>{draftDescription.trim().length} chars</span>
+						</div>
+						<div className="mt-3">
+							<label className="mb-1 block text-xs font-medium text-[#1A1A1A]">Quantity</label>
+							<Input
+								type="number"
+								min={1}
+								step={1}
+								value={draftQuantity}
+								onChange={(e) => setDraftQuantity(e.target.value)}
+								placeholder="e.g. 2"
+							/>
+							<div className="mt-1 text-xs text-[#1A1A1A]/55">
+								{isQuantityDirty ? 'Quantity changed' : 'Saved quantity'}
+							</div>
 						</div>
 						<div className="mt-3 space-y-2">
 							<div className="flex items-center justify-between">
@@ -332,6 +356,7 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 									if (draftImagePreviewUrl) URL.revokeObjectURL(draftImagePreviewUrl);
 									setDraftImagePreviewUrl('');
 									setDraftImageFile(null);
+									setDraftQuantity('');
 									setEditingValue(null);
 								}}
 							>

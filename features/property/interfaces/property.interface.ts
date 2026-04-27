@@ -3,6 +3,7 @@ import type { PropertyImage } from '@/features/property-images/interfaces/proper
 export interface PropertyAmenityEntry {
 	value: string;
 	description: string | null;
+	quantity?: number | null;
 	image_url?: string | null;
 }
 
