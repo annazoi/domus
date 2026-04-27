@@ -1,5 +1,7 @@
 import { getHostIdFromRequest } from '@/app/api/_utils/auth';
 import { mapProperty } from '@/app/api/_utils/property-map';
+import { uploadFiles } from '@/app/api/services/cloudinary/cloudinary.service';
+import { buildImageDocumentCreateInput } from '@/app/api/services/documents/documents.service';
 import { prisma } from '@/lib/prisma';
 
 interface AmenityItem {
@@ -11,6 +13,7 @@ interface AmenitiesPayload {
 	amenities?: AmenityItem[];
 	/** @deprecated use `amenities` */
 	amenity_ids?: string[];
+	clear_image_values?: string[];
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -18,7 +21,48 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 	if (!hostId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
 
 	const { id } = await params;
-	const body = (await request.json()) as AmenitiesPayload;
+	const contentType = request.headers.get('content-type') ?? '';
+	let body: AmenitiesPayload = {};
+	let imageFilesByValue = new Map<string, File>();
+
+	if (contentType.includes('multipart/form-data')) {
+		const formData = await request.formData();
+		const rawAmenities = formData.get('amenities');
+		if (typeof rawAmenities === 'string' && rawAmenities.trim()) {
+			try {
+				body.amenities = JSON.parse(rawAmenities) as AmenityItem[];
+			} catch {
+				body.amenities = [];
+			}
+		}
+		const rawClearValues = formData.get('clear_image_values');
+		if (typeof rawClearValues === 'string' && rawClearValues.trim()) {
+			try {
+				body.clear_image_values = JSON.parse(rawClearValues) as string[];
+			} catch {
+				body.clear_image_values = [];
+			}
+		}
+
+		const imageValuesRaw = formData.get('image_values');
+		let imageValues: string[] = [];
+		if (typeof imageValuesRaw === 'string' && imageValuesRaw.trim()) {
+			try {
+				imageValues = (JSON.parse(imageValuesRaw) as unknown[]).filter(
+					(v): v is string => typeof v === 'string',
+				);
+			} catch {
+				imageValues = [];
+			}
+		}
+		const files = formData.getAll('files').filter((entry): entry is File => entry instanceof File);
+		files.forEach((file, index) => {
+			const value = imageValues[index]?.trim();
+			if (value) imageFilesByValue.set(value, file);
+		});
+	} else {
+		body = (await request.json()) as AmenitiesPayload;
+	}
 
 	const property = await prisma.property.findFirst({
 		where: { id, user_id: hostId },
@@ -41,6 +85,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 	}
 	const deduped = [...mergedByValue.values()];
 	const values = deduped.map((i) => i.value);
+	const clearImageValues = new Set((body.clear_image_values ?? []).map((v) => v.trim()).filter(Boolean));
 
 	await prisma.$transaction(async (tx) => {
 		if (!deduped.length) {
@@ -77,11 +122,53 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 		}
 	});
 
+	const amenitiesByValue = await prisma.propertyAmenity.findMany({
+		where: { property_id: id },
+		select: { id: true, value: true },
+	});
+	const amenityIdByValue = new Map(amenitiesByValue.map((item) => [item.value, item.id]));
+
+	const clearAmenityIds = [...clearImageValues]
+		.map((value) => amenityIdByValue.get(value))
+		.filter((v): v is string => Boolean(v));
+
+	if (clearAmenityIds.length) {
+		await prisma.document.deleteMany({
+			where: { user_id: hostId, property_amenity_id: { in: clearAmenityIds } },
+		});
+	}
+
+	if (imageFilesByValue.size) {
+		const imageEntries = [...imageFilesByValue.entries()].filter(([value]) => amenityIdByValue.has(value));
+		if (imageEntries.length) {
+			const uploaded = await uploadFiles(imageEntries.map(([, file]) => file));
+			await prisma.$transaction(async (tx) => {
+				for (const [index, [value]] of imageEntries.entries()) {
+					const amenityId = amenityIdByValue.get(value);
+					if (!amenityId) continue;
+					await tx.document.deleteMany({ where: { user_id: hostId, property_amenity_id: amenityId } });
+					await tx.document.create({
+						data: {
+							...buildImageDocumentCreateInput(hostId, uploaded[index], 0),
+							property_amenity: { connect: { id: amenityId } },
+						},
+					});
+				}
+			});
+		}
+	}
+
 	const updated = await prisma.property.findFirst({
 		where: { id },
 		include: {
 			images: { orderBy: { order: 'asc' }, include: { document: true } },
-			amenities: { select: { value: true, description: true } },
+			amenities: {
+				select: {
+					value: true,
+					description: true,
+					documents: { orderBy: { created_at: 'desc' }, take: 1 },
+				},
+			},
 		},
 	});
 	if (!updated) return Response.json({ message: 'Property not found' }, { status: 404 });

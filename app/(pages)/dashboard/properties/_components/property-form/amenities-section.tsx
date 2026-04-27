@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Pencil, Search, Wifi } from 'lucide-react';
+import {  ImageIcon, Pencil, Search, Wifi, X,NotebookPen  } from 'lucide-react';
 import { Button, cn, Input, Textarea } from '@/components/ui';
 import {
 	amenityOptionByValue,
@@ -25,8 +25,13 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
 	const [descByValue, setDescByValue] = useState<Record<string, string>>({});
+	const [imageUrlByValue, setImageUrlByValue] = useState<Record<string, string>>({});
+	const [imageFileByValue, setImageFileByValue] = useState<Record<string, File | null>>({});
 	const [editingValue, setEditingValue] = useState<AmenityId | null>(null);
 	const [draftDescription, setDraftDescription] = useState('');
+	const [draftImageFile, setDraftImageFile] = useState<File | null>(null);
+	const [draftImagePreviewUrl, setDraftImagePreviewUrl] = useState('');
+	const [removeDraftImage, setRemoveDraftImage] = useState(false);
 
 	const { mutateAsync: saveAmenities, isPending: saving } = useSavePropertyAmenities(propertyId);
 	const { handleSubmit, watch, setValue } = useForm<{ amenity_ids: string[] }>({
@@ -37,11 +42,21 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 
 	useEffect(() => {
 		const next: Record<string, string> = {};
+		const nextImageUrls: Record<string, string> = {};
 		for (const a of initialProperty?.amenities ?? []) {
 			if (a.description) next[a.value] = a.description;
+			if (a.image_url) nextImageUrls[a.value] = a.image_url;
 		}
 		setDescByValue(next);
+		setImageUrlByValue(nextImageUrls);
+		setImageFileByValue({});
 	}, [initialProperty?.id, initialProperty?.updated_at]);
+
+	useEffect(() => {
+		return () => {
+			if (draftImagePreviewUrl) URL.revokeObjectURL(draftImagePreviewUrl);
+		};
+	}, [draftImagePreviewUrl]);
 
 	useEffect(() => {
 		if (!editingValue) return;
@@ -64,11 +79,25 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 				delete copy[amenityId];
 				return copy;
 			});
+			setImageUrlByValue((prev) => {
+				const copy = { ...prev };
+				delete copy[amenityId];
+				return copy;
+			});
+			setImageFileByValue((prev) => {
+				const copy = { ...prev };
+				delete copy[amenityId];
+				return copy;
+			});
 		}
 	};
 
 	const openEdit = (value: AmenityId) => {
 		setDraftDescription(descByValue[value] ?? '');
+		const selectedFile = imageFileByValue[value];
+		setDraftImageFile(selectedFile ?? null);
+		setDraftImagePreviewUrl(selectedFile ? URL.createObjectURL(selectedFile) : '');
+		setRemoveDraftImage(false);
 		setEditingValue(value);
 	};
 
@@ -81,6 +110,22 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 			else delete next[editingValue];
 			return next;
 		});
+		setImageFileByValue((prev) => {
+			const next = { ...prev };
+			if (removeDraftImage) next[editingValue] = null;
+			else if (draftImageFile) next[editingValue] = draftImageFile;
+			return next;
+		});
+		if (removeDraftImage) {
+			setImageUrlByValue((prev) => {
+				const next = { ...prev };
+				delete next[editingValue];
+				return next;
+			});
+		}
+		if (draftImagePreviewUrl) URL.revokeObjectURL(draftImagePreviewUrl);
+		setDraftImagePreviewUrl('');
+		setDraftImageFile(null);
 		setEditingValue(null);
 	};
 
@@ -97,8 +142,10 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 			const amenities = amenity_ids.map((value) => ({
 				value,
 				description: descByValue[value]?.trim() || null,
+				image_url: imageUrlByValue[value] ?? null,
 			}));
-			await saveAmenities(amenities);
+			const clearImageValues = amenity_ids.filter((value) => imageFileByValue[value] === null);
+			await saveAmenities({ amenities, imageFilesByValue: imageFileByValue, clearImageValues });
 			setSuccess('Amenities saved.');
 		} catch (submitError) {
 			setError(submitError instanceof Error ? submitError.message : 'Could not save amenities.');
@@ -115,6 +162,11 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 	}, [search]);
 
 	const editingLabel = editingValue ? amenityOptionByValue[editingValue]?.label ?? editingValue : '';
+	const savedDescriptionForEditing = editingValue ? (descByValue[editingValue] ?? '') : '';
+	const isDescriptionDirty = editingValue ? draftDescription.trim() !== savedDescriptionForEditing.trim() : false;
+	const editingImageUrl = editingValue ? (imageUrlByValue[editingValue] ?? '') : '';
+	const editingImagePreview = removeDraftImage ? '' : (draftImagePreviewUrl || editingImageUrl);
+	const isImageDirty = Boolean(removeDraftImage || draftImageFile);
 
 	return (
 		<PropertyFormSection id="amenities" title="Amenities">
@@ -149,6 +201,7 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 								const active = selectedAmenities.includes(amenity.value);
 								const Icon = amenity.icon ?? Wifi;
 								const hasNote = Boolean(descByValue[amenity.value]?.trim());
+								const hasImage = Boolean(imageUrlByValue[amenity.value] || imageFileByValue[amenity.value] instanceof File);
 								return (
 									<div
 										key={amenity.value}
@@ -169,6 +222,8 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 										>
 											<Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
 											<span>{amenity.label}</span>
+											{hasNote ? <NotebookPen className="h-3.5 w-3.5 opacity-80" aria-hidden="true" /> : null}
+											{hasImage ? <ImageIcon className="h-3.5 w-3.5 opacity-80" aria-hidden="true" /> : null}
 										</button>
 										<button
 											type="button"
@@ -206,7 +261,12 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 					role="dialog"
 					aria-modal="true"
 					aria-labelledby="amenity-edit-title"
-					onClick={() => setEditingValue(null)}
+					onClick={() => {
+						if (draftImagePreviewUrl) URL.revokeObjectURL(draftImagePreviewUrl);
+						setDraftImagePreviewUrl('');
+						setDraftImageFile(null);
+						setEditingValue(null);
+					}}
 				>
 					<div
 						className="w-full max-w-md rounded-xl border border-black/10 bg-white p-5 shadow-xl"
@@ -223,8 +283,58 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 							rows={4}
 							className="mt-3 min-h-[100px] text-sm"
 						/>
+						<div className="mt-1 flex items-center justify-between text-xs text-[#1A1A1A]/55">
+							<span>{isDescriptionDirty ? 'Typing changes...' : 'Saved value'}</span>
+							<span>{draftDescription.trim().length} chars</span>
+						</div>
+						<div className="mt-3 space-y-2">
+							<div className="flex items-center justify-between">
+								<label className="block text-xs font-medium text-[#1A1A1A]">Amenity photo</label>
+								<span className="text-xs text-[#1A1A1A]/55">{isImageDirty ? 'Photo changed' : 'Saved photo'}</span>
+							</div>
+							{editingImagePreview ? (
+								<div className="relative overflow-hidden rounded-lg border border-black/10">
+									<img src={editingImagePreview} alt="" className="h-32 w-full object-cover" />
+									<button
+										type="button"
+										onClick={() => {
+											setRemoveDraftImage(true);
+											if (draftImagePreviewUrl) {
+												URL.revokeObjectURL(draftImagePreviewUrl);
+												setDraftImagePreviewUrl('');
+											}
+											setDraftImageFile(null);
+										}}
+										className="absolute right-2 top-2 rounded-full bg-black/70 p-1 text-white"
+										aria-label="Remove amenity photo"
+									>
+										<X className="h-3.5 w-3.5" />
+									</button>
+								</div>
+							) : null}
+							<Input
+								type="file"
+								accept="image/*"
+								onChange={(e) => {
+									const file = e.target.files?.[0] ?? null;
+									if (draftImagePreviewUrl) URL.revokeObjectURL(draftImagePreviewUrl);
+									setDraftImageFile(file);
+									setDraftImagePreviewUrl(file ? URL.createObjectURL(file) : '');
+									setRemoveDraftImage(false);
+								}}
+							/>
+						</div>
 						<div className="mt-4 flex justify-end gap-2">
-							<Button type="button" variant="secondary" onClick={() => setEditingValue(null)}>
+							<Button
+								type="button"
+								variant="secondary"
+								onClick={() => {
+									if (draftImagePreviewUrl) URL.revokeObjectURL(draftImagePreviewUrl);
+									setDraftImagePreviewUrl('');
+									setDraftImageFile(null);
+									setEditingValue(null);
+								}}
+							>
 								Cancel
 							</Button>
 							<Button type="button" variant="primary" onClick={commitEdit}>

@@ -26,7 +26,13 @@ export async function GET(request: Request) {
 		orderBy: { created_at: 'desc' },
 		include: {
 			images: { orderBy: { order: 'asc' }, include: { document: true } },
-			amenities: { select: { value: true, description: true } },
+			amenities: {
+				select: {
+					value: true,
+					description: true,
+					documents: { orderBy: { created_at: 'desc' }, take: 1 },
+				},
+			},
 		},
 	});
 	return Response.json(properties.map(mapProperty));
@@ -74,7 +80,13 @@ export async function POST(request: Request) {
 			},
 			include: {
 				images: { orderBy: { order: 'asc' }, include: { document: true } },
-				amenities: { select: { value: true, description: true } },
+				amenities: {
+					select: {
+						value: true,
+						description: true,
+						documents: { orderBy: { created_at: 'desc' }, take: 1 },
+					},
+				},
 			},
 		});
 

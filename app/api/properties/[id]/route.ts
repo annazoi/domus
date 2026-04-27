@@ -20,7 +20,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 		where: { id, user_id: hostId },
 		include: {
 			images: { orderBy: { order: 'asc' }, include: { document: true } },
-			amenities: { select: { value: true, description: true } },
+			amenities: {
+				select: {
+					value: true,
+					description: true,
+					documents: { orderBy: { created_at: 'desc' }, take: 1 },
+				},
+			},
 		},
 	});
 	if (!property) return Response.json({ message: 'Property not found' }, { status: 404 });
@@ -73,7 +79,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 		},
 		include: {
 			images: { orderBy: { order: 'asc' }, include: { document: true } },
-			amenities: { select: { value: true, description: true } },
+			amenities: {
+				select: {
+					value: true,
+					description: true,
+					documents: { orderBy: { created_at: 'desc' }, take: 1 },
+				},
+			},
 		},
 	});
 	return Response.json(mapProperty(property));

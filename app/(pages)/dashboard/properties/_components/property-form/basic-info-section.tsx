@@ -217,6 +217,7 @@ export function BasicInfoSection({
 							<option key={option.value} value={option.value}>
 								{option.label}
 							</option>
+							
 						))}
 					</Select>
 				</div>
