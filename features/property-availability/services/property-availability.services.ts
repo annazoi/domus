@@ -1,6 +1,6 @@
 import axiosInstance from '@/config/api/axios';
 import { ApiRoutes } from '@/config/api/routes';
-import type { AvailabilityDay } from '../interfaces/property-availability.interface';
+import type { AvailabilityDay, AvailabilityStatus } from '../interfaces/property-availability.interface';
 
 export const listAvailability = async (property_id: string, start?: string, end?: string) => {
 	const response = await axiosInstance.get<AvailabilityDay[]>(
@@ -14,7 +14,7 @@ type UpsertAvailabilityPayload = {
 	end: string;
 	price: number;
 	is_available: boolean;
-	reason?: 'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | null;
+	reason?: AvailabilityStatus | null;
 };
 
 type UpsertAvailabilityResponse = {

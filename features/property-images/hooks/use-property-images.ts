@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { PropertyImage } from '../interfaces/property-image.interfaces';
 import { deleteImage, reorderPropertyImages, uploadPropertyImages } from '../services/property-images.services';
 
 export const useUploadPropertyImages = (propertyId: string) => {
@@ -31,11 +30,8 @@ export const useDeletePropertyImage = (propertyId: string) => {
 
 	return useMutation({
 		mutationFn: (imageId: string) => deleteImage(imageId),
-		onSuccess: (_result, imageId) => {
+		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ['properties', propertyId] });
-			queryClient.setQueryData<PropertyImage[]>(['property-images', propertyId], (previous = []) =>
-				previous.filter((image) => image.id !== imageId),
-			);
 		},
 	});
 };

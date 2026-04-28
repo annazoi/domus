@@ -1,0 +1,25 @@
+---
+description: Keep TanStack hooks thin and free of data-shaping logic
+globs: features/**/hooks/*.ts
+alwaysApply: false
+---
+
+# TanStack Hook Boundaries
+
+- Hooks in `features/**/hooks/*.ts` should only:
+  - call API service functions in `mutationFn` / `queryFn`
+  - define query keys
+  - set `enabled`
+  - invalidate cache on success/error when needed
+
+- Do **not** place data-shaping logic inside hooks:
+  - no `setQueryData` merge/rewrite logic
+  - no mapping/filtering loops that transform returned rows
+  - no component-specific cache patching behavior
+
+- If optimistic merge/update behavior is required:
+  - move that behavior to component-level utils (or shared utils when reused)
+  - call those utils from the component after mutation resolves
+
+- Invalidation remains in hooks unless explicitly requested otherwise.
+

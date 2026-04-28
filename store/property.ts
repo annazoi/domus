@@ -1,6 +1,6 @@
 import { getStaticAmenities } from '@/config/constants/dropdowns/amenities.options';
 import type { Booking } from '@/features/bookings/interfaces/booking.interface';
-import type { AvailabilityDay } from '@/features/property-availability/interfaces/property-availability.interface';
+import { AvailabilityStatus, type AvailabilityDay, type AvailabilityStatus as AvailabilityStatusType } from '@/features/property-availability/interfaces/property-availability.interface';
 import type { PropertyImage } from '@/features/property-images/interfaces/property-image.interfaces';
 import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import type { LucideIcon } from 'lucide-react';
@@ -189,7 +189,7 @@ export const propertyStore = {
 		date: string,
 		is_available: boolean,
 		price: number,
-		reason: 'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | null,
+		reason: AvailabilityStatusType | null,
 	) {
 		const property = this.getProperty(hostId, propertyId);
 		if (!property) return { error: 'FORBIDDEN' as const };
@@ -201,7 +201,7 @@ export const propertyStore = {
 				date >= booking.start_date &&
 				date <= booking.end_date,
 		);
-		if (isBooked) return { error: 'BOOKED' as const };
+		if (isBooked) return { error: AvailabilityStatus.BOOKED as const };
 
 		const existing = store.availability.find((item) => item.property_id === propertyId && item.date === date);
 		if (existing) {

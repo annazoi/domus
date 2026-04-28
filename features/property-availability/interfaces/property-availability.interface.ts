@@ -4,5 +4,13 @@ export interface AvailabilityDay {
 	date: string;
 	price: number;
 	is_available: boolean;
-	reason: 'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | null;
+	reason: AvailabilityStatus | null;
 }
+
+export const AvailabilityStatus = {
+	BLOCKED: 'BLOCKED',
+	MAINTENANCE: 'MAINTENANCE',
+	BOOKED: 'BOOKED',
+} as const;
+
+export type AvailabilityStatus = (typeof AvailabilityStatus)[keyof typeof AvailabilityStatus];

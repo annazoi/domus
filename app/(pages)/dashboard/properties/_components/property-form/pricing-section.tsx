@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { DateTime } from 'luxon';
 import { DayPicker, type DateRange } from 'react-day-picker';
@@ -12,11 +13,13 @@ import {
 	usePropertyAvailability,
 	useUpsertPropertyAvailability,
 } from '@/features/property-availability/hooks/use-property-availability';
+import { AvailabilityStatus, type AvailabilityStatus as AvailabilityStatusType } from '@/features/property-availability/interfaces/property-availability.interface';
 import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { toApiDate } from '@/features/property-availability/utils/date';
 import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
 import { PropertyFormSection } from './property-form-section';
 import { pricingFormSchema, type PricingFormValues } from './schemas';
+import { mergeAvailabilityRowsInCache } from './utils/availability-cache';
 
 type PricingSectionProps = {
 	mode: 'create' | 'edit';
@@ -29,6 +32,7 @@ type RangeEntry = { id: string; value?: DateRange };
 
 export function PricingSection({ initialProperty, propertyId: propertyIdProp }: PricingSectionProps) {
 	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
+	const queryClient = useQueryClient();
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
 	const { mutateAsync: update, isPending: saving } = useUpdateProperty(propertyId);
@@ -46,7 +50,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 	const [singleDayDate, setSingleDayDate] = useState<string | null>(null);
 	const [singleDayPrice, setSingleDayPrice] = useState('');
 	const [singleDayAvailable, setSingleDayAvailable] = useState(true);
-	const [singleDayReason, setSingleDayReason] = useState<'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | ''>('');
+	const [singleDayReason, setSingleDayReason] = useState<AvailabilityStatusType | ''>('');
 	const monthStart = viewMonth.startOf('month');
 	const monthEndExclusive = viewMonth.endOf('month').startOf('day').plus({ days: 1 });
 	const { data: availabilityRows = [] } = usePropertyAvailability(
@@ -62,7 +66,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 	);
 	const [rangePrice, setRangePrice] = useState('');
 	const [isAvailable, setIsAvailable] = useState(true);
-	const [reason, setReason] = useState<'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | ''>('');
+	const [reason, setReason] = useState<AvailabilityStatusType | ''>('');
 
 	const handleSave = handleSubmit(async (formValues) => {
 		setError('');
@@ -124,12 +128,19 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		const dayEnd = dayStart.plus({ days: 1 });
 
 		try {
-			await upsertAvailability({
+			const rows = await upsertAvailability({
 				start: toApiDate(dayStart),
 				end: toApiDate(dayEnd),
 				price: nightlyPrice,
 				is_available: singleDayAvailable,
 				reason: singleDayAvailable ? null : singleDayReason || null,
+			});
+			mergeAvailabilityRowsInCache({
+				queryClient,
+				propertyId,
+				start: monthStart.toISODate() ?? undefined,
+				end: monthEndExclusive.toISODate() ?? undefined,
+				rows,
 			});
 			setSuccess(`Updated ${dayStart.toFormat('MMM d, yyyy')}.`);
 		} catch (submitError) {
@@ -178,12 +189,19 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 				completeRanges.map(async (rangeItem) => {
 					const from = DateTime.fromJSDate(rangeItem.from!, { zone: 'utc' }).startOf('day');
 					const checkout = DateTime.fromJSDate(rangeItem.to!, { zone: 'utc' }).plus({ days: 1 }).startOf('day');
-					await upsertAvailability({
+					const rows = await upsertAvailability({
 						start: toApiDate(from),
 						end: toApiDate(checkout),
 						price: nightlyPrice,
 						is_available: isAvailable,
 						reason: isAvailable ? null : reason || null,
+					});
+					mergeAvailabilityRowsInCache({
+						queryClient,
+						propertyId,
+						start: monthStart.toISODate() ?? undefined,
+						end: monthEndExclusive.toISODate() ?? undefined,
+						rows,
 					});
 				}),
 			);
@@ -294,14 +312,14 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 						</label>
 						<select
 							value={singleDayReason}
-							onChange={(e) => setSingleDayReason(e.target.value as 'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | '')}
+							onChange={(e) => setSingleDayReason(e.target.value as AvailabilityStatusType | '')}
 							className="mt-2 h-10 w-full rounded-xl border border-black/10 px-3 text-sm"
 							disabled={!singleDayDate || singleDayAvailable}
 						>
 							<option value="">None</option>
-							<option value="BLOCKED">Blocked</option>
-							<option value="MAINTENANCE">Maintenance</option>
-							<option value="BOOKED">Booked</option>
+							<option value={AvailabilityStatus.BLOCKED}>Blocked</option>
+							<option value={AvailabilityStatus.MAINTENANCE}>Maintenance</option>
+							<option value={AvailabilityStatus.BOOKED}>Booked</option>
 						</select>
 						<Button
 							type="button"
@@ -429,13 +447,13 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 								Reason (when unavailable)
 								<select
 									value={reason}
-									onChange={(e) => setReason(e.target.value as 'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | '')}
+									onChange={(e) => setReason(e.target.value as AvailabilityStatusType | '')}
 									className="mt-1.5 h-10 w-full rounded-xl border border-black/10 px-3 text-sm"
 								>
 									<option value="">None</option>
-									<option value="BLOCKED">Blocked</option>
-									<option value="MAINTENANCE">Maintenance</option>
-									<option value="BOOKED">Booked</option>
+									<option value={AvailabilityStatus.BLOCKED}>Blocked</option>
+									<option value={AvailabilityStatus.MAINTENANCE}>Maintenance</option>
+									<option value={AvailabilityStatus.BOOKED}>Booked</option>
 								</select>
 							</label>
 						</div>
@@ -481,7 +499,7 @@ function formatRangeLabel(range: DateRange | undefined) {
 type DayCellProps = {
 	day: DateTime;
 	selected: boolean;
-	availability: { is_available: boolean; price: number; reason: string | null } | undefined;
+	availability: { is_available: boolean; price: number; reason: AvailabilityStatusType | null } | undefined;
 	onClick: () => void;
 };
 

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { DateTime } from 'luxon';
 import { Button, Input, cn } from '@/components/ui';
-import type { AvailabilityDay } from '@/features/property-availability/interfaces/property-availability.interface';
+import { AvailabilityStatus, type AvailabilityDay } from '@/features/property-availability/interfaces/property-availability.interface';
 import { listAvailability, upsertAvailability } from '@/features/property-availability/services/property-availability.services';
 
 const toDate = (day: number) => `2026-04-${String(day).padStart(2, '0')}`;
@@ -35,7 +35,7 @@ export default function PropertyCalendarPage() {
 					end: DateTime.fromISO(selectedDate, { zone: 'utc' }).plus({ days: 1 }).toISODate() ?? selectedDate,
 					price: customPrice.trim() ? Number(customPrice) : 0,
 					is_available: isAvailable,
-					reason: isAvailable ? null : 'BLOCKED',
+					reason: isAvailable ? null : AvailabilityStatus.BLOCKED,
 				},
 			);
 			setDays((previous) => {

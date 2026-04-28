@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { AvailabilityStatus } from '../interfaces/property-availability.interface';
 import { listAvailability, upsertAvailability } from '../services/property-availability.services';
-import type { AvailabilityDay } from '../interfaces/property-availability.interface';
 
 export const propertyAvailabilityQueryKey = {
 	all: (propertyId: string, start?: string, end?: string) => ['property-availability', propertyId, start, end] as const,
@@ -23,21 +23,10 @@ export const useUpsertPropertyAvailability = (propertyId: string) => {
 			end: string;
 			price: number;
 			is_available: boolean;
-			reason?: 'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | null;
+			reason?: AvailabilityStatus | null;
 		}) => upsertAvailability(propertyId, payload),
-		onSuccess: (rows: AvailabilityDay[]) => {
+		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ['property-availability', propertyId] });
-			for (const row of rows) {
-				void queryClient.setQueryData<AvailabilityDay[] | undefined>(
-					propertyAvailabilityQueryKey.all(propertyId),
-					(previous) => {
-						if (!previous) return [row];
-						const next = previous.filter((item) => item.date !== row.date);
-						next.push(row);
-						return next;
-					},
-				);
-			}
 		},
 	});
 };

@@ -1,4 +1,5 @@
 import { getHostIdFromRequest } from '@/app/api/_utils/auth';
+import { AvailabilityStatus, type AvailabilityStatus as AvailabilityStatusType } from '@/features/property-availability/interfaces/property-availability.interface';
 import { propertyStore } from '@/store/property';
 
 interface AvailabilityPayload {
@@ -6,7 +7,7 @@ interface AvailabilityPayload {
 	date: string;
 	is_available: boolean;
 	price?: number;
-	reason?: 'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | null;
+	reason?: AvailabilityStatusType | null;
 }
 
 export async function GET(request: Request) {
@@ -37,7 +38,9 @@ export async function POST(request: Request) {
 	);
 
 	if ('error' in result) {
-		if (result.error === 'BOOKED') return Response.json({ message: 'This date is already booked.' }, { status: 409 });
+		if (result.error === AvailabilityStatus.BOOKED) {
+			return Response.json({ message: 'This date is already booked.' }, { status: 409 });
+		}
 		return Response.json({ message: 'Property not found' }, { status: 404 });
 	}
 

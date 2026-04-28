@@ -6,19 +6,6 @@ import { createUser, getMe, getUser, removeManyUsers, removeUser } from '../serv
 export const useCreateUser = () => {
 	return useMutation({
 		mutationFn: createUser,
-		onSuccess: () => {
-			// toast({
-			// 	title: 'User created',
-			// 	description: 'User created successfully',
-			// });
-		},
-		onError: (error) => {
-			// toast({
-			// 	title: 'Could not create user',
-			// 	description: error.message,
-			// 	variant: 'error',
-			// });
-		},
 	});
 };
 
@@ -47,37 +34,11 @@ export const useGetMe = () => {
 export const useRemoveUser = () => {
 	return useMutation({
 		mutationFn: removeUser,
-		onSuccess: () => {
-			// toast({
-			// 	title: 'User removed',
-			// 	description: 'User removed successfully',
-			// });
-		},
-		onError: (error) => {
-			// toast({
-			// 	title: 'Could not remove user',
-			// 	description: error.message,
-			// 	variant: 'error',
-			// });
-		},
 	});
 };
 
 export const useRemoveManyUsers = () => {
 	return useMutation({
 		mutationFn: removeManyUsers,
-		onSuccess: () => {
-			// toast({
-			// 	title: 'Users removed',
-			// 	description: 'Users removed successfully',
-			// });
-		},
-		onError: (error: any) => {
-			// toast({
-			// 	title: 'Could not remove many users',
-			// 	description: error.message,
-			// 	variant: 'error',
-			// });
-		},
 	});
 };
