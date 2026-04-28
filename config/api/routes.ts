@@ -28,9 +28,11 @@ export const ApiRoutes = {
 		image: (id: string) => `/images/${id}`,
 	},
 	availability: {
-		prefix: '/availability',
-		availability: '/availability',
-		listByProperty: (property_id: string) => `/availability?property_id=${property_id}`,
+		byProperty: (propertyId: string) => `/properties/${propertyId}/availability`,
+		listByProperty: (propertyId: string, start?: string, end?: string) => {
+			const query = toSearchParams({ start, end });
+			return `/properties/${propertyId}/availability${query ? `?${query}` : ''}`;
+		},
 	},
 	bookings: {
 		prefix: '/bookings',

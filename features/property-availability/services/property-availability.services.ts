@@ -2,20 +2,29 @@ import axiosInstance from '@/config/api/axios';
 import { ApiRoutes } from '@/config/api/routes';
 import type { AvailabilityDay } from '../interfaces/property-availability.interface';
 
-export const listAvailability = async (property_id: string) => {
-	const response = await axiosInstance.get<AvailabilityDay[]>(ApiRoutes.availability.listByProperty(property_id));
+export const listAvailability = async (property_id: string, start?: string, end?: string) => {
+	const response = await axiosInstance.get<AvailabilityDay[]>(
+		ApiRoutes.availability.listByProperty(property_id, start, end),
+	);
 	return response.data;
 };
 
-export const upsertAvailability = async (
-	property_id: string,
-	date: string,
-	is_available: boolean,
-	custom_price: number | null,
-) => {
-	const response = await axiosInstance.post<AvailabilityDay>(
-		ApiRoutes.availability.availability,
-		{ property_id, date, is_available, custom_price },
+type UpsertAvailabilityPayload = {
+	start: string;
+	end: string;
+	price: number;
+	is_available: boolean;
+	reason?: 'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | null;
+};
+
+type UpsertAvailabilityResponse = {
+	rows: AvailabilityDay[];
+};
+
+export const upsertAvailability = async (property_id: string, payload: UpsertAvailabilityPayload) => {
+	const response = await axiosInstance.post<UpsertAvailabilityResponse>(
+		ApiRoutes.availability.byProperty(property_id),
+		payload,
 	);
-	return response.data;
+	return response.data.rows;
 };

@@ -183,7 +183,14 @@ export const propertyStore = {
 		return property;
 	},
 
-	upsertAvailability(hostId: string, propertyId: string, date: string, is_available: boolean, custom_price: number | null) {
+	upsertAvailability(
+		hostId: string,
+		propertyId: string,
+		date: string,
+		is_available: boolean,
+		price: number,
+		reason: 'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | null,
+	) {
 		const property = this.getProperty(hostId, propertyId);
 		if (!property) return { error: 'FORBIDDEN' as const };
 
@@ -199,15 +206,17 @@ export const propertyStore = {
 		const existing = store.availability.find((item) => item.property_id === propertyId && item.date === date);
 		if (existing) {
 			existing.is_available = is_available;
-			existing.custom_price = custom_price;
+			existing.price = price;
+			existing.reason = reason;
 			return { value: existing };
 		}
 		const created: AvailabilityDay = {
 			id: crypto.randomUUID(),
 			property_id: propertyId,
 			date,
+			price,
 			is_available,
-			custom_price,
+			reason,
 		};
 		store.availability.push(created);
 		return { value: created };

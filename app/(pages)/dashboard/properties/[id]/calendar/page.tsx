@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { DateTime } from 'luxon';
 import { Button, Input, cn } from '@/components/ui';
 import type { AvailabilityDay } from '@/features/property-availability/interfaces/property-availability.interface';
 import { listAvailability, upsertAvailability } from '@/features/property-availability/services/property-availability.services';
@@ -29,13 +30,17 @@ export default function PropertyCalendarPage() {
 		try {
 			const result = await upsertAvailability(
 				params.id,
-				selectedDate,
-				isAvailable,
-				customPrice.trim() ? Number(customPrice) : null,
+				{
+					start: selectedDate,
+					end: DateTime.fromISO(selectedDate, { zone: 'utc' }).plus({ days: 1 }).toISODate() ?? selectedDate,
+					price: customPrice.trim() ? Number(customPrice) : 0,
+					is_available: isAvailable,
+					reason: isAvailable ? null : 'BLOCKED',
+				},
 			);
 			setDays((previous) => {
 				const next = previous.filter((item) => item.date !== selectedDate);
-				next.push(result);
+				next.push(...result);
 				return next;
 			});
 			setMessage('Availability saved.');
@@ -70,7 +75,7 @@ export default function PropertyCalendarPage() {
 									variant="custom"
 									onClick={() => {
 										setSelectedDate(date);
-										setCustomPrice(item?.custom_price ? String(item.custom_price) : '');
+										setCustomPrice(item?.price ? String(item.price) : '');
 										setMessage('');
 									}}
 									className={cn(

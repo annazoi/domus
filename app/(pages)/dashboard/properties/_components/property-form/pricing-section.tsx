@@ -1,14 +1,19 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { format } from 'date-fns';
+import { DateTime } from 'luxon';
 import { DayPicker, type DateRange } from 'react-day-picker';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { Button, Checkbox, Input } from '@/components/ui';
+import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
+import { Button, Checkbox, Input, cn } from '@/components/ui';
 import { useUpdateProperty } from '@/features/property/hooks/use-property';
+import {
+	usePropertyAvailability,
+	useUpsertPropertyAvailability,
+} from '@/features/property-availability/hooks/use-property-availability';
 import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
+import { toApiDate } from '@/features/property-availability/utils/date';
 import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
 import { PropertyFormSection } from './property-form-section';
 import { pricingFormSchema, type PricingFormValues } from './schemas';
@@ -20,16 +25,9 @@ type PricingSectionProps = {
 };
 
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+type RangeEntry = { id: string; value?: DateRange };
 
-function startOfMonth(d: Date) {
-	return new Date(d.getFullYear(), d.getMonth(), 1);
-}
-
-function addMonths(d: Date, n: number) {
-	return new Date(d.getFullYear(), d.getMonth() + n, 1);
-}
-
-export function PricingSection({ mode, initialProperty, propertyId: propertyIdProp }: PricingSectionProps) {
+export function PricingSection({ initialProperty, propertyId: propertyIdProp }: PricingSectionProps) {
 	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
@@ -41,17 +39,30 @@ export function PricingSection({ mode, initialProperty, propertyId: propertyIdPr
 		resolver: zodResolver(pricingFormSchema),
 		defaultValues: {},
 	});
-	const [viewMonth, setViewMonth] = useState(() => startOfMonth(new Date()));
+	const [viewMonth, setViewMonth] = useState(() => DateTime.utc().startOf('month'));
 	const [modalOpen, setModalOpen] = useState(false);
-	const [range, setRange] = useState<DateRange | undefined>();
-	const rangeLabel = useMemo(() => {
-		if (!range?.from) return '';
-		if (!range.to) return `${format(range.from, 'MMM d, yyyy')} – …`;
-		return `${format(range.from, 'MMM d, yyyy')} – ${format(range.to, 'MMM d, yyyy')}`;
-	}, [range]);
+	const [ranges, setRanges] = useState<RangeEntry[]>([{ id: 'range-1' }]);
+	const [activeRangeId, setActiveRangeId] = useState<string | null>(null);
+	const [singleDayDate, setSingleDayDate] = useState<string | null>(null);
+	const [singleDayPrice, setSingleDayPrice] = useState('');
+	const [singleDayAvailable, setSingleDayAvailable] = useState(true);
+	const [singleDayReason, setSingleDayReason] = useState<'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | ''>('');
+	const monthStart = viewMonth.startOf('month');
+	const monthEndExclusive = viewMonth.endOf('month').startOf('day').plus({ days: 1 });
+	const { data: availabilityRows = [] } = usePropertyAvailability(
+		propertyId,
+		monthStart.toISODate() ?? undefined,
+		monthEndExclusive.toISODate() ?? undefined,
+	);
+	const { mutateAsync: upsertAvailability, isPending: applyingAvailability } = useUpsertPropertyAvailability(propertyId);
+
+	const availabilityMap = useMemo(
+		() => new Map(availabilityRows.map((row) => [row.date, row])),
+		[availabilityRows],
+	);
 	const [rangePrice, setRangePrice] = useState('');
 	const [isAvailable, setIsAvailable] = useState(true);
-	const [calOpen, setCalOpen] = useState(false);
+	const [reason, setReason] = useState<'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | ''>('');
 
 	const handleSave = handleSubmit(async (formValues) => {
 		setError('');
@@ -70,25 +81,118 @@ export function PricingSection({ mode, initialProperty, propertyId: propertyIdPr
 		}
 	});
 
-	const closeModal = useCallback(() => {
+	const closeModal = () => {
 		setModalOpen(false);
-		setCalOpen(false);
-	}, []);
+		setActiveRangeId(null);
+	};
 
 	const { days, label } = useMemo(() => {
-		const first = startOfMonth(viewMonth);
-		const year = first.getFullYear();
-		const month = first.getMonth();
-		const lastDay = new Date(year, month + 1, 0).getDate();
-		const startPad = first.getDay();
-		const cells: (number | null)[] = [...Array(startPad).fill(null)];
-		for (let d = 1; d <= lastDay; d++) cells.push(d);
-		while (cells.length % 7 !== 0) cells.push(null);
+		const first = viewMonth.startOf('month');
+		const startPad = first.weekday % 7;
+		const totalDays = first.daysInMonth;
+		const cells: (DateTime | null)[] = [...Array(startPad).fill(null)];
+		for (let day = 1; day <= totalDays; day++) {
+			cells.push(first.set({ day }));
+		}
+		while (cells.length % 7 !== 0) {
+			cells.push(null);
+		}
 		return {
 			days: cells,
-			label: first.toLocaleString('default', { month: 'long', year: 'numeric' }),
+			label: first.toFormat('LLLL yyyy'),
 		};
 	}, [viewMonth]);
+
+	const disabledDates = useMemo(
+		() =>
+			availabilityRows.filter((row) => row.is_available === false).map((row) => toUtcJsDate(row.date)),
+		[availabilityRows],
+	);
+
+	const handleApplySingleDay = async () => {
+		if (!singleDayDate || !propertyId) return;
+		setError('');
+		setSuccess('');
+
+		const nightlyPrice = Number(singleDayPrice);
+		if (Number.isNaN(nightlyPrice) || nightlyPrice < 0) {
+			setError('Price must be a non-negative number.');
+			return;
+		}
+
+		const dayStart = DateTime.fromISO(singleDayDate, { zone: 'utc' }).startOf('day');
+		const dayEnd = dayStart.plus({ days: 1 });
+
+		try {
+			await upsertAvailability({
+				start: toApiDate(dayStart),
+				end: toApiDate(dayEnd),
+				price: nightlyPrice,
+				is_available: singleDayAvailable,
+				reason: singleDayAvailable ? null : singleDayReason || null,
+			});
+			setSuccess(`Updated ${dayStart.toFormat('MMM d, yyyy')}.`);
+		} catch (submitError) {
+			setError(submitError instanceof Error ? submitError.message : 'Could not update availability.');
+		}
+	};
+
+	const handleApplyRanges = async () => {
+		if (!propertyId) return;
+
+		setError('');
+		setSuccess('');
+
+		const completeRanges = ranges
+			.map((item) => ({ id: item.id, from: item.value?.from, to: item.value?.to }))
+			.filter((item) => item.from || item.to);
+		if (!completeRanges.length) {
+			setError('Select at least one date range.');
+			return;
+		}
+		if (completeRanges.some((item) => !item.from || !item.to)) {
+			setError('Complete all date ranges before applying.');
+			return;
+		}
+
+		const nightlyPrice = Number(rangePrice);
+		if (Number.isNaN(nightlyPrice) || nightlyPrice < 0) {
+			setError('Price must be a non-negative number.');
+			return;
+		}
+
+		for (const rangeItem of completeRanges) {
+			const from = DateTime.fromJSDate(rangeItem.from!, { zone: 'utc' }).startOf('day');
+			const checkout = DateTime.fromJSDate(rangeItem.to!, { zone: 'utc' }).plus({ days: 1 }).startOf('day');
+			for (let cursor = from; cursor < checkout; cursor = cursor.plus({ days: 1 })) {
+				const existing = availabilityMap.get(toApiDate(cursor));
+				if (existing && !existing.is_available) {
+					setError('One of the ranges includes unavailable dates.');
+					return;
+				}
+			}
+		}
+
+		try {
+			await Promise.all(
+				completeRanges.map(async (rangeItem) => {
+					const from = DateTime.fromJSDate(rangeItem.from!, { zone: 'utc' }).startOf('day');
+					const checkout = DateTime.fromJSDate(rangeItem.to!, { zone: 'utc' }).plus({ days: 1 }).startOf('day');
+					await upsertAvailability({
+						start: toApiDate(from),
+						end: toApiDate(checkout),
+						price: nightlyPrice,
+						is_available: isAvailable,
+						reason: isAvailable ? null : reason || null,
+					});
+				}),
+			);
+			setSuccess('Availability updated for selected ranges.');
+			closeModal();
+		} catch (submitError) {
+			setError(submitError instanceof Error ? submitError.message : 'Could not update availability.');
+		}
+	};
 
 	return (
 		<PropertyFormSection id="pricing-availability" title="Pricing & availability">
@@ -103,7 +207,7 @@ export function PricingSection({ mode, initialProperty, propertyId: propertyIdPr
 						<Button
 							type="button"
 							variant="iconSquare"
-							onClick={() => setViewMonth((m) => addMonths(m, -1))}
+							onClick={() => setViewMonth((month) => month.minus({ months: 1 }))}
 							aria-label="Previous month"
 						>
 							<ChevronLeft className="h-5 w-5" />
@@ -114,7 +218,7 @@ export function PricingSection({ mode, initialProperty, propertyId: propertyIdPr
 						<Button
 							type="button"
 							variant="iconSquare"
-							onClick={() => setViewMonth((m) => addMonths(m, 1))}
+							onClick={() => setViewMonth((month) => month.plus({ months: 1 }))}
 							aria-label="Next month"
 						>
 							<ChevronRight className="h-5 w-5" />
@@ -131,14 +235,20 @@ export function PricingSection({ mode, initialProperty, propertyId: propertyIdPr
 					<div className="grid grid-cols-7 gap-2">
 						{days.map((day, i) =>
 							day ? (
-								<Button
+								<DayCell
 									key={i}
-									type="button"
-									variant="custom"
-									className="h-16 rounded-xl border border-black/5 bg-white text-sm text-[#1A1A1A]/70 transition-all duration-200 ease-out hover:border-[#6B705C]/30 active:scale-[0.98]"
-								>
-									{day}
-								</Button>
+									day={day}
+									selected={singleDayDate === toApiDate(day)}
+									availability={availabilityMap.get(toApiDate(day))}
+									onClick={() => {
+										const iso = toApiDate(day);
+										const existing = availabilityMap.get(iso);
+										setSingleDayDate(iso);
+										setSingleDayPrice(existing ? String(existing.price) : '');
+										setSingleDayAvailable(existing?.is_available ?? true);
+										setSingleDayReason(existing?.reason ?? '');
+									}}
+								/>
 							) : (
 								<div key={i} className="h-16" aria-hidden />
 							),
@@ -152,10 +262,57 @@ export function PricingSection({ mode, initialProperty, propertyId: propertyIdPr
 						variant="secondary"
 						className="w-full shrink-0"
 						onClick={() => setModalOpen(true)}
+						disabled={!propertyId}
 					>
 						Set dates &amp; price
 					</Button>
-					
+					<div className="rounded-2xl border border-black/8 bg-white/75 p-4">
+						<p className="text-sm font-medium text-[#1A1A1A]">Single day edit</p>
+						<p className="mt-1 text-xs text-[#1A1A1A]/60">
+							Click any date on the calendar, then update that day here.
+						</p>
+						<p className="mt-2 text-sm text-[#1A1A1A]/70">
+							{singleDayDate ? DateTime.fromISO(singleDayDate, { zone: 'utc' }).toFormat('MMM d, yyyy') : 'No date selected'}
+						</p>
+						<Input
+							type="number"
+							min={0}
+							step={0.01}
+							placeholder="Nightly price"
+							value={singleDayPrice}
+							onChange={(e) => setSingleDayPrice(e.target.value)}
+							className="mt-2"
+							disabled={!singleDayDate}
+						/>
+						<label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border border-black/8 px-3 py-2">
+							<Checkbox
+								checked={singleDayAvailable}
+								onChange={(e) => setSingleDayAvailable(e.target.checked)}
+								disabled={!singleDayDate}
+							/>
+							<span className="text-sm text-[#1A1A1A]">Available for booking</span>
+						</label>
+						<select
+							value={singleDayReason}
+							onChange={(e) => setSingleDayReason(e.target.value as 'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | '')}
+							className="mt-2 h-10 w-full rounded-xl border border-black/10 px-3 text-sm"
+							disabled={!singleDayDate || singleDayAvailable}
+						>
+							<option value="">None</option>
+							<option value="BLOCKED">Blocked</option>
+							<option value="MAINTENANCE">Maintenance</option>
+							<option value="BOOKED">Booked</option>
+						</select>
+						<Button
+							type="button"
+							variant="primarySm"
+							className="mt-3 w-full"
+							disabled={!singleDayDate || applyingAvailability}
+							onClick={() => void handleApplySingleDay()}
+						>
+							{applyingAvailability ? 'Applying...' : 'Apply day'}
+						</Button>
+					</div>
 				</div>
 			</div>
 
@@ -189,44 +346,69 @@ export function PricingSection({ mode, initialProperty, propertyId: propertyIdPr
 						</div>
 
 						<div className="space-y-4">
-							<div className="relative">
-								<label className="block text-sm text-[#1A1A1A]/70">
-									Date range
-									<Input
-										variant="compact"
-										readOnly
-										value={rangeLabel}
-										placeholder="Select dates"
-										onClick={() => setCalOpen((o) => !o)}
-										className="mt-1.5 cursor-pointer"
-										aria-expanded={calOpen}
-										aria-haspopup="dialog"
-									/>
-								</label>
-								{calOpen ? (
-									<div
-										className="absolute left-0 right-0 top-full z-[70] mt-2 w-full rounded-xl border border-black/10 bg-white p-3 shadow-xl [--rdp-accent-color:#1A1A1A] [--rdp-accent-background-color:rgba(26,26,26,0.08)] [&_.rdp-month]:w-full [&_.rdp-month_grid]:w-full [&_.rdp-day]:transition-[background,background-color] [&_.rdp-day]:duration-200 [&_.rdp-day]:ease-out [&_.rdp-day_button]:transition-[color,background-color,border-color,transform,box-shadow] [&_.rdp-day_button]:duration-200 [&_.rdp-day_button]:ease-out [&_.rdp-day_button]:active:scale-[0.94]"
-									>
-										<DayPicker
-											mode="range"
-											min={1}
-											selected={range}
-											onSelect={setRange}
-											className="w-full"
+							{ranges.map((rangeItem, index) => (
+								<div key={rangeItem.id} className="relative">
+									<label className="block text-sm text-[#1A1A1A]/70">
+										Date range {index + 1}
+										<Input
+											variant="compact"
+											readOnly
+											value={formatRangeLabel(rangeItem.value)}
+											placeholder="Select dates"
+											onClick={() =>
+												setActiveRangeId((current) => (current === rangeItem.id ? null : rangeItem.id))
+											}
+											className="mt-1.5 cursor-pointer"
+											aria-expanded={activeRangeId === rangeItem.id}
+											aria-haspopup="dialog"
 										/>
-										<div className="mt-3 flex justify-end border-t border-black/8 pt-3">
-											<Button
-												type="button"
-												variant="primarySm"
-												disabled={!range?.from || !range?.to}
-												onClick={() => setCalOpen(false)}
-											>
-												OK
-											</Button>
+									</label>
+									{index === 0 ? (
+										<Button
+											type="button"
+											variant="ghostPill"
+											className="mt-2 h-8 px-3"
+											onClick={() =>
+												setRanges((previous) => [...previous, { id: `range-${previous.length + 1}` }])
+											}
+										>
+											<Plus className="mr-1 h-4 w-4" />
+											Add another range
+										</Button>
+									) : null}
+									{activeRangeId === rangeItem.id ? (
+										<div
+											className="absolute left-0 right-0 top-full z-[70] mt-2 w-full rounded-xl border border-black/10 bg-white p-3 shadow-xl [--rdp-accent-color:#1A1A1A] [--rdp-accent-background-color:rgba(26,26,26,0.08)] [&_.rdp-month]:w-full [&_.rdp-month_grid]:w-full [&_.rdp-day]:transition-[background,background-color] [&_.rdp-day]:duration-200 [&_.rdp-day]:ease-out [&_.rdp-day_button]:transition-[color,background-color,border-color,transform,box-shadow] [&_.rdp-day_button]:duration-200 [&_.rdp-day_button]:ease-out [&_.rdp-day_button]:active:scale-[0.94]"
+										>
+											<DayPicker
+												mode="range"
+												min={1}
+												excludeDisabled
+												disabled={disabledDates}
+												selected={rangeItem.value}
+												onSelect={(nextRange) =>
+													setRanges((previous) =>
+														previous.map((item) =>
+															item.id === rangeItem.id ? { ...item, value: nextRange } : item,
+														),
+													)
+												}
+												className="w-full"
+											/>
+											<div className="mt-3 flex justify-end border-t border-black/8 pt-3">
+												<Button
+													type="button"
+													variant="primarySm"
+													disabled={!rangeItem.value?.from || !rangeItem.value?.to}
+													onClick={() => setActiveRangeId(null)}
+												>
+													OK
+												</Button>
+											</div>
 										</div>
-									</div>
-								) : null}
-							</div>
+									) : null}
+								</div>
+							))}
 							<label className="block text-sm text-[#1A1A1A]/70">
 								Price for this range (per night)
 								<Input
@@ -243,6 +425,19 @@ export function PricingSection({ mode, initialProperty, propertyId: propertyIdPr
 								<Checkbox checked={isAvailable} onChange={(e) => setIsAvailable(e.target.checked)} />
 								<span className="text-sm text-[#1A1A1A]">Available for booking</span>
 							</label>
+							<label className="block text-sm text-[#1A1A1A]/70">
+								Reason (when unavailable)
+								<select
+									value={reason}
+									onChange={(e) => setReason(e.target.value as 'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | '')}
+									className="mt-1.5 h-10 w-full rounded-xl border border-black/10 px-3 text-sm"
+								>
+									<option value="">None</option>
+									<option value="BLOCKED">Blocked</option>
+									<option value="MAINTENANCE">Maintenance</option>
+									<option value="BOOKED">Booked</option>
+								</select>
+							</label>
 						</div>
 
 						<div className="mt-8 flex justify-end gap-3">
@@ -253,9 +448,10 @@ export function PricingSection({ mode, initialProperty, propertyId: propertyIdPr
 								type="button"
 								variant="primary"
 								className="opacity-90"
-								disabled={!range?.from || !range?.to}
+								disabled={applyingAvailability}
+								onClick={() => void handleApplyRanges()}
 							>
-								Apply
+								{applyingAvailability ? 'Applying...' : 'Apply'}
 							</Button>
 						</div>
 					</div>
@@ -267,5 +463,54 @@ export function PricingSection({ mode, initialProperty, propertyId: propertyIdPr
 				</Button>
 			</div>
 		</PropertyFormSection>
+	);
+}
+
+function toUtcJsDate(date: string) {
+	return DateTime.fromISO(date, { zone: 'utc' }).toJSDate();
+}
+
+function formatRangeLabel(range: DateRange | undefined) {
+	if (!range?.from) return '';
+	const from = DateTime.fromJSDate(range.from, { zone: 'utc' });
+	if (!range.to) return `${from.toFormat('MMM d, yyyy')} - ...`;
+	const to = DateTime.fromJSDate(range.to, { zone: 'utc' });
+	return `${from.toFormat('MMM d, yyyy')} - ${to.toFormat('MMM d, yyyy')}`;
+}
+
+type DayCellProps = {
+	day: DateTime;
+	selected: boolean;
+	availability: { is_available: boolean; price: number; reason: string | null } | undefined;
+	onClick: () => void;
+};
+
+function DayCell({ day, selected, availability, onClick }: DayCellProps) {
+	const stateClass = !availability
+		? 'border-black/5 bg-white text-[#1A1A1A]/70 hover:border-[#6B705C]/30'
+		: availability.is_available
+			? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+			: 'border-red-200 bg-red-50 text-red-800';
+
+	return (
+		<Button
+			type="button"
+			variant="custom"
+			onClick={onClick}
+			className={cn(
+				'h-16 rounded-xl border text-sm transition-all duration-200 ease-out active:scale-[0.98]',
+				stateClass,
+				selected ? 'ring-2 ring-[#6B705C]/40' : '',
+			)}
+		>
+			<div className="flex w-full flex-col items-center gap-1">
+				<span>{day.day}</span>
+				{availability?.is_available ? (
+					<span className="text-[11px] font-medium">${availability.price.toFixed(0)}</span>
+				) : availability ? (
+					<span className="text-[10px] uppercase tracking-wide">{availability.reason ?? 'UNAVAILABLE'}</span>
+				) : null}
+			</div>
+		</Button>
 	);
 }

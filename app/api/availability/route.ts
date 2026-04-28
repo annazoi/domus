@@ -5,7 +5,8 @@ interface AvailabilityPayload {
 	property_id: string;
 	date: string;
 	is_available: boolean;
-	custom_price: number | null;
+	price?: number;
+	reason?: 'BLOCKED' | 'MAINTENANCE' | 'BOOKED' | null;
 }
 
 export async function GET(request: Request) {
@@ -31,7 +32,8 @@ export async function POST(request: Request) {
 		body.property_id,
 		body.date,
 		body.is_available,
-		body.custom_price ?? null,
+		body.price ?? 0,
+		body.reason ?? null,
 	);
 
 	if ('error' in result) {
