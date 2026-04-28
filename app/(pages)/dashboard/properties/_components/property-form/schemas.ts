@@ -2,7 +2,11 @@ import { z } from 'zod';
 
 export const basicInfoFormSchema = z.object({
 	title: z.string().trim().min(1, 'Title is required.'),
-	slug: z.string().trim(),
+	slug: z
+		.string()
+		.trim()
+		.min(1, 'Slug is required.')
+		.regex(/^[a-z-]+$/, 'Slug must contain only lowercase letters (a-z) and "-" only (no spaces or other symbols).'),
 	description: z.string(),
 	short_description: z.string().optional(),
 	check_in_time: z.string(),

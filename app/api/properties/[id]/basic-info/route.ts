@@ -1,7 +1,7 @@
 import { getHostIdFromRequest } from '@/app/api/_utils/auth';
 import { findHostProperty } from '@/app/api/_utils/property-host';
 import { mapProperty } from '@/app/api/_utils/property-map';
-import { uniquePropertySlug } from '@/app/api/_utils/property-slug';
+import { hasPropertySlugConflict, slugifyPropertySlug } from '@/app/api/_utils/property-slug';
 import { parseTimeToUtcDate } from '@/app/api/_utils/time-of-day';
 import { prisma } from '@/lib/prisma';
 
@@ -28,7 +28,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 		return Response.json({ message: 'Title is required.' }, { status: 400 });
 	}
 
-	const slug = await uniquePropertySlug(body.slug?.trim() ? body.slug : body.title, id);
+	const slug = slugifyPropertySlug(body.slug?.trim() ? body.slug : body.title);
+	if (!slug) {
+		return Response.json({ message: 'Slug is invalid.' }, { status: 400 });
+	}
+	const slugExists = await hasPropertySlugConflict({ slug, hostId, excludePropertyId: id });
+	if (slugExists) {
+		return Response.json({ message: 'Slug already exists for another property.' }, { status: 409 });
+	}
 
 	const updated = await prisma.property.update({
 		where: { id },

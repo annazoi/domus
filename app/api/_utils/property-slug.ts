@@ -5,24 +5,22 @@ export function slugifyPropertySlug(raw: string): string {
 		.trim()
 		.toLowerCase()
 		.replace(/\s+/g, '-')
-		.replace(/[^a-z0-9-]/g, '');
+		.replace(/[^a-z-]/g, '');
 	return s.replace(/-+/g, '-').replace(/^-|-$/g, '');
 }
 
-export async function uniquePropertySlug(baseRaw: string, excludePropertyId?: string): Promise<string> {
-	const base = slugifyPropertySlug(baseRaw) || 'listing';
-	let candidate = base;
-	let n = 0;
-	for (;;) {
-		const clash = await prisma.property.findFirst({
-			where: {
-				slug: candidate,
-				...(excludePropertyId ? { NOT: { id: excludePropertyId } } : {}),
-			},
-			select: { id: true },
-		});
-		if (!clash) return candidate;
-		n += 1;
-		candidate = `${base}-${n}`;
-	}
+export async function hasPropertySlugConflict(input: {
+	slug: string;
+	hostId: string;
+	excludePropertyId?: string;
+}): Promise<boolean> {
+	const clash = await prisma.property.findFirst({
+		where: {
+			user_id: input.hostId,
+			slug: input.slug,
+			...(input.excludePropertyId ? { NOT: { id: input.excludePropertyId } } : {}),
+		},
+		select: { id: true },
+	});
+	return Boolean(clash);
 }

@@ -67,6 +67,7 @@ export function BasicInfoSection({
 }: BasicInfoSectionProps) {
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
+	const [slugHelpOpen, setSlugHelpOpen] = useState(false);
 	const { mutateAsync: create, isPending: creating } = useCreateProperty();
 	const targetPropertyId = initialProperty?.id ?? createdPropertyId ?? '';
 	const { mutateAsync: update, isPending: updating } = useUpdateProperty(targetPropertyId);
@@ -81,6 +82,7 @@ export function BasicInfoSection({
 		control,
 		register,
 		handleSubmit,
+		setError: setFieldError,
 		setValue,
 		watch,
 		formState: { errors },
@@ -133,7 +135,12 @@ export function BasicInfoSection({
 			setSuccess('Saved.');
 		} catch (submitError) {
 			console.error('Basic info save failed', submitError);
-			setError('Could not save property. Please try again.');
+			const message = submitError instanceof Error ? submitError.message : 'Could not save property. Please try again.';
+			if (message.toLowerCase().includes('slug')) {
+				setFieldError('slug', { type: 'server', message });
+				return;
+			}
+			setError(message);
 		}
 	});
 
@@ -192,14 +199,36 @@ export function BasicInfoSection({
 					{errors.title?.message ? <p className="text-xs text-red-700">{errors.title.message}</p> : null}
 				</div>
 				<div className="space-y-1.5">
-					<label htmlFor="property-slug" className="text-sm font-medium text-[#1A1A1A]">
-						Slug *
-					</label>
+					<div className="flex items-center gap-1.5">
+						<label htmlFor="property-slug" className="text-sm font-medium text-[#1A1A1A]">
+							Slug *
+						</label>
+						<div className="group relative">
+							<button
+								type="button"
+								onClick={() => setSlugHelpOpen((prev) => !prev)}
+								onBlur={() => setSlugHelpOpen(false)}
+								aria-label="What is slug?"
+								className="flex h-4.5 w-4.5 items-center justify-center rounded-full border border-black/20 text-[10px] font-semibold text-[#1A1A1A]/70"
+							>
+								?
+							</button>
+							<div
+								className={[
+									'pointer-events-none absolute left-1/2 top-full z-20 mt-1 w-56 -translate-x-1/2 rounded-md bg-[#1A1A1A] px-2 py-1.5 text-[11px] text-white shadow-lg transition-opacity',
+									slugHelpOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
+								].join(' ')}
+							>
+								Slug is URL-safe name for listing, like `my-sea-view-apartment`.
+							</div>
+						</div>
+					</div>
 					<Input
 						id="property-slug"
 						{...register('slug')}
 						placeholder="Enter slug"
 					/>
+					{errors.slug?.message ? <p className="text-xs text-red-700">{errors.slug.message}</p> : null}
 				</div>
 				<div className="space-y-1.5">
 					<label htmlFor="property-type" className="text-sm font-medium text-[#1A1A1A]">

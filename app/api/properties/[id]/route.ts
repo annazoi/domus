@@ -1,6 +1,6 @@
 import { getHostIdFromRequest } from '@/app/api/_utils/auth';
 import { mapProperty } from '@/app/api/_utils/property-map';
-import { uniquePropertySlug } from '@/app/api/_utils/property-slug';
+import { hasPropertySlugConflict, slugifyPropertySlug } from '@/app/api/_utils/property-slug';
 import { parseTimeToUtcDate } from '@/app/api/_utils/time-of-day';
 import { RoomTypes } from '@/config/constants/dropdowns/room-type.options';
 import type { UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
@@ -51,7 +51,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 	});
 	if (!existing) return Response.json({ message: 'Property not found' }, { status: 404 });
 
-	const slug = await uniquePropertySlug(body.slug?.trim() ? body.slug : body.title, id);
+	const slug = slugifyPropertySlug(body.slug?.trim() ? body.slug : body.title);
+	if (!slug) {
+		return Response.json({ message: 'Slug is invalid.' }, { status: 400 });
+	}
+	const slugExists = await hasPropertySlugConflict({ slug, hostId, excludePropertyId: id });
+	if (slugExists) {
+		return Response.json({ message: 'Slug already exists for another property.' }, { status: 409 });
+	}
 	const check_in_time = parseTimeToUtcDate(body.check_in_time, '15:00');
 	const check_out_time = parseTimeToUtcDate(body.check_out_time, '11:00');
 
