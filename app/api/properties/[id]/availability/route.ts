@@ -131,3 +131,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 		})),
 	});
 }
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+	const hostId = getHostIdFromRequest(request);
+	if (!hostId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
+
+	const { id } = await params;
+	const property = await findHostProperty(id, hostId);
+	if (!property) return Response.json({ message: 'Property not found' }, { status: 404 });
+
+	const deleted = await prisma.propertyAvailability.deleteMany({
+		where: {
+			property_id: id,
+		},
+	});
+
+	return Response.json({ deleted: deleted.count });
+}

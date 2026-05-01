@@ -1,5 +1,6 @@
 import { getHostIdFromRequest } from '@/app/api/_utils/auth';
 import { AvailabilityStatus, type AvailabilityStatus as AvailabilityStatusType } from '@/features/property-availability/interfaces/property-availability.interface';
+import { toApiDate, toUtcDay } from '@/features/property-availability/utils/date';
 import { propertyStore } from '@/store/property';
 
 interface AvailabilityPayload {
@@ -28,10 +29,19 @@ export async function POST(request: Request) {
 	if (!hostId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
 
 	const body = (await request.json()) as AvailabilityPayload;
+	if (!body.property_id || !body.date) {
+		return Response.json({ message: 'property_id and date are required' }, { status: 400 });
+	}
+
+	const normalizedDate = toUtcDay(body.date);
+	if (!normalizedDate.isValid) {
+		return Response.json({ message: 'Invalid date.' }, { status: 400 });
+	}
+
 	const result = propertyStore.upsertAvailability(
 		hostId,
 		body.property_id,
-		body.date,
+		toApiDate(normalizedDate),
 		body.is_available,
 		body.price ?? 0,
 		body.reason ?? null,

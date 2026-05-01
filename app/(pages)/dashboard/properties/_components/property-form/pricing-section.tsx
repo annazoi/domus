@@ -10,6 +10,8 @@ import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
 import { Button, Checkbox, Input, cn } from '@/components/ui';
 import { useUpdateProperty } from '@/features/property/hooks/use-property';
 import {
+	propertyAvailabilityQueryKey,
+	useClearPropertyAvailability,
 	usePropertyAvailability,
 	useUpsertPropertyAvailability,
 } from '@/features/property-availability/hooks/use-property-availability';
@@ -59,6 +61,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		monthEndExclusive.toISODate() ?? undefined,
 	);
 	const { mutateAsync: upsertAvailability, isPending: applyingAvailability } = useUpsertPropertyAvailability(propertyId);
+	const { mutateAsync: clearAllAvailability, isPending: clearingAvailability } = useClearPropertyAvailability(propertyId);
 
 	const availabilityMap = useMemo(
 		() => new Map(availabilityRows.map((row) => [row.date, row])),
@@ -212,6 +215,36 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		}
 	};
 
+	const handleClearAllAvailability = async () => {
+		if (!propertyId) return;
+		const confirmed = window.confirm(
+			'Remove all availability and prices for this property? This action cannot be undone.',
+		);
+		if (!confirmed) return;
+
+		setError('');
+		setSuccess('');
+
+		try {
+			await clearAllAvailability();
+			queryClient.setQueryData(
+				propertyAvailabilityQueryKey.all(
+					propertyId,
+					monthStart.toISODate() ?? undefined,
+					monthEndExclusive.toISODate() ?? undefined,
+				),
+				[],
+			);
+			setSingleDayDate(null);
+			setSingleDayPrice('');
+			setSingleDayAvailable(true);
+			setSingleDayReason('');
+			setSuccess('All availability was removed.');
+		} catch (submitError) {
+			setError(submitError instanceof Error ? submitError.message : 'Could not remove availability.');
+		}
+	};
+
 	return (
 		<PropertyFormSection id="pricing-availability" title="Pricing & availability">
 			{error ? <p className="rounded-xl bg-red-100/70 px-4 py-3 text-sm text-red-700">{error}</p> : null}
@@ -283,6 +316,15 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 						disabled={!propertyId}
 					>
 						Set dates &amp; price
+					</Button>
+					<Button
+						type="button"
+						variant="secondary"
+						className="w-full shrink-0 border-red-200 text-red-700 hover:border-red-300 hover:bg-red-50"
+						onClick={() => void handleClearAllAvailability()}
+						disabled={!propertyId || clearingAvailability}
+					>
+						{clearingAvailability ? 'Removing...' : 'Remove all availability'}
 					</Button>
 					<div className="rounded-2xl border border-black/8 bg-white/75 p-4">
 						<p className="text-sm font-medium text-[#1A1A1A]">Single day edit</p>

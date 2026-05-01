@@ -28,3 +28,7 @@ export const upsertAvailability = async (property_id: string, payload: UpsertAva
 	);
 	return response.data.rows;
 };
+
+export const clearAvailability = async (property_id: string) => {
+	await axiosInstance.delete(ApiRoutes.availability.byProperty(property_id));
+};

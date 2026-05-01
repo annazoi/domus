@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AvailabilityStatus } from '../interfaces/property-availability.interface';
-import { listAvailability, upsertAvailability } from '../services/property-availability.services';
+import { clearAvailability, listAvailability, upsertAvailability } from '../services/property-availability.services';
 
 export const propertyAvailabilityQueryKey = {
 	all: (propertyId: string, start?: string, end?: string) => ['property-availability', propertyId, start, end] as const,
@@ -25,6 +25,17 @@ export const useUpsertPropertyAvailability = (propertyId: string) => {
 			is_available: boolean;
 			reason?: AvailabilityStatus | null;
 		}) => upsertAvailability(propertyId, payload),
+		onSuccess: () => {
+			void queryClient.invalidateQueries({ queryKey: ['property-availability', propertyId] });
+		},
+	});
+};
+
+export const useClearPropertyAvailability = (propertyId: string) => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: () => clearAvailability(propertyId),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ['property-availability', propertyId] });
 		},

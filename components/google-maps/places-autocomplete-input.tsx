@@ -3,6 +3,7 @@
 import { useEffect, useRef, type ChangeEvent, type ComponentPropsWithoutRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { placeResultToSelection, type PlaceSelection } from './place-selection';
+import { MapPin, Loader2 } from 'lucide-react';
 
 type PlacesAutocompleteInputProps = Omit<ComponentPropsWithoutRef<'input'>, 'onChange'> & {
 	/** When true, attaches Google Places Autocomplete to this input. */
@@ -50,5 +51,21 @@ export function PlacesAutocompleteInput({
 		};
 	}, [placesLibraryReady]);
 
-	return <Input ref={inputRef} variant="default" {...inputProps} onChange={onChange} />;
+	return (
+		<div className="relative">
+			<span
+				aria-hidden
+				className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[13px] text-[#6B705C]/70"
+			>
+				{placesLibraryReady ? <MapPin className="w-4 h-4" /> : <Loader2 className="w-4 h-4 animate-spin" />}
+			</span>
+			<Input
+				ref={inputRef}
+				variant="default"
+				className="pl-10 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]"
+				{...inputProps}
+				onChange={onChange}
+			/>
+		</div>
+	);
 }
