@@ -233,13 +233,17 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 										</button>
 										<button
 											type="button"
+											disabled={!active}
 											onClick={(e) => {
 												e.stopPropagation();
+												if (!active) return;
 												openEdit(amenity.value);
 											}}
 											className={cn(
 												'flex w-11 shrink-0 items-center justify-center border-l outline-none transition',
-												active ? 'border-white/25 text-white hover:bg-white/15' : 'border-black/10 hover:bg-black/10',
+												active
+													? 'border-white/25 text-white hover:bg-white/15'
+													: 'cursor-not-allowed border-black/10 text-[#1A1A1A]/30',
 											)}
 											aria-label={`Edit description for ${amenity.label}`}
 										>

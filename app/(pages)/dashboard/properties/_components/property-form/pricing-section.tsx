@@ -76,6 +76,48 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 	const [rangePrice, setRangePrice] = useState('');
 	const [isAvailable, setIsAvailable] = useState(true);
 	const [reason, setReason] = useState<AvailabilityStatusType | ''>('');
+	const selectedRanges = useMemo(
+		() =>
+			ranges
+				.map((item) => ({ id: item.id, from: item.value?.from, to: item.value?.to }))
+				.filter((item) => item.from || item.to),
+		[ranges],
+	);
+	const hasIncompleteRanges = selectedRanges.some((item) => !item.from || !item.to);
+	const hasRangeConflict = useMemo(() => {
+		for (const rangeItem of selectedRanges) {
+			if (!rangeItem.from || !rangeItem.to) continue;
+			const from = fromPickerDate(rangeItem.from);
+			const checkout = fromPickerDate(rangeItem.to).plus({ days: 1 });
+			for (let cursor = from; cursor < checkout; cursor = cursor.plus({ days: 1 })) {
+				const existing = availabilityMap.get(toApiDate(cursor));
+				if (existing && !existing.is_available) return true;
+			}
+		}
+		return false;
+	}, [selectedRanges, availabilityMap]);
+	const hasSelectedRangeOverlap = useMemo(() => {
+		const completeRanges = selectedRanges
+			.filter((item): item is { id: string; from: Date; to: Date } => Boolean(item.from && item.to))
+			.map((item) => ({
+				start: fromPickerDate(item.from),
+				endExclusive: fromPickerDate(item.to).plus({ days: 1 }),
+			}))
+			.sort((a, b) => a.start.toMillis() - b.start.toMillis());
+		for (let i = 1; i < completeRanges.length; i++) {
+			if (completeRanges[i].start < completeRanges[i - 1].endExclusive) return true;
+		}
+		return false;
+	}, [selectedRanges]);
+	const rangePriceValue = Number(rangePrice);
+	const invalidRangePrice = Number.isNaN(rangePriceValue) || rangePriceValue < 0;
+	const disableApplyRanges =
+		applyingAvailability ||
+		!selectedRanges.length ||
+		hasIncompleteRanges ||
+		invalidRangePrice ||
+		hasRangeConflict ||
+		hasSelectedRangeOverlap;
 
 	const handleSave = handleSubmit(async (formValues) => {
 		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
@@ -92,9 +134,22 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		}
 	});
 
+	const resetRangeModalForm = () => {
+		setRanges([{ id: 'range-1' }]);
+		setActiveRangeId(null);
+		setRangePrice('');
+		setIsAvailable(true);
+		setReason('');
+	};
+
+	const openModal = () => {
+		resetRangeModalForm();
+		setModalOpen(true);
+	};
+
 	const closeModal = () => {
 		setModalOpen(false);
-		setActiveRangeId(null);
+		resetRangeModalForm();
 	};
 
 	const { days, label } = useMemo(() => {
@@ -159,45 +214,38 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 	const handleApplyRanges = async () => {
 		if (!propertyId) return;
 
-		const completeRanges = ranges
-			.map((item) => ({ id: item.id, from: item.value?.from, to: item.value?.to }))
-			.filter((item) => item.from || item.to);
-		if (!completeRanges.length) {
+		if (!selectedRanges.length) {
 			push({ title: 'Select at least one date range.', tone: 'error' });
 			return;
 		}
-		if (completeRanges.some((item) => !item.from || !item.to)) {
+		if (hasIncompleteRanges) {
 			push({ title: 'Complete all date ranges before applying.', tone: 'error' });
 			return;
 		}
 
-		const nightlyPrice = Number(rangePrice);
-		if (Number.isNaN(nightlyPrice) || nightlyPrice < 0) {
+		if (invalidRangePrice) {
 			push({ title: 'Price must be a non-negative number.', tone: 'error' });
 			return;
 		}
 
-		for (const rangeItem of completeRanges) {
-			const from = DateTime.fromJSDate(rangeItem.from!, { zone: 'utc' }).startOf('day');
-			const checkout = DateTime.fromJSDate(rangeItem.to!, { zone: 'utc' }).plus({ days: 1 }).startOf('day');
-			for (let cursor = from; cursor < checkout; cursor = cursor.plus({ days: 1 })) {
-				const existing = availabilityMap.get(toApiDate(cursor));
-				if (existing && !existing.is_available) {
-					push({ title: 'One of the ranges includes unavailable dates.', tone: 'error' });
-					return;
-				}
-			}
+		if (hasRangeConflict) {
+			push({ title: 'One of the ranges includes unavailable dates.', tone: 'error' });
+			return;
+		}
+		if (hasSelectedRangeOverlap) {
+			push({ title: 'Date ranges cannot overlap each other.', tone: 'error' });
+			return;
 		}
 
 		try {
 			await Promise.all(
-				completeRanges.map(async (rangeItem) => {
-					const from = DateTime.fromJSDate(rangeItem.from!, { zone: 'utc' }).startOf('day');
-					const checkout = DateTime.fromJSDate(rangeItem.to!, { zone: 'utc' }).plus({ days: 1 }).startOf('day');
+				selectedRanges.map(async (rangeItem) => {
+					const from = fromPickerDate(rangeItem.from!);
+					const checkout = fromPickerDate(rangeItem.to!).plus({ days: 1 });
 					const rows = await upsertAvailability({
 						start: toApiDate(from),
 						end: toApiDate(checkout),
-						price: nightlyPrice,
+						price: rangePriceValue,
 						is_available: isAvailable,
 						reason: isAvailable ? null : reason || null,
 					});
@@ -237,6 +285,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 			setSingleDayPrice('');
 			setSingleDayAvailable(true);
 			setSingleDayReason('');
+			resetRangeModalForm();
 			push({ title: 'All availability was removed.', tone: 'success' });
 		} catch (submitError) {
 			push({
@@ -343,7 +392,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 						type="button"
 						variant="secondary"
 						className="w-full shrink-0"
-						onClick={() => setModalOpen(true)}
+						onClick={openModal}
 						disabled={!propertyId}
 					>
 						Set dates &amp; price
@@ -562,7 +611,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 								type="button"
 								variant="primary"
 								className="opacity-90"
-								disabled={applyingAvailability}
+								disabled={disableApplyRanges}
 								onClick={() => void handleApplyRanges()}
 							>
 								{applyingAvailability ? 'Applying...' : 'Apply'}
@@ -601,10 +650,17 @@ function toUtcJsDate(date: string) {
 
 function formatRangeLabel(range: DateRange | undefined) {
 	if (!range?.from) return '';
-	const from = DateTime.fromJSDate(range.from, { zone: 'utc' });
+	const from = fromPickerDate(range.from);
 	if (!range.to) return `${from.toFormat('MMM d, yyyy')} - ...`;
-	const to = DateTime.fromJSDate(range.to, { zone: 'utc' });
+	const to = fromPickerDate(range.to);
 	return `${from.toFormat('MMM d, yyyy')} - ${to.toFormat('MMM d, yyyy')}`;
+}
+
+function fromPickerDate(date: Date) {
+	return DateTime.fromObject(
+		{ year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() },
+		{ zone: 'utc' },
+	).startOf('day');
 }
 
 type DayCellProps = {

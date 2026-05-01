@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 interface AmenityItem {
 	value: string;
 	description?: string | null;
+	quantity?: number | null;
 }
 
 interface AmenitiesPayload {
@@ -81,7 +82,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 	for (const item of items) {
 		const value = item.value.trim();
 		if (!value) continue;
-		mergedByValue.set(value, { value, description: item.description ?? null });
+		const quantity =
+			typeof item.quantity === 'number' && Number.isFinite(item.quantity) && item.quantity > 0
+				? Math.trunc(item.quantity)
+				: null;
+		mergedByValue.set(value, { value, description: item.description ?? null, quantity });
 	}
 	const deduped = [...mergedByValue.values()];
 	const values = deduped.map((i) => i.value);
@@ -108,7 +113,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 			if (existing) {
 				await tx.propertyAmenity.update({
 					where: { id: existing.id },
-					data: { description },
+					data: { description, quantity: item.quantity ?? null },
 				});
 			} else {
 				await tx.propertyAmenity.create({
@@ -116,6 +121,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 						property_id: id,
 						value: item.value,
 						description,
+						quantity: item.quantity ?? null,
 					},
 				});
 			}
@@ -166,6 +172,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 				select: {
 					value: true,
 					description: true,
+					quantity: true,
 					documents: { orderBy: { created_at: 'desc' }, take: 1 },
 				},
 			},

@@ -31,6 +31,7 @@ export type PropertyImageWithDocument = {
 export type PropertyAmenityRow = {
 	value: string;
 	description: string | null;
+	quantity: number | null;
 	documents?: PropertyImageDocument[];
 };
 
@@ -96,6 +97,7 @@ export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 	amenities: (property.amenities ?? []).map((a) => ({
 		value: a.value,
 		description: a.description ?? null,
+		quantity: a.quantity ?? null,
 		image_url: a.documents?.[0]?.url ?? null,
 	})),
 	amenity_ids: (property.amenities ?? []).map((a) => a.value),
