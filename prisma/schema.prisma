@@ -112,6 +112,7 @@ model PropertyAvailability {
 model PropertyAmenity {
   id          String   @id @default(uuid())
   property_id String
+  selected    Boolean  @default(true)
   quantity    Int?
   value       String
   description String?

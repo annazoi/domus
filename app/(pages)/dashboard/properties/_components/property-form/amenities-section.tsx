@@ -217,7 +217,7 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 											type="button"
 											onClick={() => onToggleAmenity(amenity.value)}
 											className={cn(
-												'inline-flex items-center gap-2 px-4 py-2.5 text-left outline-none transition hover:bg-black/[0.06]',
+												'cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 text-left outline-none transition hover:bg-black/[0.06]',
 												active && 'hover:bg-white/10',
 											)}
 										>
@@ -242,7 +242,7 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 											className={cn(
 												'flex w-11 shrink-0 items-center justify-center border-l outline-none transition',
 												active
-													? 'border-white/25 text-white hover:bg-white/15'
+													? 'border-white/25 text-white hover:bg-white/15 cursor-pointer'
 													: 'cursor-not-allowed border-black/10 text-[#1A1A1A]/30',
 											)}
 											aria-label={`Edit description for ${amenity.label}`}

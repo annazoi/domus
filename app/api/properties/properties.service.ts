@@ -15,6 +15,7 @@ const propertyInclude = {
 		select: {
 			value: true,
 			description: true,
+			selected: true,
 			quantity: true,
 			documents: { orderBy: { created_at: 'desc' }, take: 1 },
 		},

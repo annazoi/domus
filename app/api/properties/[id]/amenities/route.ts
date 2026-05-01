@@ -94,16 +94,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
 	await prisma.$transaction(async (tx) => {
 		if (!deduped.length) {
-			await tx.propertyAmenity.deleteMany({ where: { property_id: id } });
+			await tx.propertyAmenity.updateMany({
+				where: { property_id: id },
+				data: { selected: false },
+			});
 			return;
 		}
-
-		await tx.propertyAmenity.deleteMany({
-			where: {
-				property_id: id,
-				value: { notIn: values },
-			},
-		});
 
 		for (const item of deduped) {
 			const description = item.description?.trim() || null;
@@ -113,7 +109,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 			if (existing) {
 				await tx.propertyAmenity.update({
 					where: { id: existing.id },
-					data: { description, quantity: item.quantity ?? null },
+					data: { description, quantity: item.quantity ?? null, selected: true },
 				});
 			} else {
 				await tx.propertyAmenity.create({
@@ -122,10 +118,19 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 						value: item.value,
 						description,
 						quantity: item.quantity ?? null,
+						selected: true,
 					},
 				});
 			}
 		}
+
+		await tx.propertyAmenity.updateMany({
+			where: {
+				property_id: id,
+				value: { notIn: values },
+			},
+			data: { selected: false },
+		});
 	});
 
 	const amenitiesByValue = await prisma.propertyAmenity.findMany({
@@ -172,6 +177,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 				select: {
 					value: true,
 					description: true,
+					selected: true,
 					quantity: true,
 					documents: { orderBy: { created_at: 'desc' }, take: 1 },
 				},
