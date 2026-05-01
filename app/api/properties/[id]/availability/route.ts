@@ -2,8 +2,8 @@ import { Reason } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { getHostIdFromRequest } from '@/app/api/_utils/auth';
 import { findHostProperty } from '@/app/api/_utils/property-host';
-import { prisma } from '@/lib/prisma';
-import { eachDayInRange, toApiDate, toUtcDay } from '@/features/property-availability/utils/date';
+import { availabilityService } from './availability.service';
+import { eachDayInRange, toUtcDay } from '@/features/property-availability/utils/date';
 
 type AvailabilityUpdatePayload = {
 	start?: string;
@@ -11,12 +11,6 @@ type AvailabilityUpdatePayload = {
 	price?: number;
 	is_available?: boolean;
 	reason?: Reason | null;
-};
-
-const parseDateParam = (value: string | null, fallback: DateTime) => {
-	if (!value) return fallback;
-	const parsed = DateTime.fromISO(value, { zone: 'utc' }).startOf('day');
-	return parsed.isValid ? parsed : null;
 };
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -29,32 +23,16 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 	const now = DateTime.utc().startOf('day');
 	const url = new URL(request.url);
-	const start = parseDateParam(url.searchParams.get('start'), now.startOf('month'));
-	const end = parseDateParam(url.searchParams.get('end'), now.endOf('month').startOf('day').plus({ days: 1 }));
+	const start = availabilityService.parseDateParam(url.searchParams.get('start'), now.startOf('month'));
+	const end = availabilityService.parseDateParam(
+		url.searchParams.get('end'),
+		now.endOf('month').startOf('day').plus({ days: 1 }),
+	);
 	if (!start || !end) return Response.json({ message: 'Invalid start or end date.' }, { status: 400 });
 	if (start >= end) return Response.json({ message: 'start must be before end.' }, { status: 400 });
 
-	const rows = await prisma.propertyAvailability.findMany({
-		where: {
-			property_id: id,
-			date: {
-				gte: start.toJSDate(),
-				lt: end.toJSDate(),
-			},
-		},
-		orderBy: { date: 'asc' },
-	});
-
-	return Response.json(
-		rows.map((row) => ({
-			id: row.id,
-			property_id: row.property_id,
-			date: toApiDate(row.date.toISOString()),
-			price: Number(row.price),
-			is_available: row.is_available,
-			reason: row.reason,
-		})),
-	);
+	const rows = await availabilityService.listByRange(id, start, end);
+	return Response.json(availabilityService.toApiRows(rows));
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -95,42 +73,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 	}
 
 	const days = eachDayInRange(start, end);
-	const rows = await prisma.$transaction(
-		days.map((day) =>
-			prisma.propertyAvailability.upsert({
-				where: {
-					property_id_date: {
-						property_id: id,
-						date: day.toJSDate(),
-					},
-				},
-				update: {
-					price,
-					is_available: isAvailable,
-					reason,
-					user_id: hostId,
-				},
-				create: {
-					property_id: id,
-					user_id: hostId,
-					date: day.toJSDate(),
-					price,
-					is_available: isAvailable,
-					reason,
-				},
-			}),
-		),
-	);
+	const rows = await availabilityService.upsertRange({
+		propertyId: id,
+		hostId,
+		days,
+		price,
+		isAvailable,
+		reason,
+	});
 
 	return Response.json({
-		rows: rows.map((row) => ({
-			id: row.id,
-			property_id: row.property_id,
-			date: toApiDate(row.date.toISOString()),
-			price: Number(row.price),
-			is_available: row.is_available,
-			reason: row.reason,
-		})),
+		rows: availabilityService.toApiRows(rows),
 	});
 }
 
@@ -142,11 +95,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 	const property = await findHostProperty(id, hostId);
 	if (!property) return Response.json({ message: 'Property not found' }, { status: 404 });
 
-	const deleted = await prisma.propertyAvailability.deleteMany({
-		where: {
-			property_id: id,
-		},
-	});
+	const deleted = await availabilityService.clearByProperty(id);
 
 	return Response.json({ deleted: deleted.count });
 }

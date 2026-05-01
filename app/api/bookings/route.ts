@@ -1,5 +1,5 @@
 import { getHostIdFromRequest } from '@/app/api/_utils/auth';
-import { propertyStore } from '@/store/property';
+import { bookingsService } from './bookings.service';
 
 interface BookingPayload {
 	property_id: string;
@@ -16,18 +16,22 @@ export async function GET(request: Request) {
 	const hostFilter = url.searchParams.get('host_id');
 	if (hostFilter && hostFilter !== 'me') return Response.json({ message: 'Forbidden' }, { status: 403 });
 
-	const bookings = propertyStore.getBookings(hostId);
-	const state = propertyStore.getState();
-	const enriched = bookings.map((booking) => ({
-		...booking,
-		property_title: state.properties.find((property) => property.id === booking.property_id)?.title ?? 'Unknown property',
-	}));
-	return Response.json(enriched);
+	const bookings = await bookingsService.listHostBookings(hostId);
+	return Response.json(bookings);
 }
 
 export async function POST(request: Request) {
+	const hostId = getHostIdFromRequest(request);
+	if (!hostId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
+
 	const body = (await request.json()) as BookingPayload;
-	const booking = propertyStore.createBooking(body.property_id, body.guest_name, body.start_date, body.end_date);
+	const booking = await bookingsService.createBookingBlock({
+		hostId,
+		propertyId: body.property_id,
+		startDate: body.start_date,
+		endDate: body.end_date,
+	});
 	if (!booking) return Response.json({ message: 'Property not found' }, { status: 404 });
+	if ('error' in booking) return Response.json({ message: 'Invalid start_date or end_date.' }, { status: 400 });
 	return Response.json(booking, { status: 201 });
 }
