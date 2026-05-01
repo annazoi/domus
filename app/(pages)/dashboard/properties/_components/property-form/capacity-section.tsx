@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui';
 import { Input } from '@/components/ui';
+import { useToast } from '@/components/ui';
 import { useUpdateProperty } from '@/features/property/hooks/use-property';
 import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
@@ -24,8 +24,7 @@ const capacityFields: Array<{ key: 'max_guests' | 'bedrooms' | 'beds' | 'bathroo
 
 export function CapacitySection({ initialProperty, propertyId: propertyIdProp }: CapacitySectionProps) {
 	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
-	const [error, setError] = useState('');
-	const [success, setSuccess] = useState('');
+	const { push } = useToast();
 	const { mutateAsync: update, isPending: saving } = useUpdateProperty(propertyId);
 	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
 	const {
@@ -44,12 +43,10 @@ export function CapacitySection({ initialProperty, propertyId: propertyIdProp }:
 	});
 
 	const handleSave = handleSubmit(async (formValues) => {
-		setError('');
-		setSuccess('');
 		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
 
 		if (!propertyId) {
-			setError('Save Basic info first to create the property.');
+			push({ title: 'Save Basic info first to create the property.', tone: 'error' });
 			return;
 		}
 
@@ -61,16 +58,14 @@ export function CapacitySection({ initialProperty, propertyId: propertyIdProp }:
 				beds: saved.beds,
 				bathrooms: saved.bathrooms,
 			});
-			setSuccess('Saved.');
+			push({ title: 'Saved.', tone: 'success' });
 		} catch (submitError) {
-			setError(submitError instanceof Error ? submitError.message : 'Could not save.');
+			push({ title: submitError instanceof Error ? submitError.message : 'Could not save.', tone: 'error' });
 		}
 	});
 
 	return (
 		<PropertyFormSection id="capacity" title="Capacity">
-			{error ? <p className="rounded-xl bg-red-100/70 px-4 py-3 text-sm text-red-700">{error}</p> : null}
-			{success ? <p className="rounded-xl bg-emerald-100/70 px-4 py-3 text-sm text-emerald-800">{success}</p> : null}
 			<div className="grid gap-4 md:grid-cols-4">
 				{capacityFields.map((field) => (
 					<div key={field.key} className="space-y-1.5">

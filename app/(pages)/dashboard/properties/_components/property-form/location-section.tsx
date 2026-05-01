@@ -1,10 +1,8 @@
 'use client';
-
-import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { PlacesAutocompleteInput, type PlaceSelection } from '@/components/google-maps';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, useToast } from '@/components/ui';
 import { useUpdateProperty } from '@/features/property/hooks/use-property';
 import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
@@ -46,8 +44,7 @@ export function LocationSection({
 	placesLibraryReady = false,
 }: LocationSectionProps) {
 	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
-	const [error, setError] = useState('');
-	const [success, setSuccess] = useState('');
+	const { push } = useToast();
 	const { mutateAsync: update, isPending: saving } = useUpdateProperty(propertyId);
 	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
 	const {
@@ -68,27 +65,23 @@ export function LocationSection({
 	});
 
 	const handleSave = handleSubmit(async (formValues: LocationFormValues) => {
-		setError('');
-		setSuccess('');
 		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
 
 		if (!propertyId) {
-			setError('Save Basic info first to create the property.');
+			push({ title: 'Save Basic info first to create the property.', tone: 'error' });
 			return;
 		}
 
 		try {
 			await update(payload);
-			setSuccess('Saved.');
+			push({ title: 'Saved.', tone: 'success' });
 		} catch (submitError) {
-			setError(submitError instanceof Error ? submitError.message : 'Could not save.');
+			push({ title: submitError instanceof Error ? submitError.message : 'Could not save.', tone: 'error' });
 		}
 	});
 
 	return (
 		<PropertyFormSection id="location" title="Location">
-			{error ? <p className="rounded-xl bg-red-100/70 px-4 py-3 text-sm text-red-700">{error}</p> : null}
-			{success ? <p className="rounded-xl bg-emerald-100/70 px-4 py-3 text-sm text-emerald-800">{success}</p> : null}
 			<div className="space-y-1.5">
 				<label htmlFor="property-address" className="text-sm font-medium text-[#1A1A1A]">
 					Address

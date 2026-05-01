@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock3 } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
-import { Button, Input, MinimalRichText, Select } from '@/components/ui';
+import { Button, Input, MinimalRichText, Select, useToast } from '@/components/ui';
 import { ApartmentOptions } from '@/config/constants/dropdowns/apartment.options';
 import { RoomTypeOptions } from '@/config/constants/dropdowns/room-type.options';
 import { useCreateProperty, useUpdateProperty } from '@/features/property/hooks/use-property';
@@ -65,8 +65,7 @@ export function BasicInfoSection({
 	createdPropertyId = null,
 	onPropertyCreated,
 }: BasicInfoSectionProps) {
-	const [error, setError] = useState('');
-	const [success, setSuccess] = useState('');
+	const { push } = useToast();
 	const [slugHelpOpen, setSlugHelpOpen] = useState(false);
 	const { mutateAsync: create, isPending: creating } = useCreateProperty();
 	const targetPropertyId = initialProperty?.id ?? createdPropertyId ?? '';
@@ -119,20 +118,18 @@ export function BasicInfoSection({
 	};
 
 	const handleSave = handleSubmit(async (formValues) => {
-		setError('');
-		setSuccess('');
 		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
 		try {
 			if (mode === 'create' && !createdPropertyId && !initialProperty?.id) {
 				const saved = await create(payload);
 				onPropertyCreated?.(saved.id);
-				setSuccess('Saved.');
+				push({ title: 'Saved.', tone: 'success' });
 				return;
 			}
 
 			if (!targetPropertyId) return;
 			await update(payload);
-			setSuccess('Saved.');
+			push({ title: 'Saved.', tone: 'success' });
 		} catch (submitError) {
 			console.error('Basic info save failed', submitError);
 			const message = submitError instanceof Error ? submitError.message : 'Could not save property. Please try again.';
@@ -140,14 +137,12 @@ export function BasicInfoSection({
 				setFieldError('slug', { type: 'server', message });
 				return;
 			}
-			setError(message);
+			push({ title: message, tone: 'error' });
 		}
 	});
 
 	return (
 		<PropertyFormSection id="basic-info" title="Basic info">
-			{error ? <p className="rounded-xl bg-red-100/70 px-4 py-3 text-sm text-red-700">{error}</p> : null}
-			{success ? <p className="rounded-xl bg-emerald-100/70 px-4 py-3 text-sm text-emerald-800">{success}</p> : null}
 			<div className="flex flex-col gap-3 rounded-xl border border-black/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
 				<div className="min-w-0">
 					<p className="text-sm font-medium text-[#1A1A1A]">Listing status</p>

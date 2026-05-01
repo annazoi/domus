@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import {  ImageIcon, Pencil, Search, Wifi, X, NotepadText   } from 'lucide-react';
-import { Button, cn, Input, Textarea } from '@/components/ui';
+import { Button, cn, Input, Textarea, useToast } from '@/components/ui';
 import {
 	amenityOptionByValue,
 	PROPERTY_FORM_AMENITY_CATEGORIES,
@@ -22,8 +22,7 @@ type AmenitiesSectionProps = {
 export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }: AmenitiesSectionProps) {
 	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
 	const [search, setSearch] = useState('');
-	const [error, setError] = useState('');
-	const [success, setSuccess] = useState('');
+	const { push } = useToast();
 	const [descByValue, setDescByValue] = useState<Record<string, string>>({});
 	const [quantityByValue, setQuantityByValue] = useState<Record<string, string>>({});
 	const [imageUrlByValue, setImageUrlByValue] = useState<Record<string, string>>({});
@@ -129,11 +128,8 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 	};
 
 	const handleSave = handleSubmit(async ({ amenity_ids }) => {
-		setError('');
-		setSuccess('');
-
 		if (!propertyId) {
-			setError('Save Basic info first to create the property.');
+			push({ title: 'Save Basic info first to create the property.', tone: 'error' });
 			return;
 		}
 
@@ -146,9 +142,12 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 			}));
 			const clearImageValues = amenity_ids.filter((value) => imageFileByValue[value] === null);
 			await saveAmenities({ amenities, imageFilesByValue: imageFileByValue, clearImageValues });
-			setSuccess('Amenities saved.');
+			push({ title: 'Amenities saved.', tone: 'success' });
 		} catch (submitError) {
-			setError(submitError instanceof Error ? submitError.message : 'Could not save amenities.');
+			push({
+				title: submitError instanceof Error ? submitError.message : 'Could not save amenities.',
+				tone: 'error',
+			});
 		}
 	});
 
@@ -172,8 +171,6 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 
 	return (
 		<PropertyFormSection id="amenities" title="Amenities">
-			{error ? <p className="rounded-xl bg-red-100/70 px-4 py-3 text-sm text-red-700">{error}</p> : null}
-			{success ? <p className="rounded-xl bg-emerald-100/70 px-4 py-3 text-sm text-emerald-800">{success}</p> : null}
 			<div className="mb-6">
 				<label htmlFor="amenities-search" className="mb-1.5 block text-sm font-medium text-[#1A1A1A]">
 					Search amenities

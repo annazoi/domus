@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { DateTime } from 'luxon';
 import { DayPicker, type DateRange } from 'react-day-picker';
 import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
-import { Button, Checkbox, ConfirmationDialog, Input, cn } from '@/components/ui';
+import { Button, Checkbox, ConfirmationDialog, Input, cn, useToast } from '@/components/ui';
 import { useUpdateProperty } from '@/features/property/hooks/use-property';
 import {
 	propertyAvailabilityQueryKey,
@@ -35,8 +35,7 @@ type RangeEntry = { id: string; value?: DateRange };
 export function PricingSection({ initialProperty, propertyId: propertyIdProp }: PricingSectionProps) {
 	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
 	const queryClient = useQueryClient();
-	const [error, setError] = useState('');
-	const [success, setSuccess] = useState('');
+	const { push } = useToast();
 	const { mutateAsync: update, isPending: saving } = useUpdateProperty(propertyId);
 	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
 	const {
@@ -73,19 +72,17 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 	const [reason, setReason] = useState<AvailabilityStatusType | ''>('');
 
 	const handleSave = handleSubmit(async (formValues) => {
-		setError('');
-		setSuccess('');
 		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
 
 		if (!propertyId) {
-			setError('Save Basic info first to create the property.');
+			push({ title: 'Save Basic info first to create the property.', tone: 'error' });
 			return;
 		}
 		try {
 			await update(payload);
-			setSuccess('Saved.');
+			push({ title: 'Saved.', tone: 'success' });
 		} catch (submitError) {
-			setError(submitError instanceof Error ? submitError.message : 'Could not save.');
+			push({ title: submitError instanceof Error ? submitError.message : 'Could not save.', tone: 'error' });
 		}
 	});
 
@@ -119,12 +116,10 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 
 	const handleApplySingleDay = async () => {
 		if (!singleDayDate || !propertyId) return;
-		setError('');
-		setSuccess('');
 
 		const nightlyPrice = Number(singleDayPrice);
 		if (Number.isNaN(nightlyPrice) || nightlyPrice < 0) {
-			setError('Price must be a non-negative number.');
+			push({ title: 'Price must be a non-negative number.', tone: 'error' });
 			return;
 		}
 
@@ -146,33 +141,33 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 				end: monthEndExclusive.toISODate() ?? undefined,
 				rows,
 			});
-			setSuccess(`Updated ${dayStart.toFormat('MMM d, yyyy')}.`);
+			push({ title: `Updated ${dayStart.toFormat('MMM d, yyyy')}.`, tone: 'success' });
 		} catch (submitError) {
-			setError(submitError instanceof Error ? submitError.message : 'Could not update availability.');
+			push({
+				title: submitError instanceof Error ? submitError.message : 'Could not update availability.',
+				tone: 'error',
+			});
 		}
 	};
 
 	const handleApplyRanges = async () => {
 		if (!propertyId) return;
 
-		setError('');
-		setSuccess('');
-
 		const completeRanges = ranges
 			.map((item) => ({ id: item.id, from: item.value?.from, to: item.value?.to }))
 			.filter((item) => item.from || item.to);
 		if (!completeRanges.length) {
-			setError('Select at least one date range.');
+			push({ title: 'Select at least one date range.', tone: 'error' });
 			return;
 		}
 		if (completeRanges.some((item) => !item.from || !item.to)) {
-			setError('Complete all date ranges before applying.');
+			push({ title: 'Complete all date ranges before applying.', tone: 'error' });
 			return;
 		}
 
 		const nightlyPrice = Number(rangePrice);
 		if (Number.isNaN(nightlyPrice) || nightlyPrice < 0) {
-			setError('Price must be a non-negative number.');
+			push({ title: 'Price must be a non-negative number.', tone: 'error' });
 			return;
 		}
 
@@ -182,7 +177,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 			for (let cursor = from; cursor < checkout; cursor = cursor.plus({ days: 1 })) {
 				const existing = availabilityMap.get(toApiDate(cursor));
 				if (existing && !existing.is_available) {
-					setError('One of the ranges includes unavailable dates.');
+					push({ title: 'One of the ranges includes unavailable dates.', tone: 'error' });
 					return;
 				}
 			}
@@ -209,18 +204,18 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 					});
 				}),
 			);
-			setSuccess('Availability updated for selected ranges.');
+			push({ title: 'Availability updated for selected ranges.', tone: 'success' });
 			closeModal();
 		} catch (submitError) {
-			setError(submitError instanceof Error ? submitError.message : 'Could not update availability.');
+			push({
+				title: submitError instanceof Error ? submitError.message : 'Could not update availability.',
+				tone: 'error',
+			});
 		}
 	};
 
 	const handleClearAllAvailability = async () => {
 		if (!propertyId) return;
-
-		setError('');
-		setSuccess('');
 
 		try {
 			await clearAllAvailability();
@@ -236,9 +231,12 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 			setSingleDayPrice('');
 			setSingleDayAvailable(true);
 			setSingleDayReason('');
-			setSuccess('All availability was removed.');
+			push({ title: 'All availability was removed.', tone: 'success' });
 		} catch (submitError) {
-			setError(submitError instanceof Error ? submitError.message : 'Could not remove availability.');
+			push({
+				title: submitError instanceof Error ? submitError.message : 'Could not remove availability.',
+				tone: 'error',
+			});
 		}
 	};
 
@@ -249,8 +247,6 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 
 	return (
 		<PropertyFormSection id="pricing-availability" title="Pricing & availability">
-			{error ? <p className="rounded-xl bg-red-100/70 px-4 py-3 text-sm text-red-700">{error}</p> : null}
-			{success ? <p className="rounded-xl bg-emerald-100/70 px-4 py-3 text-sm text-emerald-800">{success}</p> : null}
 			<p className="text-sm text-[#1A1A1A]/65">
 				Nightly rates are set per day on the property calendar.
 			</p>

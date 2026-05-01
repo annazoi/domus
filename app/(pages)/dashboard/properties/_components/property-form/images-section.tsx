@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ImageIcon, Maximize2, Trash2 } from 'lucide-react';
-import { Button, Textarea } from '@/components/ui';
+import { Button, Textarea, useToast } from '@/components/ui';
 import {
 	useDeletePropertyImage,
 	useReorderPropertyImages,
@@ -43,8 +43,7 @@ export function ImagesSection({
 	const [fileZoneOver, setFileZoneOver] = useState(false);
 	const [images, setImages] = useState<PropertyImage[]>(initialProperty?.images ?? []);
 	const [draggingId, setDraggingId] = useState<string | null>(null);
-	const [error, setError] = useState('');
-	const [success, setSuccess] = useState('');
+	const { push } = useToast();
 	const [staged, setStaged] = useState<StagedImage[]>([]);
 	const stagedPreviewUrlsRef = useRef(new Set<string>());
 	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
@@ -105,15 +104,12 @@ export function ImagesSection({
 	);
 
 	const handleSave = async () => {
-		setError('');
-		setSuccess('');
-
 		if (!propertyId) {
-			setError('Save Basic info first to create the property.');
+			push({ title: 'Save Basic info first to create the property.', tone: 'error' });
 			return;
 		}
 		if (!staged.length) {
-			setError('Select one or more images to upload.');
+			push({ title: 'Select one or more images to upload.', tone: 'error' });
 			return;
 		}
 		try {
@@ -124,9 +120,9 @@ export function ImagesSection({
 			staged.forEach((s) => revokePreview(s.previewUrl));
 			setStaged([]);
 			setImages((previous) => [...previous, ...created].sort((a, b) => a.order - b.order));
-			setSuccess('Images uploaded.');
+			push({ title: 'Images uploaded.', tone: 'success' });
 		} catch (submitError) {
-			setError(submitError instanceof Error ? submitError.message : 'Could not upload images.');
+			push({ title: submitError instanceof Error ? submitError.message : 'Could not upload images.', tone: 'error' });
 		}
 	};
 
@@ -142,7 +138,6 @@ export function ImagesSection({
 		const normalized = next.map((item, index) => ({ ...item, order: index }));
 		const coverImageId = normalized.find((image) => image.is_cover)?.id;
 
-		setError('');
 		try {
 			const reordered = await reorderImages({
 				reorder_ids: normalized.map((image) => image.id),
@@ -150,38 +145,36 @@ export function ImagesSection({
 			});
 			setImages(reordered);
 		} catch (submitError) {
-			setError(submitError instanceof Error ? submitError.message : 'Could not reorder images.');
+			push({ title: submitError instanceof Error ? submitError.message : 'Could not reorder images.', tone: 'error' });
 		}
 	};
 
 	const onSetCover = async (imageId: string) => {
 		if (!propertyId) return;
-		setError('');
 		try {
 			const reordered = await reorderImages({
 				reorder_ids: images.map((image) => image.id),
 				cover_image_id: imageId,
 			});
 			setImages(reordered);
+			push({ title: 'Cover image updated.', tone: 'success' });
 		} catch (submitError) {
-			setError(submitError instanceof Error ? submitError.message : 'Could not update cover image.');
+			push({ title: submitError instanceof Error ? submitError.message : 'Could not update cover image.', tone: 'error' });
 		}
 	};
 
 	const onDelete = async (imageId: string) => {
-		setError('');
 		try {
 			await removeImage(imageId);
 			setImages((previous) => previous.filter((image) => image.id !== imageId));
+			push({ title: 'Image removed.', tone: 'success' });
 		} catch (submitError) {
-			setError(submitError instanceof Error ? submitError.message : 'Could not remove image.');
+			push({ title: submitError instanceof Error ? submitError.message : 'Could not remove image.', tone: 'error' });
 		}
 	};
 
 	return (
 		<PropertyFormSection id="images" title="Images">
-			{error ? <p className="rounded-xl bg-red-100/70 px-4 py-3 text-sm text-red-700">{error}</p> : null}
-			{success ? <p className="rounded-xl bg-emerald-100/70 px-4 py-3 text-sm text-emerald-800">{success}</p> : null}
 			<div className="flex flex-col gap-8 lg:flex-row lg:gap-10">
 				<div className="min-w-0 flex-1 space-y-8">
 					<header className="flex flex-col gap-2">

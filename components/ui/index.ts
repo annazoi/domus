@@ -6,3 +6,4 @@ export { Select, type SelectProps, type SelectVariant } from './select';
 export { Checkbox, type CheckboxProps } from './checkbox';
 export { MinimalRichText } from './minimal-rich-text';
 export { ConfirmationDialog } from './confirmation-dialog';
+export { ToastProvider, useToast } from './toast';
