@@ -91,6 +91,18 @@ export const availabilityService = {
 		});
 	},
 
+	clearByRange(propertyId: string, start: DateTime, end: DateTime) {
+		return prisma.propertyAvailability.deleteMany({
+			where: {
+				property_id: propertyId,
+				date: {
+					gte: start.toJSDate(),
+					lt: end.toJSDate(),
+				},
+			},
+		});
+	},
+
 	toApiRows(rows: Array<{ id: string; property_id: string; date: Date; price: unknown; is_available: boolean; reason: Reason | null }>) {
 		return rows.map(mapAvailabilityRow);
 	},

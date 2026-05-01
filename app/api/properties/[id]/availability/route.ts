@@ -95,6 +95,25 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 	const property = await findHostProperty(id, hostId);
 	if (!property) return Response.json({ message: 'Property not found' }, { status: 404 });
 
+	const url = new URL(request.url);
+	const startRaw = url.searchParams.get('start');
+	const endRaw = url.searchParams.get('end');
+	if (startRaw || endRaw) {
+		if (!startRaw || !endRaw) {
+			return Response.json({ message: 'start and end are required together.' }, { status: 400 });
+		}
+		const start = toUtcDay(startRaw);
+		const end = toUtcDay(endRaw);
+		if (!start.isValid || !end.isValid) {
+			return Response.json({ message: 'Invalid start or end date.' }, { status: 400 });
+		}
+		if (start >= end) {
+			return Response.json({ message: 'end must be after start.' }, { status: 400 });
+		}
+		const deleted = await availabilityService.clearByRange(id, start, end);
+		return Response.json({ deleted: deleted.count });
+	}
+
 	const deleted = await availabilityService.clearByProperty(id);
 
 	return Response.json({ deleted: deleted.count });

@@ -15,7 +15,11 @@ import {
 	usePropertyAvailability,
 	useUpsertPropertyAvailability,
 } from '@/features/property-availability/hooks/use-property-availability';
-import { AvailabilityStatus, type AvailabilityStatus as AvailabilityStatusType } from '@/features/property-availability/interfaces/property-availability.interface';
+import {
+	AvailabilityStatus,
+	type AvailabilityDay,
+	type AvailabilityStatus as AvailabilityStatusType,
+} from '@/features/property-availability/interfaces/property-availability.interface';
 import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { toApiDate } from '@/features/property-availability/utils/date';
 import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
@@ -67,6 +71,8 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		() => new Map(availabilityRows.map((row) => [row.date, row])),
 		[availabilityRows],
 	);
+	const selectedDayRow = singleDayDate ? availabilityMap.get(singleDayDate) : undefined;
+	const hasExistingDay = Boolean(selectedDayRow);
 	const [rangePrice, setRangePrice] = useState('');
 	const [isAvailable, setIsAvailable] = useState(true);
 	const [reason, setReason] = useState<AvailabilityStatusType | ''>('');
@@ -218,7 +224,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		if (!propertyId) return;
 
 		try {
-			await clearAllAvailability();
+			await clearAllAvailability(undefined);
 			queryClient.setQueryData(
 				propertyAvailabilityQueryKey.all(
 					propertyId,
@@ -237,6 +243,33 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 				title: submitError instanceof Error ? submitError.message : 'Could not remove availability.',
 				tone: 'error',
 			});
+		}
+	};
+
+	const handleDeleteSingleDay = async () => {
+		if (!singleDayDate || !propertyId) return;
+		const dayStart = DateTime.fromISO(singleDayDate, { zone: 'utc' }).startOf('day');
+		const dayEnd = dayStart.plus({ days: 1 });
+		try {
+			await clearAllAvailability({
+				start: toApiDate(dayStart),
+				end: toApiDate(dayEnd),
+			});
+			queryClient.setQueryData<AvailabilityDay[] | undefined>(
+				propertyAvailabilityQueryKey.all(
+					propertyId,
+					monthStart.toISODate() ?? undefined,
+					monthEndExclusive.toISODate() ?? undefined,
+				),
+				(previous) => (previous ?? []).filter((row) => row.date !== singleDayDate),
+			);
+			setSingleDayDate(null);
+			setSingleDayPrice('');
+			setSingleDayAvailable(true);
+			setSingleDayReason('');
+			push({ title: `Deleted ${dayStart.toFormat('MMM d, yyyy')}.`, tone: 'success' });
+		} catch (submitError) {
+			push({ title: submitError instanceof Error ? submitError.message : 'Could not delete day.', tone: 'error' });
 		}
 	};
 
@@ -361,15 +394,38 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 							<option value={AvailabilityStatus.MAINTENANCE}>Maintenance</option>
 							<option value={AvailabilityStatus.BOOKED}>Booked</option>
 						</select>
-						<Button
-							type="button"
-							variant="primarySm"
-							className="mt-3 w-full"
-							disabled={!singleDayDate || applyingAvailability}
-							onClick={() => void handleApplySingleDay()}
-						>
-							{applyingAvailability ? 'Applying...' : 'Apply day'}
-						</Button>
+						{hasExistingDay ? (
+							<div className="mt-3 flex flex-col gap-2">
+								<Button
+									type="button"
+									variant="primarySm"
+									className="w-full"
+									disabled={!singleDayDate || applyingAvailability}
+									onClick={() => void handleApplySingleDay()}
+								>
+									{applyingAvailability ? 'Updating...' : 'Update day'}
+								</Button>
+								<Button
+									type="button"
+									variant="secondary"
+									className="w-full border-red-300 text-red-700 hover:bg-red-50"
+									disabled={!singleDayDate || clearingAvailability}
+									onClick={() => void handleDeleteSingleDay()}
+								>
+									{clearingAvailability ? 'Deleting...' : 'Delete day'}
+								</Button>
+							</div>
+						) : (
+							<Button
+								type="button"
+								variant="primarySm"
+								className="mt-3 w-full"
+								disabled={!singleDayDate || applyingAvailability}
+								onClick={() => void handleApplySingleDay()}
+							>
+								{applyingAvailability ? 'Applying...' : 'Apply day'}
+							</Button>
+						)}
 					</div>
 				</div>
 			</div>

@@ -35,7 +35,8 @@ export const useClearPropertyAvailability = (propertyId: string) => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: () => clearAvailability(propertyId),
+		mutationFn: (payload?: { start?: string; end?: string }) =>
+			clearAvailability(propertyId, payload?.start, payload?.end),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ['property-availability', propertyId] });
 		},
