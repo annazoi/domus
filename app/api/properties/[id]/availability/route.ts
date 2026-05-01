@@ -73,10 +73,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 	if (typeof body.price !== 'number' || Number.isNaN(body.price) || body.price < 0) {
 		return Response.json({ message: 'price must be a non-negative number.' }, { status: 400 });
 	}
+	const price = body.price;
 
 	if (typeof body.is_available !== 'boolean') {
 		return Response.json({ message: 'is_available must be boolean.' }, { status: 400 });
 	}
+	const isAvailable = body.is_available;
 
 	const start = toUtcDay(body.start);
 	const end = toUtcDay(body.end);
@@ -103,8 +105,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 					},
 				},
 				update: {
-					price: body.price,
-					is_available: body.is_available,
+					price,
+					is_available: isAvailable,
 					reason,
 					user_id: hostId,
 				},
@@ -112,8 +114,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 					property_id: id,
 					user_id: hostId,
 					date: day.toJSDate(),
-					price: body.price,
-					is_available: body.is_available,
+					price,
+					is_available: isAvailable,
 					reason,
 				},
 			}),

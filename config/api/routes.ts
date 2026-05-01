@@ -1,5 +1,4 @@
 import type { PropertyAmenityQuery } from '@/features/property-amenities/interfaces/property-amenities.interfaces';
-import type { PropertyImageQuery } from '@/features/property-images/interfaces/property-image.interfaces';
 
 const toSearchParams = <T extends object>(query: T) =>
 	new URLSearchParams(
@@ -39,10 +38,9 @@ export const ApiRoutes = {
 		listMine: '/bookings?host_id=me',
 	},
 	property_images: {
-		prefix: '/property-images',
-		property_image: (id: string) => `/property-images/${id}`,
-		property_images: (query: PropertyImageQuery) => `/property-images?${toSearchParams(query)}`,
 		byProperty: (id: string) => `/properties/${id}/images`,
+		byPropertyImage: (propertyId: string, imageId: string) =>
+			`/properties/${propertyId}/images?${toSearchParams({ image_id: imageId })}`,
 	},
 	documents: {
 		prefix: '/documents',

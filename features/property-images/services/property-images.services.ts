@@ -25,6 +25,6 @@ export const reorderPropertyImages = async (id: string, reorder_ids: string[], c
 	return response.data;
 };
 
-export const deleteImage = async (imageId: string) => {
-	await axiosInstance.delete(ApiRoutes.property_images.property_image(imageId));
+export const deleteImage = async (propertyId: string, imageId: string) => {
+	await axiosInstance.delete(ApiRoutes.property_images.byPropertyImage(propertyId, imageId));
 };

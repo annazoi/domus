@@ -29,7 +29,7 @@ export const useDeletePropertyImage = (propertyId: string) => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: (imageId: string) => deleteImage(imageId),
+		mutationFn: (imageId: string) => deleteImage(propertyId, imageId),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ['properties', propertyId] });
 		},
