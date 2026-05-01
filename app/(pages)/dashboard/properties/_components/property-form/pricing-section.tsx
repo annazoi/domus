@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { DateTime } from 'luxon';
 import { DayPicker, type DateRange } from 'react-day-picker';
 import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
-import { Button, Checkbox, Input, cn } from '@/components/ui';
+import { Button, Checkbox, ConfirmationDialog, Input, cn } from '@/components/ui';
 import { useUpdateProperty } from '@/features/property/hooks/use-property';
 import {
 	propertyAvailabilityQueryKey,
@@ -53,6 +53,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 	const [singleDayPrice, setSingleDayPrice] = useState('');
 	const [singleDayAvailable, setSingleDayAvailable] = useState(true);
 	const [singleDayReason, setSingleDayReason] = useState<AvailabilityStatusType | ''>('');
+	const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 	const monthStart = viewMonth.startOf('month');
 	const monthEndExclusive = viewMonth.endOf('month').startOf('day').plus({ days: 1 });
 	const { data: availabilityRows = [] } = usePropertyAvailability(
@@ -217,10 +218,6 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 
 	const handleClearAllAvailability = async () => {
 		if (!propertyId) return;
-		const confirmed = window.confirm(
-			'Remove all availability and prices for this property? This action cannot be undone.',
-		);
-		if (!confirmed) return;
 
 		setError('');
 		setSuccess('');
@@ -243,6 +240,11 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		} catch (submitError) {
 			setError(submitError instanceof Error ? submitError.message : 'Could not remove availability.');
 		}
+	};
+
+	const requestClearAllAvailability = () => {
+		if (!propertyId || clearingAvailability) return;
+		setConfirmClearOpen(true);
 	};
 
 	return (
@@ -321,7 +323,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 						type="button"
 						variant="secondary"
 						className="w-full shrink-0 border-red-200 text-red-700 hover:border-red-300 hover:bg-red-50"
-						onClick={() => void handleClearAllAvailability()}
+						onClick={requestClearAllAvailability}
 						disabled={!propertyId || clearingAvailability}
 					>
 						{clearingAvailability ? 'Removing...' : 'Remove all availability'}
@@ -517,6 +519,21 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 					</div>
 				</div>
 			) : null}
+			<ConfirmationDialog
+				open={confirmClearOpen}
+				title="Remove all availability?"
+				description="This will delete all prices and availability days for this property. This action cannot be undone."
+				confirmLabel="Remove all"
+				cancelLabel="Keep data"
+				confirmVariant="danger"
+				loading={clearingAvailability}
+				onCancel={() => setConfirmClearOpen(false)}
+				onConfirm={() => {
+					void handleClearAllAvailability().finally(() => {
+						setConfirmClearOpen(false);
+					});
+				}}
+			/>
 			<div className="mt-2 flex justify-end border-t border-black/5 pt-5">
 				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
 					{saving ? 'Saving...' : 'Save'}
