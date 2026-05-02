@@ -40,7 +40,7 @@ const groupBookedDays = (rows: Array<{ id: string; date: Date; property_id: stri
 				property_title: row.property.title,
 			};
 			result.push(active);
-		} else {
+		} else if (active) {
 			active.end_date = dayLabel;
 		}
 
