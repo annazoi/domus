@@ -25,14 +25,16 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 	const [selected, setSelected] = useState<PropertyBrandingTheme>(
 		initialProperty?.branding_theme ?? PropertyBrandingTheme.CANVAS,
 	);
-	const [previewOpen, setPreviewOpen] = useState(false);
-	const [previewTheme, setPreviewTheme] = useState<PropertyBrandingTheme>(PropertyBrandingTheme.CANVAS);
+	const [demoPreviewOpen, setDemoPreviewOpen] = useState(false);
+	const [demoPreviewTheme, setDemoPreviewTheme] = useState<PropertyBrandingTheme>(PropertyBrandingTheme.CANVAS);
 
 	useEffect(() => {
 		if (initialProperty?.branding_theme) {
 			setSelected(initialProperty.branding_theme);
 		}
 	}, [initialProperty?.id, initialProperty?.updated_at, initialProperty?.branding_theme]);
+
+	const previewSlug = initialProperty?.slug?.trim();
 
 	const handleSave = async () => {
 		if (!propertyId) {
@@ -99,12 +101,12 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 									variant="cardRow"
 									className="w-full justify-center gap-2 text-xs"
 									onClick={() => {
-										setPreviewTheme(option.id);
-										setPreviewOpen(true);
+										setDemoPreviewTheme(option.id);
+										setDemoPreviewOpen(true);
 									}}
 								>
 									<Eye className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
-									Preview full layout
+									Preview theme demo
 								</Button>
 							</div>
 						</div>
@@ -113,14 +115,26 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 			</div>
 
 			<BrandingThemePreviewDialog
-				open={previewOpen}
-				theme={previewTheme}
-				onClose={() => setPreviewOpen(false)}
+				open={demoPreviewOpen}
+				theme={demoPreviewTheme}
+				onClose={() => setDemoPreviewOpen(false)}
 			/>
 
-			<div className="mt-2 flex justify-end border-t border-black/5 pt-5">
+			<div className="mt-2 flex flex-wrap justify-end gap-3 border-t border-black/5 pt-5">
 				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
 					{saving ? 'Saving...' : 'Save'}
+				</Button>
+				<Button
+					type="button"
+					variant="cardRow"
+					disabled={!propertyId || !previewSlug}
+					className="max-w-fit"
+					onClick={() => {
+						if (!previewSlug) return;
+						window.open(`/dashboard/properties/${encodeURIComponent(previewSlug)}/preview`, '_blank', 'noopener,noreferrer');
+					}}
+				>
+					Preview listing
 				</Button>
 			</div>
 		</PropertyFormSection>

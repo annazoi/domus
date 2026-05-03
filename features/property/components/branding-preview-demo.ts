@@ -17,6 +17,8 @@ export type BrandingPreviewDemo = {
 		eyebrow: string;
 		coords: string;
 		mapImage: string;
+		/** Google Maps embed URL — listing preview only */
+		mapEmbedSrc?: string;
 		columns: [{ title: string; text: string }, { title: string; text: string }];
 	};
 	booking: {

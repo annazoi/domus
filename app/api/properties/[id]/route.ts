@@ -9,7 +9,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 	if (!hostId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
 
 	const { id } = await params;
-	const property = await propertyService.findByHostAndId(hostId, id);
+	let property = await propertyService.findByHostAndId(hostId, id);
+	if (!property) property = await propertyService.findByHostAndSlug(hostId, id);
 	if (!property) return Response.json({ message: 'Property not found' }, { status: 404 });
 	return Response.json(mapProperty(property));
 }

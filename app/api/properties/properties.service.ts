@@ -87,6 +87,13 @@ export const propertyService = {
 		});
 	},
 
+	findByHostAndSlug(hostId: string, slug: string) {
+		return prisma.property.findFirst({
+			where: { slug, user_id: hostId },
+			include: propertyInclude,
+		});
+	},
+
 	create(hostId: string, body: UpsertPropertyInput, slug: string) {
 		return prisma.property.create({
 			data: toPropertyData({ body, hostId, slug }),
