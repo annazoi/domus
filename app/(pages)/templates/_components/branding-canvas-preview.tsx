@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { cn } from '@/components/ui';
 import { MapPin, Menu, Star } from 'lucide-react';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
 import { AmenityGlyph, FillImg } from './branding-preview-shared';
@@ -12,6 +13,10 @@ export function CanvasPreview({
 	data: BrandingPreviewDemo;
 	listingPreview?: boolean;
 }) {
+	const aboutLong = [data.concept.paragraphs[0], data.concept.paragraphs[1]].filter(Boolean).join(' ').trim();
+	const showAboutLong = Boolean(aboutLong);
+	const aboutShort = data.concept.title.trim();
+
 	return (
 		<div className="bg-[#F7F5F2] text-[#1A1A1A] antialiased selection:bg-[#6B705C]/15">
 			<header className="sticky top-0 z-20 flex items-center justify-between border-b border-black/[0.06] bg-[#F7F5F2]/95 px-4 py-4 backdrop-blur-md sm:px-8">
@@ -62,9 +67,6 @@ export function CanvasPreview({
 								{data.hero.location}
 							</p>
 						) : null}
-						{data.concept.paragraphs[0] ? (
-							<p className="mt-6 text-sm leading-relaxed text-[#1A1A1A]/65">{data.concept.paragraphs[0]}</p>
-						) : null}
 					</div>
 				</section>
 
@@ -72,9 +74,28 @@ export function CanvasPreview({
 					{data.concept.eyebrow ? (
 						<span className="text-[10px] uppercase tracking-widest text-[#6B705C]">{data.concept.eyebrow}</span>
 					) : null}
-					<h2 className="mt-2 font-[family-name:var(--font-serif)] text-2xl text-[#1A1A1A] sm:text-3xl">{data.concept.title}</h2>
-					{data.concept.paragraphs[1] ? (
-						<p className="mt-4 max-w-2xl text-sm leading-relaxed text-[#1A1A1A]/65">{data.concept.paragraphs[1]}</p>
+					{showAboutLong ? (
+						<p
+							className={cn(
+								'font-[family-name:var(--font-serif)] text-2xl leading-tight text-[#1A1A1A] sm:text-3xl',
+								data.concept.eyebrow ? 'mt-2' : '',
+								aboutShort ? 'mb-6' : '',
+							)}
+						>
+							{aboutLong}
+						</p>
+					) : null}
+					{aboutShort ? (
+						<p
+							className={cn(
+								showAboutLong
+									? 'max-w-2xl text-sm leading-relaxed text-[#1A1A1A]/65'
+									: 'font-[family-name:var(--font-serif)] text-2xl text-[#1A1A1A] sm:text-3xl',
+								!showAboutLong && data.concept.eyebrow ? 'mt-2' : '',
+							)}
+						>
+							{data.concept.title}
+						</p>
 					) : null}
 
 					{data.gallery.large.src.trim() ||

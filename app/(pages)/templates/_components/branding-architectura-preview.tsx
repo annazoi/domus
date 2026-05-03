@@ -28,6 +28,10 @@ export function ArchitecturaPreview({
 	data: BrandingPreviewDemo;
 	listingPreview?: boolean;
 }) {
+	const aboutLong = [data.concept.paragraphs[0], data.concept.paragraphs[1]].filter(Boolean).join(' ').trim();
+	const showAboutLong = Boolean(aboutLong);
+	const aboutShort = data.concept.title.trim();
+
 	return (
 		<div
 			className={cn(
@@ -119,13 +123,30 @@ export function ArchitecturaPreview({
 									{data.concept.eyebrow}
 								</span>
 							) : null}
-							<h2 className="mb-6 font-[family-name:var(--preview-arch-headline)] text-2xl font-semibold leading-tight text-[#1b1c1a] sm:text-3xl lg:text-4xl">
-								{data.concept.title}
-							</h2>
-							<div className="max-w-2xl space-y-4 text-base leading-relaxed text-[#55433d] sm:text-lg">
-								{data.concept.paragraphs[0] ? <p>{data.concept.paragraphs[0]}</p> : null}
-								{data.concept.paragraphs[1] ? <p>{data.concept.paragraphs[1]}</p> : null}
-							</div>
+							{showAboutLong ? (
+								<p
+									className={cn(
+										'max-w-2xl font-[family-name:var(--preview-arch-headline)] text-2xl font-semibold leading-tight text-[#1b1c1a] sm:text-3xl lg:text-4xl',
+										!data.concept.eyebrow && 'mt-4',
+										aboutShort ? 'mb-6' : '',
+									)}
+								>
+									{aboutLong}
+								</p>
+							) : null}
+							{aboutShort ? (
+								<p
+									className={cn(
+										'mb-6 max-w-2xl',
+										showAboutLong
+											? 'text-base leading-relaxed text-[#55433d] sm:text-lg'
+											: 'font-[family-name:var(--preview-arch-headline)] text-2xl font-semibold leading-tight text-[#1b1c1a] sm:text-3xl lg:text-4xl',
+										!showAboutLong && (data.concept.eyebrow ? 'mt-2' : 'mt-4'),
+									)}
+								>
+									{data.concept.title}
+								</p>
+							) : null}
 						</section>
 
 						<section className="space-y-12">
