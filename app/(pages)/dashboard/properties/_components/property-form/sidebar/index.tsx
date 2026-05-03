@@ -10,6 +10,7 @@ export const PROPERTY_FORM_TAB_IDS = [
 	'pricing-availability',
 	'amenities',
 	'images',
+	'branding',
 ] as const;
 
 export type PropertyFormTabId = (typeof PROPERTY_FORM_TAB_IDS)[number];

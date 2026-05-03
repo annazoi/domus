@@ -7,6 +7,11 @@ import { ApiRoutes } from '@/config/api/routes';
 import { buttonClassName, Button } from '@/components/ui';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import elevatedPropertyPages from '@/public/images/elevated_property_pages.png';
+import seamlessBookingExperience from '@/public/images/seamless_booking_experience.png';
+import { PiInstagramLogoThin, PiTwitterLogoThin, PiWhatsappLogoThin } from "react-icons/pi";
+import logo from '@/public/images/logo_white.png'
+import stoneLogo from '@/public/images/stone_logo.png'
 
 const fadeIn: Variants = {
 	hidden: { opacity: 0, y: 20 },
@@ -36,11 +41,13 @@ export default function Home() {
 			{/* Navigation */}
 			<nav
 				className={[
-					'fixed top-0 left-0 w-full z-50 px-8 py-6 flex justify-between items-center text-stone-100 mix-blend-difference transition-[backdrop-filter] duration-300',
+					'fixed top-0 left-0 w-full z-50 px-8 py-6 flex justify-between items-center text-stone-100 transition-[backdrop-filter] duration-300',
 					isNavScrolled ? 'backdrop-blur-md border-b border-stone-200/5' : 'backdrop-blur-none',
 				].join(' ')}
 			>
-				<div className="font-serif text-2xl tracking-wide">Domus</div>
+				<Link href="/">
+					<Image src={logo} alt="Domus" className="w-20 h-20" />
+				</Link>
 				<div className="hidden md:flex gap-8 text-sm font-light tracking-wide">
 					<a href="#" className="hover:opacity-70 transition-opacity">
 						Platform
@@ -63,7 +70,7 @@ export default function Home() {
 					src="/images/hero_luxury_apartment_1776225273450.png"
 					alt="Luxury minimalist apartment"
 					fill
-					className="object-cover object-center"
+					className="object-cover object-center brightness-50"
 					priority
 				/>
 				<div className="absolute inset-0 bg-stone-900/20" /> {/* Subtle darkening for text readability */}
@@ -127,86 +134,75 @@ export default function Home() {
 				</div>
 			</section>
 
-			{/* Visual Showcase */}
-			<section className="py-24 px-8 md:px-16 lg:px-24 bg-white">
-				<div className="max-w-7xl mx-auto flex flex-col gap-32">
-					{/* Showcase 1 */}
-					<div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-						<motion.div
-							initial="hidden"
-							whileInView="visible"
-							viewport={{ once: true }}
-							variants={fadeIn}
-							className="order-2 lg:order-1 relative aspect-[4/3] w-full"
-						>
+			{/* Visual Showcase - staggered editorial pairs */}
+			<section className="bg-[#f7f5f0] py-24 md:py-32 px-5 md:px-10">
+				<div className="max-w-7xl mx-auto flex flex-col gap-24 md:gap-40">
+					<motion.article
+						initial="hidden"
+						whileInView="visible"
+						viewport={{ once: true }}
+						variants={fadeIn}
+						className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-6 items-start"
+					>
+						<div className="lg:col-span-7 relative aspect-[3/4] w-full max-h-[min(34rem,78vh)] mx-auto lg:mx-0">
 							<Image
-								src="/images/tablet_mockup_listing_1776225336809.png"
-								alt="Property listing on tablet"
+								src={elevatedPropertyPages}
+								alt="Elevated property pages preview"
 								fill
-								className="object-cover rounded-sm"
+								sizes="(max-width: 1024px) 100vw, 58vw"
+								className="object-cover"
+								priority
 							/>
-						</motion.div>
-						<motion.div
-							initial="hidden"
-							whileInView="visible"
-							viewport={{ once: true }}
-							variants={fadeIn}
-							className="order-1 lg:order-2 lg:pl-16 flex flex-col"
-						>
-							<h2 className="font-serif text-4xl md:text-5xl mb-6 text-stone-800 leading-tight">
+						</div>
+						<div className="lg:col-span-4 lg:col-start-9 bg-white px-8 py-10 md:px-11 md:py-12 shadow-[0_2px_28px_-6px_rgba(28,25,23,0.1)] ring-1 ring-stone-200/50 lg:translate-y-14 lg:-translate-x-2">
+							<h2 className="font-serif italic text-[1.7rem] sm:text-3xl md:text-[2.1rem] mb-5 text-stone-900 leading-[1.2]">
 								Elevated property pages.
 							</h2>
-							<p className="text-stone-500 font-light text-lg mb-8 leading-relaxed max-w-md">
+							<p className="text-stone-600 font-light text-sm md:text-[15px] mb-8 leading-[1.75]">
 								Present your spaces with the architectural reverence they deserve. Large imagery, elegant
 								typography, and a calm interface.
 							</p>
 							<a
 								href="#"
-								className="flex items-center gap-2 text-stone-900 border-b border-stone-300 pb-1 w-fit hover:border-stone-900 transition-colors text-sm uppercase tracking-widest"
+								className="inline-flex items-center gap-1.5 text-stone-900 text-[11px] font-semibold uppercase tracking-[0.18em] hover:opacity-55 transition-opacity"
 							>
-								Explore Design <ChevronRight className="w-4 h-4" />
+								Explore Design <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
 							</a>
-						</motion.div>
-					</div>
+						</div>
+					</motion.article>
 
-					{/* Showcase 2 */}
-					<div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-						<motion.div
-							initial="hidden"
-							whileInView="visible"
-							viewport={{ once: true }}
-							variants={fadeIn}
-							className="lg:pr-16 flex flex-col"
-						>
-							<h2 className="font-serif text-4xl md:text-5xl mb-6 text-stone-800 leading-tight">
+					<motion.article
+						initial="hidden"
+						whileInView="visible"
+						viewport={{ once: true }}
+						variants={fadeIn}
+						className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-6 items-start"
+					>
+						<div className="lg:col-span-4 order-2 lg:order-1 bg-white px-8 py-10 md:px-11 md:py-12 shadow-[0_2px_28px_-6px_rgba(28,25,23,0.1)] ring-1 ring-stone-200/50 m-auto">
+							<h2 className="font-serif italic text-[1.7rem] sm:text-3xl md:text-[2.1rem] mb-5 text-stone-900 leading-[1.2]">
 								A seamless booking experience.
 							</h2>
-							<p className="text-stone-500 font-light text-lg mb-8 leading-relaxed max-w-md">
+							<p className="text-stone-600 font-light text-sm md:text-[15px] mb-8 leading-[1.75]">
 								No clutter, no distractions. A frictionless checkout flow that feels premium and builds trust
 								instantly with your guests.
 							</p>
 							<a
 								href="#"
-								className="flex items-center gap-2 text-stone-900 border-b border-stone-300 pb-1 w-fit hover:border-stone-900 transition-colors text-sm uppercase tracking-widest"
+								className="inline-flex items-center gap-1.5 text-stone-900 text-[11px] font-semibold uppercase tracking-[0.18em] hover:opacity-55 transition-opacity"
 							>
-								View Flow <ChevronRight className="w-4 h-4" />
+								View Flow <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
 							</a>
-						</motion.div>
-						<motion.div
-							initial="hidden"
-							whileInView="visible"
-							viewport={{ once: true }}
-							variants={fadeIn}
-							className="relative aspect-[3/4] w-full max-w-md mx-auto"
-						>
+						</div>
+						<div className="lg:col-span-7 lg:col-start-6 order-1 lg:order-2 relative aspect-[3/4] w-full max-h-[min(34rem,78vh)] mx-auto lg:mx-0 lg:-translate-y-4">
 							<Image
-								src="/images/phone_mockup_booking_1776225359748.png"
-								alt="Booking flow on mobile"
+								src={seamlessBookingExperience}
+								alt="Seamless booking experience preview"
 								fill
-								className="object-cover rounded-sm"
+								sizes="(max-width: 1024px) 100vw, 58vw"
+								className="object-cover object-bottom"
 							/>
-						</motion.div>
-					</div>
+						</div>
+					</motion.article>
 				</div>
 			</section>
 
@@ -368,16 +364,18 @@ export default function Home() {
 
 			{/* Footer */}
 			<footer className="py-12 px-8 md:px-16 lg:px-24 border-t border-stone-200 bg-stone-50 flex flex-col md:flex-row justify-between items-center gap-6">
-				<div className="font-serif text-xl tracking-wide text-stone-800">Domus</div>
-				<div className="flex gap-6 text-sm text-stone-500 font-light">
-					<a href="#" className="hover:text-stone-900 transition-colors">
-						Twitter
+				<Link href="/">
+				<Image src={stoneLogo} alt="Domus" className="w-20 h-20" />
+				</Link>
+				<div className="flex gap-6 text-sm text-stone-500 font-light relative md:absolute md:left-1/2 md:-translate-x-1/2">
+					<a href="#" className="hover:text-stone-900 transition-colors text-3xl">
+					<PiTwitterLogoThin />
 					</a>
-					<a href="#" className="hover:text-stone-900 transition-colors">
-						Instagram
+					<a href="#" className="hover:text-stone-900 transition-colors text-3xl">
+					<PiInstagramLogoThin />
 					</a>
-					<a href="#" className="hover:text-stone-900 transition-colors">
-						Email
+					<a href="#" className="hover:text-stone-900 transition-colors text-3xl">
+					<PiWhatsappLogoThin />
 					</a>
 				</div>
 				<div className="text-sm text-stone-400 font-light">© 2026 Domus. All rights reserved.</div>

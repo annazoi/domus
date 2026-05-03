@@ -1,4 +1,5 @@
 import type { PropertyImage } from '@/features/property-images/interfaces/property-image.interfaces';
+import type { PropertyBrandingTheme } from '@/features/property/constants/property-branding-theme';
 
 export interface PropertyAmenityEntry {
 	value: string;
@@ -29,6 +30,7 @@ export interface Property {
 	lat: number | null;
 	lng: number | null;
 	isVisible: boolean;
+	branding_theme: PropertyBrandingTheme;
 	amenity_ids: string[];
 	amenities: PropertyAmenityEntry[];
 	created_at: string;

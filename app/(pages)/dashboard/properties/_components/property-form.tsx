@@ -6,6 +6,7 @@ import { GoogleMapsPlacesScript } from '@/components/google-maps';
 import type { Property } from '@/features/property/interfaces/property.interface';
 import { AmenitiesSection } from './property-form/amenities-section';
 import { BasicInfoSection } from './property-form/basic-info-section';
+import { BrandingSection } from './property-form/branding-section';
 import { CapacitySection } from './property-form/capacity-section';
 import { ImagesSection } from './property-form/images-section';
 import { LocationSection } from './property-form/location-section';
@@ -83,6 +84,9 @@ export function PropertyForm({ mode, initialProperty }: PropertyFormProps) {
 					) : null}
 					{activeTab === 'images' ? (
 						<ImagesSection mode={mode} initialProperty={initialProperty} propertyId={resolvedPropertyId} />
+					) : null}
+					{activeTab === 'branding' ? (
+						<BrandingSection initialProperty={initialProperty} propertyId={resolvedPropertyId} />
 					) : null}
 				</div>
 			</div>

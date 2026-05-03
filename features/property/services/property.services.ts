@@ -1,6 +1,7 @@
 import axiosInstance from '@/config/api/axios';
 import axios from 'axios';
 import { ApiRoutes } from '@/config/api/routes';
+import type { PropertyBrandingTheme } from '../constants/property-branding-theme';
 import type { Property, UpsertPropertyInput } from '../interfaces/property.interface';
 
 const inFlightPropertyUpdates = new Map<string, Promise<Property>>();
@@ -50,5 +51,17 @@ export const updateProperty = async (id: string, input: UpsertPropertyInput) => 
 
 export const deleteProperty = async (id: string) => {
 	await axiosInstance.delete(ApiRoutes.properties.property(id));
+};
+
+export const patchPropertyBranding = async (id: string, branding_theme: PropertyBrandingTheme) => {
+	try {
+		const response = await axiosInstance.patch<Property>(ApiRoutes.properties.branding(id), { branding_theme });
+		return response.data;
+	} catch (error) {
+		if (axios.isAxiosError(error)) {
+			throw new Error((error.response?.data as { message?: string } | undefined)?.message ?? error.message);
+		}
+		throw error;
+	}
 };
 

@@ -1,4 +1,5 @@
 import type { Property as PropertyDTO } from '@/features/property/interfaces/property.interface';
+import type { PropertyBrandingTheme } from '@/features/property/constants/property-branding-theme';
 import { formatUtcTimeOfDay } from '@/app/api/_utils/time-of-day';
 
 export type PropertyImageDocument = {
@@ -55,6 +56,7 @@ export type PropertyWithImages = {
 	check_in_time: Date;
 	check_out_time: Date;
 	isPublished: boolean;
+	branding_theme: PropertyBrandingTheme;
 	created_at: Date;
 	updated_at: Date;
 	user_id: string;
@@ -95,6 +97,7 @@ export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 	lat: property.latitude,
 	lng: property.longitude,
 	isVisible: property.isPublished,
+	branding_theme: property.branding_theme,
 	amenities: (property.amenities ?? []).map((a) => ({
 		value: a.value,
 		description: a.description ?? null,

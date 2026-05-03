@@ -10,4 +10,5 @@ export const sidebarItems: SidebarItem[] = [
 	{ id: 'pricing-availability', label: 'Pricing & Availability' },
 	{ id: 'amenities', label: 'Amenities' },
 	{ id: 'images', label: 'Images' },
+	{ id: 'branding', label: 'Branding' },
 ];

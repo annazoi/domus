@@ -17,6 +17,9 @@ type BasicInfoSectionProps = {
 	initialProperty?: Property | null;
 	createdPropertyId?: string | null;
 	onPropertyCreated?: (id: string) => void;
+	/** Omit inner section heading (e.g. modal supplies its own title). */
+	hideSectionHeading?: boolean;
+	submitLabel?: string;
 };
 
 function formatTimeLabel(value: string) {
@@ -64,6 +67,8 @@ export function BasicInfoSection({
 	initialProperty,
 	createdPropertyId = null,
 	onPropertyCreated,
+	hideSectionHeading = false,
+	submitLabel = 'Save',
 }: BasicInfoSectionProps) {
 	const { push } = useToast();
 	const [slugHelpOpen, setSlugHelpOpen] = useState(false);
@@ -142,7 +147,7 @@ export function BasicInfoSection({
 	});
 
 	return (
-		<PropertyFormSection id="basic-info" title="Basic info">
+		<PropertyFormSection id="basic-info" title={hideSectionHeading ? undefined : 'Basic info'}>
 			<div className="flex flex-col gap-3 rounded-xl border border-black/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
 				<div className="min-w-0">
 					<p className="text-sm font-medium text-[#1A1A1A]">Listing status</p>
@@ -354,7 +359,7 @@ export function BasicInfoSection({
 			</div>
 			<div className="mt-2 flex justify-end border-t border-black/5 pt-5">
 				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
-					{saving ? 'Saving...' : 'Save'}
+					{saving ? 'Saving...' : submitLabel}
 				</Button>
 			</div>
 		</PropertyFormSection>

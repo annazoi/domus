@@ -26,7 +26,7 @@ type ImagesSectionProps = {
 	propertyId?: string;
 };
 
-/** Cover first, then remaining by `order` — every image appears exactly once. */
+/** Cover first, then remaining by `order` - every image appears exactly once. */
 function displayImages(images: PropertyImage[]) {
 	if (!images.length) return [];
 	const byOrder = [...images].sort((a, b) => a.order - b.order);
@@ -236,7 +236,7 @@ export function ImagesSection({
 						</button>
 						{staged.length > 0 ? (
 							<p className="mt-2 text-xs text-[#1A1A1A]/55">
-								{staged.length} image{staged.length === 1 ? '' : 's'} staged — add captions below, then Save.
+								{staged.length} image{staged.length === 1 ? '' : 's'} staged - add captions below, then Save.
 							</p>
 						) : null}
 					</div>

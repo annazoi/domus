@@ -32,9 +32,9 @@ export type ButtonVariant =
 
 const variantClasses: Record<ButtonVariant, string> = {
 	primary:
-		'cursor-pointer rounded-full bg-[#1A1A1A] px-6 py-2.5 text-sm text-white transition hover:-translate-y-0.5 hover:bg-[#1A1A1A]/90 disabled:opacity-60 disabled:pointer-events-none',
+		'cursor-pointer rounded-full bg-primary px-6 py-2.5 text-sm text-white transition hover:-translate-y-0.5 hover:bg-primary-hover disabled:opacity-60 disabled:pointer-events-none',
 	primarySm:
-		'cursor-pointer rounded-full bg-[#1A1A1A] px-5 py-2.5 text-sm text-white transition hover:-translate-y-0.5 hover:bg-[#1A1A1A]/90 disabled:opacity-60 disabled:pointer-events-none',
+		'cursor-pointer rounded-full bg-primary px-5 py-2.5 text-sm text-white transition hover:-translate-y-0.5 hover:bg-primary-hover disabled:opacity-60 disabled:pointer-events-none',
 	secondary:
 		'cursor-pointer rounded-full border border-black/10 bg-white px-4 py-2 text-sm text-[#1A1A1A] transition hover:border-[#6B705C]/40 hover:bg-black/[0.02]',
 	ghost:

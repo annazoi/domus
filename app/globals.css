@@ -10,7 +10,10 @@
   --color-stone-500: #78716c;
   --color-stone-800: #292524;
   --color-stone-900: #1c1917;
-  
+
+  --color-primary: #6b705c;
+  --color-primary-hover: #5e6351;
+
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-serif), ui-serif, Georgia, serif;
 }

@@ -20,6 +20,7 @@ export const ApiRoutes = {
 	properties: {
 		prefix: '/properties',
 		property: (id: string) => `/properties/${id}`,
+		branding: (id: string) => `/properties/${id}/branding`,
 		listMine: '/properties?host_id=me',
 	},
 	images: {

@@ -24,6 +24,8 @@ import {
 	X,
 } from 'lucide-react';
 import { Button } from '@/components/ui';
+import Image from 'next/image';
+import logo from '@/public/images/primary_logo.png'
 
 type NavItem = {
 	label: string;
@@ -70,7 +72,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 				>
 					<div className="flex items-center justify-between px-2">
 						<div className={['font-serif text-2xl tracking-tight', isCollapsed ? 'hidden' : 'block'].join(' ')}>
-							Domus
+							<Image src={logo} alt="Domus" width={100} height={100} className='w-15 h-15' />
 						</div>
 						<Button
 							type="button"
