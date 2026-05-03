@@ -53,7 +53,12 @@ export default function PropertiesPage() {
 								<Link href={`/dashboard/properties/${property.id}`} className="text-sm text-[#1A1A1A]/70 hover:text-[#6B705C]">
 									Edit
 								</Link>
-								<Link href={`/dashboard/properties/${property.id}`} className="text-sm text-[#1A1A1A]/70 hover:text-[#6B705C]">
+								<Link
+									href={`/dashboard/properties/${encodeURIComponent(property.slug)}/preview`}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="text-sm text-[#1A1A1A]/70 hover:text-[#6B705C]"
+								>
 									View
 								</Link>
 								<Button type="button" variant="dangerLink" onClick={() => void handleDelete(property.id)}>
