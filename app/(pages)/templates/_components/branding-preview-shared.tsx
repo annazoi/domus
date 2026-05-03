@@ -1,41 +1,19 @@
 'use client';
 
 import Image from 'next/image';
-import {
-	Flame,
-	Sparkles,
-	UtensilsCrossed,
-	Waves,
-	Wifi,
-	Wine,
-} from 'lucide-react';
 import { cn } from '@/components/ui';
-import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
+import { amenityOptionByValue, type AmenityId } from '@/config/constants/dropdowns/amenities.options';
 
 export function AmenityGlyph({
 	id,
 	className,
 }: {
-	id: BrandingPreviewDemo['amenities'][number]['id'];
+	id: AmenityId;
 	className?: string;
 }) {
-	const iconClass = cn('h-8 w-8', className);
-	switch (id) {
-		case 'pool':
-			return <Waves strokeWidth={1.25} className={iconClass} />;
-		case 'fire':
-			return <Flame strokeWidth={1.25} className={iconClass} />;
-		case 'utensils':
-			return <UtensilsCrossed strokeWidth={1.25} className={iconClass} />;
-		case 'spa':
-			return <Sparkles strokeWidth={1.25} className={iconClass} />;
-		case 'wine':
-			return <Wine strokeWidth={1.25} className={iconClass} />;
-		case 'wifi':
-			return <Wifi strokeWidth={1.25} className={iconClass} />;
-		default:
-			return null;
-	}
+	const Icon = amenityOptionByValue[id]?.icon;
+	if (!Icon) return null;
+	return <Icon strokeWidth={1.25} className={cn('h-8 w-8', className)} />;
 }
 
 export function FillImg({

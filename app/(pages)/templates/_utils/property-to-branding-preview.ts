@@ -17,7 +17,7 @@ export type BrandingPreviewDemo = {
 		stack: [{ src: string }, { src: string }];
 		full: { src: string; pullQuote: { title: string; text: string } };
 	};
-	amenities: { id: 'pool' | 'fire' | 'utensils' | 'spa' | 'wine' | 'wifi'; label: string }[];
+	amenities: { id: AmenityId; label: string }[];
 	location: {
 		eyebrow: string;
 		coords: string;
@@ -56,19 +56,6 @@ function bodyOnlyEchoesShortTeaser(teaser: string, p1: string, p2: string): bool
 	const words = combined.split(/\s+/).filter(Boolean);
 	if (words.length === 0 || !words.every((w) => vocab.has(w))) return false;
 	return combined.length <= t.length + 8;
-}
-
-type PrevAmenityId = BrandingPreviewDemo['amenities'][number]['id'];
-
-function amenityPreviewId(value: string): PrevAmenityId {
-	const v = value.toLowerCase();
-	if (v.includes('pool') || v.includes('tub')) return 'pool';
-	if (v.includes('wifi')) return 'wifi';
-	if (v.includes('kitchen') || v.includes('stove') || v.includes('oven') || v.includes('cooking')) return 'utensils';
-	if (v.includes('fire') || v.includes('bbq') || v.includes('grill')) return 'fire';
-	if (v.includes('wine')) return 'wine';
-	if (v.includes('spa') || v.includes('gym')) return 'spa';
-	return 'wifi';
 }
 
 const DEMO_IDS = {
@@ -171,9 +158,10 @@ export function propertyToBrandingPreview(property: Property): BrandingPreviewDe
 	const img = (i: number) => urls[i] ?? '';
 
 	const amenities = property.amenity_ids.map((value) => {
-		const opt = amenityOptionByValue[value as AmenityId];
+		const amenityId = value as AmenityId;
+		const opt = amenityOptionByValue[amenityId];
 		return {
-			id: amenityPreviewId(value),
+			id: amenityId,
 			label: opt?.label ?? value.replace(/_/g, ' '),
 		};
 	});
