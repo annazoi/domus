@@ -1,5 +1,5 @@
 import type { PropertyImage } from '@/features/property-images/interfaces/property-image.interfaces';
-import type { PropertyBrandingTheme } from '@/features/property/constants/property-branding-theme';
+import type { PropertyBrandingTheme } from '@/app/(pages)/templates/_constants/property-branding-theme';
 
 export interface PropertyAmenityEntry {
 	value: string;

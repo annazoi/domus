@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { PropertyBrandingTheme } from '../constants/property-branding-theme';
+import type { PropertyBrandingTheme } from '../../../app/(pages)/templates/_constants/property-branding-theme';
 import type { UpsertPropertyInput } from '../interfaces/property.interface';
 import {
 	createProperty,

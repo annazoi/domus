@@ -1,5 +1,5 @@
 import type { Property as PropertyDTO } from '@/features/property/interfaces/property.interface';
-import type { PropertyBrandingTheme } from '@/features/property/constants/property-branding-theme';
+import type { PropertyBrandingTheme } from '@/app/(pages)/templates/_constants/property-branding-theme';
 import { formatUtcTimeOfDay } from '@/app/api/_utils/time-of-day';
 
 export type PropertyImageDocument = {

@@ -1,5 +1,5 @@
-import type { PropertyBrandingTheme } from '@/features/property/constants/property-branding-theme';
-import { PropertyBrandingTheme as Theme } from '@/features/property/constants/property-branding-theme';
+import type { PropertyBrandingTheme } from '@/app/(pages)/templates/_constants/property-branding-theme';
+import { PropertyBrandingTheme as Theme } from '@/app/(pages)/templates/_constants/property-branding-theme';
 
 /** Demo-only content for theme previews; replace with property data when wiring the public site. */
 export type BrandingPreviewDemo = {
@@ -17,6 +17,8 @@ export type BrandingPreviewDemo = {
 		eyebrow: string;
 		coords: string;
 		mapImage: string;
+		/** Google Maps embed URL — listing preview only */
+		mapEmbedSrc?: string;
 		columns: [{ title: string; text: string }, { title: string; text: string }];
 	};
 	booking: {

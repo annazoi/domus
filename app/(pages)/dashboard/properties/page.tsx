@@ -54,7 +54,7 @@ export default function PropertiesPage() {
 									Edit
 								</Link>
 								<Link
-									href={`/dashboard/properties/${encodeURIComponent(property.slug)}/preview`}
+									href={`/${encodeURIComponent(property.slug)}`}
 									target="_blank"
 									rel="noopener noreferrer"
 									className="text-sm text-[#1A1A1A]/70 hover:text-[#6B705C]"

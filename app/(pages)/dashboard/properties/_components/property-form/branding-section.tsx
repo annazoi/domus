@@ -6,8 +6,8 @@ import { Button, cn, useToast } from '@/components/ui';
 import {
 	PROPERTY_BRANDING_THEME_OPTIONS,
 	PropertyBrandingTheme,
-} from '@/features/property/constants/property-branding-theme';
-import { BrandingThemePreviewDialog } from '@/features/property/components/branding-theme-preview-dialog';
+	brandingThemeToTemplateSlug,
+} from '@/app/(pages)/templates/_constants/property-branding-theme';
 import { usePatchPropertyBranding } from '@/features/property/hooks/use-property';
 import type { Property } from '@/features/property/interfaces/property.interface';
 import { PropertyFormSection } from './property-form-section';
@@ -25,9 +25,6 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 	const [selected, setSelected] = useState<PropertyBrandingTheme>(
 		initialProperty?.branding_theme ?? PropertyBrandingTheme.CANVAS,
 	);
-	const [demoPreviewOpen, setDemoPreviewOpen] = useState(false);
-	const [demoPreviewTheme, setDemoPreviewTheme] = useState<PropertyBrandingTheme>(PropertyBrandingTheme.CANVAS);
-
 	useEffect(() => {
 		if (initialProperty?.branding_theme) {
 			setSelected(initialProperty.branding_theme);
@@ -67,12 +64,7 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 								active ? 'border-[#6B705C] ring-2 ring-[#6B705C]/25' : 'border-black/[0.06] hover:border-black/15',
 							)}
 						>
-							<button
-								type="button"
-								onClick={() => setSelected(option.id)}
-								className="flex flex-1 flex-col p-5 text-left"
-								aria-pressed={active}
-							>
+							<div className="flex flex-1 flex-col p-5 text-left">
 								<div
 									className="mb-4 flex h-24 items-end justify-between overflow-hidden rounded-xl px-4 pb-3 shadow-inner"
 									style={{
@@ -94,31 +86,39 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 								</div>
 								<p className="font-medium text-[#1A1A1A]">{option.label}</p>
 								<p className="mt-2 text-sm text-[#1A1A1A]/55">{option.description}</p>
-							</button>
-							<div className="border-t border-black/5 px-4 pb-4 pt-1">
+							</div>
+							<div className="flex gap-2 border-t border-black/5 px-4 pb-4 pt-1">
 								<Button
 									type="button"
 									variant="cardRow"
-									className="w-full justify-center gap-2 text-xs"
+									disabled={active}
+									aria-pressed={active}
+									onClick={() => setSelected(option.id)}
+									className={cn(
+										'flex min-w-0 flex-1 justify-center text-center text-xs hover:!translate-y-0 active:!translate-y-0',
+										active &&
+											'pointer-events-none border-primary bg-primary text-white hover:border-primary hover:bg-primary disabled:opacity-100',
+									)}
+								>
+									{active ? 'Selected' : 'Select'}
+								</Button>
+								<Button
+									type="button"
+									variant="cardRow"
+									className="flex min-w-0 flex-1 justify-center gap-2 text-xs hover:!translate-y-0 active:!translate-y-0"
 									onClick={() => {
-										setDemoPreviewTheme(option.id);
-										setDemoPreviewOpen(true);
+										const slug = brandingThemeToTemplateSlug(option.id);
+										window.open(`/templates/${slug}`, '_blank', 'noopener,noreferrer');
 									}}
 								>
 									<Eye className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
-									Preview theme demo
+									Preview theme
 								</Button>
 							</div>
 						</div>
 					);
 				})}
 			</div>
-
-			<BrandingThemePreviewDialog
-				open={demoPreviewOpen}
-				theme={demoPreviewTheme}
-				onClose={() => setDemoPreviewOpen(false)}
-			/>
 
 			<div className="mt-2 flex flex-wrap justify-end gap-3 border-t border-black/5 pt-5">
 				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
@@ -131,7 +131,7 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 					className="max-w-fit"
 					onClick={() => {
 						if (!previewSlug) return;
-						window.open(`/dashboard/properties/${encodeURIComponent(previewSlug)}/preview`, '_blank', 'noopener,noreferrer');
+						window.open(`/${encodeURIComponent(previewSlug)}`, '_blank', 'noopener,noreferrer');
 					}}
 				>
 					Preview listing

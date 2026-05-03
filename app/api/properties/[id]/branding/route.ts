@@ -1,7 +1,7 @@
 import { getHostIdFromRequest } from '@/app/api/_utils/auth';
 import { findHostProperty } from '@/app/api/_utils/property-host';
 import { mapProperty } from '@/app/api/_utils/property-map';
-import { PropertyBrandingTheme } from '@/features/property/constants/property-branding-theme';
+import { PropertyBrandingTheme } from '@/app/(pages)/templates/_constants/property-branding-theme';
 import { prisma } from '@/lib/prisma';
 
 const isBrandingTheme = (value: unknown): value is (typeof PropertyBrandingTheme)[keyof typeof PropertyBrandingTheme] =>
