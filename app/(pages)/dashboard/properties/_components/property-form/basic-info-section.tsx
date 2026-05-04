@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock3 } from 'lucide-react';
-import { Controller, useForm } from 'react-hook-form';
-import { Button, Input, MinimalRichText, Select, useToast } from '@/components/ui';
+import { useForm } from 'react-hook-form';
+import { Button, Input, Select, useToast } from '@/components/ui';
 import { ApartmentOptions } from '@/config/constants/dropdowns/apartment.options';
 import { RoomTypeOptions } from '@/config/constants/dropdowns/room-type.options';
 import { useCreateProperty, useUpdateProperty } from '@/features/property/hooks/use-property';
@@ -22,25 +21,6 @@ type BasicInfoSectionProps = {
 	submitLabel?: string;
 };
 
-function formatTimeLabel(value: string) {
-	const [rawHour, rawMinute] = value.split(':');
-	const hour = Number(rawHour);
-	const minute = Number(rawMinute);
-	const suffix = hour >= 12 ? 'PM' : 'AM';
-	const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-	return `${hour12}:${String(minute).padStart(2, '0')} ${suffix}`;
-}
-
-function normalizeTimeValue(value: string | null | undefined, fallback: string) {
-	if (!value) return fallback;
-	const match = value.match(/^(\d{1,2}):(\d{2})/);
-	if (!match) return fallback;
-	const hour = Number(match[1]);
-	const minute = Number(match[2]);
-	if (Number.isNaN(hour) || Number.isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) return fallback;
-	return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-}
-
 function normalizePropertyType(value: string | null | undefined, fallback: string) {
 	if (!value) return fallback;
 	return ApartmentOptions.some((option) => option.value === value)
@@ -54,13 +34,6 @@ function normalizeRoomType(value: string | null | undefined, fallback: string) {
 		? value
 		: fallback;
 }
-
-const TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
-	const hour = Math.floor(index / 2);
-	const minute = index % 2 === 0 ? 0 : 30;
-	const value = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-	return { value, label: formatTimeLabel(value) };
-});
 
 export function BasicInfoSection({
 	mode,
@@ -77,8 +50,6 @@ export function BasicInfoSection({
 	const { mutateAsync: update, isPending: updating } = useUpdateProperty(targetPropertyId);
 	const saving = creating || updating;
 	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
-	const normalizedCheckIn = normalizeTimeValue(defaultValues.check_in_time, PROPERTY_FORM_DEFAULT_VALUES.check_in_time);
-	const normalizedCheckOut = normalizeTimeValue(defaultValues.check_out_time, PROPERTY_FORM_DEFAULT_VALUES.check_out_time);
 	const normalizedPropertyType = normalizePropertyType(defaultValues.property_type, PROPERTY_FORM_DEFAULT_VALUES.property_type);
 	const normalizedRoomType = normalizeRoomType(defaultValues.room_type, PROPERTY_FORM_DEFAULT_VALUES.room_type);
 
@@ -95,10 +66,6 @@ export function BasicInfoSection({
 		defaultValues: {
 			title: defaultValues.title,
 			slug: defaultValues.slug,
-			description: defaultValues.description,
-			short_description: defaultValues.short_description,
-			check_in_time: normalizedCheckIn,
-			check_out_time: normalizedCheckOut,
 			property_type: normalizedPropertyType,
 			room_type: normalizedRoomType,
 			isVisible: defaultValues.isVisible,
@@ -272,91 +239,7 @@ export function BasicInfoSection({
 					) : null}
 				</div>
 			</div>
-			<Controller
-				control={control}
-				name="description"
-				render={({ field }) => (
-					<MinimalRichText
-						id="property-description"
-						label="Description"
-						value={field.value}
-						onChange={field.onChange}
-						placeholder="Describe your space…"
-						editorMinHeight="min-h-[160px]"
-					/>
-				)}
-			/>
-			<Controller
-				control={control}
-				name="short_description"
-				render={({ field }) => (
-					<MinimalRichText
-						id="property-short-description"
-						label="Short description"
-						value={field.value ?? ''}
-						onChange={field.onChange}
-						placeholder="A line or two for cards and search…"
-						editorMinHeight="min-h-[100px]"
-					/>
-				)}
-			/>
 
-			<div className="grid gap-4 md:grid-cols-2">
-				<div className="space-y-1.5">
-					<label htmlFor="property-check-in-time" className="text-sm font-medium text-[#1A1A1A]">
-						Check-in time
-					</label>
-					<Controller
-						control={control}
-						name="check_in_time"
-						render={({ field }) => (
-							<div className="relative">
-								<Select
-									id="property-check-in-time"
-									variant="default"
-									className="[&_button]:pr-16"
-									value={field.value}
-									onChange={(event) => field.onChange(event.target.value)}
-								>
-									{TIME_OPTIONS.map((option) => (
-										<option key={option.value} value={option.value}>
-											{option.label}
-										</option>
-									))}
-								</Select>
-								<Clock3 className="pointer-events-none absolute right-9 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B705C]/45" />
-							</div>
-						)}
-					/>
-				</div>
-				<div className="space-y-1.5">
-					<label htmlFor="property-check-out-time" className="text-sm font-medium text-[#1A1A1A]">
-						Check-out time
-					</label>
-					<Controller
-						control={control}
-						name="check_out_time"
-						render={({ field }) => (
-							<div className="relative">
-								<Select
-									id="property-check-out-time"
-									variant="default"
-									className="[&_button]:pr-16"
-									value={field.value}
-									onChange={(event) => field.onChange(event.target.value)}
-								>
-									{TIME_OPTIONS.map((option) => (
-										<option key={option.value} value={option.value}>
-											{option.label}
-										</option>
-									))}
-								</Select>
-								<Clock3 className="pointer-events-none absolute right-9 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B705C]/45" />
-							</div>
-						)}
-					/>
-				</div>
-			</div>
 			<div className="mt-2 flex justify-end border-t border-black/5 pt-5">
 				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
 					{saving ? 'Saving...' : submitLabel}

@@ -5,6 +5,8 @@ import { sidebarItems } from './constants';
 
 export const PROPERTY_FORM_TAB_IDS = [
 	'basic-info',
+	'house-rules',
+	'description',
 	'capacity',
 	'location',
 	'pricing-availability',

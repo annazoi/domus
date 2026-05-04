@@ -7,13 +7,19 @@ export const basicInfoFormSchema = z.object({
 		.trim()
 		.min(1, 'Slug is required.')
 		.regex(/^[a-z-]+$/, 'Slug must contain only lowercase letters (a-z) and "-" only (no spaces or other symbols).'),
-	description: z.string(),
-	short_description: z.string().optional(),
-	check_in_time: z.string(),
-	check_out_time: z.string(),
 	property_type: z.string(),
 	room_type: z.string(),
 	isVisible: z.boolean(),
+});
+
+export const descriptionFormSchema = z.object({
+	description: z.string(),
+	short_description: z.string().optional(),
+});
+
+export const houseRulesFormSchema = z.object({
+	check_in_time: z.string(),
+	check_out_time: z.string(),
 });
 
 export const capacityFormSchema = z.object({
@@ -42,6 +48,8 @@ export const imagesFormSchema = z.object({
 });
 
 export type BasicInfoFormValues = z.infer<typeof basicInfoFormSchema>;
+export type DescriptionFormValues = z.infer<typeof descriptionFormSchema>;
+export type HouseRulesFormValues = z.infer<typeof houseRulesFormSchema>;
 export type CapacityFormValues = z.infer<typeof capacityFormSchema>;
 export type LocationFormValues = z.infer<typeof locationFormSchema>;
 export type PricingFormValues = z.infer<typeof pricingFormSchema>;

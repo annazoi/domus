@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { Manrope, Noto_Serif } from 'next/font/google';
 import { ChevronDown, CircleUser, MapPin, Menu, Search, Star } from 'lucide-react';
+import { BrandingPreviewMap } from '@/components/google-maps';
 import { cn } from '@/components/ui';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
 import { AmenityGlyph, FillImg } from './branding-preview-shared';
@@ -233,15 +234,13 @@ export function ArchitecturaPreview({
 							<span className="mb-8 block font-[family-name:var(--preview-arch-body)] text-[10px] uppercase tracking-widest text-[#944528]">
 								{data.location.eyebrow}
 							</span>
-							{listingPreview && data.location.mapEmbedSrc ? (
+							{listingPreview && (data.location.mapCenter || data.location.mapEmbedSrc) ? (
 								<div className="relative aspect-video w-full overflow-hidden rounded-sm bg-[#efeeeb] grayscale contrast-125">
-									<iframe
+									<BrandingPreviewMap
 										title="Property location"
-										src={data.location.mapEmbedSrc}
+										center={data.location.mapCenter}
+										embedSrc={data.location.mapEmbedSrc}
 										className="absolute inset-0 h-full w-full border-0"
-										loading="lazy"
-										referrerPolicy="no-referrer-when-downgrade"
-										allowFullScreen
 									/>
 								</div>
 							) : (

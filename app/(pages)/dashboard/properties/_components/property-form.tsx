@@ -9,9 +9,11 @@ import { AmenitiesSection } from './property-form/amenities-section';
 import { BasicInfoSection } from './property-form/basic-info-section';
 import { BrandingSection } from './property-form/branding-section';
 import { CapacitySection } from './property-form/capacity-section';
+import { HouseRulesSection } from './property-form/house-rules-section';
 import { ImagesSection } from './property-form/images-section';
 import { LocationSection } from './property-form/location-section';
 import { PricingSection } from './property-form/pricing-section';
+import { DescriptionSection} from './property-form/description-section';
 import { PropertyFormSidebar, type PropertyFormTabId } from './property-form/sidebar';
 
 type PropertyFormProps = {
@@ -73,6 +75,12 @@ export function PropertyForm({ mode, initialProperty }: PropertyFormProps) {
 							createdPropertyId={createdPropertyId}
 							onPropertyCreated={setCreatedPropertyId}
 						/>
+					) : null}
+					{activeTab === 'house-rules' ? (
+						<HouseRulesSection mode={mode} initialProperty={initialProperty} propertyId={resolvedPropertyId} />
+					) : null}
+					{activeTab === 'description' ? (
+						<DescriptionSection mode={mode} initialProperty={initialProperty} propertyId={resolvedPropertyId} />
 					) : null}
 					{activeTab === 'capacity' ? (
 						<CapacitySection mode={mode} initialProperty={initialProperty} propertyId={resolvedPropertyId} />

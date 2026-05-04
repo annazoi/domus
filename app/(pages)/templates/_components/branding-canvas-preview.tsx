@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { MapPin, Menu, Star } from 'lucide-react';
+import { BrandingPreviewMap } from '@/components/google-maps';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
 import { AmenityGlyph } from './branding-preview-shared';
 
@@ -109,15 +110,13 @@ export function CanvasPreview({
 
 							<section>
 								<span className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#1A1A1A]/45">Location</span>
-								<div className="relative mt-6 aspect-[21/10] w-full overflow-hidden rounded-2xl bg-[#d8d6d2] grayscale">
-									{listingPreview && data.location.mapEmbedSrc ? (
-										<iframe
+								<div className="relative mt-6 aspect-[21/10] w-full overflow-hidden rounded-2xl">
+									{listingPreview && (data.location.mapCenter || data.location.mapEmbedSrc) ? (
+										<BrandingPreviewMap
 											title="Property location"
-											src={data.location.mapEmbedSrc}
+											center={data.location.mapCenter}
+											embedSrc={data.location.mapEmbedSrc}
 											className="absolute inset-0 h-full w-full border-0"
-											loading="lazy"
-											referrerPolicy="no-referrer-when-downgrade"
-											allowFullScreen
 										/>
 									) : data.location.mapImage.trim() ? (
 										<Image

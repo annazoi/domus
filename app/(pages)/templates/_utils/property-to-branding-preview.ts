@@ -22,6 +22,8 @@ export type BrandingPreviewDemo = {
 		eyebrow: string;
 		coords: string;
 		mapImage: string;
+		/** Used with Maps JavaScript API for styled preview maps. */
+		mapCenter?: { lat: number; lng: number };
 		mapEmbedSrc?: string;
 		columns: [{ title: string; text: string }, { title: string; text: string }];
 	};
@@ -171,9 +173,12 @@ export function propertyToBrandingPreview(property: Property): BrandingPreviewDe
 			? `${property.lat.toFixed(4)}°, ${property.lng.toFixed(4)}°`
 			: '';
 
+	const mapCenter =
+		property.lat != null && property.lng != null ? { lat: property.lat, lng: property.lng } : undefined;
+
 	const mapEmbedSrc =
-		property.lat != null && property.lng != null
-			? `https://www.google.com/maps?q=${encodeURIComponent(`${property.lat},${property.lng}`)}&z=15&output=embed`
+		mapCenter != null
+			? `https://www.google.com/maps?q=${encodeURIComponent(`${mapCenter.lat},${mapCenter.lng}`)}&z=15&output=embed`
 			: '';
 
 	const strippedShort = stripHtml(property.short_description ?? '').trim();
@@ -225,6 +230,7 @@ export function propertyToBrandingPreview(property: Property): BrandingPreviewDe
 			eyebrow: 'Location',
 			coords,
 			mapImage: '',
+			mapCenter,
 			mapEmbedSrc,
 			columns: [
 				{ title: 'Address', text: addressLine },
