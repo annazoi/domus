@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { MapPin, Menu, Star } from 'lucide-react';
 import { Input } from '@/components/ui';
+import { ApiRoutes } from '@/config/api/routes';
 import { BrandingPreviewMap } from '@/components/google-maps';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
 import { AmenityGlyph } from './branding-preview-shared';
@@ -17,6 +18,13 @@ function startOfToday() {
 
 function formatStay(d: Date) {
 	return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function toDateParam(d: Date) {
+	const y = d.getFullYear();
+	const m = String(d.getMonth() + 1).padStart(2, '0');
+	const day = String(d.getDate()).padStart(2, '0');
+	return `${y}-${m}-${day}`;
 }
 
 export function CanvasPreview({
@@ -46,7 +54,10 @@ export function CanvasPreview({
 		return Math.min(Math.max(1, data.booking.maxGuests), Math.max(1, cap));
 	}, [data.booking.guests, data.booking.maxGuests]);
 	const [guestCount, setGuestCount] = useState(1);
+	const [checkingAvailability, setCheckingAvailability] = useState(false);
+	const [availabilityMsg, setAvailabilityMsg] = useState<string | null>(null);
 	const todayStart = useMemo(() => startOfToday(), []);
+	const propertyRef = useMemo(() => data.footer.tagline.replace(/^\//, '').trim(), [data.footer.tagline]);
 
 	useEffect(() => {
 		setGuestCount((c) => Math.min(guestCap, Math.max(1, c)));
@@ -61,6 +72,33 @@ export function CanvasPreview({
 		document.addEventListener('pointerdown', onPointerDown);
 		return () => document.removeEventListener('pointerdown', onPointerDown);
 	}, [stayPickerOpen]);
+
+	const handleCheckAvailability = async () => {
+		if (!stayRange?.from || !stayRange?.to || !propertyRef) return;
+		setCheckingAvailability(true);
+		setAvailabilityMsg(null);
+		try {
+			const check_in = toDateParam(stayRange.from);
+			const check_out = toDateParam(stayRange.to);
+			const res = await fetch(
+				`/api${ApiRoutes.properties.checkAvailability(propertyRef, check_in, check_out, guestCount)}`,
+			);
+			const data = (await res.json()) as { isAvailable?: boolean; totalPrice?: number | null; message?: string };
+			if (!res.ok) {
+				setAvailabilityMsg(data.message ?? 'Could not check availability.');
+				return;
+			}
+			setAvailabilityMsg(
+				data.isAvailable
+					? `Available${typeof data.totalPrice === 'number' ? ` · Total $${data.totalPrice}` : ''}`
+					: 'Not available for selected dates.',
+			);
+		} catch {
+			setAvailabilityMsg('Could not check availability.');
+		} finally {
+			setCheckingAvailability(false);
+		}
+	};
 
 	return (
 		<div className="bg-[#F4F2EE] text-[#1A1A1A] antialiased selection:bg-[#5c6149]/12">
@@ -218,7 +256,7 @@ export function CanvasPreview({
 														onClick={() => setStayPickerOpen(true)}
 														aria-expanded={stayPickerOpen}
 														aria-haspopup="dialog"
-														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30"
+														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30"
 													>
 														{stayRange?.from ? formatStay(stayRange.from) : 'Add date'}
 													</button>
@@ -232,7 +270,7 @@ export function CanvasPreview({
 														onClick={() => setStayPickerOpen(true)}
 														aria-expanded={stayPickerOpen}
 														aria-haspopup="dialog"
-														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30"
+														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30"
 													>
 														{stayRange?.to ? formatStay(stayRange.to) : 'Add date'}
 													</button>
@@ -295,10 +333,13 @@ export function CanvasPreview({
 										) : null}
 										<button
 											type="button"
-											className="mt-6 w-full rounded-xl bg-[#5c6149] py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-[#4d523e]"
+											onClick={() => void handleCheckAvailability()}
+											disabled={!propertyRef || !stayRange?.from || !stayRange?.to || checkingAvailability}
+											className="mt-6 w-full cursor-pointer rounded-xl bg-[#5c6149] py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-[#4d523e] disabled:cursor-not-allowed disabled:opacity-60"
 										>
-											{data.booking.cta}
+											{checkingAvailability ? 'Checking...' : data.booking.cta}
 										</button>
+										{availabilityMsg ? <p className="mt-2 text-xs text-[#1A1A1A]/65">{availabilityMsg}</p> : null}
 									</>
 								) : (
 									<>
