@@ -1,10 +1,23 @@
 'use client';
 
 import Image from 'next/image';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { MapPin, Menu, Star } from 'lucide-react';
+import { Input } from '@/components/ui';
 import { BrandingPreviewMap } from '@/components/google-maps';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
 import { AmenityGlyph } from './branding-preview-shared';
+import { DayPicker, type DateRange } from 'react-day-picker';
+
+function startOfToday() {
+	const d = new Date();
+	d.setHours(0, 0, 0, 0);
+	return d;
+}
+
+function formatStay(d: Date) {
+	return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
 
 export function CanvasPreview({
 	data,
@@ -22,6 +35,32 @@ export function CanvasPreview({
 		? data.gallery.stack[0].src.trim() || data.gallery.stack[1].src.trim()
 		: data.gallery.stack[1].src.trim() || data.gallery.stack[0].src.trim();
 	const hasGallery = Boolean(leftHero || rightTop || rightBot);
+	const [stayRange, setStayRange] = useState<DateRange | undefined>();
+	const [stayPickerOpen, setStayPickerOpen] = useState(false);
+	const stayPickerRef = useRef<HTMLDivElement>(null);
+	const guestFieldId = useId();
+	const guestCap = useMemo(() => {
+		const m = data.booking.guests.match(/^(\d+)/);
+		const n = m ? parseInt(m[1], 10) : data.booking.maxGuests;
+		const cap = Number.isFinite(n) && n > 0 ? n : data.booking.maxGuests;
+		return Math.min(Math.max(1, data.booking.maxGuests), Math.max(1, cap));
+	}, [data.booking.guests, data.booking.maxGuests]);
+	const [guestCount, setGuestCount] = useState(1);
+	const todayStart = useMemo(() => startOfToday(), []);
+
+	useEffect(() => {
+		setGuestCount((c) => Math.min(guestCap, Math.max(1, c)));
+	}, [guestCap]);
+
+	useEffect(() => {
+		if (!stayPickerOpen) return;
+		const onPointerDown = (e: PointerEvent) => {
+			const el = stayPickerRef.current;
+			if (el && !el.contains(e.target as Node)) setStayPickerOpen(false);
+		};
+		document.addEventListener('pointerdown', onPointerDown);
+		return () => document.removeEventListener('pointerdown', onPointerDown);
+	}, [stayPickerOpen]);
 
 	return (
 		<div className="bg-[#F4F2EE] text-[#1A1A1A] antialiased selection:bg-[#5c6149]/12">
@@ -158,28 +197,96 @@ export function CanvasPreview({
 							) : null}
 						</div>
 
-						<aside className="w-full shrink-0 lg:sticky lg:top-24 lg:mt-[-2.5rem] lg:w-[min(100%,340px)]">
-							<div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-[0_12px_40px_rgba(0,0,0,0.08)] sm:p-7">
+						<aside className="w-full min-w-0 shrink-0 lg:sticky lg:top-24 lg:mt-[-2.5rem] lg:w-[min(100%,440px)]">
+							<div className="min-w-0 overflow-x-clip rounded-2xl border border-black/[0.06] bg-white p-6 shadow-[0_12px_40px_rgba(0,0,0,0.08)] sm:p-7">
 								{listingPreview ? (
 									<>
 										<p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#1A1A1A]/45">
 											{data.booking.eyebrow}
 										</p>
-										<div className="mt-6 grid grid-cols-2 gap-4 border-t border-black/[0.06] pt-6">
-											<div>
-												<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">
-													Check in
-												</p>
-												<p className="mt-1.5 text-sm font-medium">{data.booking.arrival || '—'}</p>
+										<div
+											ref={stayPickerRef}
+											className="relative mt-6 min-w-0 border-t border-black/[0.06] pt-6 [--rdp-accent-color:#5c6149] [--rdp-accent-background-color:rgba(92,97,73,0.12)]"
+										>
+											<div className="grid grid-cols-2 gap-2">
+												<div>
+													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">
+														Check in
+													</p>
+													<button
+														type="button"
+														onClick={() => setStayPickerOpen(true)}
+														aria-expanded={stayPickerOpen}
+														aria-haspopup="dialog"
+														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30"
+													>
+														{stayRange?.from ? formatStay(stayRange.from) : 'Add date'}
+													</button>
+												</div>
+												<div>
+													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">
+														Check out
+													</p>
+													<button
+														type="button"
+														onClick={() => setStayPickerOpen(true)}
+														aria-expanded={stayPickerOpen}
+														aria-haspopup="dialog"
+														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30"
+													>
+														{stayRange?.to ? formatStay(stayRange.to) : 'Add date'}
+													</button>
+												</div>
 											</div>
-											<div className="text-right">
-												<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">
-													Check out
-												</p>
-												<p className="mt-1.5 text-sm font-medium">{data.booking.departure || '—'}</p>
-											</div>
+											{stayPickerOpen ? (
+												<div
+													role="dialog"
+													aria-label="Select stay dates"
+													className="absolute inset-x-0 top-full z-20 mt-2 w-full min-w-0 max-w-full rounded-xl border border-black/10 bg-white p-2 shadow-xl"
+												>
+													<DayPicker
+														mode="range"
+														min={1}
+														selected={stayRange}
+														onSelect={setStayRange}
+														disabled={{ before: todayStart }}
+														numberOfMonths={1}
+														className="mx-auto w-full min-w-0 max-w-full justify-center [--rdp-day-height:2rem] [--rdp-day-width:2rem] [--rdp-day_button-height:1.875rem] [--rdp-day_button-width:1.875rem] [&_.rdp-month]:w-full [&_.rdp-month_caption]:text-sm [&_.rdp-month_grid]:w-full [&_.rdp-nav]:h-8 [&_.rdp-weekday]:p-0 [&_.rdp-weekday]:text-[10px] [&_.rdp-day]:text-[12px]"
+													/>
+													<div className="flex justify-end gap-2">
+														<button type="button" onClick={() => setStayPickerOpen(false)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30">Apply</button>
+														<button type="button" onClick={() => setStayRange(undefined)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30">Clear</button>
+													</div>
+												</div>
+											) : null}
 										</div>
-										<p className="mt-5 border-t border-black/[0.06] pt-5 text-sm text-[#1A1A1A]/75">{data.booking.guests}</p>
+										<div className="mt-5">
+											<label
+												htmlFor={guestFieldId}
+												className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40"
+											>
+												Guests
+											</label>
+											<Input
+												id={guestFieldId}
+												type="number"
+												inputMode="numeric"
+												min={1}
+												max={guestCap}
+												step={1}
+												value={guestCount}
+												onChange={(e) => {
+													const v = parseInt(e.target.value, 10);
+													if (Number.isNaN(v)) return;
+													setGuestCount(Math.min(guestCap, Math.max(1, v)));
+												}}
+												className="mt-1.5"
+												variant="compact"
+											/>
+											<p className="mt-1 text-[10px] text-[#1A1A1A]/45">Up to {guestCap} guests</p>
+										</div>
+
+										{/* <p className="mt-5 border-t border-black/[0.06] pt-5 text-sm text-[#1A1A1A]/75">{data.booking.guests}</p> */}
 										{data.booking.price.trim() ? (
 											<p className="mt-4 font-[family-name:var(--font-serif)] text-2xl text-[#1A1A1A]">
 												{data.booking.price}{' '}

@@ -35,6 +35,7 @@ export type BrandingPreviewDemo = {
 		arrival: string;
 		departure: string;
 		guests: string;
+		maxGuests: number;
 		lines: [{ label: string; value: string }, { label: string; value: string }];
 		totalLabel: string;
 		total: string;
@@ -238,13 +239,14 @@ export function propertyToBrandingPreview(property: Property): BrandingPreviewDe
 			],
 		},
 		booking: {
-			eyebrow: 'Stay details',
+			eyebrow: 'Add your availability',
 			price: '',
 			per: '',
 			rating: '',
 			arrival: property.check_in_time,
 			departure: property.check_out_time,
 			guests: `${property.max_guests} guests · ${property.bedrooms} bd · ${property.beds} beds · ${property.bathrooms} bath${roomLbl ? ` · ${roomLbl}` : ''}`,
+			maxGuests: Math.max(1, property.max_guests),
 			lines: [
 				{ label: '', value: '' },
 				{ label: '', value: '' },
