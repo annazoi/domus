@@ -159,7 +159,7 @@ export function CanvasPreview({
 							) : null}
 						</div>
 
-						<aside className="w-full shrink-0 lg:sticky lg:top-24 lg:mt-[-5.5rem] lg:w-[min(100%,340px)]">
+						<aside className="w-full shrink-0 lg:sticky lg:top-24 lg:mt-[-2.5rem] lg:w-[min(100%,340px)]">
 							<div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-[0_12px_40px_rgba(0,0,0,0.08)] sm:p-7">
 								{listingPreview ? (
 									<>
