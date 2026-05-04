@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { GoogleMapsPlacesScript } from '@/components/google-maps';
@@ -56,7 +57,15 @@ export function PropertyForm({ mode, initialProperty }: PropertyFormProps) {
 			/>
 
 			<div className="min-h-[320px] space-y-6">
-				<div role="tabpanel" id={`property-form-panel-${activeTab}`} aria-labelledby={`property-form-tab-${activeTab}`}>
+				<motion.div
+					key={activeTab}
+					role="tabpanel"
+					id={`property-form-panel-${activeTab}`}
+					aria-labelledby={`property-form-tab-${activeTab}`}
+					initial={{ opacity: 0, y: 6 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.18, ease: 'easeOut' }}
+				>
 					{activeTab === 'basic-info' ? (
 						<BasicInfoSection
 							mode={mode}
@@ -88,7 +97,7 @@ export function PropertyForm({ mode, initialProperty }: PropertyFormProps) {
 					{activeTab === 'branding' ? (
 						<BrandingSection initialProperty={initialProperty} propertyId={resolvedPropertyId} />
 					) : null}
-				</div>
+				</motion.div>
 			</div>
 		</div>
 					</>

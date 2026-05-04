@@ -1,16 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { Button, buttonClassName } from '@/components/ui';
+import { Button, buttonClassName, ConfirmationDialog } from '@/components/ui';
 import { useDeleteProperty, useProperties } from '@/features/property/hooks/use-property';
 
 export default function PropertiesPage() {
 	const { data: properties = [], isLoading: loading } = useProperties();
-	const { mutateAsync: removeProperty } = useDeleteProperty();
-
-	const handleDelete = async (id: string) => {
-		await removeProperty(id);
-	};
+	const { mutateAsync: removeProperty, isPending: deleting } = useDeleteProperty();
+	const [deleteId, setDeleteId] = useState<string | null>(null);
+	const toDelete = properties.find((p) => p.id === deleteId);
 
 	return (
 		<div className="space-y-10">
@@ -61,7 +60,7 @@ export default function PropertiesPage() {
 								>
 									View
 								</Link>
-								<Button type="button" variant="dangerLink" onClick={() => void handleDelete(property.id)}>
+								<Button type="button" variant="dangerLink" onClick={() => setDeleteId(property.id)}>
 									Delete
 								</Button>
 							</div>
@@ -69,6 +68,25 @@ export default function PropertiesPage() {
 					);
 				})}
 			</div>
+
+			<ConfirmationDialog
+				open={deleteId !== null}
+				title="Delete this property?"
+				description={
+					toDelete
+						? `“${toDelete.title}” and its listing data will be removed. This cannot be undone.`
+						: ''
+				}
+				confirmLabel="Delete"
+				confirmVariant="danger"
+				onCancel={() => setDeleteId(null)}
+				onConfirm={async () => {
+					if (!deleteId) return;
+					await removeProperty(deleteId);
+					setDeleteId(null);
+				}}
+				loading={deleting}
+			/>
 		</div>
 	);
 }
