@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { MapPin, Menu, Star } from 'lucide-react';
 import { Input } from '@/components/ui';
 import { ApiRoutes } from '@/config/api/routes';
@@ -25,6 +25,19 @@ function toDateParam(d: Date) {
 	const m = String(d.getMonth() + 1).padStart(2, '0');
 	const day = String(d.getDate()).padStart(2, '0');
 	return `${y}-${m}-${day}`;
+}
+
+function dayStart(d: Date) {
+	const x = new Date(d);
+	x.setHours(0, 0, 0, 0);
+	return x;
+}
+
+function nightsPriced(checkIn: Date, checkOutExclusive: Date, allowed: Set<string>) {
+	for (let c = dayStart(checkIn), end = dayStart(checkOutExclusive); c < end; c.setDate(c.getDate() + 1)) {
+		if (!allowed.has(toDateParam(c))) return false;
+	}
+	return true;
 }
 
 export function CanvasPreview({
@@ -56,12 +69,60 @@ export function CanvasPreview({
 	const [guestCount, setGuestCount] = useState(1);
 	const [checkingAvailability, setCheckingAvailability] = useState(false);
 	const [availabilityMsg, setAvailabilityMsg] = useState<string | null>(null);
+	const [allowedDateKeys, setAllowedDateKeys] = useState<Set<string>>(new Set());
+	const checkAvailabilityAbortRef = useRef<AbortController | null>(null);
 	const todayStart = useMemo(() => startOfToday(), []);
 	const propertyRef = useMemo(() => data.footer.tagline.replace(/^\//, '').trim(), [data.footer.tagline]);
 
 	useEffect(() => {
 		setGuestCount((c) => Math.min(guestCap, Math.max(1, c)));
 	}, [guestCap]);
+
+	useEffect(() => {
+		if (!listingPreview || !propertyRef) return;
+		let cancelled = false;
+		void (async () => {
+			try {
+				const qs = new URLSearchParams({ start: toDateParam(todayStart) });
+				const res = await fetch(`/api${ApiRoutes.properties.unavailableDays(propertyRef)}?${qs}`);
+				if (!res.ok || cancelled) return;
+				const json = (await res.json()) as { available_dates?: string[] };
+				if (!cancelled) setAllowedDateKeys(new Set(json.available_dates ?? []));
+			} catch {
+				if (!cancelled) setAllowedDateKeys(new Set());
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, [listingPreview, propertyRef, todayStart]);
+
+	const dayDisabled = useMemo(() => {
+		return (day: Date) => {
+			const d = dayStart(day);
+			if (d.getTime() < todayStart.getTime()) return true;
+
+			const from = stayRange?.from ? dayStart(stayRange.from) : null;
+			const to = stayRange?.to ? dayStart(stayRange.to) : null;
+			const key = toDateParam(day);
+
+			if (!from) return !allowedDateKeys.has(key);
+
+			if (!to) {
+				if (d.getTime() < from.getTime()) return true;
+				if (d.getTime() === from.getTime()) return !allowedDateKeys.has(key);
+				return !nightsPriced(from, d, allowedDateKeys);
+			}
+
+			if (d.getTime() < from.getTime()) return true;
+			if (d.getTime() === from.getTime()) return !allowedDateKeys.has(key);
+			if (d.getTime() <= to.getTime()) {
+				if (d.getTime() === to.getTime()) return !nightsPriced(from, d, allowedDateKeys);
+				return !allowedDateKeys.has(key);
+			}
+			return !nightsPriced(from, d, allowedDateKeys);
+		};
+	}, [allowedDateKeys, todayStart, stayRange?.from, stayRange?.to]);
 
 	useEffect(() => {
 		if (!stayPickerOpen) return;
@@ -73,31 +134,44 @@ export function CanvasPreview({
 		return () => document.removeEventListener('pointerdown', onPointerDown);
 	}, [stayPickerOpen]);
 
-	const handleCheckAvailability = async () => {
-		if (!stayRange?.from || !stayRange?.to || !propertyRef) return;
-		setCheckingAvailability(true);
-		setAvailabilityMsg(null);
-		try {
-			const check_in = toDateParam(stayRange.from);
-			const check_out = toDateParam(stayRange.to);
-			const res = await fetch(
-				`/api${ApiRoutes.properties.checkAvailability(propertyRef, check_in, check_out, guestCount)}`,
-			);
-			const data = (await res.json()) as { isAvailable?: boolean; totalPrice?: number | null; message?: string };
-			if (!res.ok) {
-				setAvailabilityMsg(data.message ?? 'Could not check availability.');
-				return;
+	const checkAvailabilityForDates = useCallback(
+		async (from: Date, to: Date) => {
+			if (!propertyRef) return;
+			checkAvailabilityAbortRef.current?.abort();
+			const ac = new AbortController();
+			checkAvailabilityAbortRef.current = ac;
+			setCheckingAvailability(true);
+			setAvailabilityMsg(null);
+			try {
+				const check_in = toDateParam(from);
+				const check_out = toDateParam(to);
+				const res = await fetch(
+					`/api${ApiRoutes.properties.checkAvailability(propertyRef, check_in, check_out, guestCount)}`,
+					{ signal: ac.signal },
+				);
+				const data = (await res.json()) as { isAvailable?: boolean; totalPrice?: number | null; message?: string };
+				if (!res.ok) {
+					setAvailabilityMsg(data.message ?? 'Could not check availability.');
+					return;
+				}
+				setAvailabilityMsg(
+					data.isAvailable
+						? `Available${typeof data.totalPrice === 'number' ? ` · Total $${data.totalPrice}` : ''}`
+						: 'Not available for selected dates.',
+				);
+			} catch (e) {
+				if (e instanceof DOMException && e.name === 'AbortError') return;
+				setAvailabilityMsg('Could not check availability.');
+			} finally {
+				if (checkAvailabilityAbortRef.current === ac) setCheckingAvailability(false);
 			}
-			setAvailabilityMsg(
-				data.isAvailable
-					? `Available${typeof data.totalPrice === 'number' ? ` · Total $${data.totalPrice}` : ''}`
-					: 'Not available for selected dates.',
-			);
-		} catch {
-			setAvailabilityMsg('Could not check availability.');
-		} finally {
-			setCheckingAvailability(false);
-		}
+		},
+		[propertyRef, guestCount],
+	);
+
+	const handleCheckAvailability = () => {
+		if (!stayRange?.from || !stayRange?.to) return;
+		void checkAvailabilityForDates(stayRange.from, stayRange.to);
 	};
 
 	return (
@@ -240,11 +314,19 @@ export function CanvasPreview({
 								{listingPreview ? (
 									<>
 										<p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#1A1A1A]/45">
-											{data.booking.eyebrow}
+											{/* {data.booking.eyebrow} */}
+										</p>
+										{/* <p className="mt-4 min-h-[1.35rem] text-sm font-medium leading-snug text-[#1A1A1A]"> */}
+										<p className="text-[10px] font-medium uppercase leading-snug tracking-[0.2em] text-[#1A1A1A]">
+											{checkingAvailability
+												? 'Checking...'
+												: stayRange?.from && stayRange?.to && availabilityMsg
+													? availabilityMsg
+													: 'Pick your stay dates - pricing appears here.'}
 										</p>
 										<div
 											ref={stayPickerRef}
-											className="relative mt-6 min-w-0 border-t border-black/[0.06] pt-6 [--rdp-accent-color:#5c6149] [--rdp-accent-background-color:rgba(92,97,73,0.12)]"
+											className="relative mt-5 min-w-0 border-t border-black/[0.06] pt-6 [--rdp-accent-color:#5c6149] [--rdp-accent-background-color:rgba(92,97,73,0.12)]"
 										>
 											<div className="grid grid-cols-2 gap-2">
 												<div>
@@ -286,8 +368,11 @@ export function CanvasPreview({
 														mode="range"
 														min={1}
 														selected={stayRange}
-														onSelect={setStayRange}
-														disabled={{ before: todayStart }}
+														onSelect={(range) => {
+															setStayRange(range);
+															if (range?.from && range?.to) void checkAvailabilityForDates(range.from, range.to);
+														}}
+														disabled={dayDisabled}
 														numberOfMonths={1}
 														className="mx-auto w-full min-w-0 max-w-full justify-center [--rdp-day-height:2rem] [--rdp-day-width:2rem] [--rdp-day_button-height:1.875rem] [--rdp-day_button-width:1.875rem] [&_.rdp-month]:w-full [&_.rdp-month_caption]:text-sm [&_.rdp-month_grid]:w-full [&_.rdp-nav]:h-8 [&_.rdp-weekday]:p-0 [&_.rdp-weekday]:text-[10px] [&_.rdp-day]:text-[12px]"
 													/>
@@ -333,13 +418,12 @@ export function CanvasPreview({
 										) : null}
 										<button
 											type="button"
-											onClick={() => void handleCheckAvailability()}
+											onClick={handleCheckAvailability}
 											disabled={!propertyRef || !stayRange?.from || !stayRange?.to || checkingAvailability}
 											className="mt-6 w-full cursor-pointer rounded-xl bg-[#5c6149] py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-[#4d523e] disabled:cursor-not-allowed disabled:opacity-60"
 										>
-											{checkingAvailability ? 'Checking...' : data.booking.cta}
+											{checkingAvailability ? 'Checking...' : 'RESERVE'}
 										</button>
-										{availabilityMsg ? <p className="mt-2 text-xs text-[#1A1A1A]/65">{availabilityMsg}</p> : null}
 									</>
 								) : (
 									<>
