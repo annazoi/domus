@@ -16,6 +16,7 @@ export interface Property {
 	slug: string;
 	description: string;
 	short_description?: string;
+	location_access?: string;
 	check_in_time: string;
 	check_out_time: string;
 	property_type: string;
@@ -43,6 +44,7 @@ export interface UpsertPropertyInput {
 	slug: string;
 	description: string;
 	short_description?: string;
+	location_access?: string;
 	check_in_time: string;
 	check_out_time: string;
 	property_type: string;

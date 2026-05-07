@@ -43,6 +43,7 @@ export type PropertyWithImages = {
 	slug: string;
 	description: string | null;
 	short_description: string | null;
+	location_access: string | null;
 	property_type: string;
 	max_guests: number;
 	bedrooms: number;
@@ -83,6 +84,7 @@ export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 	slug: property.slug,
 	description: property.description ?? '',
 	short_description: property.short_description ?? '',
+	location_access: property.location_access ?? '',
 	check_in_time: formatUtcTimeOfDay(property.check_in_time),
 	check_out_time: formatUtcTimeOfDay(property.check_out_time),
 	property_type: property.property_type,

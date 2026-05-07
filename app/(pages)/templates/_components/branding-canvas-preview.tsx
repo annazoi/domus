@@ -2,13 +2,15 @@
 
 import Image from 'next/image';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { MapPin, Menu, Star } from 'lucide-react';
+import { ChevronDown, MapPin, Menu, Star } from 'lucide-react';
 import { Input } from '@/components/ui';
 import { ApiRoutes } from '@/config/api/routes';
 import { BrandingPreviewMap } from '@/components/google-maps';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
 import { AmenityGlyph } from './branding-preview-shared';
+import { PhotoGalleryLightbox } from './photo-gallery-carousel';
 import { DayPicker, type DateRange } from 'react-day-picker';
+import { useCheckAvailability } from '@/features/bookings/hooks/use-check-availability';
 
 function startOfToday() {
 	const d = new Date();
@@ -55,7 +57,10 @@ export function CanvasPreview({
 	const rightBot = data.hero.imageSrc.trim()
 		? data.gallery.stack[0].src.trim() || data.gallery.stack[1].src.trim()
 		: data.gallery.stack[1].src.trim() || data.gallery.stack[0].src.trim();
+	const galleryImages = useMemo(() => [leftHero, rightTop, rightBot, data.gallery.full.src.trim()].filter(Boolean), [leftHero, rightTop, rightBot, data.gallery.full.src]);
 	const hasGallery = Boolean(leftHero || rightTop || rightBot);
+	const [galleryOpen, setGalleryOpen] = useState(false);
+	const [galleryIndex, setGalleryIndex] = useState(0);
 	const [stayRange, setStayRange] = useState<DateRange | undefined>();
 	const [stayPickerOpen, setStayPickerOpen] = useState(false);
 	const stayPickerRef = useRef<HTMLDivElement>(null);
@@ -69,10 +74,15 @@ export function CanvasPreview({
 	const [guestCount, setGuestCount] = useState(1);
 	const [checkingAvailability, setCheckingAvailability] = useState(false);
 	const [availabilityMsg, setAvailabilityMsg] = useState<string | null>(null);
+	const [availableForCheckout, setAvailableForCheckout] = useState(false);
+	const [totalPrice, setTotalPrice] = useState<number | null>(null);
+	const [confirmModalOpen, setConfirmModalOpen] = useState(false);
 	const [allowedDateKeys, setAllowedDateKeys] = useState<Set<string>>(new Set());
-	const checkAvailabilityAbortRef = useRef<AbortController | null>(null);
 	const todayStart = useMemo(() => startOfToday(), []);
 	const propertyRef = useMemo(() => data.footer.tagline.replace(/^\//, '').trim(), [data.footer.tagline]);
+	const checkAvailabilityMutation = useCheckAvailability();
+	const hostRating = data.host.rating.trim() || (data.booking.rating.trim() ? `${data.booking.rating} rating` : 'Top rated host');
+	const hostBio = data.host.bio.trim() || 'Friendly, responsive host with a focus on thoughtful local recommendations.';
 
 	useEffect(() => {
 		setGuestCount((c) => Math.min(guestCap, Math.max(1, c)));
@@ -137,41 +147,49 @@ export function CanvasPreview({
 	const checkAvailabilityForDates = useCallback(
 		async (from: Date, to: Date) => {
 			if (!propertyRef) return;
-			checkAvailabilityAbortRef.current?.abort();
-			const ac = new AbortController();
-			checkAvailabilityAbortRef.current = ac;
 			setCheckingAvailability(true);
 			setAvailabilityMsg(null);
 			try {
 				const check_in = toDateParam(from);
 				const check_out = toDateParam(to);
-				const res = await fetch(
-					`/api${ApiRoutes.properties.checkAvailability(propertyRef, check_in, check_out, guestCount)}`,
-					{ signal: ac.signal },
-				);
-				const data = (await res.json()) as { isAvailable?: boolean; totalPrice?: number | null; message?: string };
-				if (!res.ok) {
-					setAvailabilityMsg(data.message ?? 'Could not check availability.');
-					return;
-				}
+				const data = await checkAvailabilityMutation.mutateAsync({
+					property_id: propertyRef,
+					check_in,
+					check_out,
+					guests: guestCount,
+				});
+				const available = Boolean(data.isAvailable);
+				const total = typeof data.totalPrice === 'number' ? data.totalPrice : null;
+				setAvailableForCheckout(available);
+				setTotalPrice(total);
 				setAvailabilityMsg(
-					data.isAvailable
-						? `Available${typeof data.totalPrice === 'number' ? ` · Total $${data.totalPrice}` : ''}`
+					available
+						? `Available${total !== null ? ` · Total $${total}` : ''}`
 						: 'Not available for selected dates.',
 				);
-			} catch (e) {
-				if (e instanceof DOMException && e.name === 'AbortError') return;
+				return { available, total };
+			} catch {
+				setAvailableForCheckout(false);
+				setTotalPrice(null);
 				setAvailabilityMsg('Could not check availability.');
 			} finally {
-				if (checkAvailabilityAbortRef.current === ac) setCheckingAvailability(false);
+				setCheckingAvailability(false);
 			}
 		},
-		[propertyRef, guestCount],
+		[propertyRef, guestCount, checkAvailabilityMutation],
 	);
 
-	const handleCheckAvailability = () => {
+	const openGallery = (src?: string) => {
+		if (!src) return;
+		const index = galleryImages.findIndex((img) => img === src);
+		setGalleryIndex(index >= 0 ? index : 0);
+		setGalleryOpen(true);
+	};
+
+	const handleReserveClick = async () => {
 		if (!stayRange?.from || !stayRange?.to) return;
-		void checkAvailabilityForDates(stayRange.from, stayRange.to);
+		const result = await checkAvailabilityForDates(stayRange.from, stayRange.to);
+		if (result?.available) setConfirmModalOpen(true);
 	};
 
 	return (
@@ -199,22 +217,34 @@ export function CanvasPreview({
 					{hasGallery ? (
 						<div className="grid grid-cols-1 gap-3 sm:grid-cols-12 sm:gap-4">
 							{leftHero ? (
-								<div className="relative aspect-[4/5] min-h-[220px] overflow-hidden rounded-2xl bg-[#e0ded9] sm:col-span-7 sm:min-h-[280px] lg:min-h-[360px]">
-									<Image src={leftHero} alt="" fill className="object-cover" sizes="(max-width:640px)100vw,58vw" unoptimized />
-								</div>
+								<button
+									type="button"
+									onClick={() => openGallery(leftHero)}
+									className="relative aspect-[4/5] min-h-[220px] cursor-pointer overflow-hidden rounded-2xl bg-[#e0ded9] sm:col-span-7 sm:min-h-[280px] lg:min-h-[360px]"
+								>
+									<Image src={leftHero} alt="" fill className="object-cover cursor-pointer" sizes="(max-width:640px)100vw,58vw" unoptimized />
+								</button>
 							) : (
 								<div className="hidden sm:col-span-7 sm:block" aria-hidden />
 							)}
 							<div className="grid grid-cols-2 gap-3 sm:col-span-5 sm:grid-cols-1 sm:grid-rows-2 sm:gap-4">
 								{rightTop ? (
-									<div className="relative aspect-[5/4] overflow-hidden rounded-2xl bg-[#e0ded9] sm:min-h-0 sm:flex-1">
-										<Image src={rightTop} alt="" fill className="object-cover" sizes="40vw" unoptimized />
-									</div>
+									<button
+										type="button"
+										onClick={() => openGallery(rightTop)}
+										className="relative aspect-[5/4] cursor-pointer overflow-hidden rounded-2xl bg-[#e0ded9] sm:min-h-0 sm:flex-1"
+									>
+										<Image src={rightTop} alt="" fill className="object-cover cursor-pointer" sizes="40vw" unoptimized />
+									</button>
 								) : null}
 								{rightBot && rightBot !== rightTop ? (
-									<div className="relative aspect-[5/4] overflow-hidden rounded-2xl bg-[#e0ded9] sm:min-h-0 sm:flex-1">
-										<Image src={rightBot} alt="" fill className="object-cover" sizes="40vw" unoptimized />
-									</div>
+									<button
+										type="button"
+										onClick={() => openGallery(rightBot)}
+										className="relative aspect-[5/4] cursor-pointer overflow-hidden rounded-2xl bg-[#e0ded9] sm:min-h-0 sm:flex-1"
+									>
+										<Image src={rightBot} alt="" fill className="object-cover cursor-pointer" sizes="40vw" unoptimized />
+									</button>
 								) : null}
 							</div>
 						</div>
@@ -291,22 +321,24 @@ export function CanvasPreview({
 									))}
 								</div>
 							</section>
-
-							{data.gallery.full.src.trim() && !listingPreview ? (
-								<div className="relative aspect-[21/9] overflow-hidden rounded-2xl">
-									<Image src={data.gallery.full.src} alt="" fill className="object-cover" sizes="100vw" unoptimized />
-									{(data.gallery.full.pullQuote.title || data.gallery.full.pullQuote.text) && (
-										<div className="absolute bottom-4 left-4 max-w-sm rounded-xl bg-white/95 p-4 shadow-lg backdrop-blur-sm">
-											{data.gallery.full.pullQuote.title ? (
-												<p className="font-[family-name:var(--font-serif)] text-lg">{data.gallery.full.pullQuote.title}</p>
-											) : null}
-											{data.gallery.full.pullQuote.text ? (
-												<p className="mt-1 text-xs text-[#1A1A1A]/60">{data.gallery.full.pullQuote.text}</p>
-											) : null}
+							{data.host.name.trim() ? (
+								<section className="border-t border-black/[0.06] pt-8">
+									<p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5c6149]">Meet our host</p>
+									<div className="mt-4 flex items-start gap-4">
+										{data.host.imageSrc.trim() ? (
+											<div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[#eee]">
+												<Image src={data.host.imageSrc} alt="" fill className="object-cover" sizes="56px" unoptimized />
+											</div>
+										) : null}
+										<div className="min-w-0">
+											<p className="text-lg font-semibold text-[#1A1A1A]">{data.host.name}</p>
+											<p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-[#5c6149]">{hostRating}</p>
+											<p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#1A1A1A]/70">{hostBio}</p>
 										</div>
-									)}
-								</div>
+									</div>
+								</section>
 							) : null}
+
 						</div>
 
 						<aside className="w-full min-w-0 shrink-0 lg:sticky lg:top-24 lg:mt-[-2.5rem] lg:w-[min(100%,440px)]">
@@ -318,11 +350,20 @@ export function CanvasPreview({
 										</p>
 										{/* <p className="mt-4 min-h-[1.35rem] text-sm font-medium leading-snug text-[#1A1A1A]"> */}
 										<p className="text-[10px] font-medium uppercase leading-snug tracking-[0.2em] text-[#1A1A1A]">
-											{checkingAvailability
-												? 'Checking...'
-												: stayRange?.from && stayRange?.to && availabilityMsg
-													? availabilityMsg
-													: 'Pick your stay dates - pricing appears here.'}
+											{checkingAvailability ? (
+												'Checking...'
+											) : stayRange?.from && stayRange?.to && availabilityMsg ? (
+												availableForCheckout && totalPrice !== null ? (
+													<>
+														Available · Total{' '}
+														<span className="text-[14px] font-semibold tracking-normal">${totalPrice}</span>
+													</>
+												) : (
+													availabilityMsg
+												)
+											) : (
+												'Pick your stay dates - pricing appears here.'
+											)}
 										</p>
 										<div
 											ref={stayPickerRef}
@@ -410,15 +451,9 @@ export function CanvasPreview({
 										</div>
 
 										{/* <p className="mt-5 border-t border-black/[0.06] pt-5 text-sm text-[#1A1A1A]/75">{data.booking.guests}</p> */}
-										{data.booking.price.trim() ? (
-											<p className="mt-4 font-[family-name:var(--font-serif)] text-2xl text-[#1A1A1A]">
-												{data.booking.price}{' '}
-												<span className="text-sm font-normal text-[#1A1A1A]/45">{data.booking.per}</span>
-											</p>
-										) : null}
 										<button
 											type="button"
-											onClick={handleCheckAvailability}
+											onClick={() => void handleReserveClick()}
 											disabled={!propertyRef || !stayRange?.from || !stayRange?.to || checkingAvailability}
 											className="mt-6 w-full cursor-pointer rounded-xl bg-[#5c6149] py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-[#4d523e] disabled:cursor-not-allowed disabled:opacity-60"
 										>
@@ -427,57 +462,120 @@ export function CanvasPreview({
 									</>
 								) : (
 									<>
-										<div className="flex flex-wrap items-end justify-between gap-4">
-											<div>
-												<p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/45">{data.booking.eyebrow}</p>
-												<p className="mt-1 font-[family-name:var(--font-serif)] text-3xl">
-													{data.booking.price}{' '}
-													<span className="text-sm font-normal text-[#1A1A1A]/45">{data.booking.per}</span>
-												</p>
-											</div>
-											<div className="flex items-center gap-1 text-sm">
-												<Star className="h-4 w-4 fill-[#5c6149] text-[#5c6149]" />
-												<span className="font-semibold">{data.booking.rating}</span>
-											</div>
-										</div>
-										<div className="mt-6 space-y-3 border-t border-black/[0.06] pt-6 text-sm text-[#1A1A1A]/70">
-											<div className="flex justify-between">
-												<span>{data.booking.lines[0].label}</span>
-												<span>{data.booking.lines[0].value}</span>
-											</div>
-											<div className="flex justify-between">
-												<span>{data.booking.lines[1].label}</span>
-												<span>{data.booking.lines[1].value}</span>
-											</div>
-											<div className="flex justify-between border-t border-black/[0.06] pt-3 font-semibold text-[#1A1A1A]">
-												<span>{data.booking.totalLabel}</span>
-												<span>{data.booking.total}</span>
-											</div>
-										</div>
-										<button
-											type="button"
-											className="mt-6 w-full rounded-xl bg-[#5c6149] py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-[#4d523e]"
+										<p className="text-[10px] font-medium uppercase leading-snug tracking-[0.2em] text-[#1A1A1A]">
+											{checkingAvailability ? (
+												'Checking...'
+											) : stayRange?.from && stayRange?.to && availabilityMsg ? (
+												availableForCheckout && totalPrice !== null ? (
+													<>
+														Available · Total{' '}
+														<span className="text-[14px] font-semibold tracking-normal">${totalPrice}</span>
+													</>
+												) : (
+													availabilityMsg
+												)
+											) : (
+												'Pick your stay dates - pricing appears here.'
+											)}
+										</p>
+										<div
+											ref={stayPickerRef}
+											className="relative mt-5 min-w-0 border-t border-black/[0.06] pt-6 [--rdp-accent-color:#5c6149] [--rdp-accent-background-color:rgba(92,97,73,0.12)]"
 										>
-											{data.booking.cta}
-										</button>
-										<p className="mt-3 text-center text-[10px] text-[#1A1A1A]/40">{data.booking.disclaimer}</p>
-										<div className="mt-6 flex items-center gap-3 border-t border-black/[0.06] pt-6">
-											{data.host.imageSrc.trim() ? (
-												<div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-[#eee]">
-													<Image src={data.host.imageSrc} alt="" fill className="object-cover" sizes="44px" unoptimized />
+											<div className="grid grid-cols-2 gap-2">
+												<div>
+													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">
+														Check in
+													</p>
+													<button
+														type="button"
+														onClick={() => setStayPickerOpen(true)}
+														aria-expanded={stayPickerOpen}
+														aria-haspopup="dialog"
+														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30"
+													>
+														{stayRange?.from ? formatStay(stayRange.from) : 'Add date'}
+													</button>
+												</div>
+												<div>
+													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">
+														Check out
+													</p>
+													<button
+														type="button"
+														onClick={() => setStayPickerOpen(true)}
+														aria-expanded={stayPickerOpen}
+														aria-haspopup="dialog"
+														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30"
+													>
+														{stayRange?.to ? formatStay(stayRange.to) : 'Add date'}
+													</button>
+												</div>
+											</div>
+											{stayPickerOpen ? (
+												<div
+													role="dialog"
+													aria-label="Select stay dates"
+													className="absolute inset-x-0 top-full z-20 mt-2 w-full min-w-0 max-w-full rounded-xl border border-black/10 bg-white p-2 shadow-xl"
+												>
+													<DayPicker
+														mode="range"
+														min={1}
+														selected={stayRange}
+														onSelect={(range) => {
+															setStayRange(range);
+															if (range?.from && range?.to) void checkAvailabilityForDates(range.from, range.to);
+														}}
+														disabled={dayDisabled}
+														numberOfMonths={1}
+														className="mx-auto w-full min-w-0 max-w-full justify-center [--rdp-day-height:2rem] [--rdp-day-width:2rem] [--rdp-day_button-height:1.875rem] [--rdp-day_button-width:1.875rem] [&_.rdp-month]:w-full [&_.rdp-month_caption]:text-sm [&_.rdp-month_grid]:w-full [&_.rdp-nav]:h-8 [&_.rdp-weekday]:p-0 [&_.rdp-weekday]:text-[10px] [&_.rdp-day]:text-[12px]"
+													/>
+													<div className="flex justify-end gap-2">
+														<button type="button" onClick={() => setStayPickerOpen(false)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30">Apply</button>
+														<button type="button" onClick={() => setStayRange(undefined)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30">Clear</button>
+													</div>
 												</div>
 											) : null}
-											<div className="min-w-0">
-												<p className="text-[9px] uppercase tracking-widest text-[#1A1A1A]/40">{data.host.label}</p>
-												<p className="truncate text-sm font-medium">{data.host.name}</p>
-											</div>
-											<button
-												type="button"
-												className="ml-auto shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[#5c6149]"
-											>
-												{data.host.inquire}
-											</button>
 										</div>
+										<div className="mt-5">
+											<label
+												htmlFor={guestFieldId}
+												className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40"
+											>
+												Guests
+											</label>
+											<Input
+												id={guestFieldId}
+												type="number"
+												inputMode="numeric"
+												min={1}
+												max={guestCap}
+												step={1}
+												value={guestCount}
+												onChange={(e) => {
+													const v = parseInt(e.target.value, 10);
+													if (Number.isNaN(v)) return;
+													setGuestCount(Math.min(guestCap, Math.max(1, v)));
+												}}
+												className="mt-1.5"
+												variant="compact"
+											/>
+											<p className="mt-1 text-[10px] text-[#1A1A1A]/45">Up to {guestCap} guests</p>
+										</div>
+										{data.booking.price.trim() ? (
+											<p className="mt-4 font-[family-name:var(--font-serif)] text-2xl text-[#1A1A1A]">
+												{data.booking.price}{' '}
+												<span className="text-sm font-normal text-[#1A1A1A]/45">{data.booking.per}</span>
+											</p>
+										) : null}
+										<button
+											type="button"
+											onClick={() => void handleReserveClick()}
+											disabled={!propertyRef || !stayRange?.from || !stayRange?.to || checkingAvailability}
+											className="mt-6 w-full cursor-pointer rounded-xl bg-[#5c6149] py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-[#4d523e] disabled:cursor-not-allowed disabled:opacity-60"
+										>
+											{checkingAvailability ? 'Checking...' : 'RESERVE'}
+										</button>
 									</>
 								)}
 							</div>
@@ -504,6 +602,58 @@ export function CanvasPreview({
 					<p>{data.footer.copyright}</p>
 				</div>
 			</footer>
+			{confirmModalOpen && stayRange?.from && stayRange?.to ? (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
+					<div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+						<div className="flex items-start justify-between gap-4">
+							<div>
+								<p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#1A1A1A]/45">Booking</p>
+								<h2 className="mt-2 font-[family-name:var(--font-serif)] text-2xl text-[#1A1A1A]">Confirm and pay</h2>
+							</div>
+							<button
+								type="button"
+								onClick={() => setConfirmModalOpen(false)}
+								className="rounded-lg border border-black/10 px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-[#1A1A1A]/70 transition hover:border-black/20 hover:text-[#1A1A1A]"
+							>
+								Close
+							</button>
+						</div>
+						<div className="mt-6 space-y-3 border-y border-black/[0.06] py-4 text-sm text-[#1A1A1A]/80">
+							<div className="flex justify-between gap-3">
+								<span>Check in</span>
+								<span className="font-medium text-[#1A1A1A]">{formatStay(stayRange.from)}</span>
+							</div>
+							<div className="flex justify-between gap-3">
+								<span>Check out</span>
+								<span className="font-medium text-[#1A1A1A]">{formatStay(stayRange.to)}</span>
+							</div>
+							<div className="flex justify-between gap-3">
+								<span>Guests</span>
+								<span className="font-medium text-[#1A1A1A]">{guestCount}</span>
+							</div>
+							<div className="flex justify-between gap-3 border-t border-black/[0.06] pt-3">
+								<span>Total</span>
+								<span className="font-semibold text-[#1A1A1A]">
+									{availableForCheckout && totalPrice !== null ? `$${totalPrice}` : 'Calculated at checkout'}
+								</span>
+							</div>
+						</div>
+						<button
+							type="button"
+							onClick={() => setConfirmModalOpen(false)}
+							className="cursor-pointer mt-6 w-full rounded-xl bg-[#5c6149] py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-[#4d523e]"
+						>
+							Confirm and pay
+						</button>
+					</div>
+				</div>
+			) : null}
+			<PhotoGalleryLightbox
+				images={galleryImages}
+				open={galleryOpen}
+				initialIndex={galleryIndex}
+				onClose={() => setGalleryOpen(false)}
+			/>
 		</div>
 	);
 }

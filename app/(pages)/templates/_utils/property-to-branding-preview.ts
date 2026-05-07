@@ -42,7 +42,7 @@ export type BrandingPreviewDemo = {
 		cta: string;
 		disclaimer: string;
 	};
-	host: { label: string; name: string; imageSrc: string; inquire: string };
+	host: { label: string; name: string; imageSrc: string; inquire: string; rating: string; bio: string };
 	footer: { wordmark: string; tagline: string; links: { label: string }[]; copyright: string };
 };
 
@@ -117,7 +117,9 @@ export const DEMO_PROPERTY_FOR_BRANDING: Property = {
 	description:
 		'<p>Floor-to-ceiling glass pulls the horizon into the living space. Warm plaster walls and wide-plank oak keep the palette grounded.</p><p>Mornings begin with coastal fog; afternoons open onto terraces cut into the hillside. Every room is oriented toward the view.</p>',
 	short_description:
-		'Quiet luxury framed by coastal redwoods and the Pacific — a whole-home stay with soaking tub, plunge pool, and chef’s kitchen.',
+		'Quiet luxury framed by coastal redwoods and the Pacific - a whole-home stay with soaking tub, plunge pool, and chef’s kitchen.',
+	location_access:
+		'Private gated drive off Highway 1 - keypad code shared 24h before arrival. Self check-in via smart lock; coastal trail entrance from the lower terrace.',
 	check_in_time: '16:00',
 	check_out_time: '11:00',
 	property_type: 'single_family_home',
@@ -235,7 +237,7 @@ export function propertyToBrandingPreview(property: Property): BrandingPreviewDe
 			mapEmbedSrc,
 			columns: [
 				{ title: 'Address', text: addressLine },
-				{ title: 'Coordinates', text: coords || '—' },
+				{ title: 'Access', text: stripHtml(property.location_access ?? '') || '—' },
 			],
 		},
 		booking: {
@@ -256,7 +258,7 @@ export function propertyToBrandingPreview(property: Property): BrandingPreviewDe
 			cta: 'Check availability',
 			disclaimer: '',
 		},
-		host: { label: '', name: '', imageSrc: '', inquire: '' },
+		host: { label: '', name: '', imageSrc: '', inquire: '', rating: '', bio: '' },
 		footer: {
 			wordmark: property.title,
 			tagline: property.slug ? `/${property.slug}` : '',
@@ -309,7 +311,7 @@ function decorateFullTemplateDemo(theme: PropertyBrandingTheme, d: BrandingPrevi
 			arrival: arch ? 'May 12, 2026' : 'Jun 4, 2026',
 			departure: arch ? 'May 19, 2026' : 'Jun 11, 2026',
 			guests: arch ? '2 guests · 1 suite' : `${DEMO_PROPERTY_FOR_BRANDING.max_guests} guests · Whole home`,
-			price: arch ? '€2,450' : '$890',
+			
 			per: arch ? '/ NIGHT' : '/ night',
 			rating: arch ? '4.98' : '4.92',
 			lines: arch
@@ -331,6 +333,10 @@ function decorateFullTemplateDemo(theme: PropertyBrandingTheme, d: BrandingPrevi
 			name: arch ? 'Domus Studio' : 'Domus Collective',
 			imageSrc: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
 			inquire: arch ? 'Inquire' : 'Message',
+			rating: arch ? '4.98 (124 reviews)' : '4.92 (208 reviews)',
+			bio: arch
+				? 'Design-led hosting focused on quiet, high-touch stays with local sourcing and concierge planning.'
+				: 'We are a local hosting team sharing calm, detail-focused homes and responsive guest support.',
 		},
 		footer: {
 			...d.footer,

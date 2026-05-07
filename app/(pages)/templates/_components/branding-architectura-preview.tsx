@@ -4,9 +4,14 @@ import Image from 'next/image';
 import { Manrope, Noto_Serif } from 'next/font/google';
 import { ChevronDown, CircleUser, MapPin, Menu, Search, Star } from 'lucide-react';
 import { BrandingPreviewMap } from '@/components/google-maps';
-import { cn } from '@/components/ui';
+import { cn, Input } from '@/components/ui';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { ApiRoutes } from '@/config/api/routes';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
 import { AmenityGlyph, FillImg } from './branding-preview-shared';
+import { PhotoGalleryLightbox } from './photo-gallery-carousel';
+import { DayPicker, type DateRange } from 'react-day-picker';
+import { useCheckAvailability } from '@/features/bookings/hooks/use-check-availability';
 
 const notoSerif = Noto_Serif({
 	subsets: ['latin'],
@@ -22,6 +27,36 @@ const manrope = Manrope({
 	display: 'swap',
 });
 
+function startOfToday() {
+	const d = new Date();
+	d.setHours(0, 0, 0, 0);
+	return d;
+}
+
+function formatStay(d: Date) {
+	return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function toDateParam(d: Date) {
+	const y = d.getFullYear();
+	const m = String(d.getMonth() + 1).padStart(2, '0');
+	const day = String(d.getDate()).padStart(2, '0');
+	return `${y}-${m}-${day}`;
+}
+
+function dayStart(d: Date) {
+	const x = new Date(d);
+	x.setHours(0, 0, 0, 0);
+	return x;
+}
+
+function nightsPriced(checkIn: Date, checkOutExclusive: Date, allowed: Set<string>) {
+	for (let c = dayStart(checkIn), end = dayStart(checkOutExclusive); c < end; c.setDate(c.getDate() + 1)) {
+		if (!allowed.has(toDateParam(c))) return false;
+	}
+	return true;
+}
+
 export function ArchitecturaPreview({
 	data,
 	listingPreview,
@@ -32,6 +67,145 @@ export function ArchitecturaPreview({
 	const aboutLong = [data.concept.paragraphs[0], data.concept.paragraphs[1]].filter(Boolean).join(' ').trim();
 	const showAboutLong = Boolean(aboutLong);
 	const aboutShort = data.concept.title.trim();
+	const galleryImages = useMemo(
+		() => [
+		data.gallery.large.src.trim(),
+		data.gallery.stack[0].src.trim(),
+		data.gallery.stack[1].src.trim(),
+	].filter(Boolean),
+		[data.gallery.large.src, data.gallery.stack],
+	);
+	const [galleryOpen, setGalleryOpen] = useState(false);
+	const [galleryIndex, setGalleryIndex] = useState(0);
+	const [stayRange, setStayRange] = useState<DateRange | undefined>();
+	const [stayPickerOpen, setStayPickerOpen] = useState(false);
+	const stayPickerRef = useRef<HTMLDivElement>(null);
+	const guestFieldId = useId();
+	const guestCap = useMemo(() => {
+		const m = data.booking.guests.match(/^(\d+)/);
+		const n = m ? parseInt(m[1], 10) : data.booking.maxGuests;
+		const cap = Number.isFinite(n) && n > 0 ? n : data.booking.maxGuests;
+		return Math.min(Math.max(1, data.booking.maxGuests), Math.max(1, cap));
+	}, [data.booking.guests, data.booking.maxGuests]);
+	const [guestCount, setGuestCount] = useState(1);
+	const [checkingAvailability, setCheckingAvailability] = useState(false);
+	const [availabilityMsg, setAvailabilityMsg] = useState<string | null>(null);
+	const [availableForCheckout, setAvailableForCheckout] = useState(false);
+	const [totalPrice, setTotalPrice] = useState<number | null>(null);
+	const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+	const [allowedDateKeys, setAllowedDateKeys] = useState<Set<string>>(new Set());
+	const todayStart = useMemo(() => startOfToday(), []);
+	const propertyRef = useMemo(() => data.footer.tagline.replace(/^\//, '').trim(), [data.footer.tagline]);
+	const checkAvailabilityMutation = useCheckAvailability();
+	const hostRating = data.host.rating.trim() || (data.booking.rating.trim() ? `${data.booking.rating} rating` : 'Top rated host');
+	const hostBio = data.host.bio.trim() || 'Friendly, responsive host with a focus on thoughtful local recommendations.';
+
+	const openGallery = (src: string) => {
+		const index = galleryImages.findIndex((img) => img === src);
+		setGalleryIndex(index >= 0 ? index : 0);
+		setGalleryOpen(true);
+	};
+
+	useEffect(() => {
+		setGuestCount((c) => Math.min(guestCap, Math.max(1, c)));
+	}, [guestCap]);
+
+	useEffect(() => {
+		if (!listingPreview || !propertyRef) return;
+		let cancelled = false;
+		void (async () => {
+			try {
+				const qs = new URLSearchParams({ start: toDateParam(todayStart) });
+				const res = await fetch(`/api${ApiRoutes.properties.unavailableDays(propertyRef)}?${qs}`);
+				if (!res.ok || cancelled) return;
+				const json = (await res.json()) as { available_dates?: string[] };
+				if (!cancelled) setAllowedDateKeys(new Set(json.available_dates ?? []));
+			} catch {
+				if (!cancelled) setAllowedDateKeys(new Set());
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, [listingPreview, propertyRef, todayStart]);
+
+	const dayDisabled = useMemo(() => {
+		return (day: Date) => {
+			const d = dayStart(day);
+			if (d.getTime() < todayStart.getTime()) return true;
+
+			const from = stayRange?.from ? dayStart(stayRange.from) : null;
+			const to = stayRange?.to ? dayStart(stayRange.to) : null;
+			const key = toDateParam(day);
+
+			if (!from) return !allowedDateKeys.has(key);
+			if (!to) {
+				if (d.getTime() < from.getTime()) return true;
+				if (d.getTime() === from.getTime()) return !allowedDateKeys.has(key);
+				return !nightsPriced(from, d, allowedDateKeys);
+			}
+
+			if (d.getTime() < from.getTime()) return true;
+			if (d.getTime() === from.getTime()) return !allowedDateKeys.has(key);
+			if (d.getTime() <= to.getTime()) {
+				if (d.getTime() === to.getTime()) return !nightsPriced(from, d, allowedDateKeys);
+				return !allowedDateKeys.has(key);
+			}
+			return !nightsPriced(from, d, allowedDateKeys);
+		};
+	}, [allowedDateKeys, todayStart, stayRange?.from, stayRange?.to]);
+
+	useEffect(() => {
+		if (!stayPickerOpen) return;
+		const onPointerDown = (e: PointerEvent) => {
+			const el = stayPickerRef.current;
+			if (el && !el.contains(e.target as Node)) setStayPickerOpen(false);
+		};
+		document.addEventListener('pointerdown', onPointerDown);
+		return () => document.removeEventListener('pointerdown', onPointerDown);
+	}, [stayPickerOpen]);
+
+	const checkAvailabilityForDates = useCallback(
+		async (from: Date, to: Date) => {
+			if (!propertyRef) return;
+			setCheckingAvailability(true);
+			setAvailabilityMsg(null);
+			try {
+				const check_in = toDateParam(from);
+				const check_out = toDateParam(to);
+				const data = await checkAvailabilityMutation.mutateAsync({
+					property_id: propertyRef,
+					check_in,
+					check_out,
+					guests: guestCount,
+				});
+
+				const available = Boolean(data.isAvailable);
+				const total = typeof data.totalPrice === 'number' ? data.totalPrice : null;
+				setAvailableForCheckout(available);
+				setTotalPrice(total);
+				setAvailabilityMsg(
+					available
+						? `Available${total !== null ? ` · Total $${total}` : ''}`
+						: 'Not available for selected dates.',
+				);
+				return { available };
+			} catch {
+				setAvailableForCheckout(false);
+				setTotalPrice(null);
+				setAvailabilityMsg('Could not check availability.');
+			} finally {
+				setCheckingAvailability(false);
+			}
+		},
+		[propertyRef, guestCount, checkAvailabilityMutation],
+	);
+
+	const handleReserveClick = async () => {
+		if (!stayRange?.from || !stayRange?.to) return;
+		const result = await checkAvailabilityForDates(stayRange.from, stayRange.to);
+		if (result?.available) setConfirmModalOpen(true);
+	};
 
 	return (
 		<div
@@ -156,7 +330,7 @@ export function ArchitecturaPreview({
 							data.gallery.stack[1].src.trim() ? (
 								<div className="grid grid-cols-12 items-end gap-4">
 									{data.gallery.large.src.trim() ? (
-										<div className="col-span-12 sm:col-span-8">
+										<button type="button" onClick={() => openGallery(data.gallery.large.src.trim())} className="col-span-12 cursor-pointer text-left sm:col-span-8">
 											<FillImg
 												src={data.gallery.large.src}
 												className="aspect-[4/5] w-full rounded-sm"
@@ -167,20 +341,28 @@ export function ArchitecturaPreview({
 													{data.gallery.large.caption}
 												</p>
 											) : null}
-										</div>
+										</button>
 									) : null}
 									{data.gallery.stack[0].src.trim() || data.gallery.stack[1].src.trim() ? (
 										<div className="col-span-12 grid gap-4 sm:col-span-4 sm:translate-y-6">
-											<FillImg
-												src={data.gallery.stack[0].src}
-												className="aspect-square w-full rounded-sm"
-												sizes="200px"
-											/>
-											<FillImg
-												src={data.gallery.stack[1].src}
-												className="aspect-[3/4] w-full rounded-sm"
-												sizes="200px"
-											/>
+											{data.gallery.stack[0].src.trim() ? (
+												<button type="button" onClick={() => openGallery(data.gallery.stack[0].src.trim())} className="cursor-pointer">
+													<FillImg
+														src={data.gallery.stack[0].src}
+														className="aspect-square w-full rounded-sm"
+														sizes="200px"
+													/>
+												</button>
+											) : null}
+											{data.gallery.stack[1].src.trim() ? (
+												<button type="button" onClick={() => openGallery(data.gallery.stack[1].src.trim())} className="cursor-pointer">
+													<FillImg
+														src={data.gallery.stack[1].src}
+														className="aspect-[3/4] w-full rounded-sm"
+														sizes="200px"
+													/>
+												</button>
+											) : null}
 										</div>
 									) : null}
 								</div>
@@ -285,6 +467,25 @@ export function ArchitecturaPreview({
 								))}
 							</div>
 						</section>
+						{data.host.name.trim() ? (
+							<section className="border-t border-[#dbc1b9]/15 pt-8">
+								<p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#944528]">Meet our host</p>
+								<div className="mt-4 flex items-start gap-4">
+									{data.host.imageSrc.trim() ? (
+										<div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full grayscale">
+											<Image src={data.host.imageSrc} alt="" fill className="object-cover" sizes="64px" unoptimized />
+										</div>
+									) : null}
+									<div className="min-w-0">
+										<p className="font-[family-name:var(--preview-arch-headline)] text-xl font-semibold text-[#1b1c1a]">
+											{data.host.name}
+										</p>
+										<p className="mt-1 text-xs font-medium uppercase tracking-wide text-[#944528]">{hostRating}</p>
+										<p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#1b1c1a]/70">{hostBio}</p>
+									</div>
+								</div>
+							</section>
+						) : null}
 					</div>
 
 					<div className="lg:col-span-5">
@@ -292,103 +493,211 @@ export function ArchitecturaPreview({
 							<div className="border border-[#dbc1b9]/30 bg-white p-6 shadow-[0_20px_50px_rgba(27,28,26,0.06)] sm:p-8 lg:p-10">
 								{listingPreview ? (
 									<>
-										<span className="font-[family-name:var(--preview-arch-body)] text-[10px] uppercase tracking-widest text-[#944528]">
-											{data.booking.eyebrow}
-										</span>
-										<div className="mt-6 space-y-6 border-t border-[#dbc1b9]/40 pt-6">
-											<div className="grid grid-cols-2 gap-4 border-b border-[#dbc1b9]/40 pb-4">
+										<p className="text-[10px] font-medium uppercase leading-snug tracking-[0.2em] text-[#1A1A1A]">
+											{checkingAvailability ? (
+												'Checking...'
+											) : stayRange?.from && stayRange?.to && availabilityMsg ? (
+												availableForCheckout && totalPrice !== null ? (
+													<>
+														Available · Total{' '}
+														<span className="text-[14px] font-semibold tracking-normal">${totalPrice}</span>
+													</>
+												) : (
+													availabilityMsg
+												)
+											) : (
+												'Pick your stay dates - pricing appears here.'
+											)}
+										</p>
+										<div
+											ref={stayPickerRef}
+											className="relative mt-5 min-w-0 border-t border-[#dbc1b9]/40 pt-6 [--rdp-accent-color:#944528] [--rdp-accent-background-color:rgba(148,69,40,0.12)]"
+										>
+											<div className="grid grid-cols-2 gap-2">
 												<div>
-													<span className="text-[9px] uppercase tracking-tighter text-[#1b1c1a]/50">
-														Check-in
-													</span>
-													<p className="mt-1 text-sm font-medium">{data.booking.arrival}</p>
+													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">Check in</p>
+													<button
+														type="button"
+														onClick={() => setStayPickerOpen(true)}
+														aria-expanded={stayPickerOpen}
+														aria-haspopup="dialog"
+														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30"
+													>
+														{stayRange?.from ? formatStay(stayRange.from) : 'Add date'}
+													</button>
 												</div>
-												<div className="text-right">
-													<span className="text-[9px] uppercase tracking-tighter text-[#1b1c1a]/50">
-														Check-out
-													</span>
-													<p className="mt-1 text-sm font-medium">{data.booking.departure}</p>
+												<div>
+													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">Check out</p>
+													<button
+														type="button"
+														onClick={() => setStayPickerOpen(true)}
+														aria-expanded={stayPickerOpen}
+														aria-haspopup="dialog"
+														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30"
+													>
+														{stayRange?.to ? formatStay(stayRange.to) : 'Add date'}
+													</button>
 												</div>
 											</div>
-											<div>
-												<span className="text-[9px] uppercase tracking-tighter text-[#1b1c1a]/50">
-													Capacity
-												</span>
-												<p className="mt-1 text-sm font-medium">{data.booking.guests}</p>
-											</div>
+											{stayPickerOpen ? (
+												<div
+													role="dialog"
+													aria-label="Select stay dates"
+													className="absolute inset-x-0 top-full z-20 mt-2 w-full min-w-0 max-w-full rounded-xl border border-black/10 bg-white p-2 shadow-xl"
+												>
+													<DayPicker
+														mode="range"
+														min={1}
+														selected={stayRange}
+														onSelect={(range) => {
+															setStayRange(range);
+															if (range?.from && range?.to) void checkAvailabilityForDates(range.from, range.to);
+														}}
+														disabled={dayDisabled}
+														numberOfMonths={1}
+														className="mx-auto w-full min-w-0 max-w-full justify-center [--rdp-day-height:2rem] [--rdp-day-width:2rem] [--rdp-day_button-height:1.875rem] [--rdp-day_button-width:1.875rem] [&_.rdp-month]:w-full [&_.rdp-month_caption]:text-sm [&_.rdp-month_grid]:w-full [&_.rdp-nav]:h-8 [&_.rdp-weekday]:p-0 [&_.rdp-weekday]:text-[10px] [&_.rdp-day]:text-[12px]"
+													/>
+													<div className="flex justify-end gap-2">
+														<button type="button" onClick={() => setStayPickerOpen(false)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30">Apply</button>
+														<button type="button" onClick={() => setStayRange(undefined)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30">Clear</button>
+													</div>
+												</div>
+											) : null}
+										</div>
+										<div className="mt-5">
+											<label htmlFor={guestFieldId} className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">
+												Guests
+											</label>
+											<Input
+												id={guestFieldId}
+												type="number"
+												inputMode="numeric"
+												min={1}
+												max={guestCap}
+												step={1}
+												value={guestCount}
+												onChange={(e) => {
+													const v = parseInt(e.target.value, 10);
+													if (Number.isNaN(v)) return;
+													setGuestCount(Math.min(guestCap, Math.max(1, v)));
+												}}
+												className="mt-1.5"
+												variant="compact"
+											/>
+											<p className="mt-1 text-[10px] text-[#1A1A1A]/45">Up to {guestCap} guests</p>
 										</div>
 										<button
 											type="button"
-											className="mt-8 w-full rounded-sm bg-[#944528] py-4 font-[family-name:var(--preview-arch-body)] text-[11px] uppercase tracking-widest text-white transition hover:bg-[#b35c3d]"
+											onClick={() => void handleReserveClick()}
+											disabled={!propertyRef || !stayRange?.from || !stayRange?.to || checkingAvailability}
+											className="mt-8 w-full rounded-sm bg-[#944528] py-4 font-[family-name:var(--preview-arch-body)] text-[11px] uppercase tracking-widest text-white transition hover:bg-[#b35c3d] disabled:cursor-not-allowed disabled:opacity-60"
 										>
-											{data.booking.cta}
+											{checkingAvailability ? 'Checking...' : 'Reserve'}
 										</button>
 									</>
 								) : (
 									<>
-										<div className="mb-8 flex items-baseline justify-between gap-4">
-											<div>
-												<span className="font-[family-name:var(--preview-arch-body)] text-[10px] uppercase tracking-widest text-[#944528]">
-													{data.booking.eyebrow}
-												</span>
-												<h3 className="mt-1 font-[family-name:var(--preview-arch-headline)] text-2xl font-bold sm:text-3xl">
-													{data.booking.price}{' '}
-													<span className="text-sm font-normal text-[#1b1c1a]/40">{data.booking.per}</span>
-												</h3>
-											</div>
-											<div className="flex items-center gap-1 text-sm">
-												<Star className="h-4 w-4 fill-current text-[#944528]" aria-hidden />
-												<span className="font-semibold">{data.booking.rating}</span>
-											</div>
-										</div>
-										<div className="mb-8 space-y-6">
-											<div className="grid grid-cols-2 gap-4 border-b border-[#dbc1b9]/40 pb-4">
+										<p className="text-[10px] font-medium uppercase leading-snug tracking-[0.2em] text-[#1A1A1A]">
+											{checkingAvailability ? (
+												'Checking...'
+											) : stayRange?.from && stayRange?.to && availabilityMsg ? (
+												availableForCheckout && totalPrice !== null ? (
+													<>
+														Available · Total{' '}
+														<span className="text-[14px] font-semibold tracking-normal">${totalPrice}</span>
+													</>
+												) : (
+													availabilityMsg
+												)
+											) : (
+												'Pick your stay dates - pricing appears here.'
+											)}
+										</p>
+										<div
+											ref={stayPickerRef}
+											className="relative mt-5 min-w-0 border-t border-[#dbc1b9]/40 pt-6 [--rdp-accent-color:#944528] [--rdp-accent-background-color:rgba(148,69,40,0.12)]"
+										>
+											<div className="grid grid-cols-2 gap-2">
 												<div>
-													<span className="text-[9px] uppercase tracking-tighter text-[#1b1c1a]/50">
-														Arrival
-													</span>
-													<p className="mt-1 text-sm font-medium">{data.booking.arrival}</p>
+													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">Check in</p>
+													<button
+														type="button"
+														onClick={() => setStayPickerOpen(true)}
+														aria-expanded={stayPickerOpen}
+														aria-haspopup="dialog"
+														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30"
+													>
+														{stayRange?.from ? formatStay(stayRange.from) : 'Add date'}
+													</button>
 												</div>
-												<div className="text-right">
-													<span className="text-[9px] uppercase tracking-tighter text-[#1b1c1a]/50">
-														Departure
-													</span>
-													<p className="mt-1 text-sm font-medium">{data.booking.departure}</p>
+												<div>
+													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">Check out</p>
+													<button
+														type="button"
+														onClick={() => setStayPickerOpen(true)}
+														aria-expanded={stayPickerOpen}
+														aria-haspopup="dialog"
+														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30"
+													>
+														{stayRange?.to ? formatStay(stayRange.to) : 'Add date'}
+													</button>
 												</div>
 											</div>
-											<div className="border-b border-[#dbc1b9]/40 pb-4">
-												<span className="text-[9px] uppercase tracking-tighter text-[#1b1c1a]/50">
-													Curated For
-												</span>
-												<div className="mt-1 flex items-center justify-between text-sm font-medium">
-													<span>{data.booking.guests}</span>
-													<ChevronDown className="h-4 w-4 opacity-50" />
+											{stayPickerOpen ? (
+												<div
+													role="dialog"
+													aria-label="Select stay dates"
+													className="absolute inset-x-0 top-full z-20 mt-2 w-full min-w-0 max-w-full rounded-xl border border-black/10 bg-white p-2 shadow-xl"
+												>
+													<DayPicker
+														mode="range"
+														min={1}
+														selected={stayRange}
+														onSelect={(range) => {
+															setStayRange(range);
+															if (range?.from && range?.to) void checkAvailabilityForDates(range.from, range.to);
+														}}
+														disabled={dayDisabled}
+														numberOfMonths={1}
+														className="mx-auto w-full min-w-0 max-w-full justify-center [--rdp-day-height:2rem] [--rdp-day-width:2rem] [--rdp-day_button-height:1.875rem] [--rdp-day_button-width:1.875rem] [&_.rdp-month]:w-full [&_.rdp-month_caption]:text-sm [&_.rdp-month_grid]:w-full [&_.rdp-nav]:h-8 [&_.rdp-weekday]:p-0 [&_.rdp-weekday]:text-[10px] [&_.rdp-day]:text-[12px]"
+													/>
+													<div className="flex justify-end gap-2">
+														<button type="button" onClick={() => setStayPickerOpen(false)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30">Apply</button>
+														<button type="button" onClick={() => setStayRange(undefined)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30">Clear</button>
+													</div>
 												</div>
-											</div>
+											) : null}
 										</div>
-										<div className="mb-8 space-y-3 text-sm text-[#55433d]">
-											<div className="flex justify-between">
-												<span>{data.booking.lines[0].label}</span>
-												<span>{data.booking.lines[0].value}</span>
-											</div>
-											<div className="flex justify-between">
-												<span>{data.booking.lines[1].label}</span>
-												<span>{data.booking.lines[1].value}</span>
-											</div>
-											<div className="flex justify-between border-t border-[#dbc1b9]/25 pt-3 font-bold text-[#1b1c1a]">
-												<span>{data.booking.totalLabel}</span>
-												<span>{data.booking.total}</span>
-											</div>
+										<div className="mt-5">
+											<label htmlFor={guestFieldId} className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">
+												Guests
+											</label>
+											<Input
+												id={guestFieldId}
+												type="number"
+												inputMode="numeric"
+												min={1}
+												max={guestCap}
+												step={1}
+												value={guestCount}
+												onChange={(e) => {
+													const v = parseInt(e.target.value, 10);
+													if (Number.isNaN(v)) return;
+													setGuestCount(Math.min(guestCap, Math.max(1, v)));
+												}}
+												className="mt-1.5"
+												variant="compact"
+											/>
+											<p className="mt-1 text-[10px] text-[#1A1A1A]/45">Up to {guestCap} guests</p>
 										</div>
 										<button
 											type="button"
-											className="w-full rounded-sm bg-[#944528] py-4 font-[family-name:var(--preview-arch-body)] text-[11px] uppercase tracking-widest text-white transition hover:bg-[#b35c3d]"
+											onClick={() => void handleReserveClick()}
+											disabled={!propertyRef || !stayRange?.from || !stayRange?.to || checkingAvailability}
+											className="mt-8 w-full rounded-sm bg-[#944528] py-4 font-[family-name:var(--preview-arch-body)] text-[11px] uppercase tracking-widest text-white transition hover:bg-[#b35c3d] disabled:cursor-not-allowed disabled:opacity-60"
 										>
-											{data.booking.cta}
+											{checkingAvailability ? 'Checking...' : 'Reserve'}
 										</button>
-										<p className="mt-4 text-center font-[family-name:var(--preview-arch-body)] text-[10px] uppercase tracking-widest text-[#1b1c1a]/40">
-											{data.booking.disclaimer}
-										</p>
 									</>
 								)}
 							</div>
@@ -456,6 +765,58 @@ export function ArchitecturaPreview({
 					</p>
 				</div>
 			</footer>
+			{confirmModalOpen && stayRange?.from && stayRange?.to ? (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
+					<div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+						<div className="flex items-start justify-between gap-4">
+							<div>
+								<p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#1A1A1A]/45">Booking</p>
+								<h2 className="mt-2 font-[family-name:var(--font-serif)] text-2xl text-[#1A1A1A]">Confirm and pay</h2>
+							</div>
+							<button
+								type="button"
+								onClick={() => setConfirmModalOpen(false)}
+								className="rounded-lg border border-black/10 px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-[#1A1A1A]/70 transition hover:border-black/20 hover:text-[#1A1A1A]"
+							>
+								Close
+							</button>
+						</div>
+						<div className="mt-6 space-y-3 border-y border-black/[0.06] py-4 text-sm text-[#1A1A1A]/80">
+							<div className="flex justify-between gap-3">
+								<span>Check in</span>
+								<span className="font-medium text-[#1A1A1A]">{formatStay(stayRange.from)}</span>
+							</div>
+							<div className="flex justify-between gap-3">
+								<span>Check out</span>
+								<span className="font-medium text-[#1A1A1A]">{formatStay(stayRange.to)}</span>
+							</div>
+							<div className="flex justify-between gap-3">
+								<span>Guests</span>
+								<span className="font-medium text-[#1A1A1A]">{guestCount}</span>
+							</div>
+							<div className="flex justify-between gap-3 border-t border-black/[0.06] pt-3">
+								<span>Total</span>
+								<span className="font-semibold text-[#1A1A1A]">
+									{availableForCheckout && totalPrice !== null ? `$${totalPrice}` : 'Calculated at checkout'}
+								</span>
+							</div>
+						</div>
+						<button
+							type="button"
+							onClick={() => setConfirmModalOpen(false)}
+							className="mt-6 w-full rounded-xl bg-[#944528] py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-[#b35c3d]"
+						>
+							Confirm and pay
+						</button>
+					</div>
+				</div>
+			) : null}
+			<PhotoGalleryLightbox
+				images={galleryImages}
+				open={galleryOpen}
+				initialIndex={galleryIndex}
+				onClose={() => setGalleryOpen(false)}
+			/>
 		</div>
 	);
 }

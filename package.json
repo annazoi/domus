@@ -26,6 +26,7 @@
 		"@types/luxon": "^3.7.1",
 		"axios": "^1.15.0",
 		"date-fns": "^4.1.0",
+		"embla-carousel-react": "^8.6.0",
 		"framer-motion": "^12.38.0",
 		"lucide-react": "^1.8.0",
 		"luxon": "^3.7.2",

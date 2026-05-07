@@ -15,6 +15,7 @@ export const basicInfoFormSchema = z.object({
 export const descriptionFormSchema = z.object({
 	description: z.string(),
 	short_description: z.string().optional(),
+	location_access: z.string().optional(),
 });
 
 export const houseRulesFormSchema = z.object({

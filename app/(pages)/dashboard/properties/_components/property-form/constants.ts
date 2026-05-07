@@ -6,6 +6,7 @@ export const PROPERTY_FORM_DEFAULT_VALUES: UpsertPropertyInput = {
 	title: '',
 	short_description: '',
 	description: '',
+	location_access: '',
 	slug: '',
 	check_in_time: '15:00',
 	check_out_time: '11:00',
