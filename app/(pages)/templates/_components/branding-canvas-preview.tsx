@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ChevronDown, MapPin, Menu, Star } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui';
 import { ApiRoutes } from '@/config/api/routes';
 import { BrandingPreviewMap } from '@/components/google-maps';
@@ -76,11 +77,11 @@ export function CanvasPreview({
 	const [availabilityMsg, setAvailabilityMsg] = useState<string | null>(null);
 	const [availableForCheckout, setAvailableForCheckout] = useState(false);
 	const [totalPrice, setTotalPrice] = useState<number | null>(null);
-	const [confirmModalOpen, setConfirmModalOpen] = useState(false);
 	const [allowedDateKeys, setAllowedDateKeys] = useState<Set<string>>(new Set());
 	const todayStart = useMemo(() => startOfToday(), []);
 	const propertyRef = useMemo(() => data.footer.tagline.replace(/^\//, '').trim(), [data.footer.tagline]);
 	const checkAvailabilityMutation = useCheckAvailability();
+	const router = useRouter();
 	const hostRating = data.host.rating.trim() || (data.booking.rating.trim() ? `${data.booking.rating} rating` : 'Top rated host');
 	const hostBio = data.host.bio.trim() || 'Friendly, responsive host with a focus on thoughtful local recommendations.';
 
@@ -189,7 +190,18 @@ export function CanvasPreview({
 	const handleReserveClick = async () => {
 		if (!stayRange?.from || !stayRange?.to) return;
 		const result = await checkAvailabilityForDates(stayRange.from, stayRange.to);
-		if (result?.available) setConfirmModalOpen(true);
+		if (!result?.available) return;
+
+		const check_in = toDateParam(stayRange.from);
+		const check_out = toDateParam(stayRange.to);
+		const qs = new URLSearchParams({
+			property_id: propertyRef,
+			check_in,
+			check_out,
+			guests: String(guestCount),
+			total_price: String(result.total ?? 0),
+		});
+		router.push(`/confirm-and-pay?${qs.toString()}`);
 	};
 
 	return (
@@ -355,7 +367,7 @@ export function CanvasPreview({
 											) : stayRange?.from && stayRange?.to && availabilityMsg ? (
 												availableForCheckout && totalPrice !== null ? (
 													<>
-														Available · Total{' '}
+														Total{' '}
 														<span className="text-[14px] font-semibold tracking-normal">${totalPrice}</span>
 													</>
 												) : (
@@ -602,52 +614,6 @@ export function CanvasPreview({
 					<p>{data.footer.copyright}</p>
 				</div>
 			</footer>
-			{confirmModalOpen && stayRange?.from && stayRange?.to ? (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
-					<div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-						<div className="flex items-start justify-between gap-4">
-							<div>
-								<p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#1A1A1A]/45">Booking</p>
-								<h2 className="mt-2 font-[family-name:var(--font-serif)] text-2xl text-[#1A1A1A]">Confirm and pay</h2>
-							</div>
-							<button
-								type="button"
-								onClick={() => setConfirmModalOpen(false)}
-								className="rounded-lg border border-black/10 px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-[#1A1A1A]/70 transition hover:border-black/20 hover:text-[#1A1A1A]"
-							>
-								Close
-							</button>
-						</div>
-						<div className="mt-6 space-y-3 border-y border-black/[0.06] py-4 text-sm text-[#1A1A1A]/80">
-							<div className="flex justify-between gap-3">
-								<span>Check in</span>
-								<span className="font-medium text-[#1A1A1A]">{formatStay(stayRange.from)}</span>
-							</div>
-							<div className="flex justify-between gap-3">
-								<span>Check out</span>
-								<span className="font-medium text-[#1A1A1A]">{formatStay(stayRange.to)}</span>
-							</div>
-							<div className="flex justify-between gap-3">
-								<span>Guests</span>
-								<span className="font-medium text-[#1A1A1A]">{guestCount}</span>
-							</div>
-							<div className="flex justify-between gap-3 border-t border-black/[0.06] pt-3">
-								<span>Total</span>
-								<span className="font-semibold text-[#1A1A1A]">
-									{availableForCheckout && totalPrice !== null ? `$${totalPrice}` : 'Calculated at checkout'}
-								</span>
-							</div>
-						</div>
-						<button
-							type="button"
-							onClick={() => setConfirmModalOpen(false)}
-							className="cursor-pointer mt-6 w-full rounded-xl bg-[#5c6149] py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-[#4d523e]"
-						>
-							Confirm and pay
-						</button>
-					</div>
-				</div>
-			) : null}
 			<PhotoGalleryLightbox
 				images={galleryImages}
 				open={galleryOpen}

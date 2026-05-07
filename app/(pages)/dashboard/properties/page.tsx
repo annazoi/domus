@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Button, buttonClassName, ConfirmationDialog } from '@/components/ui';
+import { Button, buttonClassName, ConfirmationDialog, Skeleton } from '@/components/ui';
 import { useDeleteProperty, useProperties } from '@/features/property/hooks/use-property';
 
 export default function PropertiesPage() {
@@ -23,7 +23,24 @@ export default function PropertiesPage() {
 				</Link>
 			</div>
 
-			{loading ? <p className="text-sm text-[#1A1A1A]/60">Loading properties...</p> : null}
+			{loading ? (
+				<div className="space-y-4">
+					{Array.from({ length: 3 }).map((_, index) => (
+						<div key={index} className="grid grid-cols-1 gap-4 rounded-2xl bg-white/80 p-4 md:grid-cols-[140px_1fr_auto]">
+							<Skeleton className="h-24 w-full rounded-xl bg-black/10" />
+							<div className="space-y-2 py-1">
+								<Skeleton className="h-5 w-52 bg-black/10" />
+								<Skeleton className="h-4 w-28 bg-black/10" />
+							</div>
+							<div className="flex items-center gap-2 md:justify-end">
+								<Skeleton className="h-7 w-20 rounded-full bg-black/10" />
+								<Skeleton className="h-4 w-10 bg-black/10" />
+								<Skeleton className="h-4 w-10 bg-black/10" />
+							</div>
+						</div>
+					))}
+				</div>
+			) : null}
 			{!loading && properties.length === 0 ? (
 				<div className="rounded-2xl bg-white/80 p-8 text-center">
 					<p className="font-serif text-2xl">No properties yet</p>

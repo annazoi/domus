@@ -7,3 +7,4 @@ export { Checkbox, type CheckboxProps } from './checkbox';
 export { MinimalRichText } from './minimal-rich-text';
 export { ConfirmationDialog } from './confirmation-dialog';
 export { ToastProvider, useToast } from './toast';
+export { Skeleton } from './skeleton';

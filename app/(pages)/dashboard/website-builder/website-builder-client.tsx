@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { Monitor, Smartphone } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Checkbox, Select } from '@/components/ui';
+import { Button, Checkbox, Select, Skeleton } from '@/components/ui';
 import { useProperties } from '@/features/property/hooks/use-property';
 import type { Property } from '@/features/property/interfaces/property.interface';
 
@@ -78,7 +78,7 @@ export function WebsiteBuilderClient() {
 				<div>
 					<p className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-[#1A1A1A]/45">Current page</p>
 					{isLoading ? (
-						<p className="mt-2 text-sm text-[#1A1A1A]/45">Loading…</p>
+						<Skeleton className="mt-2 h-10 w-full bg-black/10" />
 					) : (
 						<Select
 							variant="compact"
@@ -154,7 +154,11 @@ export function WebsiteBuilderClient() {
 							Add a property to preview how it will look on your site.
 						</p>
 					) : isLoading ? (
-						<p className="text-sm text-[#1A1A1A]/45">Loading preview…</p>
+						<div className="w-full max-w-3xl space-y-4">
+							<Skeleton className="h-10 w-40 bg-black/10" />
+							<Skeleton className="h-6 w-80 max-w-full bg-black/10" />
+							<Skeleton className="h-56 w-full rounded-xl bg-black/10" />
+						</div>
 					) : current ? (
 						<div
 							className="relative w-full transition-[max-width] duration-300 ease-out"

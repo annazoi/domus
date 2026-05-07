@@ -50,23 +50,39 @@ model User {
   avatar_id    String? @unique
   banner_id    String? @unique
   is_verified  Boolean @default(false)
-  is_host     Boolean  @default(true)
+  is_host     Boolean  @default(false)
   is_archived Boolean  @default(true)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  avatar   Document? @relation("UserAvatar", fields: [avatar_id], references: [id])
-  banner   Document? @relation("UserBanner", fields: [banner_id], references: [id])
-  properties              Property[]
-  property_images         PropertyImage[]
-  property_availability   PropertyAvailability[]
-  bookings_as_guest       Booking[]              @relation("GuestBookings")
-  documents               Document[] @relation("UserDocuments")
-
-  @@map("users")
-  @@index([email])
-  @@index([id])
+  customer Customer[]
 }
+
+  model Customer {
+    id String @id @default(uuid())
+    host_id String @unique
+    customer_id String @unique
+    first_name String
+    last_name String
+    email String @unique
+    phone String?
+    vat_number String?
+    notes String?
+    address String?
+    city String?
+    state String?
+    zip String?
+    country String?
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+
+    user User @relation(fields: [host_id], references: [id])
+    @@map("customers")
+    @@index([email])
+    @@index([id])
+  }
+
+
 
 model Property {
   id            String   @id @default(uuid())

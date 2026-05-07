@@ -48,7 +48,10 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		resolver: zodResolver(pricingFormSchema),
 		defaultValues: {},
 	});
+	const today = useMemo(() => DateTime.utc().startOf('day'), []);
+	const currentMonthStart = useMemo(() => today.startOf('month'), [today]);
 	const [viewMonth, setViewMonth] = useState(() => DateTime.utc().startOf('month'));
+	const isAtCurrentMonth = viewMonth.toMillis() <= currentMonthStart.toMillis();
 	const [modalOpen, setModalOpen] = useState(false);
 	const [ranges, setRanges] = useState<RangeEntry[]>([{ id: 'range-1' }]);
 	const [activeRangeId, setActiveRangeId] = useState<string | null>(null);
@@ -339,6 +342,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 							type="button"
 							variant="iconSquare"
 							onClick={() => setViewMonth((month) => month.minus({ months: 1 }))}
+							disabled={isAtCurrentMonth}
 							aria-label="Previous month"
 						>
 							<ChevronLeft className="h-5 w-5" />
@@ -371,6 +375,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 									day={day}
 									selected={singleDayDate === toApiDate(day)}
 									availability={availabilityMap.get(toApiDate(day))}
+									isPast={day < today}
 									onClick={() => {
 										const iso = toApiDate(day);
 										const existing = availabilityMap.get(iso);
@@ -547,7 +552,8 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 												mode="range"
 												min={1}
 												excludeDisabled
-												disabled={disabledDates}
+												disabled={[...disabledDates, { before: today.toJSDate() }]}
+												startMonth={today.toJSDate()}
 												selected={rangeItem.value}
 												onSelect={(nextRange) =>
 													setRanges((previous) =>
@@ -667,30 +673,34 @@ type DayCellProps = {
 	day: DateTime;
 	selected: boolean;
 	availability: { is_available: boolean; price: number; reason: AvailabilityStatusType | null } | undefined;
+	isPast: boolean;
 	onClick: () => void;
 };
 
-function DayCell({ day, selected, availability, onClick }: DayCellProps) {
-	const stateClass = !availability
-		? 'border-black/5 bg-white text-[#1A1A1A]/70 hover:border-[#6B705C]/30'
-		: availability.is_available
-			? 'border-emerald-200 bg-emerald-50 text-emerald-900'
-			: 'border-red-200 bg-red-50 text-red-800';
+function DayCell({ day, selected, availability, isPast, onClick }: DayCellProps) {
+	const stateClass = isPast
+		? 'cursor-not-allowed border-black/5 bg-black/[0.03] text-[#1A1A1A]/30'
+		: !availability
+			? 'border-black/5 bg-white text-[#1A1A1A]/70 hover:border-[#6B705C]/30'
+			: availability.is_available
+				? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+				: 'border-red-200 bg-red-50 text-red-800';
 
 	return (
 		<Button
 			type="button"
 			variant="custom"
 			onClick={onClick}
+			disabled={isPast}
 			className={cn(
 				'h-16 rounded-xl border text-sm transition-all duration-200 ease-out active:scale-[0.98]',
 				stateClass,
-				selected ? 'ring-2 ring-[#6B705C]/40' : '',
+				selected && !isPast ? 'ring-2 ring-[#6B705C]/40' : '',
 			)}
 		>
 			<div className="flex w-full flex-col items-center gap-1">
 				<span>{day.day}</span>
-				{availability?.is_available ? (
+				{isPast ? null : availability?.is_available ? (
 					<span className="text-[11px] font-medium">${availability.price.toFixed(0)}</span>
 				) : availability ? (
 					<span className="text-[10px] uppercase tracking-wide">{availability.reason ?? 'UNAVAILABLE'}</span>

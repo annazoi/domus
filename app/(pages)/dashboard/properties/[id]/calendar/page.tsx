@@ -7,14 +7,27 @@ import { Button, Input, cn } from '@/components/ui';
 import { AvailabilityStatus, type AvailabilityDay } from '@/features/property-availability/interfaces/property-availability.interface';
 import { listAvailability, upsertAvailability } from '@/features/property-availability/services/property-availability.services';
 
-const toDate = (day: number) => `2026-04-${String(day).padStart(2, '0')}`;
-
 export default function PropertyCalendarPage() {
 	const params = useParams<{ id: string }>();
 	const [days, setDays] = useState<AvailabilityDay[]>([]);
 	const [selectedDate, setSelectedDate] = useState<string | null>(null);
 	const [customPrice, setCustomPrice] = useState('');
 	const [message, setMessage] = useState('');
+
+	const today = useMemo(() => DateTime.now().startOf('day'), []);
+	const monthStart = useMemo(() => today.startOf('month'), [today]);
+	const todayISO = today.toISODate() ?? '';
+	const calendarDays = useMemo(() => {
+		const totalDays = monthStart.daysInMonth ?? 30;
+		return Array.from({ length: totalDays }, (_, index) => {
+			const date = monthStart.plus({ days: index });
+			return {
+				day: index + 1,
+				date: date.toISODate() ?? '',
+				isPast: date < today,
+			};
+		});
+	}, [monthStart, today]);
 
 	useEffect(() => {
 		void (async () => {
@@ -27,6 +40,10 @@ export default function PropertyCalendarPage() {
 
 	const saveDay = async (isAvailable: boolean) => {
 		if (!selectedDate) return;
+		if (selectedDate < todayISO) {
+			setMessage('Cannot set availability for past dates.');
+			return;
+		}
 		try {
 			const result = await upsertAvailability(
 				params.id,
@@ -64,8 +81,7 @@ export default function PropertyCalendarPage() {
 						))}
 					</div>
 					<div className="grid grid-cols-7 gap-2">
-						{Array.from({ length: 30 }, (_, index) => index + 1).map((day) => {
-							const date = toDate(day);
+						{calendarDays.map(({ day, date, isPast }) => {
 							const item = dayMap.get(date);
 							const unavailable = item?.is_available === false;
 							return (
@@ -73,6 +89,7 @@ export default function PropertyCalendarPage() {
 									key={date}
 									type="button"
 									variant="custom"
+									disabled={isPast}
 									onClick={() => {
 										setSelectedDate(date);
 										setCustomPrice(item?.price ? String(item.price) : '');
@@ -80,11 +97,13 @@ export default function PropertyCalendarPage() {
 									}}
 									className={cn(
 										'h-14 rounded-xl border text-sm',
-										selectedDate === date
-											? 'border-[#6B705C] bg-[#6B705C]/10'
-											: unavailable
-												? 'border-red-200 bg-red-50 text-red-700'
-												: 'border-black/10 bg-white hover:border-[#6B705C]/40',
+										isPast
+											? 'cursor-not-allowed border-black/5 bg-black/[0.03] text-[#1A1A1A]/30'
+											: selectedDate === date
+												? 'border-[#6B705C] bg-[#6B705C]/10'
+												: unavailable
+													? 'border-red-200 bg-red-50 text-red-700'
+													: 'border-black/10 bg-white hover:border-[#6B705C]/40',
 									)}
 								>
 									{day}

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui';
+import { Button, Skeleton } from '@/components/ui';
 import { useBookings } from '@/features/bookings/hooks/use-bookings';
 
 export default function BookingsPage() {
@@ -13,7 +13,24 @@ export default function BookingsPage() {
 				<h1 className="mt-2 font-serif text-4xl tracking-tight">Reservation flow</h1>
 			</div>
 
-			{loading ? <p className="text-sm text-[#1A1A1A]/60">Loading bookings...</p> : null}
+			{loading ? (
+				<div className="overflow-hidden rounded-2xl bg-white/80">
+					<div className="hidden grid-cols-4 gap-4 border-b border-black/5 px-5 py-3 md:grid">
+						<Skeleton className="h-3 w-14 bg-black/10" />
+						<Skeleton className="h-3 w-16 bg-black/10" />
+						<Skeleton className="h-3 w-12 bg-black/10" />
+						<Skeleton className="h-3 w-12 bg-black/10" />
+					</div>
+					{Array.from({ length: 4 }).map((_, index) => (
+						<div key={index} className="grid grid-cols-1 gap-2 border-b border-black/5 px-5 py-4 md:grid-cols-4 md:gap-4">
+							<Skeleton className="h-4 w-28 bg-black/10" />
+							<Skeleton className="h-4 w-32 bg-black/10" />
+							<Skeleton className="h-4 w-36 bg-black/10" />
+							<Skeleton className="h-4 w-16 bg-black/10" />
+						</div>
+					))}
+				</div>
+			) : null}
 			{!loading && bookings.length === 0 ? (
 				<div className="rounded-2xl bg-white/80 p-8 text-center">
 					<p className="font-serif text-2xl">No bookings yet</p>
