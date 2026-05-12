@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Input } from '@/components/ui';
+import { useCreateBooking } from '@/features/bookings/hooks/use-bookings';
 
 function formatDate(value: string) {
 	if (!value) return '-';
@@ -17,14 +18,50 @@ export default function ConfirmAndPayPage() {
 
 	const booking = useMemo(
 		() => ({
-			property_id: params.get('property_id') ?? '-',
+			property_id: params.get('property_id') ?? '',
 			check_in: params.get('check_in') ?? '',
 			check_out: params.get('check_out') ?? '',
 			guests: Number(params.get('guests') ?? 1),
 			total_price: Number(params.get('total_price') ?? 0),
+			first_name: params.get('first_name') ?? '',
+			last_name: params.get('last_name') ?? '',
+			email: params.get('email') ?? '',
+			phone: params.get('phone') ?? '',
 		}),
 		[params],
 	);
+
+	const [error, setError] = useState<string | null>(null);
+	const { mutateAsync: createBooking, isPending } = useCreateBooking();
+
+	const handlePay = async () => {
+		if (!booking.property_id || !booking.check_in || !booking.check_out) {
+			setError('Booking details are incomplete.');
+			return;
+		}
+		if (!booking.first_name || !booking.last_name || !booking.email) {
+			setError('Guest details are missing. Please go back and fill them in.');
+			return;
+		}
+		setError(null);
+		try {
+			const result = await createBooking({
+				property_id: booking.property_id,
+				check_in: booking.check_in,
+				check_out: booking.check_out,
+				guests: booking.guests,
+				guest: {
+					first_name: booking.first_name,
+					last_name: booking.last_name,
+					email: booking.email,
+					phone: booking.phone || undefined,
+				},
+			});
+			router.push(`/bookings/${result.booking_id}`);
+		} catch (err) {
+			setError(err instanceof Error ? err.message : 'Could not complete booking.');
+		}
+	};
 
 	return (
 		<div className="min-h-screen bg-[#f7f5f2] px-4 py-8 sm:px-8">
@@ -43,8 +80,16 @@ export default function ConfirmAndPayPage() {
 						<Input variant="compact" placeholder="Country" />
 					</div>
 
-					<Button type="button" variant="primarySm" className="mt-8 w-full">
-						Pay ${booking.total_price}
+					{error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+
+					<Button
+						type="button"
+						variant="primarySm"
+						className="mt-8 w-full"
+						disabled={isPending}
+						onClick={() => void handlePay()}
+					>
+						{isPending ? 'Processing...' : `Pay $${booking.total_price}`}
 					</Button>
 				</section>
 
@@ -53,7 +98,7 @@ export default function ConfirmAndPayPage() {
 					<div className="mt-5 space-y-3 text-sm text-[#1A1A1A]/75">
 						<div className="flex justify-between gap-2">
 							<span>Property</span>
-							<span className="font-medium text-[#1A1A1A]">{booking.property_id}</span>
+							<span className="font-medium text-[#1A1A1A]">{booking.property_id || '-'}</span>
 						</div>
 						<div className="flex justify-between gap-2">
 							<span>Check in</span>
@@ -75,7 +120,13 @@ export default function ConfirmAndPayPage() {
 						</div>
 					</div>
 
-					<Button type="button" variant="cardRow" className="mt-6 w-full justify-center" onClick={() => router.back()}>
+					<Button
+						type="button"
+						variant="cardRow"
+						className="mt-6 w-full justify-center"
+						disabled={isPending}
+						onClick={() => router.back()}
+					>
 						Back
 					</Button>
 				</aside>

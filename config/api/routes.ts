@@ -39,6 +39,7 @@ export const ApiRoutes = {
 	},
 	bookings: {
 		prefix: '/bookings',
+		create: '/booking',
 		listMine: '/bookings?host_id=me',
 	},
 	property_images: {

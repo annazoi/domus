@@ -1,5 +1,4 @@
 import { BookingStatus, Prisma, Reason } from '@prisma/client';
-import { getUserIdFromRequest } from '@/app/api/_utils/auth';
 import { checkAvailabilityInternal } from '@/app/api/booking/check-availability.service';
 import { eachDayInRange, toUtcDay } from '@/features/property-availability/utils/date';
 import { prisma } from '@/lib/prisma';
@@ -13,14 +12,17 @@ interface CreateBookingBody {
 	check_in?: string;
 	check_out?: string;
 	guests?: number;
+	guest?: {
+		first_name?: string;
+		last_name?: string;
+		email?: string;
+		phone?: string;
+	};
 }
 
-export async function POST(request: Request) {
-	const guestId = getUserIdFromRequest(request);
-	if (!guestId) {
-		return Response.json({ message: 'Unauthorized' }, { status: 401 });
-	}
+const isValidEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 
+export async function POST(request: Request) {
 	let body: CreateBookingBody;
 	try {
 		body = (await request.json()) as CreateBookingBody;
@@ -33,11 +35,22 @@ export async function POST(request: Request) {
 	const checkOutDay = body.check_out ? toUtcDay(body.check_out) : null;
 	const guestsRaw = body.guests;
 
+	const first_name = body.guest?.first_name?.trim() ?? '';
+	const last_name = body.guest?.last_name?.trim() ?? '';
+	const email = body.guest?.email?.trim().toLowerCase() ?? '';
+	const phone = body.guest?.phone?.trim() || null;
+
 	if (!property_id || !checkInDay || !checkOutDay || guestsRaw === undefined || guestsRaw === null) {
 		return Response.json({ message: 'property_id, check_in and check_out are required.' }, { status: 400 });
 	}
 	if (!checkInDay.isValid || !checkOutDay.isValid || typeof guestsRaw !== 'number' || !Number.isInteger(guestsRaw) || guestsRaw <= 0) {
 		return Response.json({ message: 'Invalid check_in, check_out or guests.' }, { status: 400 });
+	}
+	if (!first_name || !last_name) {
+		return Response.json({ message: 'guest.first_name and guest.last_name are required.' }, { status: 400 });
+	}
+	if (!email || !isValidEmail(email)) {
+		return Response.json({ message: 'A valid guest.email is required.' }, { status: 400 });
 	}
 
 	const guests = guestsRaw;
@@ -82,10 +95,45 @@ export async function POST(request: Request) {
 					throw new BookingUnavailableError();
 				}
 
+				let user = await tx.user.findUnique({
+					where: { email },
+					select: { id: true },
+				});
+				if (!user) {
+					user = await tx.user.create({
+						data: {
+							first_name,
+							last_name,
+							email,
+							password: '',
+							phone,
+						},
+						select: { id: true },
+					});
+				}
+
+				let customer = await tx.customer.findFirst({
+					where: { customer_id: user.id, host_id: verified.hostUserId },
+				});
+				if (!customer) {
+					customer = await tx.customer.create({
+						data: {
+							host_id: verified.hostUserId,
+							customer_id: user.id,
+							first_name,
+							last_name,
+							email,
+							phone,
+						},
+					});
+				}
+
 				const created = await tx.booking.create({
 					data: {
 						property_id: verified.propertyId,
-						guest_id: guestId,
+						user_id: verified.hostUserId,
+						guest_id: user.id,
+						customer_id: customer.id,
 						check_in,
 						check_out,
 						guests,
@@ -139,6 +187,9 @@ export async function POST(request: Request) {
 		}
 		if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2034') {
 			return Response.json({ error: 'Property not available' }, { status: 400 });
+		}
+		if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+			return Response.json({ error: 'Could not save booking. Conflict on customer record.' }, { status: 409 });
 		}
 		throw e;
 	}

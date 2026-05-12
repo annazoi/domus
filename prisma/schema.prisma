@@ -55,7 +55,19 @@ model User {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  customer Customer[]
+  customer              Customer[]
+  avatar                Document?              @relation("UserAvatar", fields: [avatar_id], references: [id])
+  banner                Document?              @relation("UserBanner", fields: [banner_id], references: [id])
+  properties            Property[]
+  property_images       PropertyImage[]
+  property_availability PropertyAvailability[]
+  bookings_as_guest     Booking[]              @relation("GuestBookings")
+  bookings_as_host      Booking[]              @relation("HostBookings")
+  documents             Document[]             @relation("UserDocuments")
+
+  @@map("users")
+  @@index([email])
+  @@index([id])
 }
 
   model Customer {
@@ -76,7 +88,9 @@ model User {
     created_at DateTime @default(now())
     updated_at DateTime @updatedAt
 
-    user User @relation(fields: [host_id], references: [id])
+    user     User      @relation(fields: [host_id], references: [id])
+    bookings Booking[]
+
     @@map("customers")
     @@index([email])
     @@index([id])
@@ -122,8 +136,11 @@ model Property {
 
 model Booking {
   id           String         @id @default(uuid())
+  user_id      String
   property_id  String
   guest_id     String
+  customer_id  String
+
   check_in     DateTime
   check_out    DateTime
   guests       Int
@@ -134,6 +151,9 @@ model Booking {
 
   property Property @relation(fields: [property_id], references: [id], onDelete: Cascade)
   guest    User     @relation("GuestBookings", fields: [guest_id], references: [id])
+  customer Customer @relation(fields: [customer_id], references: [id])
+  host     User     @relation("HostBookings", fields: [user_id], references: [id])
+
 
   @@index([property_id])
   @@index([guest_id])

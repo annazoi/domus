@@ -192,16 +192,14 @@ export function CanvasPreview({
 		const result = await checkAvailabilityForDates(stayRange.from, stayRange.to);
 		if (!result?.available) return;
 
-		const check_in = toDateParam(stayRange.from);
-		const check_out = toDateParam(stayRange.to);
 		const qs = new URLSearchParams({
 			property_id: propertyRef,
-			check_in,
-			check_out,
+			check_in: toDateParam(stayRange.from),
+			check_out: toDateParam(stayRange.to),
 			guests: String(guestCount),
 			total_price: String(result.total ?? 0),
 		});
-		router.push(`/confirm-and-pay?${qs.toString()}`);
+		router.push(`/guest-details?${qs.toString()}`);
 	};
 
 	return (
