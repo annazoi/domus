@@ -70,31 +70,33 @@ model User {
   @@index([id])
 }
 
-  model Customer {
-    id String @id @default(uuid())
-    host_id String @unique
-    customer_id String @unique
-    first_name String
-    last_name String
-    email String @unique
-    phone String?
-    vat_number String?
-    notes String?
-    address String?
-    city String?
-    state String?
-    zip String?
-    country String?
-    created_at DateTime @default(now())
-    updated_at DateTime @updatedAt
+model Customer {
+  id           String   @id @default(uuid())
+  host_id      String
+  customer_id  String
+  first_name   String
+  last_name    String
+  email        String
+  phone        String?
+  vat_number   String?
+  notes        String?
+  address      String?
+  city         String?
+  state        String?
+  zip          String?
+  country      String?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 
-    user     User      @relation(fields: [host_id], references: [id])
-    bookings Booking[]
+  user     User      @relation(fields: [host_id], references: [id])
+  bookings Booking[]
 
-    @@map("customers")
-    @@index([email])
-    @@index([id])
-  }
+  @@unique([host_id, customer_id])
+  @@index([host_id])
+  @@index([customer_id])
+  @@index([email])
+  @@map("customers")
+}
 
 
 

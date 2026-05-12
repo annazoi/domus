@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
+import { Fraunces, Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import "./page.css";
 import { Providers } from "./providers";
 
 const playfair = Playfair_Display({
   variable: "--font-serif",
   subsets: ["latin"],
+});
+
+const fraunces = Fraunces({
+  variable: "--font-display",
+  subsets: ["latin"],
+  axes: ["SOFT", "WONK", "opsz"],
 });
 
 const inter = Inter({
@@ -26,7 +33,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfair.variable} ${inter.variable} h-full antialiased`}
+      className={`${playfair.variable} ${fraunces.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="font-sans text-stone-900 bg-stone-50 selection:bg-stone-200">
         <Providers>{children}</Providers>

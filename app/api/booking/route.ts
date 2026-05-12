@@ -1,5 +1,6 @@
 import { BookingStatus, Prisma, Reason } from '@prisma/client';
 import { checkAvailabilityInternal } from '@/app/api/booking/check-availability.service';
+import { ensureGuestUserAndCustomerForHost } from '@/app/api/booking/ensure-guest-and-customer';
 import { eachDayInRange, toUtcDay } from '@/features/property-availability/utils/date';
 import { prisma } from '@/lib/prisma';
 
@@ -95,45 +96,20 @@ export async function POST(request: Request) {
 					throw new BookingUnavailableError();
 				}
 
-				let user = await tx.user.findUnique({
-					where: { email },
-					select: { id: true },
+				const { guestUserId, customerId } = await ensureGuestUserAndCustomerForHost(tx, {
+					email,
+					first_name,
+					last_name,
+					phone,
+					hostUserId: verified.hostUserId,
 				});
-				if (!user) {
-					user = await tx.user.create({
-						data: {
-							first_name,
-							last_name,
-							email,
-							password: '',
-							phone,
-						},
-						select: { id: true },
-					});
-				}
-
-				let customer = await tx.customer.findFirst({
-					where: { customer_id: user.id, host_id: verified.hostUserId },
-				});
-				if (!customer) {
-					customer = await tx.customer.create({
-						data: {
-							host_id: verified.hostUserId,
-							customer_id: user.id,
-							first_name,
-							last_name,
-							email,
-							phone,
-						},
-					});
-				}
 
 				const created = await tx.booking.create({
 					data: {
 						property_id: verified.propertyId,
 						user_id: verified.hostUserId,
-						guest_id: user.id,
-						customer_id: customer.id,
+						guest_id: guestUserId,
+						customer_id: customerId,
 						check_in,
 						check_out,
 						guests,

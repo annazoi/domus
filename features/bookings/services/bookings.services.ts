@@ -4,9 +4,6 @@ import type { Booking } from '../interfaces/booking.interface';
 
 export type CreateBookingPayload = {
 	property_id: string;
-	customer_id: string;
-	guest_id: string;
-	user_id: string;
 	check_in: string;
 	check_out: string;
 	guests: number;
