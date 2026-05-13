@@ -1,8 +1,10 @@
 'use client';
 
+import logo from '@/public/images/logo.png'
+
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ApiRoutes } from '@/config/api/routes';
 
 const marqueePhrases = [
@@ -36,6 +38,7 @@ function ArrowIcon() {
 
 export default function Home() {
 	const rootRef = useRef<HTMLDivElement>(null);
+	const [isNavScrolled, setIsNavScrolled] = useState(false);
 
 	useEffect(() => {
 		const root = rootRef.current;
@@ -56,13 +59,25 @@ export default function Home() {
 		return () => io.disconnect();
 	}, []);
 
+	useEffect(() => {
+		const updateNav = () => setIsNavScrolled(window.scrollY > 12);
+
+		updateNav();
+		window.addEventListener('scroll', updateNav, { passive: true });
+
+		return () => window.removeEventListener('scroll', updateNav);
+	}, []);
+
 	return (
 		<div ref={rootRef} className="landing-root">
-			<header className="nav">
+			<header className={`nav ${isNavScrolled ? 'nav-scrolled' : ''}`}>
 				<div className="nav-inner">
+					<div className='flex gap-2 items-center'>
+					<Image src={logo} alt="Domus" width={60} height={60} />
 					<Link href="#top" className="brand">
 						Domus<span className="clay">.</span>
 					</Link>
+					</div>
 					<nav className="nav-links">
 						<a href="#platform">Platform</a>
 						<a href="#showcase">Showcase</a>
@@ -78,13 +93,13 @@ export default function Home() {
 				<section className="hero">
 					<div className="hero-bg" />
 					<div className="hero-content">
-						<span className="eyebrow">White-label rental platform</span>
+						<span className="eyebrow">Rental platform</span>
 						<h1>
 							Create your own
 							<br />
-							<span className="italic">rental</span> website.
+							<span>rental</span> website.
 						</h1>
-						<p>A refined white-label platform for those who want to build a brand, not just list a property.</p>
+						<p>For those who want to build a brand, not just list a property.</p>
 						<a href="#start" className="btn-primary">
 							Start building
 							<ArrowIcon />
@@ -92,18 +107,18 @@ export default function Home() {
 					</div>
 				</section>
 
-				<div className="marquee-wrap">
+				{/* <div className="marquee-wrap">
 					<div className="marquee">
 						<MarqueeItems id="a" />
 						<MarqueeItems id="b" />
 					</div>
-				</div>
+				</div> */}
 
 				<section id="platform">
 					<div className="container">
 						<h2 className="section-title reveal">
 							Built for those who refuse to be{' '}
-							<span className="italic clay">another listing.</span>
+							<span className="clay">another listing.</span>
 						</h2>
 						<div className="pillars">
 							<div className="pillar reveal">
@@ -146,7 +161,7 @@ export default function Home() {
 							<div>
 								<span className="eyebrow">Design</span>
 								<h3>
-									Elevated <span className="italic">property</span> pages.
+									Elevated <span>property</span> pages.
 								</h3>
 								<p>
 									Present your spaces with the architectural reverence they deserve. Large imagery, elegant
@@ -170,7 +185,7 @@ export default function Home() {
 							<div>
 								<span className="eyebrow">Checkout</span>
 								<h3>
-									A <span className="italic">seamless</span> booking experience.
+									A <span>seamless</span> booking experience.
 								</h3>
 								<p>
 									No clutter, no distractions. A frictionless checkout flow that feels premium and builds trust
@@ -187,7 +202,7 @@ export default function Home() {
 				<section className="steps-section">
 					<div className="container">
 						<h2 className="section-title reveal">
-							Three steps to <span className="italic clay">independence.</span>
+							Three steps to <span className="clay">independence.</span>
 						</h2>
 						<div className="steps">
 							<div className="step reveal">
@@ -234,7 +249,7 @@ export default function Home() {
 						<div className="pricing-head reveal">
 							<span className="eyebrow">Pricing</span>
 							<h2>
-								Clear, <span className="italic">elegant</span> pricing.
+								Clear, <span>elegant</span> pricing.
 							</h2>
 							<p className="muted" style={{ marginTop: '1.5rem' }}>
 								No hidden fees, no complicated tiers.
@@ -281,7 +296,7 @@ export default function Home() {
 				<section id="start" className="cta">
 					<div className="container">
 						<h2 className="reveal">
-							Start building your <span className="italic clay">rental brand</span> today.
+							Start building your <span className="clay">rental brand</span> today.
 						</h2>
 						<Link href={ApiRoutes.auth.login} className="btn-primary" style={{ marginTop: '3rem' }}>
 							Begin your domain
@@ -294,10 +309,13 @@ export default function Home() {
 
 			<footer>
 				<div className="container footer-inner">
+					<div className='flex gap-2 items-center'>
+                     <Image src={logo} alt="Domus" width={60} height={60}/>
 					<span className="brand">
 						Domus<span className="clay">.</span>
 					</span>
-					<p>© 2026 — A home for your brand</p>
+					</div>
+					<p>© 2026 - A home for your brand</p>
 				</div>
 			</footer>
 		</div>

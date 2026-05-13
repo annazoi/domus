@@ -21,7 +21,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <h2 className="login-quote">
           Own your brand.
           <br />
-          <span className="italic">Control</span> your business.
+          <span>Control</span> your business.
         </h2>
       </aside>
 

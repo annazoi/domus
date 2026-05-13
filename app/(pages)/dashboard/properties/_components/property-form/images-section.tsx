@@ -190,7 +190,7 @@ export function ImagesSection({
 					</header>
 
 					{mode === 'create' && !propertyId ? (
-						<p className="text-sm italic text-[#1A1A1A]/60">
+						<p className="text-sm text-[#1A1A1A]/60">
 							Save the property from Basic info first, then return here to import assets.
 						</p>
 					) : null}

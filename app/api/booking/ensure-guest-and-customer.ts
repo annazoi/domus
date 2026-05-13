@@ -32,13 +32,13 @@ export async function ensureGuestUserAndCustomerForHost(
 	}
 
 	let customer = await tx.customer.findFirst({
-		where: { customer_id: user.id, host_id: hostUserId },
+		where: { guest_user_id: user.id, host_user_id: hostUserId },
 	});
 	if (!customer) {
 		customer = await tx.customer.create({
 			data: {
-				host_id: hostUserId,
-				customer_id: user.id,
+				guest_user_id: user.id,
+				host_user_id: hostUserId,
 				first_name,
 				last_name,
 				email,

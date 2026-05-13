@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 			},
 		});
 
-		if (!user || user.password !== password) {
+		if (!user || user.password === '' || user.password !== password) {
 			return Response.json({ message: 'Invalid credentials. Please try again.' }, { status: 401 });
 		}
 

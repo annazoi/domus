@@ -43,9 +43,7 @@
   font-weight: 300;
 }
 
-.landing-root .italic {
-  font-style: italic;
-}
+
 
 .landing-root .clay {
   color: var(--clay);
@@ -73,7 +71,22 @@
   left: 0;
   right: 0;
   z-index: 50;
-  mix-blend-mode: difference;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition:
+    background-color 240ms ease,
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    backdrop-filter 240ms ease;
+  /* mix-blend-mode: difference; */
+}
+
+.landing-root .nav.nav-scrolled {
+  background: rgba(20, 15, 10, 0.72);
+  border-bottom-color: rgba(245, 235, 220, 0.1);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .landing-root .nav-inner {
@@ -83,11 +96,12 @@
   padding: 1.5rem 2.5rem;
   max-width: 1280px;
   margin: 0 auto;
+  position: relative;
 }
 
 .landing-root .brand {
   font-family: var(--font-display), Georgia, serif;
-  font-size: 1.25rem;
+  font-size: 2rem;
   color: var(--ivory);
 }
 
@@ -96,6 +110,10 @@
   gap: 2.5rem;
   font-size: 0.875rem;
   color: rgba(245, 235, 220, 0.8);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 @media (min-width: 768px) {
@@ -113,13 +131,14 @@
   border-radius: 9999px;
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
-  color: var(--ivory);
   transition: all 0.25s;
+  background: var(--ivory);
+  color: var(--background);
 }
 
 .landing-root .btn-outline:hover {
-  background: var(--ivory);
-  color: var(--background);
+  background: var(--clay);
+  color: var(--ivory);
 }
 
 .landing-root .hero {
@@ -256,11 +275,7 @@
   padding: 8rem 0;
 }
 
-@media (min-width: 768px) {
-  .landing-root section {
-    padding: 12rem 0;
-  }
-}
+
 
 .landing-root .section-title {
   font-family: var(--font-display), Georgia, serif;

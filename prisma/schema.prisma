@@ -55,7 +55,9 @@ model User {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  customer              Customer[]
+
+  guest_customers Customer[] @relation("CustomerGuestUser")
+  host_customers  Customer[] @relation("CustomerHostUser")
   avatar                Document?              @relation("UserAvatar", fields: [avatar_id], references: [id])
   banner                Document?              @relation("UserBanner", fields: [banner_id], references: [id])
   properties            Property[]
@@ -72,8 +74,8 @@ model User {
 
 model Customer {
   id           String   @id @default(uuid())
-  host_id      String
-  customer_id  String
+  guest_user_id String
+  host_user_id      String
   first_name   String
   last_name    String
   email        String
@@ -88,16 +90,16 @@ model Customer {
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
 
-  user     User      @relation(fields: [host_id], references: [id])
+  guest_user User      @relation("CustomerGuestUser", fields: [guest_user_id], references: [id])
+  host       User      @relation("CustomerHostUser", fields: [host_user_id], references: [id], map: "customers_host_id_fkey")
   bookings Booking[]
 
-  @@unique([host_id, customer_id])
-  @@index([host_id])
-  @@index([customer_id])
+  @@unique([guest_user_id, host_user_id])
+  @@index([guest_user_id])
+  @@index([host_user_id], map: "customers_host_id_idx")
   @@index([email])
   @@map("customers")
 }
-
 
 
 model Property {
@@ -138,9 +140,9 @@ model Property {
 
 model Booking {
   id           String         @id @default(uuid())
-  user_id      String
+  host_user_id      String
   property_id  String
-  guest_id     String
+  guest_user_id     String
   customer_id  String
 
   check_in     DateTime
@@ -152,13 +154,13 @@ model Booking {
   updated_at   DateTime       @updatedAt
 
   property Property @relation(fields: [property_id], references: [id], onDelete: Cascade)
-  guest    User     @relation("GuestBookings", fields: [guest_id], references: [id])
+  guest    User     @relation("GuestBookings", fields: [guest_user_id], references: [id])
   customer Customer @relation(fields: [customer_id], references: [id])
-  host     User     @relation("HostBookings", fields: [user_id], references: [id])
+  host     User     @relation("HostBookings", fields: [host_user_id], references: [id])
 
 
   @@index([property_id])
-  @@index([guest_id])
+  @@index([guest_user_id])
   @@index([property_id, check_in, check_out])
   @@map("bookings")
 }

@@ -1,6 +1,6 @@
 import axiosInstance from '@/config/api/axios';
 import { ApiRoutes } from '@/config/api/routes';
-import type { Booking } from '../interfaces/booking.interface';
+import type { Booking, HostBookingDetail } from '../interfaces/booking.interface';
 
 export type CreateBookingPayload = {
 	property_id: string;
@@ -22,7 +22,12 @@ export type CreateBookingResponse = {
 };
 
 export const listBookings = async () => {
-	const response = await axiosInstance.get<(Booking & { property_title: string })[]>(ApiRoutes.bookings.listMine);
+	const response = await axiosInstance.get<HostBookingDetail[]>(ApiRoutes.bookings.listMine);
+	return response.data;
+};
+
+export const listMyTrips = async () => {
+	const response = await axiosInstance.get<Booking[]>(ApiRoutes.bookings.listMyTrips);
 	return response.data;
 };
 

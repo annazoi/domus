@@ -107,8 +107,8 @@ export async function POST(request: Request) {
 				const created = await tx.booking.create({
 					data: {
 						property_id: verified.propertyId,
-						user_id: verified.hostUserId,
-						guest_id: guestUserId,
+						host_user_id: verified.hostUserId,
+						guest_user_id: guestUserId,
 						customer_id: customerId,
 						check_in,
 						check_out,

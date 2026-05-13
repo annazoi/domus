@@ -1,5 +1,4 @@
-import { Reason } from '@prisma/client';
-import { DateTime } from 'luxon';
+import { BookingStatus, Reason } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { eachDayInRange, toApiDate, toUtcDay } from '@/features/property-availability/utils/date';
 
@@ -10,64 +9,142 @@ type BookingView = {
 	guest_name: string;
 	start_date: string;
 	end_date: string;
-	status: 'confirmed';
+	status: 'confirmed' | 'cancelled' | 'pending';
 	property_title: string;
 };
 
-const groupBookedDays = (rows: Array<{ id: string; date: Date; property_id: string; property: { user_id: string; title: string } }>) => {
-	const result: BookingView[] = [];
-	let active: BookingView | null = null;
-	let previousDay: DateTime | null = null;
-
-	for (const row of rows) {
-		const day = DateTime.fromJSDate(row.date, { zone: 'utc' }).startOf('day');
-		const dayLabel = toApiDate(day.toISO() ?? row.date.toISOString());
-		const isSameGroup =
-			active &&
-			active.property_id === row.property_id &&
-			previousDay &&
-			day.diff(previousDay, 'days').days === 1;
-
-		if (!isSameGroup) {
-			active = {
-				id: row.id,
-				property_id: row.property_id,
-				host_id: row.property.user_id,
-				guest_name: 'Booked guest',
-				start_date: dayLabel,
-				end_date: dayLabel,
-				status: 'confirmed',
-				property_title: row.property.title,
-			};
-			result.push(active);
-		} else if (active) {
-			active.end_date = dayLabel;
-		}
-
-		previousDay = day;
-	}
-
-	return result;
+const bookingStatusLabel = (status: BookingStatus): BookingView['status'] => {
+	if (status === BookingStatus.CONFIRMED) return 'confirmed';
+	if (status === BookingStatus.CANCELLED) return 'cancelled';
+	return 'pending';
 };
 
 export const bookingsService = {
-	async listHostBookings(hostId: string) {
-		const rows = await prisma.propertyAvailability.findMany({
-			where: {
-				property: { user_id: hostId },
-				reason: Reason.BOOKED,
-				is_available: false,
-			},
-			orderBy: [{ property_id: 'asc' }, { date: 'asc' }],
+	async listGuestBookings(guestUserId: string) {
+		const rows = await prisma.booking.findMany({
+			where: { guest_user_id: guestUserId },
+			orderBy: { check_in: 'desc' },
 			select: {
 				id: true,
-				date: true,
 				property_id: true,
-				property: { select: { user_id: true, title: true } },
+				check_in: true,
+				check_out: true,
+				status: true,
+				host: { select: { id: true, first_name: true, last_name: true } },
+				property: { select: { title: true } },
 			},
 		});
 
-		return groupBookedDays(rows);
+		return rows.map((row) => ({
+			id: row.id,
+			property_id: row.property_id,
+			host_id: row.host.id,
+			guest_name: `${row.host.first_name} ${row.host.last_name}`.trim(),
+			start_date: toApiDate(row.check_in.toISOString()),
+			end_date: toApiDate(row.check_out.toISOString()),
+			status: bookingStatusLabel(row.status),
+			property_title: row.property.title,
+		}));
+	},
+
+	async listHostBookings(hostId: string) {
+		const rows = await prisma.booking.findMany({
+			where: { host_user_id: hostId },
+			orderBy: { check_in: 'desc' },
+			select: {
+				id: true,
+				property_id: true,
+				host_user_id: true,
+				check_in: true,
+				check_out: true,
+				guests: true,
+				total_price: true,
+				status: true,
+				created_at: true,
+				updated_at: true,
+				property: {
+					select: {
+						title: true,
+						slug: true,
+						address: true,
+						city: true,
+						country: true,
+						room_type: true,
+						property_type: true,
+					},
+				},
+				guest: {
+					select: {
+						first_name: true,
+						last_name: true,
+						email: true,
+						phone: true,
+					},
+				},
+				customer: {
+					select: {
+						first_name: true,
+						last_name: true,
+						email: true,
+						phone: true,
+						vat_number: true,
+						notes: true,
+						address: true,
+						city: true,
+						state: true,
+						zip: true,
+						country: true,
+					},
+				},
+			},
+		});
+
+		return rows.map((row) => {
+			const guestName = `${row.guest.first_name} ${row.guest.last_name}`.trim();
+			return {
+				id: row.id,
+				property_id: row.property_id,
+				host_id: row.host_user_id,
+				guest_name: guestName || 'Guest',
+				start_date: toApiDate(row.check_in.toISOString()),
+				end_date: toApiDate(row.check_out.toISOString()),
+				status: bookingStatusLabel(row.status),
+				property_title: row.property.title,
+				guests: row.guests,
+				total_price: Number(row.total_price),
+				check_in_iso: row.check_in.toISOString(),
+				check_out_iso: row.check_out.toISOString(),
+				created_at: row.created_at.toISOString(),
+				updated_at: row.updated_at.toISOString(),
+				property: {
+					slug: row.property.slug,
+					address: row.property.address,
+					city: row.property.city,
+					country: row.property.country,
+					room_type: row.property.room_type,
+					property_type: row.property.property_type,
+				},
+				guest: {
+					first_name: row.guest.first_name,
+					last_name: row.guest.last_name,
+					email: row.guest.email,
+					phone: row.guest.phone,
+				},
+				customer: {
+					first_name: row.customer.first_name,
+					last_name: row.customer.last_name,
+					email: row.customer.email,
+					phone: row.customer.phone,
+					vat_number: row.customer.vat_number,
+					notes: row.customer.notes,
+					address: row.customer.address,
+					city: row.customer.city,
+					state: row.customer.state,
+					zip: row.customer.zip,
+					country: row.customer.country,
+				},
+			};
+		});
 	},
 
 	async createBookingBlock(input: {

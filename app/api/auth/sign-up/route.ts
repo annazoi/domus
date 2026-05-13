@@ -35,28 +35,55 @@ export async function POST(request: Request) {
 
 		const existingUser = await prisma.user.findUnique({
 			where: { email },
-			select: { id: true },
+			select: { id: true, password: true },
 		});
+
+		let user: {
+			id: string;
+			email: string;
+			first_name: string;
+			last_name: string;
+			created_at: Date;
+		};
 
 		if (existingUser) {
-			return Response.json({ message: 'User already exists with this email.' }, { status: 409 });
+			if (existingUser.password !== '') {
+				return Response.json({ message: 'User already exists with this email.' }, { status: 409 });
+			}
+			user = await prisma.user.update({
+				where: { id: existingUser.id },
+				data: {
+					first_name,
+					last_name,
+					password,
+					is_archived: false,
+				},
+				select: {
+					id: true,
+					email: true,
+					first_name: true,
+					last_name: true,
+					created_at: true,
+				},
+			});
+		} else {
+			user = await prisma.user.create({
+				data: {
+					first_name,
+					last_name,
+					email,
+					password,
+					is_archived: false,
+				},
+				select: {
+					id: true,
+					email: true,
+					first_name: true,
+					last_name: true,
+					created_at: true,
+				},
+			});
 		}
-
-		const user = await prisma.user.create({
-			data: {
-				first_name,
-				last_name,
-				email,
-				password,
-			},
-			select: {
-				id: true,
-				email: true,
-				first_name: true,
-				last_name: true,
-				created_at: true,
-			},
-		});
 
 		return Response.json(
 			{

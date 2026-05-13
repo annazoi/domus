@@ -1,4 +1,4 @@
-import { getHostIdFromRequest } from '@/app/api/_utils/auth';
+import { getUserIdFromRequest } from '@/app/api/_utils/auth';
 import { bookingsService } from './bookings.service';
 
 interface BookingPayload {
@@ -9,19 +9,27 @@ interface BookingPayload {
 }
 
 export async function GET(request: Request) {
-	const hostId = getHostIdFromRequest(request);
-	if (!hostId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
+	const userId = getUserIdFromRequest(request);
+	if (!userId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
 
 	const url = new URL(request.url);
+	const guestFilter = url.searchParams.get('guest_id');
 	const hostFilter = url.searchParams.get('host_id');
+
+	if (guestFilter === 'me') {
+		if (hostFilter && hostFilter !== 'me') return Response.json({ message: 'Forbidden' }, { status: 403 });
+		const bookings = await bookingsService.listGuestBookings(userId);
+		return Response.json(bookings);
+	}
+
 	if (hostFilter && hostFilter !== 'me') return Response.json({ message: 'Forbidden' }, { status: 403 });
 
-	const bookings = await bookingsService.listHostBookings(hostId);
+	const bookings = await bookingsService.listHostBookings(userId);
 	return Response.json(bookings);
 }
 
 export async function POST(request: Request) {
-	const hostId = getHostIdFromRequest(request);
+	const hostId = getUserIdFromRequest(request);
 	if (!hostId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
 
 	const body = (await request.json()) as BookingPayload;

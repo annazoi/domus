@@ -291,7 +291,7 @@ export function ArchitecturaPreview({
 							{data.hero.location ? (
 								<div className="mt-4 flex items-center gap-2 text-white/90">
 									<MapPin className="h-5 w-5 shrink-0" strokeWidth={1.5} />
-									<span className="font-[family-name:var(--preview-arch-headline)] text-lg italic sm:text-2xl">
+									<span className="font-[family-name:var(--preview-arch-headline)] text-lg sm:text-2xl">
 										{data.hero.location}
 									</span>
 								</div>
@@ -391,7 +391,7 @@ export function ArchitecturaPreview({
 									{data.gallery.full.pullQuote.title || data.gallery.full.pullQuote.text ? (
 										<div className="absolute bottom-4 right-4 hidden max-w-xs bg-white/95 p-5 shadow-sm sm:block">
 											{data.gallery.full.pullQuote.title ? (
-												<h3 className="mb-2 font-[family-name:var(--preview-arch-headline)] text-xl italic text-[#1b1c1a]">
+												<h3 className="mb-2 font-[family-name:var(--preview-arch-headline)] text-xl text-[#1b1c1a]">
 													{data.gallery.full.pullQuote.title}
 												</h3>
 											) : null}
@@ -441,14 +441,14 @@ export function ArchitecturaPreview({
 										{data.location.coords ? (
 											<div className="text-center">
 												<MapPin className="mx-auto mb-2 h-12 w-12 text-[#944528]" strokeWidth={1.25} />
-												<p className="font-[family-name:var(--preview-arch-headline)] text-lg italic text-[#1b1c1a]">
+												<p className="font-[family-name:var(--preview-arch-headline)] text-lg text-[#1b1c1a]">
 													{data.location.coords}
 												</p>
 											</div>
 										) : listingPreview ? null : (
 											<div className="text-center">
 												<MapPin className="mx-auto mb-2 h-12 w-12 text-[#944528]" strokeWidth={1.25} />
-												<p className="font-[family-name:var(--preview-arch-headline)] text-lg italic text-[#1b1c1a]">
+												<p className="font-[family-name:var(--preview-arch-headline)] text-lg text-[#1b1c1a]">
 													—
 												</p>
 											</div>
