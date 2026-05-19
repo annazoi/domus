@@ -65,7 +65,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 	sidebarOutline:
 		'w-full cursor-pointer rounded-full border border-black/10 px-5 py-2.5 text-sm transition hover:bg-black/5',
 	cardRow:
-		'w-full cursor-pointer rounded-xl border border-black/10 px-4 py-3 text-left text-sm transition hover:border-camel/40',
+		'w-full cursor-pointer rounded-full border border-black/10 px-4 py-3 text-left text-sm transition hover:border-camel/40',
 	accountTrigger:
 		'flex cursor-pointer items-center gap-2 rounded-full bg-white/80 px-2 py-1.5 text-sm transition hover:bg-white',
 	navLogin:

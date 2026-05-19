@@ -46,8 +46,7 @@ const navItems: NavItem[] = [
 	{ label: 'Messages', href: '/dashboard/messages', icon: <MessageCircle className="h-4 w-4" /> },
 	{ label: 'Calendar', href: '/dashboard/calendar', icon: <CalendarDays className="h-4 w-4" /> },
 	{ label: 'Earnings', href: '/dashboard/earnings', icon: <Wallet className="h-4 w-4" /> },
-	// { label: 'Website Builder', href: '/dashboard/website-builder', icon: <Wrench className="h-4 w-4" /> },
-	{ label: 'Settings', href: '/dashboard/settings', icon: <Settings className="h-4 w-4" /> },
+	// { label: 'Settings', href: '/dashboard/settings', icon: <Settings className="h-4 w-4" /> },
 	{ label: 'Subscription', href: '/dashboard/subscription', icon: <CreditCard className="h-4 w-4" /> },
 ];
 

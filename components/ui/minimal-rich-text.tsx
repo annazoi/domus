@@ -72,7 +72,10 @@ export function MinimalRichText({
 					{label}
 				</label>
 			) : null}
-			<div className="overflow-hidden rounded-xl border border-black/10 bg-white transition hover:border-camel/25 focus-within:border-camel/40 focus-within:ring-2 focus-within:ring-camel/12">
+			<div
+				data-rich-text-root
+				className="overflow-hidden rounded-xl border border-black/10 bg-white transition hover:border-camel/25 focus-within:border-camel/40 focus-within:ring-2 focus-within:ring-camel/12"
+			>
 				{editor ? (
 					<div className="flex flex-wrap items-center gap-0.5 border-b border-black/[0.06] bg-[#fafaf8] px-2 py-1.5">
 						<Button

@@ -10,6 +10,7 @@ import BookingServicesCard, {
 	buildSelectedServices,
 	computeExtrasTotal,
 } from './_components/booking-services-card';
+import { ArrowLeft } from 'lucide-react';
 
 export default function ConfirmAndPayContent() {
 	const router = useRouter();
@@ -210,11 +211,12 @@ export default function ConfirmAndPayContent() {
 					<Button
 						type="button"
 						variant="cardRow"
-						className="mt-6 w-full justify-center"
+						className="mt-6 max-w-fit cursor-pointer flex items-center"
 						disabled={isPending}
 						onClick={() => router.back()}
 					>
-						Back
+						<ArrowLeft className="mr-2 h-4 w-4" />
+						<span className="text-sm font-medium text-[#1A1A1A]">Back</span>
 					</Button>
 				</aside>
 			</div>

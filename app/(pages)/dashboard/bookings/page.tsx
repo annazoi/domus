@@ -49,8 +49,8 @@ export default function BookingsPage() {
 							className="cursor-pointer flex h-auto w-full flex-col items-start gap-2 border-b border-black/5 px-5 py-5 text-left font-normal transition hover:bg-black/[0.02] last:border-b-0 md:flex-row md:flex-wrap md:items-baseline md:gap-x-8 md:gap-y-2 md:px-8 md:py-6 lg:gap-x-12 lg:px-10"
 							onClick={() => setSelected(booking)}
 						>
-							<span className="max-w-full shrink-0 text-lg font-medium leading-snug md:text-xl">{booking.guest_name}</span>
-							<span className="min-w-0 flex-1 text-base leading-snug text-[#1A1A1A]/70 md:text-lg">
+							<span className="max-w-full shrink-0 text-lg font-medium leading-snug md:text-[1.05rem]">{booking.guest_name}</span>
+							<span className="min-w-0 flex-1 text-base leading-snug text-[#1A1A1A]/70 md:text-[1rem]">
 								{booking.property_title}
 							</span>
 							<span className="shrink-0 text-sm text-[#1A1A1A]/60 md:text-base">

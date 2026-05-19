@@ -87,7 +87,7 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 								<p className="font-medium text-[#1A1A1A]">{option.label}</p>
 								<p className="mt-2 text-sm text-[#1A1A1A]/55">{option.description}</p>
 							</div>
-							<div className="flex gap-2 border-t border-black/5 px-4 pb-4 pt-1">
+							<div className="flex gap-2 px-4 pb-4 pt-1">
 								<Button
 									type="button"
 									variant="cardRow"
