@@ -26,6 +26,17 @@
   --color-landing-ivory: #faf9f6;
   --color-landing-clay: #b89775;
 
+  --color-dom-cream: #efe9df;
+  --color-dom-sand: #e7dfd2;
+  --color-dom-ink: #1d1916;
+  --color-dom-coffee: #2a2521;
+  --color-dom-mocha: #3a3530;
+  --color-dom-muted: #8a807a;
+  --color-dom-gold: #c8a96a;
+
+  --font-dom-display: var(--font-instrument-serif), Georgia, serif;
+  --shadow-dom-soft: 0 30px 60px -20px rgba(0, 0, 0, 0.35);
+
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-serif), ui-serif, Georgia, serif;
 }

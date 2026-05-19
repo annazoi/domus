@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter, Playfair_Display } from "next/font/google";
+import { Fraunces, Instrument_Serif, Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import "./page.css";
 import { Providers } from "./providers";
@@ -20,9 +20,16 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  subsets: ["latin"],
+  weight: "400",
+});
+
 export const metadata: Metadata = {
-  title: "Domus | Create Your Branded Rental Platform",
-  description: "A premium white-label solution for luxury vacation rental brands. Own your bookings, control your brand.",
+  title: "Domus - Your rental house, beautifully online",
+  description:
+    "Domus is the white-label platform for short-stay hosts. Custom templates, booking system, guest CRM and your own domain — in one place.",
 };
 
 export default function RootLayout({
@@ -33,7 +40,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfair.variable} ${fraunces.variable} ${inter.variable} h-full antialiased`}
+      className={`${playfair.variable} ${fraunces.variable} ${inter.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
       <body className="font-sans text-stone-900 bg-stone-50 selection:bg-stone-200">
         <Providers>{children}</Providers>

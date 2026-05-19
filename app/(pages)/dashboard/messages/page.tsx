@@ -23,7 +23,7 @@ const DEMO: DemoChat[] = [
 		preview: 'Perfect, see you then.',
 		time: '2m',
 		messages: [
-			{ id: 'a', side: 'guest', text: 'Hi — is late checkout possible on Sunday?' },
+			{ id: 'a', side: 'guest', text: 'Hi - is late checkout possible on Sunday?' },
 			{ id: 'b', side: 'host', text: 'Hi Marco. We can do 12pm if that works.' },
 			{ id: 'c', side: 'guest', text: 'Perfect, see you then.' },
 		],
