@@ -12,7 +12,7 @@ export default function DashboardOverviewPage() {
 	return (
 		<div className="space-y-16">
 			<section className="space-y-3">
-				<p className="text-xs uppercase tracking-[0.2em] text-[#6B705C]">Overview</p>
+				<p className="text-xs uppercase tracking-[0.2em] text-camel">Overview</p>
 				<h1 className="font-serif text-4xl tracking-tight md:text-5xl">A calm view of your business.</h1>
 			</section>
 
@@ -40,7 +40,7 @@ export default function DashboardOverviewPage() {
 								<p className="font-medium">{booking.guest}</p>
 								<p className="text-sm text-[#1A1A1A]/55">{booking.dates}</p>
 							</div>
-							<span className="rounded-full bg-[#6B705C]/10 px-3 py-1 text-xs text-[#6B705C]">{booking.status}</span>
+							<span className="rounded-full bg-camel/10 px-3 py-1 text-xs text-camel">{booking.status}</span>
 						</div>
 					))}
 				</div>

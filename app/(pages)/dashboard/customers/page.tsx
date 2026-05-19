@@ -13,7 +13,7 @@ export default function CustomersPage() {
 	return (
 		<div className="space-y-8">
 			<div>
-				<p className="text-xs uppercase tracking-[0.2em] text-[#6B705C]">Customers</p>
+				<p className="text-xs uppercase tracking-[0.2em] text-camel">Customers</p>
 				<h1 className="mt-2 font-serif text-4xl tracking-tight">Your guests</h1>
 			</div>
 

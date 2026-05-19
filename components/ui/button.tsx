@@ -32,24 +32,24 @@ export type ButtonVariant =
 
 const variantClasses: Record<ButtonVariant, string> = {
 	primary:
-		'cursor-pointer rounded-full bg-primary px-6 py-2.5 text-sm text-white transition hover:-translate-y-0.5 hover:bg-primary-hover disabled:opacity-60 disabled:pointer-events-none',
+		'cursor-pointer rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition hover:-translate-y-0.5 hover:bg-primary-hover disabled:opacity-60 disabled:pointer-events-none',
 	primarySm:
-		'cursor-pointer rounded-full bg-primary px-5 py-2.5 text-sm text-white transition hover:-translate-y-0.5 hover:bg-primary-hover disabled:opacity-60 disabled:pointer-events-none',
+		'cursor-pointer rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:-translate-y-0.5 hover:bg-primary-hover disabled:opacity-60 disabled:pointer-events-none',
 	secondary:
-		'cursor-pointer rounded-full border border-black/10 bg-white px-4 py-2 text-sm text-[#1A1A1A] transition hover:border-[#6B705C]/40 hover:bg-black/[0.02]',
+		'cursor-pointer rounded-full border border-black/10 bg-white px-4 py-2 text-sm text-[#1A1A1A] transition hover:border-camel/45 hover:bg-cream/80',
 	ghost:
-		'cursor-pointer rounded-md p-2 text-[#6B705C] transition hover:bg-black/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
+		'cursor-pointer rounded-md p-2 text-camel transition hover:bg-black/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
 	ghostIcon:
-		'cursor-pointer rounded-md p-2 text-[#6B705C] transition hover:bg-black/5 inline-flex items-center justify-center',
+		'cursor-pointer rounded-md p-2 text-camel transition hover:bg-black/5 inline-flex items-center justify-center',
 	iconSquare:
-		'flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-black/5 bg-white text-[#1A1A1A]/70 transition hover:border-[#6B705C]/30',
+		'flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-black/5 bg-white text-[#1A1A1A]/70 transition hover:border-camel/35',
 	auth: 'inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-sm bg-stone-900 py-3.5 text-sm font-medium text-stone-50 transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-70',
 	dangerLink: 'cursor-pointer text-sm text-[#1A1A1A]/70 transition hover:text-red-700',
 	tab: 'block w-full cursor-pointer rounded-lg px-3 py-2 text-left text-sm text-[#1A1A1A]/70 transition hover:bg-black/5 hover:text-[#1A1A1A]',
 	tabActive: 'block w-full cursor-pointer rounded-lg bg-black/5 px-3 py-2 text-left text-sm text-[#1A1A1A]',
 	chip: 'cursor-pointer inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition',
 	quickAction:
-		'cursor-pointer rounded-full border border-black/10 bg-white px-5 py-2.5 text-sm transition hover:-translate-y-0.5 hover:border-[#6B705C]/40 hover:text-[#6B705C]',
+		'cursor-pointer rounded-full border border-black/15 bg-cream px-5 py-2.5 text-sm font-medium text-espresso transition hover:-translate-y-0.5 hover:border-camel hover:bg-camel hover:text-cream',
 	hero: 'cursor-pointer rounded-full bg-stone-50 px-8 py-4 text-sm font-medium tracking-wide text-stone-900 transition hover:bg-stone-200',
 	heroDark:
 		'cursor-pointer rounded-full bg-stone-900 px-10 py-5 text-sm font-medium tracking-wide text-stone-50 transition hover:bg-stone-800',
@@ -65,7 +65,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 	sidebarOutline:
 		'w-full cursor-pointer rounded-full border border-black/10 px-5 py-2.5 text-sm transition hover:bg-black/5',
 	cardRow:
-		'w-full cursor-pointer rounded-xl border border-black/10 px-4 py-3 text-left text-sm transition hover:border-[#6B705C]/40',
+		'w-full cursor-pointer rounded-xl border border-black/10 px-4 py-3 text-left text-sm transition hover:border-camel/40',
 	accountTrigger:
 		'flex cursor-pointer items-center gap-2 rounded-full bg-white/80 px-2 py-1.5 text-sm transition hover:bg-white',
 	navLogin:

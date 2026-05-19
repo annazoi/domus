@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
 	createContext,
 	useContext,
@@ -53,6 +54,20 @@ const navItems: NavItem[] = [
 const isItemActive = (pathname: string, href: string) =>
 	href === '/dashboard' ? pathname === href : pathname.startsWith(href);
 
+const navSpring = { type: 'spring' as const, stiffness: 420, damping: 34 };
+
+const pageTransition = {
+	initial: { opacity: 0, y: 10 },
+	animate: { opacity: 1, y: 0 },
+	exit: { opacity: 0, y: -6 },
+	transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const },
+};
+
+const overlayRoutes = ['/dashboard/properties/new'] as const;
+
+const isOverlayRoute = (pathname: string) =>
+	overlayRoutes.some((route) => pathname === route);
+
 const DashboardPageIntroContext = createContext<Dispatch<SetStateAction<ReactNode | null>> | null>(null);
 
 export function useSetDashboardPageIntro() {
@@ -67,7 +82,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 	const [pageIntro, setPageIntro] = useState<ReactNode | null>(null);
 
 	return (
-		<div className="min-h-screen bg-[#F7F5F2] text-[#1A1A1A]">
+		<div className="dashboard-root min-h-screen bg-[#F7F5F2] text-[#1A1A1A]">
 			<div className="flex w-full">
 				<aside
 					className={[
@@ -77,9 +92,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 					].join(' ')}
 				>
 					<div className="flex items-center justify-between px-2">
-						<div className={['font-serif text-2xl tracking-tight', isCollapsed ? 'hidden' : 'block'].join(' ')}>
+						<Link href="/" className={['font-serif text-2xl tracking-tight', isCollapsed ? 'hidden' : 'block'].join(' ')}>
 							<Image src={logo} alt="Domus" width={100} height={100} className='w-15 h-15' />
-						</div>
+						</Link>
 						<Button
 							type="button"
 							variant="ghostIcon"
@@ -110,13 +125,27 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 									href={item.href}
 									onClick={() => setIsMobileOpen(false)}
 									className={[
-										'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition duration-200',
-										active ? 'bg-black/5 text-[#1A1A1A]' : 'text-[#1A1A1A]/65 hover:bg-black/3 hover:text-[#1A1A1A]',
+										'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors duration-200',
+										active ? 'text-[#1A1A1A]' : 'text-[#1A1A1A]/65 hover:text-[#1A1A1A]',
 										isCollapsed ? 'justify-center' : '',
 									].join(' ')}
 								>
-									<span className={active ? 'text-[#6B705C]' : 'text-[#1A1A1A]/45'}>{item.icon}</span>
-									<span className={isCollapsed ? 'hidden' : 'inline'}>{item.label}</span>
+									{active ? (
+										<motion.span
+											layoutId="dashboard-nav-active"
+											className="absolute inset-0 rounded-xl bg-black/5"
+											transition={navSpring}
+										/>
+									) : null}
+									<span
+										className={[
+											'relative z-10 flex items-center gap-3',
+											isCollapsed ? 'justify-center' : '',
+										].join(' ')}
+									>
+										<span className={active ? 'text-camel' : 'text-[#1A1A1A]/45'}>{item.icon}</span>
+										<span className={isCollapsed ? 'hidden' : 'inline'}>{item.label}</span>
+									</span>
 								</Link>
 							);
 						})}
@@ -150,20 +179,22 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 								</div>
 
 								<div className="flex shrink-0 items-center gap-3">
-									<span className="hidden rounded-full bg-[#6B705C]/10 px-3 py-1 text-xs font-medium text-[#6B705C] sm:inline-flex">
+									<span className="hidden rounded-full bg-camel/15 px-3 py-1 text-xs font-medium text-camel sm:inline-flex">
 										Portfolio Plan
 									</span>
-									<Button type="button" variant="accountTrigger">
-										<span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#6B705C] text-xs font-semibold text-white">
-											ZA
-										</span>
-										<span className="hidden pr-1 text-[#1A1A1A]/70 sm:inline">Account</span>
-									</Button>
 								</div>
 							</header>
 
-							<main className="px-5 pb-14 pt-2 md:px-10">
-								<div className="mx-auto w-full">{children}</div>
+							<main className={isOverlayRoute(pathname) ? 'p-0' : 'px-5 pb-14 pt-2 md:px-10'}>
+								{isOverlayRoute(pathname) ? (
+									children
+								) : (
+									<AnimatePresence mode="wait" initial={false}>
+										<motion.div key={pathname} {...pageTransition} className="mx-auto w-full">
+											{children}
+										</motion.div>
+									</AnimatePresence>
+								)}
 							</main>
 						</div>
 					</div>

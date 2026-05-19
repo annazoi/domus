@@ -18,7 +18,7 @@ export const PROPERTY_BRANDING_THEME_OPTIONS: ReadonlyArray<{
 		id: PropertyBrandingTheme.CANVAS,
 		label: 'Canvas',
 		description: 'Neutral editorial layout with sage accents - matches the default studio preview.',
-		preview: { bg: '#F7F5F2', accent: '#6B705C', headlineFont: 'serif' },
+		preview: { bg: '#F7F5F2', accent: '#b89775', headlineFont: 'serif' },
 	},
 	{
 		id: PropertyBrandingTheme.ARCHITECTURA,

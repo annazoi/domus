@@ -67,7 +67,7 @@ export default function ConfirmAndPayContent() {
 		<div className="min-h-screen bg-[#f7f5f2] px-4 py-8 sm:px-8">
 			<div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[1fr_360px]">
 				<section className="rounded-2xl bg-white p-6 shadow-sm sm:p-8">
-					<p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#6B705C]">Confirm and pay</p>
+					<p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-camel">Confirm and pay</p>
 					<h1 className="mt-3 font-serif text-3xl text-[#1A1A1A]">Payment method</h1>
 
 					<div className="mt-8 space-y-4">

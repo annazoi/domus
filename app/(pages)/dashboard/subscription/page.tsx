@@ -21,7 +21,7 @@ export default function SubscriptionPage() {
 	return (
 		<div className="space-y-8">
 			<div>
-				<p className="text-xs uppercase tracking-[0.2em] text-[#6B705C]">Subscription</p>
+				<p className="text-xs uppercase tracking-[0.2em] text-camel">Subscription</p>
 				<h1 className="mt-2 font-serif text-4xl tracking-tight">Your plan and billing</h1>
 			</div>
 
@@ -31,7 +31,7 @@ export default function SubscriptionPage() {
 						key={plan.name}
 						className={[
 							'rounded-2xl bg-white/85 p-6',
-							plan.current ? 'ring-1 ring-[#6B705C]/35' : 'ring-1 ring-black/5',
+							plan.current ? 'ring-1 ring-camel/35' : 'ring-1 ring-black/5',
 						].join(' ')}
 					>
 						<div className="flex items-start justify-between">
@@ -40,7 +40,7 @@ export default function SubscriptionPage() {
 								<p className="mt-1 text-sm text-[#1A1A1A]/55">{plan.description}</p>
 							</div>
 							{plan.current ? (
-								<span className="rounded-full bg-[#6B705C]/12 px-3 py-1 text-xs text-[#6B705C]">Current</span>
+								<span className="rounded-full bg-camel/12 px-3 py-1 text-xs text-camel">Current</span>
 							) : null}
 						</div>
 

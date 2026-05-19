@@ -134,7 +134,7 @@ export function CustomerDetailModal({
 					>
 						<div className="flex shrink-0 items-start justify-between gap-4 border-b border-black/5 px-5 py-5 sm:px-8 md:py-6">
 							<div className="min-w-0 flex-1">
-								<p className="text-xs uppercase tracking-[0.2em] text-[#6B705C]">Customer</p>
+								<p className="text-xs uppercase tracking-[0.2em] text-camel">Customer</p>
 								<h3
 									id="customer-detail-title"
 									className="mt-1 break-words font-serif text-2xl tracking-tight text-[#1A1A1A] md:text-3xl"

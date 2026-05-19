@@ -55,7 +55,7 @@ export function PlacesAutocompleteInput({
 		<div className="relative">
 			<span
 				aria-hidden
-				className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[13px] text-[#6B705C]/70"
+				className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[13px] text-camel/70"
 			>
 				{placesLibraryReady ? <MapPin className="w-4 h-4" /> : <Loader2 className="w-4 h-4 animate-spin" />}
 			</span>

@@ -209,7 +209,7 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 										title={hasNote ? descByValue[amenity.value] : undefined}
 										className={cn(
 											'inline-flex overflow-hidden rounded-full text-sm transition',
-											active ? 'bg-[#6B705C] text-white' : 'bg-black/5 text-[#1A1A1A]/70',
+											active ? 'bg-camel text-white' : 'bg-black/5 text-[#1A1A1A]/70',
 											hasNote && active && 'ring-2 ring-white/40',
 										)}
 									>

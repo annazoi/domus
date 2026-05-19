@@ -15,7 +15,7 @@ export default function PropertiesPage() {
 		<div className="space-y-10">
 			<div className="flex flex-wrap items-end justify-between gap-4">
 				<div>
-					<p className="text-xs uppercase tracking-[0.2em] text-[#6B705C]">Properties</p>
+					<p className="text-xs uppercase tracking-[0.2em] text-camel">Properties</p>
 					<h1 className="mt-2 font-serif text-4xl tracking-tight">Your homes, curated.</h1>
 				</div>
 				<Link href="/dashboard/properties/new" className={buttonClassName('primarySm')}>
@@ -55,7 +55,7 @@ export default function PropertiesPage() {
 					return (
 						<div key={property.id} className="grid grid-cols-1 gap-4 rounded-2xl bg-white/80 p-4 md:grid-cols-[140px_1fr_auto]">
 							<div
-								className="h-24 rounded-xl bg-[#6B705C]/10 bg-cover bg-center"
+								className="h-24 rounded-xl bg-camel/10 bg-cover bg-center"
 								style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
 							/>
 							<div className="py-1">
@@ -66,14 +66,14 @@ export default function PropertiesPage() {
 								<span className="rounded-full bg-black/5 px-3 py-1 text-xs capitalize">
 									{property.isVisible ? 'published' : 'draft'}
 								</span>
-								<Link href={`/dashboard/properties/${property.id}`} className="text-sm text-[#1A1A1A]/70 hover:text-[#6B705C]">
+								<Link href={`/dashboard/properties/${property.id}`} className="text-sm text-[#1A1A1A]/70 hover:text-camel">
 									Edit
 								</Link>
 								<Link
 									href={`/${encodeURIComponent(property.slug)}`}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="text-sm text-[#1A1A1A]/70 hover:text-[#6B705C]"
+									className="text-sm text-[#1A1A1A]/70 hover:text-camel"
 								>
 									View
 								</Link>

@@ -104,13 +104,13 @@ export function WebsiteBuilderClient() {
 				<div className="space-y-4">
 					<p className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-[#1A1A1A]/45">Layout</p>
 					<label className="flex cursor-pointer items-center gap-3 text-sm text-[#1A1A1A]/85">
-						<Checkbox checked={asymmetric} onChange={(e) => setAsymmetric(e.target.checked)} className="accent-[#6B705C]" />
+						<Checkbox checked={asymmetric} onChange={(e) => setAsymmetric(e.target.checked)} className="accent-camel" />
 						Asymmetric image
 					</label>
 					<div>
 						<div className="flex justify-between text-xs text-[#1A1A1A]/50">
 							<span>Vertical padding</span>
-							<span className="font-medium tabular-nums text-[#6B705C]">{verticalPad}px</span>
+							<span className="font-medium tabular-nums text-camel">{verticalPad}px</span>
 						</div>
 						<input
 							type="range"
@@ -118,13 +118,13 @@ export function WebsiteBuilderClient() {
 							max={180}
 							value={verticalPad}
 							onChange={(e) => setVerticalPad(Number(e.target.value))}
-							className="mt-2 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-black/10 accent-[#6B705C]"
+							className="mt-2 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-black/10 accent-camel"
 						/>
 					</div>
 					<div>
 						<div className="flex justify-between text-xs text-[#1A1A1A]/50">
 							<span>Image emphasis</span>
-							<span className="font-medium tabular-nums text-[#6B705C]">{imageShare}%</span>
+							<span className="font-medium tabular-nums text-camel">{imageShare}%</span>
 						</div>
 						<input
 							type="range"
@@ -132,7 +132,7 @@ export function WebsiteBuilderClient() {
 							max={68}
 							value={imageShare}
 							onChange={(e) => setImageShare(Number(e.target.value))}
-							className="mt-2 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-black/10 accent-[#6B705C]"
+							className="mt-2 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-black/10 accent-camel"
 						/>
 					</div>
 				</div>
@@ -181,7 +181,7 @@ export function WebsiteBuilderClient() {
 										className="flex min-w-0 flex-col justify-center md:pr-4"
 										style={{ flex: `1 1 ${100 - imageShare}%` }}
 									>
-										<p className="text-[0.65rem] font-medium uppercase tracking-[0.25em] text-[#6B705C]">{kicker}</p>
+										<p className="text-[0.65rem] font-medium uppercase tracking-[0.25em] text-camel">{kicker}</p>
 										<h2 className="mt-3 font-serif text-2xl leading-tight tracking-tight text-[#1A1A1A] md:text-3xl">
 											{current.title}
 										</h2>
@@ -192,7 +192,7 @@ export function WebsiteBuilderClient() {
 										<p className="mt-4 text-sm leading-relaxed text-[#1A1A1A]/65">{body}</p>
 										<button
 											type="button"
-											className="mt-6 inline-flex w-fit items-center gap-1 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[#6B705C] transition hover:text-[#5a5f4e]"
+											className="mt-6 inline-flex w-fit items-center gap-1 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-camel transition hover:text-camel-dark"
 										>
 											Check availability <span aria-hidden>→</span>
 										</button>
@@ -216,14 +216,14 @@ export function WebsiteBuilderClient() {
 													sizes="(max-width: 768px) 100vw, 480px"
 												/>
 											) : (
-												<div className="flex min-h-[200px] w-full items-center justify-center bg-[#6B705C]/10 text-sm text-[#1A1A1A]/45 md:min-h-[300px]">
+												<div className="flex min-h-[200px] w-full items-center justify-center bg-camel/10 text-sm text-[#1A1A1A]/45 md:min-h-[300px]">
 													No photo yet
 												</div>
 											)}
 										</div>
 										{chip ? (
 											<div className="absolute bottom-3 left-3 max-w-[85%] rounded bg-white px-3 py-2 shadow-sm">
-												<p className="truncate text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-[#6B705C]">
+												<p className="truncate text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-camel">
 													{chip}
 												</p>
 											</div>

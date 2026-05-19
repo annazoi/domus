@@ -9,7 +9,7 @@ export default function TripsPage() {
 	return (
 		<div className="space-y-8">
 			<div>
-				<p className="text-xs uppercase tracking-[0.2em] text-[#6B705C]">Stays</p>
+				<p className="text-xs uppercase tracking-[0.2em] text-camel">Stays</p>
 				<h1 className="mt-2 font-serif text-4xl tracking-tight">My trips</h1>
 			</div>
 

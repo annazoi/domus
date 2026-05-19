@@ -39,7 +39,7 @@ export function PropertyForm({ mode, initialProperty }: PropertyFormProps) {
 				onLoaded={() => setGoogleMapsReady(true)}
 			/>
 		<div className="min-w-0 flex flex-col gap-2 mb-10">
-				<p className="text-[10px] uppercase tracking-[0.2em] text-[#6B705C] sm:text-xs">
+				<p className="text-[10px] uppercase tracking-[0.2em] text-camel sm:text-xs">
 					{mode === 'create' ? 'Create property' : 'Edit property'}
 				</p>
 				<h1 className="truncate font-serif text-xl leading-tight text-[#1A1A1A] sm:text-2xl md:text-3xl">

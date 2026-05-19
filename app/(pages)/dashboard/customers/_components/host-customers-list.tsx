@@ -65,7 +65,7 @@ export function HostCustomersList({ customers, loading, onSelect }: HostCustomer
 						<span className="shrink-0 text-sm text-[#1A1A1A]/70 md:text-base">
 							{customer.booking_count} {customer.booking_count === 1 ? 'booking' : 'bookings'}
 						</span>
-						<span className="shrink-0 text-sm font-medium text-[#6B705C] md:ml-auto md:text-base">
+						<span className="shrink-0 text-sm font-medium text-camel md:ml-auto md:text-base">
 							{Number.isFinite(customer.total_spent) ? customer.total_spent.toFixed(2) : '—'} spent
 						</span>
 					</Button>

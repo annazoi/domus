@@ -96,7 +96,7 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 										</option>
 									))}
 								</Select>
-								<Clock3 className="pointer-events-none absolute right-9 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B705C]/45" />
+								<Clock3 className="pointer-events-none absolute right-9 top-1/2 h-4 w-4 -translate-y-1/2 text-camel/45" />
 							</div>
 						)}
 					/>
@@ -123,7 +123,7 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 										</option>
 									))}
 								</Select>
-								<Clock3 className="pointer-events-none absolute right-9 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B705C]/45" />
+								<Clock3 className="pointer-events-none absolute right-9 top-1/2 h-4 w-4 -translate-y-1/2 text-camel/45" />
 							</div>
 						)}
 					/>

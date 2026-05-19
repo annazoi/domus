@@ -22,13 +22,13 @@ const surface = cn(
 	'flex w-full cursor-pointer items-center rounded-xl border border-black/[0.07] bg-white text-left text-[#1A1A1A] outline-none',
 	'transition-[border-color,box-shadow,background-color] duration-150 ease-out',
 	'hover:border-black/11',
-	'focus-visible:border-[#6B705C]/38 focus-visible:ring-1 focus-visible:ring-[#6B705C]/10',
+	'focus-visible:border-camel/38 focus-visible:ring-1 focus-visible:ring-camel/10',
 	'disabled:cursor-not-allowed',
 );
 
 const variantTrigger: Record<SelectVariant, string> = {
 	default: cn(surface, 'py-3 pl-4 pr-10', 'disabled:bg-[#F7F5F2] disabled:text-[#1A1A1A]/38'),
-	settings: cn(surface, 'py-3 pl-4 pr-10 text-sm', 'focus-visible:ring-[#6B705C]/12', 'disabled:opacity-55'),
+	settings: cn(surface, 'py-3 pl-4 pr-10 text-sm', 'focus-visible:ring-camel/12', 'disabled:opacity-55'),
 	auth: cn(
 		'flex w-full cursor-pointer items-center rounded-sm border border-stone-200/95 bg-white py-3 pl-4 pr-10 text-left font-light text-stone-900 outline-none transition duration-150 ease-out',
 		'hover:border-stone-300 focus-visible:border-stone-400 focus-visible:ring-1 focus-visible:ring-stone-400/25',
@@ -38,8 +38,8 @@ const variantTrigger: Record<SelectVariant, string> = {
 };
 
 const chevronTone: Record<SelectVariant, string> = {
-	default: 'text-[#6B705C]/40',
-	settings: 'text-[#6B705C]/46',
+	default: 'text-camel/40',
+	settings: 'text-camel/46',
 	auth: 'text-stone-400',
 	compact: 'text-[#1A1A1A]/30',
 };
@@ -69,9 +69,9 @@ const menu = cn(
 
 const row = cn(
 	'flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#1A1A1A] transition-colors',
-	'hover:bg-[#6B705C]/[0.07] focus:bg-[#6B705C]/[0.07] focus:outline-none',
+	'hover:bg-camel/[0.07] focus:bg-camel/[0.07] focus:outline-none',
 	'data-disabled:pointer-events-none data-disabled:opacity-40',
-	'data-active:bg-[#6B705C]/[0.09]',
+	'data-active:bg-camel/[0.09]',
 );
 
 export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & { variant?: SelectVariant };
@@ -238,7 +238,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
 									onClick={() => selectAt(i)}
 								>
 									<span className="min-w-0 flex-1 truncate">{o.label}</span>
-									{sel && <Check className="h-3.5 w-3.5 shrink-0 text-[#6B705C]" strokeWidth={2} aria-hidden />}
+									{sel && <Check className="h-3.5 w-3.5 shrink-0 text-camel" strokeWidth={2} aria-hidden />}
 								</button>
 							</li>
 						);

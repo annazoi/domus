@@ -7,7 +7,7 @@ export default function CalendarPage() {
 	return (
 		<div className="space-y-8">
 			<div>
-				<p className="text-xs uppercase tracking-[0.2em] text-[#6B705C]">Calendar</p>
+				<p className="text-xs uppercase tracking-[0.2em] text-camel">Calendar</p>
 				<h1 className="mt-2 font-serif text-4xl tracking-tight">April availability</h1>
 			</div>
 
@@ -30,8 +30,8 @@ export default function CalendarPage() {
 								className={cn(
 									'h-16 rounded-xl border text-sm transition',
 									isBooked
-										? 'border-[#6B705C]/25 bg-[#6B705C]/10 text-[#6B705C]'
-										: 'border-black/5 bg-white text-[#1A1A1A]/70 hover:border-[#6B705C]/30',
+										? 'border-camel/25 bg-camel/10 text-camel'
+										: 'border-black/5 bg-white text-[#1A1A1A]/70 hover:border-camel/30',
 								)}
 							>
 								{day}

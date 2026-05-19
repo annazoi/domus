@@ -69,7 +69,7 @@ export default function PropertyCalendarPage() {
 	return (
 		<div className="space-y-8">
 			<div>
-				<p className="text-xs uppercase tracking-[0.2em] text-[#6B705C]">Availability</p>
+				<p className="text-xs uppercase tracking-[0.2em] text-camel">Availability</p>
 				<h1 className="mt-2 font-serif text-4xl tracking-tight">Property calendar</h1>
 			</div>
 
@@ -100,10 +100,10 @@ export default function PropertyCalendarPage() {
 										isPast
 											? 'cursor-not-allowed border-black/5 bg-black/[0.03] text-[#1A1A1A]/30'
 											: selectedDate === date
-												? 'border-[#6B705C] bg-[#6B705C]/10'
+												? 'border-camel bg-camel/10'
 												: unavailable
 													? 'border-red-200 bg-red-50 text-red-700'
-													: 'border-black/10 bg-white hover:border-[#6B705C]/40',
+													: 'border-black/10 bg-white hover:border-camel/40',
 									)}
 								>
 									{day}
@@ -131,7 +131,7 @@ export default function PropertyCalendarPage() {
 							Block date
 						</Button>
 					</div>
-					{message ? <p className="text-sm text-[#6B705C]">{message}</p> : null}
+					{message ? <p className="text-sm text-camel">{message}</p> : null}
 				</div>
 			</div>
 		</div>

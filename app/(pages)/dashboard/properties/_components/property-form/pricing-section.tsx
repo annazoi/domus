@@ -681,7 +681,7 @@ function DayCell({ day, selected, availability, isPast, onClick }: DayCellProps)
 	const stateClass = isPast
 		? 'cursor-not-allowed border-black/5 bg-black/[0.03] text-[#1A1A1A]/30'
 		: !availability
-			? 'border-black/5 bg-white text-[#1A1A1A]/70 hover:border-[#6B705C]/30'
+			? 'border-black/5 bg-white text-[#1A1A1A]/70 hover:border-camel/30'
 			: availability.is_available
 				? 'border-emerald-200 bg-emerald-50 text-emerald-900'
 				: 'border-red-200 bg-red-50 text-red-800';
@@ -695,7 +695,7 @@ function DayCell({ day, selected, availability, isPast, onClick }: DayCellProps)
 			className={cn(
 				'h-16 rounded-xl border text-sm transition-all duration-200 ease-out active:scale-[0.98]',
 				stateClass,
-				selected && !isPast ? 'ring-2 ring-[#6B705C]/40' : '',
+				selected && !isPast ? 'ring-2 ring-camel/40' : '',
 			)}
 		>
 			<div className="flex w-full flex-col items-center gap-1">

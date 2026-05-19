@@ -10,7 +10,7 @@ export default function EarningsPage() {
 	return (
 		<div className="space-y-10">
 			<div>
-				<p className="text-xs uppercase tracking-[0.2em] text-[#6B705C]">Earnings</p>
+				<p className="text-xs uppercase tracking-[0.2em] text-camel">Earnings</p>
 				<h1 className="mt-2 font-serif text-4xl tracking-tight">Revenue in focus</h1>
 			</div>
 
@@ -22,7 +22,7 @@ export default function EarningsPage() {
 					{bars.map((height, index) => (
 						<div key={index} className="flex flex-1 flex-col items-center gap-2">
 							<div
-								className="w-full rounded-t-lg bg-[#6B705C]/30 transition hover:bg-[#6B705C]/45"
+								className="w-full rounded-t-lg bg-camel/30 transition hover:bg-camel/45"
 								style={{ height: `${height}%` }}
 							/>
 							<span className="text-xs text-[#1A1A1A]/45">W{index + 1}</span>
@@ -42,7 +42,7 @@ export default function EarningsPage() {
 									{tx.id} - {tx.date}
 								</p>
 							</div>
-							<p className="font-medium text-[#6B705C]">{tx.amount}</p>
+							<p className="font-medium text-camel">{tx.amount}</p>
 						</div>
 					))}
 				</div>
