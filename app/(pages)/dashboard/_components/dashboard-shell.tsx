@@ -21,13 +21,14 @@ import {
 	Menu,
 	MessageCircle,
 	Settings,
+	Users,
 	Wallet,
 	Wrench,
 	X,
 } from 'lucide-react';
 import { Button } from '@/components/ui';
 import Image from 'next/image';
-import logo from '@/public/images/primary_logo.png'
+import logo from '@/public/images/logo.png'
 
 type NavItem = {
 	label: string;
@@ -39,6 +40,7 @@ const navItems: NavItem[] = [
 	{ label: 'Overview', href: '/dashboard', icon: <LayoutGrid className="h-4 w-4" /> },
 	{ label: 'Properties', href: '/dashboard/properties', icon: <Home className="h-4 w-4" /> },
 	{ label: 'Bookings', href: '/dashboard/bookings', icon: <BarChart3 className="h-4 w-4" /> },
+	{ label: 'Customer', href: '/dashboard/customers', icon: <Users className="h-4 w-4" /> },
 	{ label: 'My trips', href: '/dashboard/trips', icon: <Luggage className="h-4 w-4" /> },
 	{ label: 'Messages', href: '/dashboard/messages', icon: <MessageCircle className="h-4 w-4" /> },
 	{ label: 'Calendar', href: '/dashboard/calendar', icon: <CalendarDays className="h-4 w-4" /> },

@@ -46,7 +46,7 @@ export default function BookingsPage() {
 							type="button"
 							key={booking.id}
 							variant="custom"
-							className="flex h-auto w-full flex-col items-start gap-2 border-b border-black/5 px-5 py-5 text-left font-normal transition hover:bg-black/[0.02] last:border-b-0 md:flex-row md:flex-wrap md:items-baseline md:gap-x-8 md:gap-y-2 md:px-8 md:py-6 lg:gap-x-12 lg:px-10"
+							className="cursor-pointer flex h-auto w-full flex-col items-start gap-2 border-b border-black/5 px-5 py-5 text-left font-normal transition hover:bg-black/[0.02] last:border-b-0 md:flex-row md:flex-wrap md:items-baseline md:gap-x-8 md:gap-y-2 md:px-8 md:py-6 lg:gap-x-12 lg:px-10"
 							onClick={() => setSelected(booking)}
 						>
 							<span className="max-w-full shrink-0 text-lg font-medium leading-snug md:text-xl">{booking.guest_name}</span>
