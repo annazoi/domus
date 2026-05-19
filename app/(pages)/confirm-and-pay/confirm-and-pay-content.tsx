@@ -1,16 +1,15 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Input } from '@/components/ui';
 import { useCreateBooking } from '@/features/bookings/hooks/use-bookings';
-
-function formatDate(value: string) {
-	if (!value) return '-';
-	const parsed = new Date(`${value}T00:00:00`);
-	if (Number.isNaN(parsed.getTime())) return value;
-	return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
+import { useServices } from '@/features/services/hooks/use-services';
+import { formatDisplayDate } from '@/features/property-availability/utils/date';
+import BookingServicesCard, {
+	buildSelectedServices,
+	computeExtrasTotal,
+} from './_components/booking-services-card';
 
 export default function ConfirmAndPayContent() {
 	const router = useRouter();
@@ -32,7 +31,43 @@ export default function ConfirmAndPayContent() {
 	);
 
 	const [error, setError] = useState<string | null>(null);
+	const [serviceQuantities, setServiceQuantities] = useState<Record<string, number>>({});
 	const { mutateAsync: createBooking, isPending } = useCreateBooking();
+	const { data: services, isLoading: servicesLoading, isError: servicesError } = useServices(
+		booking.property_id,
+	);
+
+	const availableServices = services ?? [];
+
+	const handleServiceQuantityChange = useCallback((serviceId: string, quantity: number) => {
+		setServiceQuantities((prev) => {
+			if (quantity <= 0) {
+				const next = { ...prev };
+				delete next[serviceId];
+				return next;
+			}
+			return { ...prev, [serviceId]: quantity };
+		});
+	}, []);
+
+	const selectedServiceLines = useMemo(
+		() =>
+			availableServices
+				.filter((service) => (serviceQuantities[service.id] ?? 0) > 0)
+				.map((service) => ({
+					id: service.id,
+					name: service.name,
+					quantity: serviceQuantities[service.id] ?? 0,
+					lineTotal: service.price * (serviceQuantities[service.id] ?? 0),
+				})),
+		[availableServices, serviceQuantities],
+	);
+
+	const extrasTotal = useMemo(
+		() => computeExtrasTotal(availableServices, serviceQuantities),
+		[availableServices, serviceQuantities],
+	);
+	const grandTotal = booking.total_price + extrasTotal;
 
 	const handlePay = async () => {
 		if (!booking.property_id || !booking.check_in || !booking.check_out) {
@@ -45,6 +80,7 @@ export default function ConfirmAndPayContent() {
 		}
 		setError(null);
 		try {
+			const selectedServices = buildSelectedServices(serviceQuantities);
 			const result = await createBooking({
 				property_id: booking.property_id,
 				check_in: booking.check_in,
@@ -56,6 +92,7 @@ export default function ConfirmAndPayContent() {
 					email: booking.email,
 					phone: booking.phone || undefined,
 				},
+				...(selectedServices.length > 0 ? { services: selectedServices } : {}),
 			});
 			router.push(`/bookings/${result.booking_id}`);
 		} catch (err) {
@@ -80,6 +117,14 @@ export default function ConfirmAndPayContent() {
 						<Input variant="compact" placeholder="Country" />
 					</div>
 
+					<BookingServicesCard
+						services={availableServices}
+						isLoading={servicesLoading}
+						isError={servicesError}
+						quantities={serviceQuantities}
+						onQuantityChange={handleServiceQuantityChange}
+					/>
+
 					{error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
 
 					<Button
@@ -89,7 +134,7 @@ export default function ConfirmAndPayContent() {
 						disabled={isPending}
 						onClick={() => void handlePay()}
 					>
-						{isPending ? 'Processing...' : `Pay $${booking.total_price}`}
+						{isPending ? 'Processing...' : `Pay $${grandTotal.toFixed(2)}`}
 					</Button>
 				</section>
 
@@ -102,20 +147,62 @@ export default function ConfirmAndPayContent() {
 						</div>
 						<div className="flex justify-between gap-2">
 							<span>Check in</span>
-							<span className="font-medium text-[#1A1A1A]">{formatDate(booking.check_in)}</span>
+							<span className="font-medium text-[#1A1A1A]">{formatDisplayDate(booking.check_in)}</span>
 						</div>
 						<div className="flex justify-between gap-2">
 							<span>Check out</span>
-							<span className="font-medium text-[#1A1A1A]">{formatDate(booking.check_out)}</span>
+							<span className="font-medium text-[#1A1A1A]">{formatDisplayDate(booking.check_out)}</span>
 						</div>
 						<div className="flex justify-between gap-2">
 							<span>Guests</span>
 							<span className="font-medium text-[#1A1A1A]">{booking.guests}</span>
 						</div>
-						<div className="mt-3 border-t border-black/10 pt-3">
+						{servicesLoading ? (
+							<p className="text-sm text-[#1A1A1A]/55">Loading extras…</p>
+						) : servicesError ? (
+							<p className="text-sm text-red-600">Could not load extras.</p>
+						) : availableServices.length > 0 ? (
+							<div className="space-y-2 border-t border-black/10 pt-3">
+								<p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-camel">
+									Available extras
+								</p>
+								{availableServices.map((service) => (
+									<div key={service.id} className="flex justify-between gap-2 text-sm">
+										<span className="text-[#1A1A1A]/75">{service.name}</span>
+										<span className="font-medium text-[#1A1A1A]">${service.price.toFixed(2)}</span>
+									</div>
+								))}
+							</div>
+						) : null}
+						{selectedServiceLines.length > 0 ? (
+							<div className="space-y-2 border-t border-black/10 pt-3">
+								<p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-camel">
+									Selected extras
+								</p>
+								{selectedServiceLines.map((line) => (
+									<div key={line.id} className="flex justify-between gap-2 text-sm">
+										<span className="text-[#1A1A1A]/75">
+											{line.name} × {line.quantity}
+										</span>
+										<span className="font-medium text-[#1A1A1A]">${line.lineTotal.toFixed(2)}</span>
+									</div>
+								))}
+							</div>
+						) : null}
+						<div className="mt-3 space-y-2 border-t border-black/10 pt-3">
+							<div className="flex justify-between gap-2">
+								<span>Stay</span>
+								<span className="font-medium text-[#1A1A1A]">${booking.total_price.toFixed(2)}</span>
+							</div>
+							{extrasTotal > 0 ? (
+								<div className="flex justify-between gap-2">
+									<span>Extras</span>
+									<span className="font-medium text-[#1A1A1A]">${extrasTotal.toFixed(2)}</span>
+								</div>
+							) : null}
 							<div className="flex justify-between gap-2">
 								<span>Total</span>
-								<span className="font-semibold text-[#1A1A1A]">${booking.total_price}</span>
+								<span className="font-semibold text-[#1A1A1A]">${grandTotal.toFixed(2)}</span>
 							</div>
 						</div>
 					</div>

@@ -8,6 +8,11 @@ class BookingUnavailableError extends Error {
 	override name = 'BookingUnavailableError';
 }
 
+interface BookingServiceLine {
+	service_id?: string;
+	quantity?: number;
+}
+
 interface CreateBookingBody {
 	property_id?: string;
 	check_in?: string;
@@ -19,6 +24,7 @@ interface CreateBookingBody {
 		email?: string;
 		phone?: string;
 	};
+	services?: BookingServiceLine[];
 }
 
 const isValidEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
@@ -55,6 +61,19 @@ export async function POST(request: Request) {
 	}
 
 	const guests = guestsRaw;
+
+	const serviceLines = (body.services ?? [])
+		.map((line) => ({
+			service_id: line.service_id?.trim() ?? '',
+			quantity: line.quantity ?? 1,
+		}))
+		.filter((line) => line.service_id.length > 0);
+
+	for (const line of serviceLines) {
+		if (!Number.isInteger(line.quantity) || line.quantity <= 0) {
+			return Response.json({ message: 'Invalid service quantity.' }, { status: 400 });
+		}
+	}
 
 	const check_in = checkInDay.toJSDate();
 	const check_out = checkOutDay.toJSDate();
@@ -104,6 +123,36 @@ export async function POST(request: Request) {
 					hostUserId: verified.hostUserId,
 				});
 
+				let totalPrice = verified.totalPrice;
+				let serviceCatalog: Awaited<ReturnType<typeof tx.service.findMany>> = [];
+
+				if (serviceLines.length > 0) {
+					const serviceIds = [...new Set(serviceLines.map((line) => line.service_id))];
+					const links = await tx.propertyService.findMany({
+						where: {
+							property_id: verified.propertyId,
+							service_id: { in: serviceIds },
+						},
+						select: { service_id: true },
+					});
+					if (links.length !== serviceIds.length) {
+						throw new Error('INVALID_SERVICE');
+					}
+					serviceCatalog = await tx.service.findMany({
+						where: { id: { in: serviceIds } },
+					});
+					if (serviceCatalog.length !== serviceIds.length) {
+						throw new Error('INVALID_SERVICE');
+					}
+					const priceById = new Map(serviceCatalog.map((svc) => [svc.id, Number(svc.price)]));
+
+					for (const line of serviceLines) {
+						const unitPrice = priceById.get(line.service_id);
+						if (unitPrice === undefined) continue;
+						totalPrice += unitPrice * line.quantity;
+					}
+				}
+
 				const created = await tx.booking.create({
 					data: {
 						property_id: verified.propertyId,
@@ -113,10 +162,31 @@ export async function POST(request: Request) {
 						check_in,
 						check_out,
 						guests,
-						total_price: verified.totalPrice,
+						total_price: totalPrice,
 						status: BookingStatus.CONFIRMED,
 					},
 				});
+
+				if (serviceLines.length > 0) {
+					const priceById = new Map(serviceCatalog.map((svc) => [svc.id, svc.price]));
+
+					await Promise.all(
+						serviceLines.map((line) => {
+							const unitPrice = priceById.get(line.service_id);
+							if (!unitPrice) return Promise.resolve();
+							return tx.serviceOrder.create({
+								data: {
+									user_id: guestUserId,
+									service_id: line.service_id,
+									booking_id: created.id,
+									customer_id: customerId,
+									quantity: line.quantity,
+									unit_price: unitPrice,
+								},
+							});
+						}),
+					);
+				}
 
 				const days = eachDayInRange(checkInDay, checkOutDay);
 				await Promise.all(
@@ -158,6 +228,9 @@ export async function POST(request: Request) {
 			totalPrice: Number(booking.total_price),
 		});
 	} catch (e) {
+		if (e instanceof Error && e.message === 'INVALID_SERVICE') {
+			return Response.json({ message: 'One or more selected services are invalid.' }, { status: 400 });
+		}
 		if (e instanceof BookingUnavailableError) {
 			return Response.json({ error: 'Property not available' }, { status: 400 });
 		}

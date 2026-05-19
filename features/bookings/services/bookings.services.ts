@@ -13,6 +13,7 @@ export type CreateBookingPayload = {
 		email: string;
 		phone?: string;
 	};
+	services?: { service_id: string; quantity: number }[];
 };
 
 export type CreateBookingResponse = {

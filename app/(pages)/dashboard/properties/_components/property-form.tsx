@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { GoogleMapsPlacesScript } from '@/components/google-maps';
 import type { Property } from '@/features/property/interfaces/property.interface';
 import { AmenitiesSection } from './property-form/amenities-section';
+import { ServicesSection } from './property-form/services-section';
 import { BasicInfoSection } from './property-form/basic-info-section';
 import { BrandingSection } from './property-form/branding-section';
 import { CapacitySection } from './property-form/capacity-section';
@@ -98,6 +99,9 @@ export function PropertyForm({ mode, initialProperty }: PropertyFormProps) {
 					) : null}
 					{activeTab === 'amenities' ? (
 						<AmenitiesSection mode={mode} initialProperty={initialProperty} propertyId={resolvedPropertyId} />
+					) : null}
+					{activeTab === 'services' ? (
+						<ServicesSection mode={mode} initialProperty={initialProperty} propertyId={resolvedPropertyId} />
 					) : null}
 					{activeTab === 'images' ? (
 						<ImagesSection mode={mode} initialProperty={initialProperty} propertyId={resolvedPropertyId} />

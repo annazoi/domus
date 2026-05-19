@@ -1,5 +1,5 @@
 import { DocumentType, Prisma } from '@prisma/client';
-import { deleteFile, UploadedCloudinaryFile } from '@/app/api/services/cloudinary/cloudinary.service';
+import { deleteFile, UploadedCloudinaryFile } from '@/app/api/utils/cloudinary/cloudinary.service';
 import { prisma } from '@/lib/prisma';
 import { mimetypeFromFilename } from './utils/documents.utils';
 

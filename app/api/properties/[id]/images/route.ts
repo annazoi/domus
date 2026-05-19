@@ -1,9 +1,9 @@
 import { getHostIdFromRequest } from '@/app/api/_utils/auth';
-import { uploadFiles } from '@/app/api/services/cloudinary/cloudinary.service';
+import { uploadFiles } from '@/app/api/utils/cloudinary/cloudinary.service';
 import {
 	buildImageDocumentCreateInput,
 	removeDocumentWithCloudinaryAsset,
-} from '@/app/api/services/documents/documents.service';
+} from '@/app/api/utils/documents/documents.service';
 import { propertyImagesService } from './images.service';
 
 interface ImagePayload {

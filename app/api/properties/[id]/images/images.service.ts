@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import type { UploadedCloudinaryFile } from '@/app/api/services/cloudinary/cloudinary.service';
+import type { UploadedCloudinaryFile } from '@/app/api/utils/cloudinary/cloudinary.service';
 import { prisma } from '@/lib/prisma';
 
 export const propertyImagesService = {

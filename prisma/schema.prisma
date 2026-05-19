@@ -65,6 +65,7 @@ model User {
   property_availability PropertyAvailability[]
   bookings_as_guest     Booking[]              @relation("GuestBookings")
   bookings_as_host      Booking[]              @relation("HostBookings")
+  service_orders        ServiceOrder[]
   documents             Document[]             @relation("UserDocuments")
 
   @@map("users")
@@ -93,6 +94,7 @@ model Customer {
   guest_user User      @relation("CustomerGuestUser", fields: [guest_user_id], references: [id])
   host       User      @relation("CustomerHostUser", fields: [host_user_id], references: [id], map: "customers_host_id_fkey")
   bookings Booking[]
+  service_orders ServiceOrder[]
 
   @@unique([guest_user_id, host_user_id])
   @@index([guest_user_id])
@@ -132,7 +134,8 @@ model Property {
   amenities    PropertyAmenity[]
   availability PropertyAvailability[]
   images       PropertyImage[]
-  bookings     Booking[]
+  bookings          Booking[]
+  property_services PropertyService[]
 
   @@index([user_id, isPublished])
   @@map("properties")
@@ -157,12 +160,61 @@ model Booking {
   guest    User     @relation("GuestBookings", fields: [guest_user_id], references: [id])
   customer Customer @relation(fields: [customer_id], references: [id])
   host     User     @relation("HostBookings", fields: [host_user_id], references: [id])
-
+  service_orders ServiceOrder[]
 
   @@index([property_id])
   @@index([guest_user_id])
   @@index([property_id, check_in, check_out])
   @@map("bookings")
+}
+
+model ServiceOrder {
+  id          String   @id @default(uuid())
+  user_id     String
+  service_id  String
+  booking_id  String
+  customer_id String
+  quantity    Int      @default(1)
+  unit_price  Decimal
+  created_at  DateTime @default(now())
+
+  user     User     @relation(fields: [user_id], references: [id])
+  service  Service  @relation(fields: [service_id], references: [id])
+  booking  Booking  @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customer_id], references: [id])
+
+  @@index([booking_id])
+  @@index([service_id])
+  @@map("service_orders")
+}
+
+model PropertyService {
+  id          String   @id @default(uuid())
+  property_id String
+  service_id  String
+  created_at  DateTime @default(now())
+
+  property Property @relation(fields: [property_id], references: [id], onDelete: Cascade)
+  service  Service  @relation(fields: [service_id], references: [id], onDelete: Cascade)
+
+  @@unique([property_id, service_id])
+  @@index([property_id])
+  @@index([service_id])
+  @@map("property_services")
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Decimal
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  property_services PropertyService[]
+  orders            ServiceOrder[]
+
+  @@map("services")
 }
 
 model PropertyAvailability {

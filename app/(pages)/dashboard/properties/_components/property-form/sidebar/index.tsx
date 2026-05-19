@@ -11,6 +11,7 @@ export const PROPERTY_FORM_TAB_IDS = [
 	'location',
 	'pricing-availability',
 	'amenities',
+	'services',
 	'images',
 	'branding',
 ] as const;

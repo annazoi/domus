@@ -43,6 +43,10 @@ export const ApiRoutes = {
 		listMine: '/bookings?host_id=me',
 		listMyTrips: '/bookings?guest_id=me',
 	},
+	services: {
+		list: (propertyId: string) => `/services?property_id=${encodeURIComponent(propertyId)}`,
+		byProperty: (propertyId: string) => `/properties/${propertyId}/services`,
+	},
 	customers: {
 		prefix: '/customers',
 		listMine: '/customers?host_id=me',

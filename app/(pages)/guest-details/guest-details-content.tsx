@@ -3,15 +3,10 @@
 import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Input } from '@/components/ui';
+import { formatDisplayDate } from '@/features/property-availability/utils/date';
+import { ArrowLeft } from 'lucide-react';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function formatDate(value: string) {
-	if (!value) return '-';
-	const parsed = new Date(`${value}T00:00:00`);
-	if (Number.isNaN(parsed.getTime())) return value;
-	return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
 
 export default function GuestDetailsContent() {
 	const router = useRouter();
@@ -134,8 +129,9 @@ export default function GuestDetailsContent() {
 					</div>
 
 					<div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-						<Button type="button" variant="cardRow" onClick={() => router.back()}>
-							Back
+						<Button type="button" variant="cardRow" onClick={() => router.back()} className="cursor-pointer max-w-fit flex items-center mr-auto">
+							<ArrowLeft className="mr-2 h-4 w-4" />
+							<span className="text-sm font-medium text-[#1A1A1A]">Back</span>
 						</Button>
 						<Button type="button" variant="primarySm" onClick={handleContinue}>
 							Continue to payment
@@ -152,11 +148,11 @@ export default function GuestDetailsContent() {
 						</div>
 						<div className="flex justify-between gap-2">
 							<span>Check in</span>
-							<span className="font-medium text-[#1A1A1A]">{formatDate(booking.check_in)}</span>
+							<span className="font-medium text-[#1A1A1A]">{formatDisplayDate(booking.check_in)}</span>
 						</div>
 						<div className="flex justify-between gap-2">
 							<span>Check out</span>
-							<span className="font-medium text-[#1A1A1A]">{formatDate(booking.check_out)}</span>
+							<span className="font-medium text-[#1A1A1A]">{formatDisplayDate(booking.check_out)}</span>
 						</div>
 						<div className="flex justify-between gap-2">
 							<span>Guests</span>

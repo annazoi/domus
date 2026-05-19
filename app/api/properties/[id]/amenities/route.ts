@@ -1,7 +1,7 @@
 import { getHostIdFromRequest } from '@/app/api/_utils/auth';
 import { mapProperty } from '@/app/api/_utils/property-map';
-import { uploadFiles } from '@/app/api/services/cloudinary/cloudinary.service';
-import { buildImageDocumentCreateInput } from '@/app/api/services/documents/documents.service';
+import { uploadFiles } from '@/app/api/utils/cloudinary/cloudinary.service';
+import { buildImageDocumentCreateInput } from '@/app/api/utils/documents/documents.service';
 import { prisma } from '@/lib/prisma';
 
 interface AmenityItem {
