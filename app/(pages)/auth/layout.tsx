@@ -8,7 +8,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
     <main className="login-page">
       <aside className="login-aside">
         <Image
-          src="/images/hero.jpg"
+          src="/images/landing-hero.png"
           alt="Luxury apartment with mountain view"
           fill
           priority

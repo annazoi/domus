@@ -432,10 +432,9 @@ export default function Home() {
 								className="object-cover journal-card-img"
 							/>
 							<div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-							<div className="absolute inset-0 p-6 flex flex-col justify-between text-dom-cream">
-								<span className="font-display text-xl">2025</span>
+							<div className="absolute inset-0 p-6 flex flex-col justify-end text-dom-cream">
 								<div>
-									<h3 className="font-display text-2xl mb-4">How to make the most of your direct bookings</h3>
+									<h3 className="font-display text-2xl mb-4 text-dom-cream">How to make the most of your direct bookings</h3>
 									<span className="pill">
 										<span>Read</span>
 										<PillDot>
@@ -454,10 +453,9 @@ export default function Home() {
 								className="object-cover journal-card-img"
 							/>
 							<div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-							<div className="absolute inset-0 p-6 flex flex-col justify-between text-dom-cream">
-								<span className="font-display text-xl">2025</span>
+							<div className="absolute inset-0 p-6 flex flex-col justify-end text-dom-cream">
 								<div>
-									<h3 className="font-display text-2xl mb-4">A guide to pricing your rental like a hotel</h3>
+									<h3 className="font-display text-2xl mb-4 text-dom-cream">A guide to pricing your rental like a hotel</h3>
 									<span className="pill">
 										<span>Read</span>
 										<PillDot>
@@ -476,10 +474,9 @@ export default function Home() {
 								className="object-cover journal-card-img"
 							/>
 							<div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-							<div className="absolute inset-0 p-6 flex flex-col justify-between text-dom-cream">
-								<span className="font-display text-xl">2025</span>
+							<div className="absolute inset-0 p-6 flex flex-col justify-end text-dom-cream">
 								<div>
-									<h3 className="font-display text-2xl mb-4">Five photos every listing page needs</h3>
+									<h3 className="font-display text-2xl mb-4 text-dom-cream">Five photos every listing page needs</h3>
 									<span className="pill">
 										<span>Read</span>
 										<PillDot>

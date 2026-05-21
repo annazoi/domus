@@ -1,10 +1,12 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { MessageCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui';
 import type { HostBookingDetail } from '@/features/bookings/interfaces/booking.interface';
+import { useCreateConversation } from '@/features/messaging/hooks/use-conversations';
 
 function formatWhen(iso: string) {
 	try {
@@ -47,6 +49,22 @@ export function BookingDetailModal({
 	booking: HostBookingDetail | null;
 	onClose: () => void;
 }) {
+	const router = useRouter();
+	const createConversation = useCreateConversation();
+
+	const openMessages = () => {
+		if (!booking) return;
+		createConversation.mutate(
+			{ property_id: booking.property_id, guest_user_id: booking.guest_user_id },
+			{
+				onSuccess: (conversation) => {
+					onClose();
+					router.push(`/dashboard/messages?conversation=${conversation.id}`);
+				},
+			},
+		);
+	};
+
 	return (
 		<AnimatePresence>
 			{open && booking ? (
@@ -82,9 +100,21 @@ export function BookingDetailModal({
 								</h3>
 								<p className="mt-2 text-sm capitalize text-[#1A1A1A]/60 md:text-base">{booking.status}</p>
 							</div>
-							<Button type="button" variant="ghostPill" className="shrink-0 p-2" onClick={onClose} aria-label="Close">
-								<X className="h-5 w-5" />
-							</Button>
+							<div className="flex shrink-0 items-center gap-2">
+								<Button
+									type="button"
+									variant="ghostPill"
+									className="gap-2 px-3 py-2 text-sm"
+									onClick={openMessages}
+									disabled={createConversation.isPending}
+								>
+									<MessageCircle className="h-4 w-4" />
+									Message
+								</Button>
+								<Button type="button" variant="ghostPill" className="shrink-0 p-2" onClick={onClose} aria-label="Close">
+									<X className="h-5 w-5" />
+								</Button>
+							</div>
 						</div>
 						<div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-2 sm:px-8 md:px-10 md:pb-8">
 							<div className="space-y-8 md:space-y-10 lg:grid lg:grid-cols-2 lg:gap-x-14 lg:gap-y-14 lg:space-y-0">

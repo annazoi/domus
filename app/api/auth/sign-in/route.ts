@@ -37,6 +37,11 @@ export async function POST(request: Request) {
 			return Response.json({ message: 'Invalid credentials. Please try again.' }, { status: 401 });
 		}
 
+		await prisma.user.update({
+			where: { id: user.id },
+			data: { is_archived: false },
+		});
+
 		return Response.json(
 			{
 				id: user.id,

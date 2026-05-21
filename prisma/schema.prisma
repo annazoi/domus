@@ -67,6 +67,9 @@ model User {
   bookings_as_host      Booking[]              @relation("HostBookings")
   service_orders        ServiceOrder[]
   documents             Document[]             @relation("UserDocuments")
+  host_conversations    Conversation[]         @relation("HostConversations")
+  guest_conversations   Conversation[]         @relation("GuestConversations")
+  sent_messages         Message[]
 
   @@map("users")
   @@index([email])
@@ -136,9 +139,43 @@ model Property {
   images       PropertyImage[]
   bookings          Booking[]
   property_services PropertyService[]
+  conversations     Conversation[]
 
   @@index([user_id, isPublished])
   @@map("properties")
+}
+
+model Conversation {
+  id            String   @id @default(uuid())
+  host_user_id  String
+  guest_user_id String
+  property_id   String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  host     User      @relation("HostConversations", fields: [host_user_id], references: [id])
+  guest    User      @relation("GuestConversations", fields: [guest_user_id], references: [id])
+  property Property  @relation(fields: [property_id], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([host_user_id, guest_user_id, property_id])
+  @@index([host_user_id, updated_at])
+  @@index([guest_user_id, updated_at])
+  @@map("conversations")
+}
+
+model Message {
+  id              String   @id @default(uuid())
+  conversation_id String
+  sender_id       String
+  body            String
+  created_at      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [sender_id], references: [id])
+
+  @@index([conversation_id, created_at])
+  @@map("messages")
 }
 
 model Booking {

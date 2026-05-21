@@ -10,6 +10,7 @@ export interface Booking {
 }
 
 export interface HostBookingDetail extends Booking {
+	guest_user_id: string;
 	guests: number;
 	total_price: number;
 	check_in_iso: string;

@@ -16,6 +16,7 @@ export const ApiRoutes = {
 		prefix: '/users',
 		user: (id: string) => `/users/${id}`,
 		me: '/users/me',
+		search: (q: string) => `/users/search?${toSearchParams({ q })}`,
 	},
 	properties: {
 		prefix: '/properties',
@@ -51,6 +52,10 @@ export const ApiRoutes = {
 		prefix: '/customers',
 		listMine: '/customers?host_id=me',
 		customer: (id: string) => `/customers/${id}`,
+	},
+	conversations: {
+		prefix: '/conversations',
+		messages: (id: string) => `/conversations/${id}/messages`,
 	},
 	property_images: {
 		byProperty: (id: string) => `/properties/${id}/images`,
