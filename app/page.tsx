@@ -293,7 +293,7 @@ export default function Home() {
 						</div>
 						<div className="md:col-span-6 mt-6 flex flex-col justify-center reveal">
 							<p className="text-xl md:text-2xl text-dom-ink/80 leading-relaxed">
-								Domus is a white-label platform that turns your rental property into a polished, branded
+								Domus is a rental platform that turns your rental property into a polished, branded
 								website - with bookings, payments and guest data built in. You bring the house. We bring the
 								everything-else.
 							</p>

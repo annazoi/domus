@@ -29,7 +29,7 @@ const instrumentSerif = Instrument_Serif({
 export const metadata: Metadata = {
   title: "Domus - Your rental house, beautifully online",
   description:
-    "Domus is the white-label platform for short-stay hosts. Custom templates, booking system, guest CRM and your own domain — in one place.",
+    "Domus is the rental platform for short-stay hosts. Custom templates, booking system, guest CRM and your own domain - in one place.",
 };
 
 export default function RootLayout({
