@@ -1,61 +1,168 @@
 'use client';
 
 import Image from 'next/image';
-import { Manrope, Noto_Serif } from 'next/font/google';
-import { ChevronDown, CircleUser, MapPin, Menu, Search, Star } from 'lucide-react';
+import { Fraunces, IBM_Plex_Sans } from 'next/font/google';
+import { MapPin, Menu, Star, Wind } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { DayPicker } from 'react-day-picker';
 import { BrandingPreviewMap } from '@/components/google-maps';
 import { cn, Input } from '@/components/ui';
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ApiRoutes } from '@/config/api/routes';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
 import { AmenityGlyph, FillImg } from './branding-preview-shared';
 import { PhotoGalleryLightbox } from './photo-gallery-carousel';
-import { DayPicker, type DateRange } from 'react-day-picker';
-import { useCheckAvailability } from '@/features/bookings/hooks/use-check-availability';
+import { formatStay, useBrandingStayBooking } from './use-branding-stay-booking';
 
-const notoSerif = Noto_Serif({
+const fraunces = Fraunces({
 	subsets: ['latin'],
-	variable: '--preview-arch-headline',
-	weight: ['400', '600', '700'],
+	variable: '--preview-kaze-headline',
+	weight: ['400', '500', '600', '700'],
 	display: 'swap',
 });
 
-const manrope = Manrope({
+const ibmPlex = IBM_Plex_Sans({
 	subsets: ['latin'],
-	variable: '--preview-arch-body',
-	weight: ['300', '400', '500', '700'],
+	variable: '--preview-kaze-body',
+	weight: ['300', '400', '500', '600'],
 	display: 'swap',
 });
 
-function startOfToday() {
-	const d = new Date();
-	d.setHours(0, 0, 0, 0);
-	return d;
-}
+function KazeBookingPanel({
+	data,
+	listingPreview,
+	propertyRef,
+	guestCap,
+}: {
+	data: BrandingPreviewDemo;
+	listingPreview?: boolean;
+	propertyRef: string;
+	guestCap: number;
+}) {
+	const booking = useBrandingStayBooking({ listingPreview, propertyRef, guestCap });
+	const priceHint = booking.checkingAvailability
+		? 'Checking availability…'
+		: booking.stayRange?.from && booking.stayRange?.to && booking.availabilityMsg
+			? booking.availabilityMsg
+			: data.booking.price.trim()
+				? `${data.booking.price} ${data.booking.per}`
+				: 'Select your dates';
 
-function formatStay(d: Date) {
-	return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
+	return (
+		<div className="bg-[#f7f4ef] p-8 border border-[#b54a32] shadow-[8px_8px_0_#b54a32]">
+			<div className="flex items-center gap-2 text-[#b54a32]">
+				<Wind className="h-4 w-4" strokeWidth={1.5} aria-hidden />
+				<p className="font-[family-name:var(--preview-kaze-body)] text-[10px] font-semibold uppercase tracking-[0.28em]">
+					{data.booking.eyebrow}
+				</p>
+			</div>
+			{data.booking.price.trim() ? (
+				<p className="mt-4 font-[family-name:var(--preview-kaze-headline)] text-4xl italic text-[#121110]">
+					{data.booking.price}
+					<span className="not-italic font-[family-name:var(--preview-kaze-body)] text-sm text-[#121110]/45">
+						{' '}
+						{data.booking.per}
+					</span>
+				</p>
+			) : null}
+			{data.booking.rating.trim() ? (
+				<p className="mt-2 flex items-center gap-1.5 font-[family-name:var(--preview-kaze-body)] text-sm text-[#121110]/65">
+					<Star className="h-4 w-4 fill-[#b54a32] text-[#b54a32]" aria-hidden />
+					{data.booking.rating}
+				</p>
+			) : null}
 
-function toDateParam(d: Date) {
-	const y = d.getFullYear();
-	const m = String(d.getMonth() + 1).padStart(2, '0');
-	const day = String(d.getDate()).padStart(2, '0');
-	return `${y}-${m}-${day}`;
-}
+			<p className="mt-6 border-t border-[#121110]/10 pt-5 font-[family-name:var(--preview-kaze-body)] text-sm text-[#121110]/60">
+				{priceHint}
+			</p>
 
-function dayStart(d: Date) {
-	const x = new Date(d);
-	x.setHours(0, 0, 0, 0);
-	return x;
-}
+			<div ref={booking.stayPickerRef} className="relative mt-6 [--rdp-accent-color:#b54a32] [--rdp-accent-background-color:rgba(181,74,50,0.12)]">
+				<div className="space-y-3">
+					<button
+						type="button"
+						onClick={() => booking.setStayPickerOpen(true)}
+						className="flex w-full items-center justify-between border-b-2 border-[#121110] py-3 text-left"
+					>
+						<span className="font-[family-name:var(--preview-kaze-body)] text-[10px] uppercase tracking-widest text-[#121110]/45">
+							Arrival
+						</span>
+						<span className="font-[family-name:var(--preview-kaze-headline)] text-lg text-[#121110]">
+							{booking.stayRange?.from ? formatStay(booking.stayRange.from) : data.booking.arrival || 'Add date'}
+						</span>
+					</button>
+					<button
+						type="button"
+						onClick={() => booking.setStayPickerOpen(true)}
+						className="flex w-full items-center justify-between border-b-2 border-[#121110] py-3 text-left"
+					>
+						<span className="font-[family-name:var(--preview-kaze-body)] text-[10px] uppercase tracking-widest text-[#121110]/45">
+							Departure
+						</span>
+						<span className="font-[family-name:var(--preview-kaze-headline)] text-lg text-[#121110]">
+							{booking.stayRange?.to ? formatStay(booking.stayRange.to) : data.booking.departure || 'Add date'}
+						</span>
+					</button>
+				</div>
+				{booking.stayPickerOpen ? (
+					<div
+						role="dialog"
+						aria-label="Select stay dates"
+						className="absolute inset-x-0 top-full z-30 mt-2 border-2 border-[#121110] bg-white p-3 shadow-xl"
+					>
+						<DayPicker
+							mode="range"
+							min={1}
+							selected={booking.stayRange}
+							onSelect={(range) => {
+								booking.setStayRange(range);
+								if (range?.from && range?.to) void booking.checkAvailabilityForDates(range.from, range.to);
+							}}
+							disabled={listingPreview ? booking.dayDisabled : undefined}
+							numberOfMonths={1}
+						/>
+						<button
+							type="button"
+							onClick={() => booking.setStayPickerOpen(false)}
+							className="mt-2 w-full bg-[#121110] py-2 font-[family-name:var(--preview-kaze-body)] text-xs font-semibold uppercase tracking-widest text-[#f7f4ef]"
+						>
+							Confirm
+						</button>
+					</div>
+				) : null}
+			</div>
 
-function nightsPriced(checkIn: Date, checkOutExclusive: Date, allowed: Set<string>) {
-	for (let c = dayStart(checkIn), end = dayStart(checkOutExclusive); c < end; c.setDate(c.getDate() + 1)) {
-		if (!allowed.has(toDateParam(c))) return false;
-	}
-	return true;
+			<div className="mt-6">
+				<label htmlFor={booking.guestFieldId} className="font-[family-name:var(--preview-kaze-body)] text-[10px] uppercase tracking-widest text-[#121110]/45">
+					Guests
+				</label>
+				<Input
+					id={booking.guestFieldId}
+					type="number"
+					min={1}
+					max={guestCap}
+					value={booking.guestCount}
+					onChange={(e) => {
+						const v = parseInt(e.target.value, 10);
+						if (!Number.isNaN(v)) booking.setGuestCount(Math.min(guestCap, Math.max(1, v)));
+					}}
+					className="mt-2 rounded-none border-2 border-[#121110]/15"
+					variant="compact"
+				/>
+			</div>
+
+			<button
+				type="button"
+				onClick={() => void booking.handleReserveClick()}
+				disabled={listingPreview && (!propertyRef || !booking.stayRange?.from || !booking.stayRange?.to || booking.checkingAvailability)}
+				className="mt-8 w-full border-2 border-[#121110] bg-[#b54a32] py-4 font-[family-name:var(--preview-kaze-body)] text-sm font-semibold uppercase tracking-[0.2em] text-[#f7f4ef] transition hover:bg-[#121110] disabled:opacity-50"
+			>
+				{booking.checkingAvailability ? 'Checking…' : data.booking.cta}
+			</button>
+			{data.booking.disclaimer ? (
+				<p className="mt-3 text-center font-[family-name:var(--preview-kaze-body)] text-[11px] text-[#121110]/40">
+					{data.booking.disclaimer}
+				</p>
+			) : null}
+		</div>
+	);
 }
 
 export function ArchitecturaPreview({
@@ -66,40 +173,29 @@ export function ArchitecturaPreview({
 	listingPreview?: boolean;
 }) {
 	const aboutLong = [data.concept.paragraphs[0], data.concept.paragraphs[1]].filter(Boolean).join(' ').trim();
-	const showAboutLong = Boolean(aboutLong);
 	const aboutShort = data.concept.title.trim();
 	const galleryImages = useMemo(
-		() => [
-		data.gallery.large.src.trim(),
-		data.gallery.stack[0].src.trim(),
-		data.gallery.stack[1].src.trim(),
-	].filter(Boolean),
-		[data.gallery.large.src, data.gallery.stack],
+		() =>
+			[
+				data.hero.imageSrc.trim(),
+				data.gallery.large.src.trim(),
+				data.gallery.stack[0].src.trim(),
+				data.gallery.stack[1].src.trim(),
+				data.gallery.full.src.trim(),
+			].filter(Boolean),
+		[data.hero.imageSrc, data.gallery],
 	);
 	const [galleryOpen, setGalleryOpen] = useState(false);
 	const [galleryIndex, setGalleryIndex] = useState(0);
-	const [stayRange, setStayRange] = useState<DateRange | undefined>();
-	const [stayPickerOpen, setStayPickerOpen] = useState(false);
-	const stayPickerRef = useRef<HTMLDivElement>(null);
-	const guestFieldId = useId();
+	const propertyRef = useMemo(() => data.footer.tagline.replace(/^\//, '').trim(), [data.footer.tagline]);
 	const guestCap = useMemo(() => {
 		const m = data.booking.guests.match(/^(\d+)/);
 		const n = m ? parseInt(m[1], 10) : data.booking.maxGuests;
-		const cap = Number.isFinite(n) && n > 0 ? n : data.booking.maxGuests;
-		return Math.min(Math.max(1, data.booking.maxGuests), Math.max(1, cap));
+		return Math.min(Math.max(1, data.booking.maxGuests), Math.max(1, n));
 	}, [data.booking.guests, data.booking.maxGuests]);
-	const [guestCount, setGuestCount] = useState(1);
-	const [checkingAvailability, setCheckingAvailability] = useState(false);
-	const [availabilityMsg, setAvailabilityMsg] = useState<string | null>(null);
-	const [availableForCheckout, setAvailableForCheckout] = useState(false);
-	const [totalPrice, setTotalPrice] = useState<number | null>(null);
-	const [allowedDateKeys, setAllowedDateKeys] = useState<Set<string>>(new Set());
-	const todayStart = useMemo(() => startOfToday(), []);
-	const propertyRef = useMemo(() => data.footer.tagline.replace(/^\//, '').trim(), [data.footer.tagline]);
-	const checkAvailabilityMutation = useCheckAvailability();
-	const router = useRouter();
-	const hostRating = data.host.rating.trim() || (data.booking.rating.trim() ? `${data.booking.rating} rating` : 'Top rated host');
-	const hostBio = data.host.bio.trim() || 'Friendly, responsive host with a focus on thoughtful local recommendations.';
+	const hostBio =
+		data.host.bio.trim() ||
+		'Editorial hospitality with mountain air, slow mornings, and a concierge eye for the exceptional.';
 
 	const openGallery = (src: string) => {
 		const index = galleryImages.findIndex((img) => img === src);
@@ -107,674 +203,289 @@ export function ArchitecturaPreview({
 		setGalleryOpen(true);
 	};
 
-	useEffect(() => {
-		setGuestCount((c) => Math.min(guestCap, Math.max(1, c)));
-	}, [guestCap]);
-
-	useEffect(() => {
-		if (!listingPreview || !propertyRef) return;
-		let cancelled = false;
-		void (async () => {
-			try {
-				const qs = new URLSearchParams({ start: toDateParam(todayStart) });
-				const res = await fetch(`/api${ApiRoutes.properties.unavailableDays(propertyRef)}?${qs}`);
-				if (!res.ok || cancelled) return;
-				const json = (await res.json()) as { available_dates?: string[] };
-				if (!cancelled) setAllowedDateKeys(new Set(json.available_dates ?? []));
-			} catch {
-				if (!cancelled) setAllowedDateKeys(new Set());
-			}
-		})();
-		return () => {
-			cancelled = true;
-		};
-	}, [listingPreview, propertyRef, todayStart]);
-
-	const dayDisabled = useMemo(() => {
-		return (day: Date) => {
-			const d = dayStart(day);
-			if (d.getTime() < todayStart.getTime()) return true;
-
-			const from = stayRange?.from ? dayStart(stayRange.from) : null;
-			const to = stayRange?.to ? dayStart(stayRange.to) : null;
-			const key = toDateParam(day);
-
-			if (!from) return !allowedDateKeys.has(key);
-			if (!to) {
-				if (d.getTime() < from.getTime()) return true;
-				if (d.getTime() === from.getTime()) return !allowedDateKeys.has(key);
-				return !nightsPriced(from, d, allowedDateKeys);
-			}
-
-			if (d.getTime() < from.getTime()) return true;
-			if (d.getTime() === from.getTime()) return !allowedDateKeys.has(key);
-			if (d.getTime() <= to.getTime()) {
-				if (d.getTime() === to.getTime()) return !nightsPriced(from, d, allowedDateKeys);
-				return !allowedDateKeys.has(key);
-			}
-			return !nightsPriced(from, d, allowedDateKeys);
-		};
-	}, [allowedDateKeys, todayStart, stayRange?.from, stayRange?.to]);
-
-	useEffect(() => {
-		if (!stayPickerOpen) return;
-		const onPointerDown = (e: PointerEvent) => {
-			const el = stayPickerRef.current;
-			if (el && !el.contains(e.target as Node)) setStayPickerOpen(false);
-		};
-		document.addEventListener('pointerdown', onPointerDown);
-		return () => document.removeEventListener('pointerdown', onPointerDown);
-	}, [stayPickerOpen]);
-
-	const checkAvailabilityForDates = useCallback(
-		async (from: Date, to: Date) => {
-			if (!propertyRef) return;
-			setCheckingAvailability(true);
-			setAvailabilityMsg(null);
-			try {
-				const check_in = toDateParam(from);
-				const check_out = toDateParam(to);
-				const data = await checkAvailabilityMutation.mutateAsync({
-					property_id: propertyRef,
-					check_in,
-					check_out,
-					guests: guestCount,
-				});
-
-				const available = Boolean(data.isAvailable);
-				const total = typeof data.totalPrice === 'number' ? data.totalPrice : null;
-				setAvailableForCheckout(available);
-				setTotalPrice(total);
-				setAvailabilityMsg(
-					available
-						? `Available${total !== null ? ` · Total $${total}` : ''}`
-						: 'Not available for selected dates.',
-				);
-				return { available, total };
-			} catch {
-				setAvailableForCheckout(false);
-				setTotalPrice(null);
-				setAvailabilityMsg('Could not check availability.');
-			} finally {
-				setCheckingAvailability(false);
-			}
-		},
-		[propertyRef, guestCount, checkAvailabilityMutation],
-	);
-
-	const handleReserveClick = async () => {
-		if (!stayRange?.from || !stayRange?.to) return;
-		const result = await checkAvailabilityForDates(stayRange.from, stayRange.to);
-		if (!result?.available) return;
-
-		const qs = new URLSearchParams({
-			property_id: propertyRef,
-			check_in: toDateParam(stayRange.from),
-			check_out: toDateParam(stayRange.to),
-			guests: String(guestCount),
-			total_price: String(result.total ?? 0),
-		});
-		router.push(`/guest-details?${qs.toString()}`);
-	};
-
 	return (
 		<div
 			className={cn(
-				notoSerif.variable,
-				manrope.variable,
-				'text-[#1b1c1a] antialiased',
-				'bg-[#fbf9f6] font-[family-name:var(--preview-arch-body)] selection:bg-[#ffdbcf] selection:text-[#793015]',
+				fraunces.variable,
+				ibmPlex.variable,
+				'bg-[#121110] font-[family-name:var(--preview-kaze-body)] text-[#f7f4ef] antialiased selection:bg-[#b54a32]/40',
 			)}
 		>
-			<header className="sticky top-0 z-20 flex w-full items-center justify-between border-b border-[#dbc1b9]/30 bg-[#fbf9f6]/90 px-4 py-4 backdrop-blur-xl sm:px-8 sm:py-5">
-				<div className="flex min-w-0 items-center gap-3">
-					{listingPreview ? null : <Menu className="h-5 w-5 shrink-0 text-[#944528]" strokeWidth={1.5} />}
-					<span className="truncate font-[family-name:var(--preview-arch-headline)] text-base uppercase tracking-[0.2em] text-[#1b1c1a] sm:text-lg">
+			<div
+				className="pointer-events-none fixed inset-0 opacity-[0.07]"
+				style={{
+					backgroundImage:
+						'repeating-linear-gradient(-12deg, transparent, transparent 40px, #f7f4ef 40px, #f7f4ef 41px)',
+				}}
+				aria-hidden
+			/>
+
+			<header className="relative z-20 border-b border-[#f7f4ef]/10">
+				<div className="mx-auto flex max-w-[1440px] items-center justify-between px-5 py-5 sm:px-12">
+					<span className="font-[family-name:var(--preview-kaze-headline)] text-xl italic tracking-tight sm:text-2xl">
 						{data.wordmark}
 					</span>
+					{data.nav.length > 0 ? (
+						<nav className="hidden gap-10 md:flex">
+							{data.nav.map((item) => (
+								<span
+									key={item.label}
+									className={cn(
+										'font-[family-name:var(--preview-kaze-body)] text-[10px] uppercase tracking-[0.25em]',
+										item.current ? 'font-semibold text-[#b54a32]' : 'text-[#f7f4ef]/50',
+									)}
+								>
+									{item.label}
+								</span>
+							))}
+						</nav>
+					) : null}
+					{listingPreview ? <span className="w-5 md:hidden" aria-hidden /> : <Menu className="h-5 w-5 md:hidden" strokeWidth={1.5} />}
 				</div>
-				{data.nav.length > 0 ? (
-					<nav className="hidden gap-8 md:flex">
-						{data.nav.map((item) => (
-							<span
-								key={item.label}
-								className={cn(
-									'text-[10px] uppercase tracking-widest',
-									item.current ? 'font-bold text-[#944528]' : 'text-[#1b1c1a]/60',
-								)}
-							>
-								{item.label}
-							</span>
-						))}
-					</nav>
-				) : (
-					<span className="hidden md:block" />
-				)}
-				{listingPreview ? (
-					<span className="w-10 shrink-0 sm:w-16" aria-hidden />
-				) : (
-					<div className="flex items-center gap-4 text-[#1b1c1a]/60">
-						<Search className="h-5 w-5" strokeWidth={1.5} />
-						<CircleUser className="h-5 w-5" strokeWidth={1.5} />
-					</div>
-				)}
 			</header>
 
-			<main>
-				<section className="relative mb-16 w-full overflow-hidden px-4 sm:mb-24 sm:px-8">
-					<div className="relative h-[220px] w-full sm:h-[300px] lg:h-[360px]">
+			<section className="relative overflow-hidden">
+				<div className="mx-auto grid max-w-[1440px] lg:grid-cols-12">
+					<div className="relative z-10 flex flex-col justify-end px-5 pb-12 pt-16 sm:px-12 lg:col-span-5 lg:min-h-[75vh] lg:pb-20 lg:pt-24">
+						{data.hero.series ? (
+							<p className="font-[family-name:var(--preview-kaze-body)] text-[11px] uppercase tracking-[0.4em] text-[#b54a32]">
+								{data.hero.series}
+							</p>
+						) : null}
+						<h1 className="mt-4 font-[family-name:var(--preview-kaze-headline)] text-[clamp(2.5rem,6vw,4.5rem)] font-semibold leading-[1.02] tracking-tight">
+							{data.hero.title}
+						</h1>
+						{data.hero.location ? (
+							<p className="mt-6 flex items-center gap-2 font-[family-name:var(--preview-kaze-body)] text-sm text-[#f7f4ef]/65">
+								<MapPin className="h-4 w-4 text-[#b54a32]" strokeWidth={1.5} />
+								{data.hero.location}
+							</p>
+						) : null}
+						{aboutShort ? (
+							<p className="mt-8 max-w-sm font-[family-name:var(--preview-kaze-body)] text-base leading-relaxed text-[#f7f4ef]/55">
+								{aboutShort}
+							</p>
+						) : null}
+					</div>
+					<div className="relative min-h-[45vh] lg:col-span-7 lg:min-h-[75vh]">
 						{data.hero.imageSrc.trim() ? (
-							<Image
-								src={data.hero.imageSrc}
-								alt=""
-								fill
-								className="object-cover grayscale-[20%]"
-								sizes="(max-width: 1024px) 100vw, 1024px"
-								unoptimized
-							/>
+							<button
+								type="button"
+								onClick={() => openGallery(data.hero.imageSrc.trim())}
+								className="relative block h-full min-h-[45vh] w-full lg:min-h-[75vh]"
+								style={{ clipPath: 'polygon(8% 0, 100% 0, 100% 100%, 0 100%)' }}
+							>
+								<Image
+									src={data.hero.imageSrc}
+									alt=""
+									fill
+									className="object-cover"
+									sizes="(max-width:1024px) 100vw, 60vw"
+									priority
+									unoptimized
+								/>
+								<div className="absolute inset-0 bg-gradient-to-r from-[#121110] via-transparent to-transparent" aria-hidden />
+							</button>
 						) : (
-							<div className="absolute inset-0 bg-[#e4e2df]" aria-hidden />
+							<div className="min-h-[45vh] bg-[#1e1d1b] lg:min-h-[75vh]" aria-hidden />
 						)}
-						<div
-							className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-[rgba(27,28,26,0.45)]"
-							aria-hidden
-						/>
-						<div className="absolute bottom-6 left-4 max-w-3xl sm:bottom-10 sm:left-8">
-							{data.hero.series ? (
-								<p className="mb-2 font-[family-name:var(--preview-arch-body)] text-[10px] uppercase tracking-[0.35em] text-white/85 sm:text-xs">
-									{data.hero.series}
-								</p>
-							) : null}
-							<h1 className="font-[family-name:var(--preview-arch-headline)] text-3xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
-								{data.hero.title}
-							</h1>
-							{data.hero.location ? (
-								<div className="mt-4 flex items-center gap-2 text-white/90">
-									<MapPin className="h-5 w-5 shrink-0" strokeWidth={1.5} />
-									<span className="font-[family-name:var(--preview-arch-headline)] text-lg sm:text-2xl">
-										{data.hero.location}
-									</span>
+					</div>
+				</div>
+			</section>
+
+			<section className="relative z-10 bg-[#f7f4ef] text-[#121110]">
+				<div className="mx-auto max-w-[1440px] px-5 py-16 sm:px-12 sm:py-24">
+					<div className="grid gap-16 lg:grid-cols-12 lg:gap-12">
+						<div className="space-y-20 lg:col-span-7">
+							{aboutLong ? (
+								<div>
+									{data.concept.eyebrow ? (
+										<p className="font-[family-name:var(--preview-kaze-body)] text-[10px] font-semibold uppercase tracking-[0.35em] text-[#b54a32]">
+											{data.concept.eyebrow}
+										</p>
+									) : null}
+									<p className="mt-6 font-[family-name:var(--preview-kaze-headline)] text-3xl leading-snug sm:text-4xl lg:text-[2.75rem]">
+										{aboutLong}
+									</p>
 								</div>
 							) : null}
-						</div>
-					</div>
-				</section>
 
-				<div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-12 px-4 pb-16 lg:grid-cols-12 lg:gap-16 lg:px-12">
-					<div className="space-y-16 lg:col-span-7 lg:space-y-24">
-						<section>
-							{data.concept.eyebrow ? (
-								<span className="mb-2 block font-[family-name:var(--preview-arch-body)] text-[10px] uppercase tracking-widest text-[#944528]">
-									{data.concept.eyebrow}
-								</span>
-							) : null}
-							{showAboutLong ? (
-								<p
-									className={cn(
-										'max-w-2xl font-[family-name:var(--preview-arch-headline)] text-2xl font-semibold leading-tight text-[#1b1c1a] sm:text-3xl lg:text-4xl',
-										!data.concept.eyebrow && 'mt-4',
-										aboutShort ? 'mb-6' : '',
-									)}
-								>
-									{aboutLong}
-								</p>
-							) : null}
-							{aboutShort ? (
-								<p
-									className={cn(
-										'mb-6 max-w-2xl',
-										showAboutLong
-											? 'text-base leading-relaxed text-[#55433d] sm:text-lg'
-											: 'font-[family-name:var(--preview-arch-headline)] text-2xl font-semibold leading-tight text-[#1b1c1a] sm:text-3xl lg:text-4xl',
-										!showAboutLong && (data.concept.eyebrow ? 'mt-2' : 'mt-4'),
-									)}
-								>
-									{data.concept.title}
-								</p>
-							) : null}
-						</section>
-
-						<section className="space-y-12">
-							{data.gallery.large.src.trim() ||
-							data.gallery.stack[0].src.trim() ||
-							data.gallery.stack[1].src.trim() ? (
-								<div className="grid grid-cols-12 items-end gap-4">
-									{data.gallery.large.src.trim() ? (
-										<button type="button" onClick={() => openGallery(data.gallery.large.src.trim())} className="col-span-12 cursor-pointer text-left sm:col-span-8">
-											<FillImg
-												src={data.gallery.large.src}
-												className="aspect-[4/5] w-full rounded-sm"
-												sizes="(max-width: 640px) 100vw, 60vw"
-											/>
-											{data.gallery.large.caption ? (
-												<p className="mt-3 font-[family-name:var(--preview-arch-body)] text-[10px] uppercase tracking-widest text-[#1b1c1a]/40">
-													{data.gallery.large.caption}
-												</p>
-											) : null}
+							<div className="grid gap-4 sm:grid-cols-12 sm:items-end">
+								{data.gallery.large.src.trim() ? (
+									<button
+										type="button"
+										onClick={() => openGallery(data.gallery.large.src.trim())}
+										className="sm:col-span-8"
+									>
+										<FillImg
+											src={data.gallery.large.src}
+											className="aspect-[4/5] w-full"
+											sizes="(max-width:640px) 100vw, 50vw"
+											imgClassName="grayscale-[30%] contrast-110"
+										/>
+										{data.gallery.large.caption ? (
+											<p className="mt-3 font-[family-name:var(--preview-kaze-body)] text-[10px] uppercase tracking-widest text-[#121110]/40">
+												{data.gallery.large.caption}
+											</p>
+										) : null}
+									</button>
+								) : null}
+								<div className="grid gap-4 sm:col-span-4 sm:translate-y-8">
+									{data.gallery.stack[0].src.trim() ? (
+										<button type="button" onClick={() => openGallery(data.gallery.stack[0].src.trim())}>
+											<FillImg src={data.gallery.stack[0].src} className="aspect-square w-full" sizes="200px" />
 										</button>
 									) : null}
-									{data.gallery.stack[0].src.trim() || data.gallery.stack[1].src.trim() ? (
-										<div className="col-span-12 grid gap-4 sm:col-span-4 sm:translate-y-6">
-											{data.gallery.stack[0].src.trim() ? (
-												<button type="button" onClick={() => openGallery(data.gallery.stack[0].src.trim())} className="cursor-pointer">
-													<FillImg
-														src={data.gallery.stack[0].src}
-														className="aspect-square w-full rounded-sm"
-														sizes="200px"
-													/>
-												</button>
-											) : null}
-											{data.gallery.stack[1].src.trim() ? (
-												<button type="button" onClick={() => openGallery(data.gallery.stack[1].src.trim())} className="cursor-pointer">
-													<FillImg
-														src={data.gallery.stack[1].src}
-														className="aspect-[3/4] w-full rounded-sm"
-														sizes="200px"
-													/>
-												</button>
-											) : null}
-										</div>
+									{data.gallery.stack[1].src.trim() ? (
+										<button type="button" onClick={() => openGallery(data.gallery.stack[1].src.trim())}>
+											<FillImg src={data.gallery.stack[1].src} className="aspect-[3/4] w-full" sizes="200px" />
+										</button>
+									) : null}
+								</div>
+							</div>
+
+							{data.gallery.full.pullQuote.title.trim() || data.gallery.full.pullQuote.text.trim() ? (
+								<div className="border-l-4 border-[#b54a32] py-2 pl-8">
+									{data.gallery.full.pullQuote.title.trim() ? (
+										<p className="font-[family-name:var(--preview-kaze-headline)] text-2xl italic leading-snug sm:text-3xl">
+											{data.gallery.full.pullQuote.title}
+										</p>
+									) : null}
+									{data.gallery.full.pullQuote.text.trim() ? (
+										<p className="mt-4 max-w-lg font-[family-name:var(--preview-kaze-body)] text-sm leading-relaxed text-[#121110]/55">
+											{data.gallery.full.pullQuote.text}
+										</p>
 									) : null}
 								</div>
 							) : null}
 
-							{data.gallery.full.src.trim() ? (
-								<div className="relative h-[220px] w-full overflow-hidden rounded-sm sm:h-[280px] lg:h-[320px]">
-									<Image
-										src={data.gallery.full.src}
-										alt=""
-										fill
-										className="object-cover"
-										sizes="100vw"
-										unoptimized
-									/>
-									{data.gallery.full.pullQuote.title || data.gallery.full.pullQuote.text ? (
-										<div className="absolute bottom-4 right-4 hidden max-w-xs bg-white/95 p-5 shadow-sm sm:block">
-											{data.gallery.full.pullQuote.title ? (
-												<h3 className="mb-2 font-[family-name:var(--preview-arch-headline)] text-xl text-[#1b1c1a]">
-													{data.gallery.full.pullQuote.title}
-												</h3>
-											) : null}
-											{data.gallery.full.pullQuote.text ? (
-												<p className="text-sm leading-relaxed text-[#55433d]">{data.gallery.full.pullQuote.text}</p>
-											) : null}
-										</div>
-									) : null}
+							{data.amenities.length > 0 ? (
+								<div>
+									<p className="font-[family-name:var(--preview-kaze-body)] text-[10px] font-semibold uppercase tracking-[0.35em] text-[#b54a32]">
+										Curated amenities
+									</p>
+									<ol className="mt-8 space-y-0">
+										{data.amenities.map((a, i) => (
+											<li
+												key={`${a.id}-${a.label}`}
+												className="flex items-center gap-6 border-t border-[#121110]/10 py-6"
+											>
+												<span className="font-[family-name:var(--preview-kaze-headline)] text-3xl italic text-[#121110]/15">
+													{String(i + 1).padStart(2, '0')}
+												</span>
+												<AmenityGlyph id={a.id} className="h-7 w-7 shrink-0 text-[#b54a32]" />
+												<span className="font-[family-name:var(--preview-kaze-body)] text-sm font-medium uppercase tracking-wider">
+													{a.label}
+												</span>
+											</li>
+										))}
+									</ol>
 								</div>
 							) : null}
-						</section>
 
-						{data.amenities.length > 0 ? (
-							<section>
-								<span className="mb-8 block font-[family-name:var(--preview-arch-body)] text-[10px] uppercase tracking-widest text-[#944528]">
-									{listingPreview ? '— Amenities' : '— Curated Amenities'}
-								</span>
-								<div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3">
-									{data.amenities.map((a) => (
-										<div key={a.label} className="flex flex-col gap-3">
-											<AmenityGlyph id={a.id} className="text-[#944528]" />
-											<h4 className="font-[family-name:var(--preview-arch-headline)] text-[10px] font-bold uppercase tracking-widest">
-												{a.label}
-											</h4>
+							<div>
+								<p className="font-[family-name:var(--preview-kaze-body)] text-[10px] font-semibold uppercase tracking-[0.35em] text-[#b54a32]">
+									{data.location.eyebrow}
+								</p>
+								<div className="relative mt-6 aspect-video w-full overflow-hidden bg-[#121110]/5">
+									{listingPreview && (data.location.mapCenter || data.location.mapEmbedSrc) ? (
+										<BrandingPreviewMap
+											title="Property location"
+											center={data.location.mapCenter}
+											embedSrc={data.location.mapEmbedSrc}
+											className="absolute inset-0 h-full w-full border-0"
+										/>
+									) : data.location.mapImage.trim() ? (
+										<Image src={data.location.mapImage} alt="" fill className="object-cover" sizes="100vw" unoptimized />
+									) : null}
+								</div>
+								<div className="mt-8 grid gap-8 sm:grid-cols-2">
+									{data.location.columns.map((col) => (
+										<div key={col.title}>
+											<h3 className="font-[family-name:var(--preview-kaze-headline)] text-xl font-semibold">{col.title}</h3>
+											<p className="mt-2 font-[family-name:var(--preview-kaze-body)] text-sm leading-relaxed text-[#121110]/65">
+												{col.text}
+											</p>
 										</div>
 									))}
 								</div>
-							</section>
-						) : null}
-
-						<section className="pb-8">
-							<span className="mb-8 block font-[family-name:var(--preview-arch-body)] text-[10px] uppercase tracking-widest text-[#944528]">
-								{data.location.eyebrow}
-							</span>
-							{listingPreview && (data.location.mapCenter || data.location.mapEmbedSrc) ? (
-								<div className="relative aspect-video w-full overflow-hidden rounded-sm bg-[#efeeeb] grayscale contrast-125">
-									<BrandingPreviewMap
-										title="Property location"
-										center={data.location.mapCenter}
-										embedSrc={data.location.mapEmbedSrc}
-										className="absolute inset-0 h-full w-full border-0"
-									/>
-								</div>
-							) : (
-								<div className="relative aspect-video w-full overflow-hidden rounded-sm bg-[#efeeeb] grayscale contrast-125">
-									<div className="absolute inset-0 z-10 flex items-center justify-center">
-										{data.location.coords ? (
-											<div className="text-center">
-												<MapPin className="mx-auto mb-2 h-12 w-12 text-[#944528]" strokeWidth={1.25} />
-												<p className="font-[family-name:var(--preview-arch-headline)] text-lg text-[#1b1c1a]">
-													{data.location.coords}
-												</p>
-											</div>
-										) : listingPreview ? null : (
-											<div className="text-center">
-												<MapPin className="mx-auto mb-2 h-12 w-12 text-[#944528]" strokeWidth={1.25} />
-												<p className="font-[family-name:var(--preview-arch-headline)] text-lg text-[#1b1c1a]">
-													—
-												</p>
-											</div>
-										)}
-									</div>
-									{data.location.mapImage.trim() ? (
-										<Image
-											src={data.location.mapImage}
-											alt=""
-											fill
-											className="object-cover opacity-40"
-											sizes="100vw"
-											unoptimized
-										/>
-									) : null}
-								</div>
-							)}
-							<div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
-								{data.location.columns.map((col) => (
-									<div key={col.title}>
-										<h5 className="mb-2 font-[family-name:var(--preview-arch-headline)] text-base font-semibold">
-											{col.title}
-										</h5>
-										<p className="text-sm leading-relaxed text-[#55433d]">{col.text}</p>
-									</div>
-								))}
-							</div>
-						</section>
-						{data.host.name.trim() ? (
-							<section className="border-t border-[#dbc1b9]/15 pt-8">
-								<p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#944528]">Meet our host</p>
-								<div className="mt-4 flex items-start gap-4">
-									{data.host.imageSrc.trim() ? (
-										<div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full grayscale">
-											<Image src={data.host.imageSrc} alt="" fill className="object-cover" sizes="64px" unoptimized />
-										</div>
-									) : null}
-									<div className="min-w-0">
-										<p className="font-[family-name:var(--preview-arch-headline)] text-xl font-semibold text-[#1b1c1a]">
-											{data.host.name}
-										</p>
-										<p className="mt-1 text-xs font-medium uppercase tracking-wide text-[#944528]">{hostRating}</p>
-										<p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#1b1c1a]/70">{hostBio}</p>
-									</div>
-								</div>
-							</section>
-						) : null}
-					</div>
-
-					<div className="lg:col-span-5">
-						<div className="lg:sticky lg:top-24">
-							<div className="border border-[#dbc1b9]/30 bg-white p-6 shadow-[0_20px_50px_rgba(27,28,26,0.06)] sm:p-8 lg:p-10">
-								{listingPreview ? (
-									<>
-										<p className="text-[10px] font-medium uppercase leading-snug tracking-[0.2em] text-[#1A1A1A]">
-											{checkingAvailability ? (
-												'Checking...'
-											) : stayRange?.from && stayRange?.to && availabilityMsg ? (
-												availableForCheckout && totalPrice !== null ? (
-													<>
-														Total{' '}
-														<span className="text-[14px] font-semibold tracking-normal">${totalPrice}</span>
-													</>
-												) : (
-													availabilityMsg
-												)
-											) : (
-												'Pick your stay dates - pricing appears here.'
-											)}
-										</p>
-										<div
-											ref={stayPickerRef}
-											className="relative mt-5 min-w-0 border-t border-[#dbc1b9]/40 pt-6 [--rdp-accent-color:#944528] [--rdp-accent-background-color:rgba(148,69,40,0.12)]"
-										>
-											<div className="grid grid-cols-2 gap-2">
-												<div>
-													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">Check in</p>
-													<button
-														type="button"
-														onClick={() => setStayPickerOpen(true)}
-														aria-expanded={stayPickerOpen}
-														aria-haspopup="dialog"
-														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30"
-													>
-														{stayRange?.from ? formatStay(stayRange.from) : 'Add date'}
-													</button>
-												</div>
-												<div>
-													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">Check out</p>
-													<button
-														type="button"
-														onClick={() => setStayPickerOpen(true)}
-														aria-expanded={stayPickerOpen}
-														aria-haspopup="dialog"
-														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30"
-													>
-														{stayRange?.to ? formatStay(stayRange.to) : 'Add date'}
-													</button>
-												</div>
-											</div>
-											{stayPickerOpen ? (
-												<div
-													role="dialog"
-													aria-label="Select stay dates"
-													className="absolute inset-x-0 top-full z-20 mt-2 w-full min-w-0 max-w-full rounded-xl border border-black/10 bg-white p-2 shadow-xl"
-												>
-													<DayPicker
-														mode="range"
-														min={1}
-														selected={stayRange}
-														onSelect={(range) => {
-															setStayRange(range);
-															if (range?.from && range?.to) void checkAvailabilityForDates(range.from, range.to);
-														}}
-														disabled={dayDisabled}
-														numberOfMonths={1}
-														className="mx-auto w-full min-w-0 max-w-full justify-center [--rdp-day-height:2rem] [--rdp-day-width:2rem] [--rdp-day_button-height:1.875rem] [--rdp-day_button-width:1.875rem] [&_.rdp-month]:w-full [&_.rdp-month_caption]:text-sm [&_.rdp-month_grid]:w-full [&_.rdp-nav]:h-8 [&_.rdp-weekday]:p-0 [&_.rdp-weekday]:text-[10px] [&_.rdp-day]:text-[12px]"
-													/>
-													<div className="flex justify-end gap-2">
-														<button type="button" onClick={() => setStayPickerOpen(false)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30">Apply</button>
-														<button type="button" onClick={() => setStayRange(undefined)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30">Clear</button>
-													</div>
-												</div>
-											) : null}
-										</div>
-										<div className="mt-5">
-											<label htmlFor={guestFieldId} className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">
-												Guests
-											</label>
-											<Input
-												id={guestFieldId}
-												type="number"
-												inputMode="numeric"
-												min={1}
-												max={guestCap}
-												step={1}
-												value={guestCount}
-												onChange={(e) => {
-													const v = parseInt(e.target.value, 10);
-													if (Number.isNaN(v)) return;
-													setGuestCount(Math.min(guestCap, Math.max(1, v)));
-												}}
-												className="mt-1.5"
-												variant="compact"
-											/>
-											<p className="mt-1 text-[10px] text-[#1A1A1A]/45">Up to {guestCap} guests</p>
-										</div>
-										<button
-											type="button"
-											onClick={() => void handleReserveClick()}
-											disabled={!propertyRef || !stayRange?.from || !stayRange?.to || checkingAvailability}
-											className="mt-8 w-full rounded-sm bg-[#944528] py-4 font-[family-name:var(--preview-arch-body)] text-[11px] uppercase tracking-widest text-white transition hover:bg-[#b35c3d] disabled:cursor-not-allowed disabled:opacity-60"
-										>
-											{checkingAvailability ? 'Checking...' : 'Reserve'}
-										</button>
-									</>
-								) : (
-									<>
-										<p className="text-[10px] font-medium uppercase leading-snug tracking-[0.2em] text-[#1A1A1A]">
-											{checkingAvailability ? (
-												'Checking...'
-											) : stayRange?.from && stayRange?.to && availabilityMsg ? (
-												availableForCheckout && totalPrice !== null ? (
-													<>
-														Available · Total{' '}
-														<span className="text-[14px] font-semibold tracking-normal">${totalPrice}</span>
-													</>
-												) : (
-													availabilityMsg
-												)
-											) : (
-												'Pick your stay dates - pricing appears here.'
-											)}
-										</p>
-										<div
-											ref={stayPickerRef}
-											className="relative mt-5 min-w-0 border-t border-[#dbc1b9]/40 pt-6 [--rdp-accent-color:#944528] [--rdp-accent-background-color:rgba(148,69,40,0.12)]"
-										>
-											<div className="grid grid-cols-2 gap-2">
-												<div>
-													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">Check in</p>
-													<button
-														type="button"
-														onClick={() => setStayPickerOpen(true)}
-														aria-expanded={stayPickerOpen}
-														aria-haspopup="dialog"
-														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30"
-													>
-														{stayRange?.from ? formatStay(stayRange.from) : 'Add date'}
-													</button>
-												</div>
-												<div>
-													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">Check out</p>
-													<button
-														type="button"
-														onClick={() => setStayPickerOpen(true)}
-														aria-expanded={stayPickerOpen}
-														aria-haspopup="dialog"
-														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30"
-													>
-														{stayRange?.to ? formatStay(stayRange.to) : 'Add date'}
-													</button>
-												</div>
-											</div>
-											{stayPickerOpen ? (
-												<div
-													role="dialog"
-													aria-label="Select stay dates"
-													className="absolute inset-x-0 top-full z-20 mt-2 w-full min-w-0 max-w-full rounded-xl border border-black/10 bg-white p-2 shadow-xl"
-												>
-													<DayPicker
-														mode="range"
-														min={1}
-														selected={stayRange}
-														onSelect={(range) => {
-															setStayRange(range);
-															if (range?.from && range?.to) void checkAvailabilityForDates(range.from, range.to);
-														}}
-														disabled={dayDisabled}
-														numberOfMonths={1}
-														className="mx-auto w-full min-w-0 max-w-full justify-center [--rdp-day-height:2rem] [--rdp-day-width:2rem] [--rdp-day_button-height:1.875rem] [--rdp-day_button-width:1.875rem] [&_.rdp-month]:w-full [&_.rdp-month_caption]:text-sm [&_.rdp-month_grid]:w-full [&_.rdp-nav]:h-8 [&_.rdp-weekday]:p-0 [&_.rdp-weekday]:text-[10px] [&_.rdp-day]:text-[12px]"
-													/>
-													<div className="flex justify-end gap-2">
-														<button type="button" onClick={() => setStayPickerOpen(false)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30">Apply</button>
-														<button type="button" onClick={() => setStayRange(undefined)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#944528]/30">Clear</button>
-													</div>
-												</div>
-											) : null}
-										</div>
-										<div className="mt-5">
-											<label htmlFor={guestFieldId} className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">
-												Guests
-											</label>
-											<Input
-												id={guestFieldId}
-												type="number"
-												inputMode="numeric"
-												min={1}
-												max={guestCap}
-												step={1}
-												value={guestCount}
-												onChange={(e) => {
-													const v = parseInt(e.target.value, 10);
-													if (Number.isNaN(v)) return;
-													setGuestCount(Math.min(guestCap, Math.max(1, v)));
-												}}
-												className="mt-1.5"
-												variant="compact"
-											/>
-											<p className="mt-1 text-[10px] text-[#1A1A1A]/45">Up to {guestCap} guests</p>
-										</div>
-										<button
-											type="button"
-											onClick={() => void handleReserveClick()}
-											disabled={!propertyRef || !stayRange?.from || !stayRange?.to || checkingAvailability}
-											className="mt-8 w-full rounded-sm bg-[#944528] py-4 font-[family-name:var(--preview-arch-body)] text-[11px] uppercase tracking-widest text-white transition hover:bg-[#b35c3d] disabled:cursor-not-allowed disabled:opacity-60"
-										>
-											{checkingAvailability ? 'Checking...' : 'Reserve'}
-										</button>
-									</>
-								)}
 							</div>
 
-							{data.host.imageSrc.trim() || data.host.name.trim() ? (
-								<div className="mt-6 flex items-center gap-4 border-t border-[#dbc1b9]/15 p-4">
+							{data.host.name.trim() ? (
+								<div className="grid gap-6 bg-[#121110] p-8 text-[#f7f4ef] sm:grid-cols-[140px_1fr] sm:items-center">
 									{data.host.imageSrc.trim() ? (
-										<div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full grayscale">
-											<Image
-												src={data.host.imageSrc}
-												alt=""
-												fill
-												className="object-cover"
-												sizes="48px"
-												unoptimized
-											/>
+										<div className="relative mx-auto aspect-square w-full max-w-[140px] overflow-hidden sm:mx-0">
+											<Image src={data.host.imageSrc} alt="" fill className="object-cover" sizes="140px" unoptimized />
 										</div>
 									) : null}
-									<div className="min-w-0 flex-1">
+									<div>
 										{data.host.label ? (
-											<p className="text-[9px] uppercase tracking-widest text-[#1b1c1a]/50">{data.host.label}</p>
+											<p className="font-[family-name:var(--preview-kaze-body)] text-[10px] uppercase tracking-[0.3em] text-[#b54a32]">
+												{data.host.label}
+											</p>
 										) : null}
-										<p className="font-[family-name:var(--preview-arch-headline)] text-sm font-semibold">
-											{data.host.name}
+										<p className="mt-2 font-[family-name:var(--preview-kaze-headline)] text-2xl italic">{data.host.name}</p>
+										<p className="mt-1 font-[family-name:var(--preview-kaze-body)] text-xs text-[#f7f4ef]/55">{data.host.rating}</p>
+										<p className="mt-4 font-[family-name:var(--preview-kaze-body)] text-sm leading-relaxed text-[#f7f4ef]/75">
+											{hostBio}
 										</p>
+										{data.host.inquire ? (
+											<button
+												type="button"
+												className="mt-5 border border-[#f7f4ef]/30 px-4 py-2 font-[family-name:var(--preview-kaze-body)] text-[10px] uppercase tracking-widest"
+											>
+												{data.host.inquire}
+											</button>
+										) : null}
 									</div>
-									{data.host.inquire ? (
-										<button
-											type="button"
-											className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-[#944528]"
-										>
-											{data.host.inquire}
-										</button>
-									) : null}
 								</div>
 							) : null}
 						</div>
+
+						<aside className="lg:col-span-5 lg:sticky lg:top-8 lg:self-start">
+							<KazeBookingPanel
+								data={data}
+								listingPreview={listingPreview}
+								propertyRef={propertyRef}
+								guestCap={guestCap}
+							/>
+						</aside>
 					</div>
 				</div>
-			</main>
+			</section>
 
-			<footer className="mt-12 border-t border-[#dbc1b9]/15 bg-[#fbf9f6] px-6 py-12 sm:px-10">
-				<div className="mx-auto flex max-w-[1440px] flex-col items-start justify-between gap-8 md:flex-row md:items-center">
+			{data.gallery.full.src.trim() ? (
+				<section className="relative">
+					<button
+						type="button"
+						onClick={() => openGallery(data.gallery.full.src.trim())}
+						className="relative block w-full"
+					>
+						<FillImg src={data.gallery.full.src} className="aspect-[24/9] w-full" sizes="100vw" />
+						<div className="absolute inset-0 bg-[#121110]/30" aria-hidden />
+					</button>
+				</section>
+			) : null}
+
+			<footer className="border-t border-[#f7f4ef]/10 px-5 py-12 sm:px-12">
+				<div className="mx-auto flex max-w-[1440px] flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
 					<div>
-						<span className="text-sm font-bold text-[#1b1c1a]">{data.footer.wordmark}</span>
+						<p className="font-[family-name:var(--preview-kaze-headline)] text-3xl italic">{data.footer.wordmark}</p>
 						{data.footer.tagline ? (
-							<span className="ml-2 font-[family-name:var(--preview-arch-body)] text-[10px] uppercase tracking-[0.12em] text-[#1b1c1a]/40">
-								{data.footer.tagline}
-							</span>
+							<p className="mt-2 font-[family-name:var(--preview-kaze-body)] text-sm text-[#f7f4ef]/45">{data.footer.tagline}</p>
 						) : null}
 					</div>
 					{data.footer.links.length > 0 ? (
-						<div className="flex flex-wrap gap-8">
+						<div className="flex flex-wrap gap-8 font-[family-name:var(--preview-kaze-body)] text-[10px] uppercase tracking-[0.2em] text-[#f7f4ef]/40">
 							{data.footer.links.map((l) => (
-								<span key={l.label} className="text-[10px] uppercase tracking-[0.12em] text-[#1b1c1a]/45">
-									{l.label}
-								</span>
+								<span key={l.label}>{l.label}</span>
 							))}
 						</div>
-					) : (
-						<span className="hidden md:block" />
-					)}
-					<p className="font-[family-name:var(--preview-arch-body)] text-[10px] uppercase tracking-[0.12em] text-[#1b1c1a]/35 md:mt-0">
-						{data.footer.copyright}
-					</p>
+					) : null}
+					<p className="font-[family-name:var(--preview-kaze-body)] text-xs text-[#f7f4ef]/30">{data.footer.copyright}</p>
 				</div>
 			</footer>
+
 			<PhotoGalleryLightbox
 				images={galleryImages}
 				open={galleryOpen}

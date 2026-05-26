@@ -6,9 +6,10 @@ import heroImage from '@/public/images/landing-hero.png';
 import featureVillaExteriorImage from '@/public/images/landing-feature-exterior.png';
 import featureVillaPoolImage from '@/public/images/landing-feature-pool.png';
 import featureVillaInteriorImage from '@/public/images/landing-feature-interior.png';
-import templateHikariImage from '@/public/images/landing-template-hikari.png';
-import templateKazeImage from '@/public/images/landing-template-kaze.png';
-import templateMizuImage from '@/public/images/landing-template-mizu.png';
+import {
+	PROPERTY_BRANDING_THEME_OPTIONS,
+	brandingThemeToTemplateSlug,
+} from '@/app/(pages)/templates/_constants/property-branding-theme';
 import journalBookingsImage from '@/public/images/landing-journal-bookings.png';
 import journalPricingImage from '@/public/images/landing-journal-pricing.png';
 import journalPhotosImage from '@/public/images/landing-journal-photos.png';
@@ -173,7 +174,7 @@ export default function Home() {
 					sizes="100vw"
 					className="hero-img"
 				/>
-				<div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/40" />
+				<div className="absolute inset-0" />
 
 				<div className="relative z-10 px-6 pt-10 md:px-12 flex items-start justify-between">
 					<a href="#home" className="font-display text-3xl text-dom-cream">
@@ -325,58 +326,149 @@ export default function Home() {
 							</h2>
 						</div>
 						<p className="max-w-sm text-dom-cream/70">
-							Six handcrafted designs, fully customisable. Swap colors, fonts and photos - no code, no headaches.
+							Three handcrafted designs, fully customisable. Click any template to preview the live layout.
 						</p>
 					</div>
 
 					<div className="grid md:grid-cols-3 gap-6">
-						<article className="reveal group">
-							<div className="card-img aspect-[4/5] mb-4 relative">
-								<Image
-									src={templateHikariImage}
-									alt="Luxury villa at golden hour"
-									fill
-									sizes="(max-width: 768px) 100vw, 33vw"
-									className="object-cover template-card-img"
-								/>
+						{PROPERTY_BRANDING_THEME_OPTIONS.map((option) => {
+							const previewHref = `/templates/${brandingThemeToTemplateSlug(option.id)}`;
+							return (
+								<a
+									key={option.id}
+									href={previewHref}
+									target="_blank"
+									rel="noopener noreferrer"
+									aria-label={`Preview ${option.label} template`}
+									className="reveal group template-card-link block"
+								>
+									<div className="card-img aspect-[4/5] mb-4 relative overflow-hidden">
+										<Image
+											src={option.image}
+											alt={option.imageAlt}
+											fill
+											sizes="(max-width: 768px) 100vw, 33vw"
+											className="object-cover template-card-img"
+										/>
+										<div className="template-card-preview absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition duration-300 group-hover:bg-black/45 group-hover:opacity-100">
+											<span className="pill">
+												<span>Preview</span>
+												<PillDot>
+													<PillArrow />
+												</PillDot>
+											</span>
+										</div>
+									</div>
+									<h3 className="font-display text-3xl">{option.label}</h3>
+									<div className="mt-3 flex flex-wrap gap-2">
+										{option.tags.map((tag) => (
+											<span key={tag} className="rounded-full bg-dom-mocha px-3 py-1 text-xs">
+												{tag}
+											</span>
+										))}
+									</div>
+								</a>
+							);
+						})}
+					</div>
+				</div>
+			</section>
+
+			<section id="pricing" className="pricing-section bg-dom-cream py-24 px-6 md:px-12 relative overflow-hidden">
+				<div className="pricing-grain pointer-events-none" aria-hidden />
+				<div className="max-w-7xl mx-auto relative z-10">
+					<div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-16 reveal">
+						<div>
+							<p className="font-display text-2xl mb-3 text-dom-mocha">— Pricing</p>
+							<h2 className="h-display text-5xl md:text-7xl text-dom-ink">
+								Start small.
+								<br />
+								Scale when ready.
+							</h2>
+						</div>
+						<p className="max-w-sm text-dom-muted text-lg leading-relaxed">
+							No setup fees. Cancel anytime. Every plan includes your booking engine and Stripe payouts.
+						</p>
+					</div>
+
+					<div className="pricing-grid">
+						<article className="pricing-card reveal">
+							<span className="pricing-tier-index" aria-hidden>
+								01
+							</span>
+							<div className="pricing-card-head">
+								<h3 className="font-display text-3xl text-dom-ink">Essential</h3>
+								<p className="pricing-tagline text-dom-muted">One property, fully yours</p>
 							</div>
-							<h3 className="font-display text-3xl">Hikari</h3>
-							<div className="flex gap-2 mt-3">
-								<span className="text-xs bg-dom-mocha px-3 py-1 rounded-full">Villa</span>
-								<span className="text-xs bg-dom-mocha px-3 py-1 rounded-full">Minimal</span>
+							<div className="pricing-amount">
+								<span className="pricing-currency">$</span>
+								<span className="pricing-value">29</span>
+								<span className="pricing-period">/ month</span>
 							</div>
+							<ul className="pricing-features">
+								<li>Direct bookings</li>
+								<li>Custom domain</li>
+								<li>Basic analytics</li>
+							</ul>
+							<a href="#book" className="pill pill-dark pricing-cta">
+								<span>Get started</span>
+								<PillDot>
+									<PillArrow />
+								</PillDot>
+							</a>
 						</article>
-						<article className="reveal group">
-							<div className="card-img aspect-[4/5] mb-4 relative">
-								<Image
-									src={templateKazeImage}
-									alt="Contemporary villa overlooking mountains"
-									fill
-									sizes="(max-width: 768px) 100vw, 33vw"
-									className="object-cover template-card-img"
-								/>
+
+						<article className="pricing-card pricing-card-featured reveal">
+							<span className="pricing-badge">Most popular</span>
+							<span className="pricing-tier-index" aria-hidden>
+								02
+							</span>
+							<div className="pricing-card-head">
+								<h3 className="font-display text-3xl text-dom-cream">Portfolio</h3>
+								<p className="pricing-tagline text-dom-cream/65">For hosts with multiple stays</p>
 							</div>
-							<h3 className="font-display text-3xl">Kaze Pavilion</h3>
-							<div className="flex gap-2 mt-3">
-								<span className="text-xs bg-dom-mocha px-3 py-1 rounded-full">Hospitality</span>
-								<span className="text-xs bg-dom-mocha px-3 py-1 rounded-full">Editorial</span>
+							<div className="pricing-amount pricing-amount-light">
+								<span className="pricing-currency">$</span>
+								<span className="pricing-value">79</span>
+								<span className="pricing-period">/ month</span>
 							</div>
+							<ul className="pricing-features pricing-features-light">
+								<li>Up to 10 properties</li>
+								<li>Revenue reports</li>
+								<li>Priority support</li>
+							</ul>
+							<a href="#book" className="pill pricing-cta">
+								<span>Start free trial</span>
+								<PillDot>
+									<PillArrow />
+								</PillDot>
+							</a>
 						</article>
-						<article className="reveal group">
-							<div className="card-img aspect-[4/5] mb-4 relative">
-								<Image
-									src={templateMizuImage}
-									alt="Luxury villa interior at dusk"
-									fill
-									sizes="(max-width: 768px) 100vw, 33vw"
-									className="object-cover template-card-img"
-								/>
+
+						<article className="pricing-card pricing-card-estate reveal">
+							<span className="pricing-tier-index" aria-hidden>
+								03
+							</span>
+							<div className="pricing-card-head">
+								<h3 className="font-display text-3xl text-dom-ink">Estate</h3>
+								<p className="pricing-tagline text-dom-muted">For operators at scale</p>
 							</div>
-							<h3 className="font-display text-3xl">Mizu House</h3>
-							<div className="flex gap-2 mt-3">
-								<span className="text-xs bg-dom-mocha px-3 py-1 rounded-full">Villa</span>
-								<span className="text-xs bg-dom-mocha px-3 py-1 rounded-full">Warm</span>
+							<div className="pricing-amount">
+								<span className="pricing-currency">$</span>
+								<span className="pricing-value">149</span>
+								<span className="pricing-period">/ month</span>
 							</div>
+							<ul className="pricing-features">
+								<li>Unlimited properties</li>
+								<li>Team accounts</li>
+								<li>Dedicated onboarding</li>
+							</ul>
+							<a href="#book" className="pill pill-dark pricing-cta">
+								<span>Talk to us</span>
+								<PillDot>
+									<PillArrow />
+								</PillDot>
+							</a>
 						</article>
 					</div>
 				</div>
@@ -533,7 +625,7 @@ export default function Home() {
 								<input className="input" placeholder="$290 / night" />
 							</div>
 							<div className="flex items-end">
-								<button type="submit" className="pill pill-dark w-full justify-center">
+								<button type="submit" className="pill pill-dark w-full justify-between">
 									<span>Start free trial</span>
 									<PillDot>
 										<PillArrow />

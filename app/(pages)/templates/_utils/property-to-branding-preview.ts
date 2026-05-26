@@ -271,49 +271,91 @@ export function propertyToBrandingPreview(property: Property): BrandingPreviewDe
 /** Layout-only fields for `/templates/*` (not on `Property`). */
 function decorateFullTemplateDemo(theme: PropertyBrandingTheme, d: BrandingPreviewDemo): BrandingPreviewDemo {
 	const arch = theme === Theme.ARCHITECTURA;
+	const mizu = theme === Theme.MIZU;
+	const hikari = theme === Theme.CANVAS;
 	return {
 		...d,
 		nav: arch
-			? [{ label: 'Studio' }, { label: 'Stays', current: true }, { label: 'Contact' }]
-			: [{ label: 'Stays' }, { label: 'Area', current: true }, { label: 'Host' }],
-		concept: { ...d.concept, eyebrow: '— Overview' },
+			? [{ label: 'Pavilion' }, { label: 'Residences', current: true }, { label: 'Inquire' }]
+			: mizu
+				? [{ label: 'House' }, { label: 'Gallery', current: true }, { label: 'Book' }]
+				: hikari
+					? [{ label: 'Stay' }, { label: 'Space', current: true }, { label: 'Reserve' }]
+					: [{ label: 'Stays' }, { label: 'Area', current: true }, { label: 'Host' }],
+		hero: mizu
+			? { ...d.hero, series: 'Mizu House · 水' }
+			: arch
+				? { ...d.hero, series: 'Kaze Pavilion · Vol. II' }
+				: hikari
+					? { ...d.hero, series: 'Hikari · 光' }
+					: d.hero,
+		concept: {
+			...d.concept,
+			eyebrow: mizu ? 'The stay' : arch ? 'Editorial' : hikari ? 'Essence' : '— Overview',
+		},
+		gallery:
+			mizu || arch || hikari
+				? {
+						...d.gallery,
+						full: {
+							...d.gallery.full,
+							pullQuote: mizu
+								? {
+										title: 'Light moves across cedar and still water.',
+										text: 'Evenings settle into copper and teal — the house is built for unhurried arrivals.',
+									}
+								: arch
+									? {
+											title: 'Air moves through the pavilion before you arrive.',
+											text: 'An editorial stay shaped by altitude, timber, and long shadows across the ridge.',
+										}
+									: {
+											title: 'Clarity is the luxury.',
+											text: 'White walls, golden light, and nothing between you and the horizon.',
+										},
+						},
+					}
+				: d.gallery,
 		location: {
 			...d.location,
-			eyebrow: arch ? '— Location & context' : '— Area',
-			mapImage: arch
-				? 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80'
-				: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80',
-			columns: arch
+			eyebrow: arch ? '— Altitude & access' : mizu ? '— Waterside' : hikari ? '— Setting' : '— Area',
+			mapImage: mizu
+				? 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80'
+				: arch
+					? 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=80'
+					: hikari
+						? 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1600&q=80'
+						: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80',
+			columns: mizu
 				? [
-						{
-							title: 'Access',
-							text: '45 minutes from Monterey Regional (MRY); scenic coastal route.',
-						},
-						{
-							title: 'Setting',
-							text: 'Elevated site above the marine layer with private trailhead access.',
-						},
+						{ title: 'Arrival', text: 'Private lane from the coastal road; parking beside the cedar deck.' },
+						{ title: 'Rhythm', text: 'Morning mist on the inlet, golden hour on the terrace — quiet by design.' },
 					]
-				: [
-						{
-							title: 'Access',
-							text: '45 minutes from Monterey Regional (MRY); scenic coastal route.',
-						},
-						{
-							title: 'Terrain',
-							text: 'Elevated site above the marine layer with private trailhead access.',
-						},
-					],
+				: arch
+					? [
+							{ title: 'Approach', text: 'Switchback road through pine; valet at the pavilion threshold.' },
+							{ title: 'Climate', text: 'Cool evenings, crisp mornings — pack layers for the terrace.' },
+						]
+					: hikari
+						? [
+								{ title: 'Access', text: 'Twenty minutes from the coast; a single private drive to the gate.' },
+								{ title: 'Light', text: 'East-facing glass catches first sun; afternoons stay soft in the courtyard.' },
+							]
+						: [
+								{ title: 'Access', text: '45 minutes from Monterey Regional (MRY); scenic coastal route.' },
+								{ title: 'Terrain', text: 'Elevated site above the marine layer with private trailhead access.' },
+							],
 		},
 		booking: {
 			...d.booking,
-			eyebrow: arch ? 'Reserve the space' : 'Book this stay',
-			arrival: arch ? 'May 12, 2026' : 'Jun 4, 2026',
-			departure: arch ? 'May 19, 2026' : 'Jun 11, 2026',
-			guests: arch ? '2 guests · 1 suite' : `${DEMO_PROPERTY_FOR_BRANDING.max_guests} guests · Whole home`,
-			
+			eyebrow: arch ? 'Request residency' : mizu ? 'Plan your stay' : hikari ? 'Reserve' : 'Book this stay',
+			arrival: arch ? 'May 12, 2026' : mizu ? 'Jul 8, 2026' : hikari ? 'Aug 2, 2026' : 'Jun 4, 2026',
+			departure: arch ? 'May 19, 2026' : mizu ? 'Jul 15, 2026' : hikari ? 'Aug 9, 2026' : 'Jun 11, 2026',
+			guests: arch ? '2 guests · 1 suite' : mizu ? '4 guests · Whole home' : hikari ? '6 guests · Whole home' : `${DEMO_PROPERTY_FOR_BRANDING.max_guests} guests · Whole home`,
+
 			per: arch ? '/ NIGHT' : '/ night',
-			rating: arch ? '4.98' : '4.92',
+			rating: arch ? '4.98' : mizu ? '4.96' : hikari ? '4.94' : '4.92',
+			price: mizu ? '$420' : hikari ? '$385' : arch ? '€2,450' : d.booking.price,
 			lines: arch
 				? [
 						{ label: 'Accommodation (7 nights)', value: '€17,150' },
@@ -325,26 +367,52 @@ function decorateFullTemplateDemo(theme: PropertyBrandingTheme, d: BrandingPrevi
 					],
 			totalLabel: arch ? 'Total contribution' : 'Total',
 			total: arch ? '€17,600' : '$6,415',
-			cta: arch ? 'Request residency' : 'Check availability',
+			cta: arch ? 'Request residency' : mizu ? 'Reserve dates' : hikari ? 'Check availability' : 'Check availability',
 			disclaimer: arch ? "You won't be charged yet" : 'Taxes and fees calculated at checkout',
 		},
 		host: {
-			label: arch ? 'Curated by' : 'Hosted by',
-			name: arch ? 'Domus Studio' : 'Domus Collective',
+			label: arch ? 'Curated by' : mizu ? 'Your host' : hikari ? 'Host' : 'Hosted by',
+			name: arch ? 'Kaze Pavilion' : mizu ? 'Mizu House' : hikari ? 'Hikari Stays' : 'Domus Collective',
 			imageSrc: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
-			inquire: arch ? 'Inquire' : 'Message',
-			rating: arch ? '4.98 (124 reviews)' : '4.92 (208 reviews)',
-			bio: arch
-				? 'Design-led hosting focused on quiet, high-touch stays with local sourcing and concierge planning.'
-				: 'We are a local hosting team sharing calm, detail-focused homes and responsive guest support.',
+			rating: arch
+				? '4.98 (124 reviews)'
+				: mizu
+					? '4.96 (89 reviews)'
+					: hikari
+						? '4.94 (156 reviews)'
+						: '4.92 (208 reviews)',
+			bio: mizu
+				? 'A calm, design-led retreat with onsen-inspired baths, cedar decks, and views that turn copper at dusk.'
+				: arch
+					? 'Mountain hospitality with editorial pacing — slow breakfasts, fireside evenings, and a concierge who knows the ridge.'
+					: hikari
+						? 'Minimal hosting for guests who value light, silence, and spaces that breathe. We respond within the hour.'
+						: 'We are a local hosting team sharing calm, detail-focused homes and responsive guest support.',
+			inquire: mizu ? 'Send a note' : arch ? 'Inquire' : hikari ? 'Message' : 'Message',
 		},
 		footer: {
 			...d.footer,
-			tagline: arch ? 'Curated stays.' : 'Curated stays.',
-			links: arch
-				? [{ label: 'Ethics' }, { label: 'Archive' }, { label: 'Contact' }]
-				: [{ label: 'Terms' }, { label: 'Privacy' }, { label: 'Support' }],
-			copyright: arch ? '© 2026 Domus Studio. Template preview.' : '© 2026 Domus Studio. Template preview.',
+			tagline: mizu
+				? 'Still water. Warm light.'
+				: arch
+					? 'Where the wind meets the ridge.'
+					: hikari
+						? 'Light, space, horizon.'
+						: 'Curated stays.',
+			links: mizu
+				? [{ label: 'Soak' }, { label: 'Gallery' }, { label: 'Book' }]
+				: arch
+					? [{ label: 'Journal' }, { label: 'Suites' }, { label: 'Contact' }]
+					: hikari
+						? [{ label: 'Stay' }, { label: 'Guide' }, { label: 'Book' }]
+						: [{ label: 'Terms' }, { label: 'Privacy' }, { label: 'Support' }],
+			copyright: mizu
+				? '© 2026 Mizu House. Template preview.'
+				: arch
+					? '© 2026 Kaze Pavilion. Template preview.'
+					: hikari
+						? '© 2026 Hikari. Template preview.'
+						: '© 2026 Domus Studio. Template preview.',
 		},
 	};
 }
@@ -354,6 +422,7 @@ const _fromSeed = propertyToBrandingPreview(DEMO_PROPERTY_FOR_BRANDING);
 export const BRANDING_PREVIEW_DEMO: Record<PropertyBrandingTheme, BrandingPreviewDemo> = {
 	[Theme.CANVAS]: decorateFullTemplateDemo(Theme.CANVAS, _fromSeed),
 	[Theme.ARCHITECTURA]: decorateFullTemplateDemo(Theme.ARCHITECTURA, _fromSeed),
+	[Theme.MIZU]: decorateFullTemplateDemo(Theme.MIZU, _fromSeed),
 };
 
 export function getBrandingPreviewDemo(theme: PropertyBrandingTheme): BrandingPreviewDemo {

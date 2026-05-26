@@ -170,8 +170,25 @@ html:has(.domus-landing) {
   transition: transform 0.7s;
 }
 
+.domus-landing .template-card-link {
+  transition: opacity 0.25s ease;
+}
+
+.domus-landing .template-card-link:hover {
+  opacity: 0.95;
+}
+
 .domus-landing .group:hover .template-card-img {
   transform: scale(1.05);
+}
+
+.domus-landing .template-card-preview .pill {
+  transform: translateY(6px);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.domus-landing .group:hover .template-card-preview .pill {
+  transform: translateY(0);
 }
 
 .domus-landing .journal-card-img {
@@ -180,4 +197,222 @@ html:has(.domus-landing) {
 
 .domus-landing .journal-group:hover .journal-card-img {
   transform: scale(1.05);
+}
+
+.domus-landing .pricing-section {
+  border-top: 1px solid rgb(29 25 22 / 0.08);
+}
+
+.domus-landing .pricing-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.45;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+.domus-landing .pricing-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .domus-landing .pricing-grid {
+    grid-template-columns: repeat(3, 1fr);
+    align-items: stretch;
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .domus-landing .pricing-grid {
+    gap: 2rem;
+  }
+}
+
+.domus-landing .pricing-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  border-radius: 1.75rem;
+  background: #fff;
+  border: 1px solid rgb(29 25 22 / 0.08);
+  box-shadow: 0 24px 48px -28px rgb(29 25 22 / 0.22);
+  overflow: hidden;
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.45s ease;
+}
+
+.domus-landing .pricing-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 32px 56px -24px rgb(29 25 22 / 0.28);
+}
+
+.domus-landing .pricing-card-featured {
+  background: #2a2521;
+  border-color: rgb(200 169 106 / 0.35);
+  box-shadow:
+    0 32px 64px -24px rgb(0 0 0 / 0.45),
+    inset 0 1px 0 rgb(239 233 223 / 0.08);
+}
+
+.domus-landing .pricing-card-featured::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #c8a96a 20%, #c8a96a 80%, transparent);
+}
+
+.domus-landing .pricing-card-featured:hover {
+  box-shadow:
+    0 40px 72px -28px rgb(0 0 0 / 0.5),
+    inset 0 1px 0 rgb(239 233 223 / 0.1);
+}
+
+.domus-landing .pricing-card-estate {
+  background: #e7dfd2;
+  border-color: rgb(29 25 22 / 0.1);
+}
+
+.domus-landing .pricing-tier-index {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(3.5rem, 8vw, 5.5rem);
+  line-height: 1;
+  color: rgb(29 25 22 / 0.06);
+  pointer-events: none;
+  user-select: none;
+}
+
+.domus-landing .pricing-card-featured .pricing-tier-index {
+  color: rgb(239 233 223 / 0.07);
+}
+
+.domus-landing .pricing-badge {
+  position: absolute;
+  top: 1.5rem;
+  left: 2rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #2a2521;
+  background: #c8a96a;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+}
+
+.domus-landing .pricing-card-head {
+  position: relative;
+  margin-bottom: 2rem;
+  padding-top: 0.5rem;
+}
+
+.domus-landing .pricing-card-featured .pricing-card-head {
+  padding-top: 1.75rem;
+}
+
+.domus-landing .pricing-tagline {
+  margin-top: 0.35rem;
+  font-size: 0.95rem;
+}
+
+.domus-landing .pricing-amount {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.1rem;
+  margin-bottom: 2rem;
+  color: #1d1916;
+}
+
+.domus-landing .pricing-amount-light {
+  color: #efe9df;
+}
+
+.domus-landing .pricing-currency {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  margin-top: 0.65rem;
+  opacity: 0.7;
+}
+
+.domus-landing .pricing-value {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: clamp(4rem, 12vw, 5.5rem);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+}
+
+.domus-landing .pricing-period {
+  align-self: flex-end;
+  margin-bottom: 0.65rem;
+  margin-left: 0.35rem;
+  font-size: 0.95rem;
+  opacity: 0.55;
+  white-space: nowrap;
+}
+
+.domus-landing .pricing-features {
+  list-style: none;
+  margin: 0 0 2rem;
+  padding: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.domus-landing .pricing-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.05rem;
+  color: rgb(29 25 22 / 0.82);
+}
+
+.domus-landing .pricing-features li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #c8a96a;
+  box-shadow: 0 0 0 3px rgb(200 169 106 / 0.2);
+}
+
+.domus-landing .pricing-features-light li {
+  color: rgb(239 233 223 / 0.88);
+}
+
+.domus-landing .pricing-features-light li::before {
+  background: #c8a96a;
+  box-shadow: 0 0 0 3px rgb(200 169 106 / 0.25);
+}
+
+.domus-landing .pricing-cta {
+  margin-top: auto;
+  width: fit-content;
+}
+
+@media (min-width: 768px) {
+  .domus-landing .pricing-card {
+    padding: 2.5rem;
+  }
+
+  .domus-landing .pricing-card-featured {
+    transform: translateY(-0.75rem);
+  }
+
+  .domus-landing .pricing-card-featured:hover {
+    transform: translateY(calc(-0.75rem - 4px));
+  }
 }

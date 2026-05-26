@@ -1,45 +1,73 @@
+import type { StaticImageData } from 'next/image';
+import templateHikariImage from '@/public/images/landing-template-hikari.png';
+import templateKazeImage from '@/public/images/landing-template-kaze.png';
+import templateMizuImage from '@/public/images/landing-template-mizu.png';
+
 /**
  * Mirrors `PropertyBrandingTheme` in prisma/schema.prisma - keep in sync.
  */
 export const PropertyBrandingTheme = {
 	CANVAS: 'CANVAS',
 	ARCHITECTURA: 'ARCHITECTURA',
+	MIZU: 'MIZU',
 } as const;
 
 export type PropertyBrandingTheme = (typeof PropertyBrandingTheme)[keyof typeof PropertyBrandingTheme];
 
-export const PROPERTY_BRANDING_THEME_OPTIONS: ReadonlyArray<{
+export type BrandingThemeOption = {
 	id: PropertyBrandingTheme;
 	label: string;
 	description: string;
-	preview: { bg: string; accent: string; headlineFont: string };
-}> = [
+	tags: readonly string[];
+	image: StaticImageData;
+	imageAlt: string;
+};
+
+export const PROPERTY_BRANDING_THEME_OPTIONS: ReadonlyArray<BrandingThemeOption> = [
 	{
 		id: PropertyBrandingTheme.CANVAS,
-		label: 'Canvas',
-		description: 'Neutral editorial layout with sage accents - matches the default studio preview.',
-		preview: { bg: '#F7F5F2', accent: '#b89775', headlineFont: 'serif' },
+		label: 'Hikari',
+		description: 'Light, minimal layout with calm typography and generous whitespace.',
+		tags: ['Villa', 'Minimal'],
+		image: templateHikariImage,
+		imageAlt: 'Luxury villa at golden hour',
 	},
 	{
 		id: PropertyBrandingTheme.ARCHITECTURA,
-		label: 'Architectura',
-		description:
-			'Warm terracotta and cream palette, Noto Serif headlines and Manrope body - Mediterranean editorial.',
-		preview: { bg: '#fbf9f6', accent: '#944528', headlineFont: 'serif' },
+		label: 'Kaze Pavilion',
+		description: 'Editorial hospitality layout with refined serif headlines and warm contrast.',
+		tags: ['Hospitality', 'Editorial'],
+		image: templateKazeImage,
+		imageAlt: 'Contemporary villa overlooking mountains',
+	},
+	{
+		id: PropertyBrandingTheme.MIZU,
+		label: 'Mizu House',
+		description: 'Warm, inviting presentation with soft tones and gallery-forward photography.',
+		tags: ['Villa', 'Warm'],
+		image: templateMizuImage,
+		imageAlt: 'Luxury villa interior at dusk',
 	},
 ];
 
 /** URL segment under `/templates/...` — keep in sync with routes. */
 export const BrandingTemplateSlug = {
-	CANVAS: 'canvas',
-	ARCHITECTURA: 'architectura',
+	CANVAS: 'hikari',
+	ARCHITECTURA: 'kaze',
+	MIZU: 'mizu',
 } as const;
 
 export type BrandingTemplateSlug = (typeof BrandingTemplateSlug)[keyof typeof BrandingTemplateSlug];
 
+const LEGACY_TEMPLATE_SLUGS: Record<string, PropertyBrandingTheme> = {
+	canvas: PropertyBrandingTheme.CANVAS,
+	architectura: PropertyBrandingTheme.ARCHITECTURA,
+};
+
 export const PROPERTY_BRANDING_THEME_TEMPLATE_SLUG: Record<PropertyBrandingTheme, BrandingTemplateSlug> = {
 	[PropertyBrandingTheme.CANVAS]: BrandingTemplateSlug.CANVAS,
 	[PropertyBrandingTheme.ARCHITECTURA]: BrandingTemplateSlug.ARCHITECTURA,
+	[PropertyBrandingTheme.MIZU]: BrandingTemplateSlug.MIZU,
 };
 
 export function brandingThemeToTemplateSlug(theme: PropertyBrandingTheme): BrandingTemplateSlug {
@@ -48,7 +76,10 @@ export function brandingThemeToTemplateSlug(theme: PropertyBrandingTheme): Brand
 
 export function brandingThemeFromTemplateSlug(slug: string): PropertyBrandingTheme | null {
 	const s = slug.toLowerCase();
+	const legacy = LEGACY_TEMPLATE_SLUGS[s];
+	if (legacy) return legacy;
 	if (s === BrandingTemplateSlug.CANVAS) return PropertyBrandingTheme.CANVAS;
 	if (s === BrandingTemplateSlug.ARCHITECTURA) return PropertyBrandingTheme.ARCHITECTURA;
+	if (s === BrandingTemplateSlug.MIZU) return PropertyBrandingTheme.MIZU;
 	return null;
 }

@@ -1,46 +1,154 @@
 'use client';
 
 import Image from 'next/image';
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { ChevronDown, MapPin, Menu, Star } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { Input } from '@/components/ui';
-import { ApiRoutes } from '@/config/api/routes';
+import { Syne, Lora } from 'next/font/google';
+import { ArrowRight, MapPin, Menu, Plus, Star } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { DayPicker } from 'react-day-picker';
 import { BrandingPreviewMap } from '@/components/google-maps';
+import { cn, Input } from '@/components/ui';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
-import { AmenityGlyph } from './branding-preview-shared';
+import { AmenityGlyph, FillImg } from './branding-preview-shared';
 import { PhotoGalleryLightbox } from './photo-gallery-carousel';
-import { DayPicker, type DateRange } from 'react-day-picker';
-import { useCheckAvailability } from '@/features/bookings/hooks/use-check-availability';
+import { formatStay, useBrandingStayBooking } from './use-branding-stay-booking';
 
-function startOfToday() {
-	const d = new Date();
-	d.setHours(0, 0, 0, 0);
-	return d;
-}
+const syne = Syne({
+	subsets: ['latin'],
+	variable: '--preview-hikari-display',
+	weight: ['400', '500', '600', '700', '800'],
+	display: 'swap',
+});
 
-function formatStay(d: Date) {
-	return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
+const lora = Lora({
+	subsets: ['latin'],
+	variable: '--preview-hikari-body',
+	weight: ['400', '500', '600'],
+	display: 'swap',
+});
 
-function toDateParam(d: Date) {
-	const y = d.getFullYear();
-	const m = String(d.getMonth() + 1).padStart(2, '0');
-	const day = String(d.getDate()).padStart(2, '0');
-	return `${y}-${m}-${day}`;
-}
+function HikariBookingPanel({
+	data,
+	listingPreview,
+	propertyRef,
+	guestCap,
+}: {
+	data: BrandingPreviewDemo;
+	listingPreview?: boolean;
+	propertyRef: string;
+	guestCap: number;
+}) {
+	const booking = useBrandingStayBooking({ listingPreview, propertyRef, guestCap });
+	const priceHint = booking.checkingAvailability
+		? 'Checking…'
+		: booking.stayRange?.from && booking.stayRange?.to && booking.availabilityMsg
+			? booking.availabilityMsg
+			: 'Select dates';
 
-function dayStart(d: Date) {
-	const x = new Date(d);
-	x.setHours(0, 0, 0, 0);
-	return x;
-}
+	return (
+		<div className="border border-[#0a0a0a] bg-[#fcfcfa] p-6 sm:p-8">
+			<div className="flex items-start justify-between gap-4 border-b border-[#0a0a0a]/10 pb-5">
+				<div>
+					<p className="font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.3em] text-[#0a0a0a]/45">
+						{data.booking.eyebrow}
+					</p>
+					{data.booking.price.trim() ? (
+						<p className="mt-2 font-[family-name:var(--preview-hikari-display)] text-4xl font-bold tracking-tight text-[#0a0a0a]">
+							{data.booking.price}
+							<span className="ml-1 text-sm font-normal text-[#0a0a0a]/40">{data.booking.per}</span>
+						</p>
+					) : null}
+				</div>
+				{data.booking.rating.trim() ? (
+					<div className="flex items-center gap-1 border border-[#d4a853]/40 px-2.5 py-1">
+						<Star className="h-3.5 w-3.5 fill-[#d4a853] text-[#d4a853]" aria-hidden />
+						<span className="font-[family-name:var(--preview-hikari-body)] text-xs font-medium">{data.booking.rating}</span>
+					</div>
+				) : null}
+			</div>
 
-function nightsPriced(checkIn: Date, checkOutExclusive: Date, allowed: Set<string>) {
-	for (let c = dayStart(checkIn), end = dayStart(checkOutExclusive); c < end; c.setDate(c.getDate() + 1)) {
-		if (!allowed.has(toDateParam(c))) return false;
-	}
-	return true;
+			<p className="mt-4 font-[family-name:var(--preview-hikari-body)] text-sm text-[#0a0a0a]/55">{priceHint}</p>
+
+			<div ref={booking.stayPickerRef} className="relative mt-6 [--rdp-accent-color:#0a0a0a] [--rdp-accent-background-color:rgba(10,10,10,0.08)]">
+				<div className="grid grid-cols-2 gap-px bg-[#0a0a0a]/10">
+					<button
+						type="button"
+						onClick={() => booking.setStayPickerOpen(true)}
+						className="bg-[#fcfcfa] p-4 text-left"
+					>
+						<p className="font-[family-name:var(--preview-hikari-body)] text-[9px] uppercase tracking-[0.2em] text-[#0a0a0a]/40">In</p>
+						<p className="mt-1 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold">
+							{booking.stayRange?.from ? formatStay(booking.stayRange.from) : data.booking.arrival || '—'}
+						</p>
+					</button>
+					<button
+						type="button"
+						onClick={() => booking.setStayPickerOpen(true)}
+						className="bg-[#fcfcfa] p-4 text-left"
+					>
+						<p className="font-[family-name:var(--preview-hikari-body)] text-[9px] uppercase tracking-[0.2em] text-[#0a0a0a]/40">Out</p>
+						<p className="mt-1 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold">
+							{booking.stayRange?.to ? formatStay(booking.stayRange.to) : data.booking.departure || '—'}
+						</p>
+					</button>
+				</div>
+				{booking.stayPickerOpen ? (
+					<div
+						role="dialog"
+						aria-label="Select stay dates"
+						className="absolute inset-x-0 top-full z-30 mt-1 border border-[#0a0a0a] bg-white p-3 shadow-2xl"
+					>
+						<DayPicker
+							mode="range"
+							min={1}
+							selected={booking.stayRange}
+							onSelect={(range) => {
+								booking.setStayRange(range);
+								if (range?.from && range?.to) void booking.checkAvailabilityForDates(range.from, range.to);
+							}}
+							disabled={listingPreview ? booking.dayDisabled : undefined}
+							numberOfMonths={1}
+						/>
+						<button
+							type="button"
+							onClick={() => booking.setStayPickerOpen(false)}
+							className="mt-2 w-full border-t border-[#0a0a0a]/10 py-2 font-[family-name:var(--preview-hikari-body)] text-xs uppercase tracking-widest"
+						>
+							Apply
+						</button>
+					</div>
+				) : null}
+			</div>
+
+			<div className="mt-5">
+				<label htmlFor={booking.guestFieldId} className="font-[family-name:var(--preview-hikari-body)] text-[9px] uppercase tracking-[0.2em] text-[#0a0a0a]/40">
+					Guests
+				</label>
+				<Input
+					id={booking.guestFieldId}
+					type="number"
+					min={1}
+					max={guestCap}
+					value={booking.guestCount}
+					onChange={(e) => {
+						const v = parseInt(e.target.value, 10);
+						if (!Number.isNaN(v)) booking.setGuestCount(Math.min(guestCap, Math.max(1, v)));
+					}}
+					className="mt-2 rounded-none border-[#0a0a0a]/15"
+					variant="compact"
+				/>
+			</div>
+
+			<button
+				type="button"
+				onClick={() => void booking.handleReserveClick()}
+				disabled={listingPreview && (!propertyRef || !booking.stayRange?.from || !booking.stayRange?.to || booking.checkingAvailability)}
+				className="group mt-8 flex w-full items-center justify-between bg-[#0a0a0a] px-5 py-4 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold uppercase tracking-[0.2em] text-[#fcfcfa] transition hover:bg-[#d4a853] hover:text-[#0a0a0a] disabled:opacity-50"
+			>
+				<span>{booking.checkingAvailability ? 'Checking…' : data.booking.cta}</span>
+				<ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden />
+			</button>
+		</div>
+	);
 }
 
 export function CanvasPreview({
@@ -52,566 +160,279 @@ export function CanvasPreview({
 }) {
 	const aboutLong = [data.concept.paragraphs[0], data.concept.paragraphs[1]].filter(Boolean).join(' ').trim();
 	const aboutShort = data.concept.title.trim();
-
-	const leftHero = data.hero.imageSrc.trim() || data.gallery.large.src.trim();
-	const rightTop = data.hero.imageSrc.trim() ? data.gallery.large.src.trim() : data.gallery.stack[0].src.trim();
-	const rightBot = data.hero.imageSrc.trim()
-		? data.gallery.stack[0].src.trim() || data.gallery.stack[1].src.trim()
-		: data.gallery.stack[1].src.trim() || data.gallery.stack[0].src.trim();
-	const galleryImages = useMemo(() => [leftHero, rightTop, rightBot, data.gallery.full.src.trim()].filter(Boolean), [leftHero, rightTop, rightBot, data.gallery.full.src]);
-	const hasGallery = Boolean(leftHero || rightTop || rightBot);
+	const heroSrc = data.hero.imageSrc.trim() || data.gallery.large.src.trim();
+	const galleryImages = useMemo(
+		() =>
+			[
+				heroSrc,
+				data.gallery.large.src.trim(),
+				data.gallery.stack[0].src.trim(),
+				data.gallery.stack[1].src.trim(),
+				data.gallery.full.src.trim(),
+			].filter(Boolean),
+		[heroSrc, data.gallery],
+	);
 	const [galleryOpen, setGalleryOpen] = useState(false);
 	const [galleryIndex, setGalleryIndex] = useState(0);
-	const [stayRange, setStayRange] = useState<DateRange | undefined>();
-	const [stayPickerOpen, setStayPickerOpen] = useState(false);
-	const stayPickerRef = useRef<HTMLDivElement>(null);
-	const guestFieldId = useId();
+	const propertyRef = useMemo(() => data.footer.tagline.replace(/^\//, '').trim(), [data.footer.tagline]);
 	const guestCap = useMemo(() => {
 		const m = data.booking.guests.match(/^(\d+)/);
 		const n = m ? parseInt(m[1], 10) : data.booking.maxGuests;
-		const cap = Number.isFinite(n) && n > 0 ? n : data.booking.maxGuests;
-		return Math.min(Math.max(1, data.booking.maxGuests), Math.max(1, cap));
+		return Math.min(Math.max(1, data.booking.maxGuests), Math.max(1, n));
 	}, [data.booking.guests, data.booking.maxGuests]);
-	const [guestCount, setGuestCount] = useState(1);
-	const [checkingAvailability, setCheckingAvailability] = useState(false);
-	const [availabilityMsg, setAvailabilityMsg] = useState<string | null>(null);
-	const [availableForCheckout, setAvailableForCheckout] = useState(false);
-	const [totalPrice, setTotalPrice] = useState<number | null>(null);
-	const [allowedDateKeys, setAllowedDateKeys] = useState<Set<string>>(new Set());
-	const todayStart = useMemo(() => startOfToday(), []);
-	const propertyRef = useMemo(() => data.footer.tagline.replace(/^\//, '').trim(), [data.footer.tagline]);
-	const checkAvailabilityMutation = useCheckAvailability();
-	const router = useRouter();
-	const hostRating = data.host.rating.trim() || (data.booking.rating.trim() ? `${data.booking.rating} rating` : 'Top rated host');
-	const hostBio = data.host.bio.trim() || 'Friendly, responsive host with a focus on thoughtful local recommendations.';
+	const hostBio = data.host.bio.trim() || 'Thoughtful hosting with an eye for light, space, and the quiet details.';
 
-	useEffect(() => {
-		setGuestCount((c) => Math.min(guestCap, Math.max(1, c)));
-	}, [guestCap]);
-
-	useEffect(() => {
-		if (!listingPreview || !propertyRef) return;
-		let cancelled = false;
-		void (async () => {
-			try {
-				const qs = new URLSearchParams({ start: toDateParam(todayStart) });
-				const res = await fetch(`/api${ApiRoutes.properties.unavailableDays(propertyRef)}?${qs}`);
-				if (!res.ok || cancelled) return;
-				const json = (await res.json()) as { available_dates?: string[] };
-				if (!cancelled) setAllowedDateKeys(new Set(json.available_dates ?? []));
-			} catch {
-				if (!cancelled) setAllowedDateKeys(new Set());
-			}
-		})();
-		return () => {
-			cancelled = true;
-		};
-	}, [listingPreview, propertyRef, todayStart]);
-
-	const dayDisabled = useMemo(() => {
-		return (day: Date) => {
-			const d = dayStart(day);
-			if (d.getTime() < todayStart.getTime()) return true;
-
-			const from = stayRange?.from ? dayStart(stayRange.from) : null;
-			const to = stayRange?.to ? dayStart(stayRange.to) : null;
-			const key = toDateParam(day);
-
-			if (!from) return !allowedDateKeys.has(key);
-
-			if (!to) {
-				if (d.getTime() < from.getTime()) return true;
-				if (d.getTime() === from.getTime()) return !allowedDateKeys.has(key);
-				return !nightsPriced(from, d, allowedDateKeys);
-			}
-
-			if (d.getTime() < from.getTime()) return true;
-			if (d.getTime() === from.getTime()) return !allowedDateKeys.has(key);
-			if (d.getTime() <= to.getTime()) {
-				if (d.getTime() === to.getTime()) return !nightsPriced(from, d, allowedDateKeys);
-				return !allowedDateKeys.has(key);
-			}
-			return !nightsPriced(from, d, allowedDateKeys);
-		};
-	}, [allowedDateKeys, todayStart, stayRange?.from, stayRange?.to]);
-
-	useEffect(() => {
-		if (!stayPickerOpen) return;
-		const onPointerDown = (e: PointerEvent) => {
-			const el = stayPickerRef.current;
-			if (el && !el.contains(e.target as Node)) setStayPickerOpen(false);
-		};
-		document.addEventListener('pointerdown', onPointerDown);
-		return () => document.removeEventListener('pointerdown', onPointerDown);
-	}, [stayPickerOpen]);
-
-	const checkAvailabilityForDates = useCallback(
-		async (from: Date, to: Date) => {
-			if (!propertyRef) return;
-			setCheckingAvailability(true);
-			setAvailabilityMsg(null);
-			try {
-				const check_in = toDateParam(from);
-				const check_out = toDateParam(to);
-				const data = await checkAvailabilityMutation.mutateAsync({
-					property_id: propertyRef,
-					check_in,
-					check_out,
-					guests: guestCount,
-				});
-				const available = Boolean(data.isAvailable);
-				const total = typeof data.totalPrice === 'number' ? data.totalPrice : null;
-				setAvailableForCheckout(available);
-				setTotalPrice(total);
-				setAvailabilityMsg(
-					available
-						? `Available${total !== null ? ` · Total $${total}` : ''}`
-						: 'Not available for selected dates.',
-				);
-				return { available, total };
-			} catch {
-				setAvailableForCheckout(false);
-				setTotalPrice(null);
-				setAvailabilityMsg('Could not check availability.');
-			} finally {
-				setCheckingAvailability(false);
-			}
-		},
-		[propertyRef, guestCount, checkAvailabilityMutation],
-	);
-
-	const openGallery = (src?: string) => {
-		if (!src) return;
+	const openGallery = (src: string) => {
 		const index = galleryImages.findIndex((img) => img === src);
 		setGalleryIndex(index >= 0 ? index : 0);
 		setGalleryOpen(true);
 	};
 
-	const handleReserveClick = async () => {
-		if (!stayRange?.from || !stayRange?.to) return;
-		const result = await checkAvailabilityForDates(stayRange.from, stayRange.to);
-		if (!result?.available) return;
-
-		const qs = new URLSearchParams({
-			property_id: propertyRef,
-			check_in: toDateParam(stayRange.from),
-			check_out: toDateParam(stayRange.to),
-			guests: String(guestCount),
-			total_price: String(result.total ?? 0),
-		});
-		router.push(`/guest-details?${qs.toString()}`);
-	};
-
 	return (
-		<div className="bg-[#F4F2EE] text-[#1A1A1A] antialiased selection:bg-[#5c6149]/12">
-			<header className="sticky top-0 z-30 border-b border-black/[0.05] bg-[#F4F2EE]/95 px-4 py-3 backdrop-blur-md sm:px-8">
-				<div className="mx-auto flex max-w-6xl items-center justify-between">
-					<span className="truncate font-[family-name:var(--font-serif)] text-lg tracking-tight">{data.wordmark}</span>
+		<div
+			className={cn(
+				syne.variable,
+				lora.variable,
+				'min-h-screen bg-[#fcfcfa] font-[family-name:var(--preview-hikari-body)] text-[#0a0a0a] antialiased selection:bg-[#d4a853]/30',
+			)}
+		>
+			<div className="pointer-events-none fixed inset-0 z-0 opacity-[0.35]" aria-hidden>
+				<div className="absolute inset-0 bg-[linear-gradient(to_right,#0a0a0a06_1px,transparent_1px),linear-gradient(to_bottom,#0a0a0a06_1px,transparent_1px)] bg-[size:48px_48px]" />
+			</div>
+
+			<header className="relative z-20 border-b border-[#0a0a0a]/8">
+				<div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-5 sm:px-10">
+					<span className="font-[family-name:var(--preview-hikari-display)] text-sm font-bold uppercase tracking-[0.35em]">
+						{data.wordmark}
+					</span>
 					{data.nav.length > 0 ? (
-						<nav className="hidden gap-8 text-[10px] uppercase tracking-[0.2em] text-[#1A1A1A]/50 sm:flex">
+						<nav className="hidden items-center gap-10 sm:flex">
 							{data.nav.map((item) => (
-								<span key={item.label} className={item.current ? 'font-semibold text-[#5c6149]' : ''}>
+								<span
+									key={item.label}
+									className={cn(
+										'font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.25em]',
+										item.current ? 'font-semibold text-[#0a0a0a]' : 'text-[#0a0a0a]/40',
+									)}
+								>
 									{item.label}
 								</span>
 							))}
 						</nav>
-					) : (
-						<span className="hidden sm:block" />
-					)}
-					{listingPreview ? <span className="w-5 sm:hidden" aria-hidden /> : <Menu className="h-5 w-5 text-[#1A1A1A]/35 sm:hidden" />}
+					) : null}
+					{listingPreview ? <span className="w-5 sm:hidden" aria-hidden /> : <Menu className="h-5 w-5 sm:hidden" strokeWidth={1.25} />}
 				</div>
 			</header>
 
-			<main>
-				<div className="mx-auto max-w-6xl px-4 pt-6 sm:px-8 sm:pt-8">
-					{hasGallery ? (
-						<div className="grid grid-cols-1 gap-3 sm:grid-cols-12 sm:gap-4">
-							{leftHero ? (
-								<button
-									type="button"
-									onClick={() => openGallery(leftHero)}
-									className="relative aspect-[4/5] min-h-[220px] cursor-pointer overflow-hidden rounded-2xl bg-[#e0ded9] sm:col-span-7 sm:min-h-[280px] lg:min-h-[360px]"
-								>
-									<Image src={leftHero} alt="" fill className="object-cover cursor-pointer" sizes="(max-width:640px)100vw,58vw" unoptimized />
-								</button>
-							) : (
-								<div className="hidden sm:col-span-7 sm:block" aria-hidden />
-							)}
-							<div className="grid grid-cols-2 gap-3 sm:col-span-5 sm:grid-cols-1 sm:grid-rows-2 sm:gap-4">
-								{rightTop ? (
-									<button
-										type="button"
-										onClick={() => openGallery(rightTop)}
-										className="relative aspect-[5/4] cursor-pointer overflow-hidden rounded-2xl bg-[#e0ded9] sm:min-h-0 sm:flex-1"
-									>
-										<Image src={rightTop} alt="" fill className="object-cover cursor-pointer" sizes="40vw" unoptimized />
-									</button>
-								) : null}
-								{rightBot && rightBot !== rightTop ? (
-									<button
-										type="button"
-										onClick={() => openGallery(rightBot)}
-										className="relative aspect-[5/4] cursor-pointer overflow-hidden rounded-2xl bg-[#e0ded9] sm:min-h-0 sm:flex-1"
-									>
-										<Image src={rightBot} alt="" fill className="object-cover cursor-pointer" sizes="40vw" unoptimized />
-									</button>
-								) : null}
-							</div>
-						</div>
-					) : null}
-				</div>
-
-				<div className="relative mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-8 sm:pt-12">
-					<div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-14">
-						<div className="min-w-0 flex-1 space-y-14 lg:max-w-[62%]">
-							<section>
-								<span className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#1A1A1A]/45">About</span>
-								<h1 className="mt-3 font-[family-name:var(--font-serif)] text-3xl leading-tight tracking-tight sm:text-4xl lg:text-[2.5rem]">
-									{data.hero.title}
-								</h1>
+			<main className="relative z-10">
+				<section className="mx-auto grid max-w-[1400px] lg:grid-cols-[minmax(0,42%)_1fr] lg:min-h-[calc(100vh-73px)]">
+					<div className="flex flex-col justify-between px-5 py-12 sm:px-10 lg:py-16 lg:pr-8">
+						<div>
+							{data.hero.series ? (
+								<p className="font-[family-name:var(--preview-hikari-body)] text-[11px] uppercase tracking-[0.4em] text-[#d4a853]">
+									{data.hero.series}
+								</p>
+							) : null}
+							<h1 className="mt-6 font-[family-name:var(--preview-hikari-display)] text-[clamp(2.75rem,8vw,5.5rem)] font-extrabold leading-[0.92] tracking-[-0.04em]">
+								{data.hero.title}
+							</h1>
+							<div className="mt-8 flex items-center gap-3">
+								<div className="h-px w-10 shrink-0 bg-[#d4a853]" aria-hidden />
 								{data.hero.location ? (
-									<p className="mt-3 flex items-center gap-2 text-sm text-[#1A1A1A]/50">
-										<MapPin className="h-4 w-4 shrink-0 text-[#5c6149]" />
+									<p className="flex items-center gap-2 font-[family-name:var(--preview-hikari-body)] text-sm text-[#0a0a0a]/55">
+										<MapPin className="h-4 w-4 text-[#0a0a0a]" strokeWidth={1.25} />
 										{data.hero.location}
 									</p>
 								) : null}
-								{aboutLong ? (
-									<p className="mt-6 max-w-xl text-[15px] leading-relaxed text-[#1A1A1A]/70">{aboutLong}</p>
+							</div>
+						</div>
+						{(aboutShort || aboutLong) && (
+							<div className="mt-12 max-w-md border-l-2 border-[#d4a853] pl-6 lg:mt-0">
+								{data.concept.eyebrow ? (
+									<p className="font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.3em] text-[#0a0a0a]/40">
+										{data.concept.eyebrow}
+									</p>
 								) : null}
 								{aboutShort ? (
-									<p className="mt-4 max-w-xl text-sm leading-relaxed text-[#1A1A1A]/55">{aboutShort}</p>
+									<p className="mt-3 font-[family-name:var(--preview-hikari-body)] text-lg leading-relaxed text-[#0a0a0a]/75">
+										{aboutShort}
+									</p>
 								) : null}
-							</section>
+							</div>
+						)}
+					</div>
 
-							{data.amenities.length > 0 ? (
-								<section>
-									<span className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#1A1A1A]/45">Amenities</span>
-									<div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-4">
-										{data.amenities.map((a) => (
-											<div key={`${a.id}-${a.label}`} className="flex flex-col items-center gap-3 text-center">
-												<AmenityGlyph id={a.id} className="text-[#1A1A1A]/70" />
-												<span className="text-xs font-semibold uppercase tracking-wide text-[#1A1A1A]">
-													{a.label}
-												</span>
-											</div>
-										))}
-									</div>
-								</section>
+					<div className="relative min-h-[50vh] lg:min-h-0">
+						{heroSrc ? (
+							<button type="button" onClick={() => openGallery(heroSrc)} className="relative block h-full min-h-[50vh] w-full lg:min-h-full">
+								<Image src={heroSrc} alt="" fill className="object-cover" sizes="(max-width:1024px) 100vw, 58vw" priority unoptimized />
+								<div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-[#fcfcfa]/20 lg:to-[#fcfcfa]/40" aria-hidden />
+							</button>
+						) : null}
+						{galleryImages.length > 2 ? (
+							<div className="absolute bottom-6 right-6 hidden gap-2 lg:flex">
+								{galleryImages.slice(1, 4).map((src, i) => (
+									<button
+										key={`${src}-${i}`}
+										type="button"
+										onClick={() => openGallery(src)}
+										className="relative h-20 w-16 overflow-hidden border-2 border-[#fcfcfa] shadow-lg"
+									>
+										<Image src={src} alt="" fill className="object-cover" sizes="64px" unoptimized />
+									</button>
+								))}
+							</div>
+						) : null}
+					</div>
+				</section>
+
+				<section className="border-t border-[#0a0a0a]/8 bg-white">
+					<div className="mx-auto grid max-w-[1400px] gap-12 px-5 py-16 sm:px-10 lg:grid-cols-[1fr_minmax(0,380px)] lg:gap-16 lg:py-24">
+						<div className="space-y-16">
+							{aboutLong ? (
+								<div>
+									<p className="font-[family-name:var(--preview-hikari-display)] text-6xl font-bold leading-none text-[#0a0a0a]/[0.04]">01</p>
+									<p className="-mt-8 max-w-2xl font-[family-name:var(--preview-hikari-body)] text-base leading-[1.85] text-[#0a0a0a]/70 sm:text-lg">
+										{aboutLong}
+									</p>
+								</div>
 							) : null}
 
-							<section>
-								<span className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#1A1A1A]/45">Location</span>
-								<div className="relative mt-6 aspect-[21/10] w-full overflow-hidden rounded-2xl">
+							{data.gallery.full.pullQuote.title.trim() ? (
+								<blockquote className="max-w-xl">
+									<p className="font-[family-name:var(--preview-hikari-display)] text-2xl font-semibold leading-snug tracking-tight sm:text-3xl">
+										{data.gallery.full.pullQuote.title}
+									</p>
+									{data.gallery.full.pullQuote.text.trim() ? (
+										<p className="mt-4 font-[family-name:var(--preview-hikari-body)] text-sm text-[#0a0a0a]/50">
+											{data.gallery.full.pullQuote.text}
+										</p>
+									) : null}
+								</blockquote>
+							) : null}
+
+							{data.amenities.length > 0 ? (
+								<div>
+									<p className="mb-8 font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.35em] text-[#0a0a0a]/40">
+										Amenities
+									</p>
+									<ul className="divide-y divide-[#0a0a0a]/8">
+										{data.amenities.map((a) => (
+											<li key={`${a.id}-${a.label}`} className="flex items-center gap-5 py-5">
+												<AmenityGlyph id={a.id} className="h-6 w-6 shrink-0 text-[#0a0a0a]/70" />
+												<span className="font-[family-name:var(--preview-hikari-display)] text-sm font-semibold uppercase tracking-wider">
+													{a.label}
+												</span>
+												<Plus className="ml-auto h-4 w-4 text-[#d4a853]/80" aria-hidden />
+											</li>
+										))}
+									</ul>
+								</div>
+							) : null}
+
+							<div>
+								<p className="mb-6 font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.35em] text-[#0a0a0a]/40">
+									{data.location.eyebrow || 'Location'}
+								</p>
+								<div className="relative aspect-[2/1] w-full overflow-hidden bg-[#0a0a0a]/5">
 									{listingPreview && (data.location.mapCenter || data.location.mapEmbedSrc) ? (
 										<BrandingPreviewMap
 											title="Property location"
 											center={data.location.mapCenter}
 											embedSrc={data.location.mapEmbedSrc}
-											className="absolute inset-0 h-full w-full border-0"
+											className="absolute inset-0 h-full w-full border-0 grayscale"
 										/>
 									) : data.location.mapImage.trim() ? (
-										<Image
-											src={data.location.mapImage}
-											alt=""
-											fill
-											className="object-cover opacity-90"
-											sizes="(max-width:768px)100vw,62vw"
-											unoptimized
-										/>
+										<Image src={data.location.mapImage} alt="" fill className="object-cover grayscale" sizes="100vw" unoptimized />
 									) : null}
 								</div>
 								<div className="mt-8 grid gap-8 sm:grid-cols-2">
 									{data.location.columns.map((c) => (
 										<div key={c.title}>
-											<h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#1A1A1A]/55">
+											<h3 className="font-[family-name:var(--preview-hikari-display)] text-xs font-bold uppercase tracking-[0.2em]">
 												{c.title}
 											</h3>
-											<p className="mt-2 text-sm leading-relaxed text-[#1A1A1A]/75">{c.text}</p>
+											<p className="mt-2 font-[family-name:var(--preview-hikari-body)] text-sm leading-relaxed text-[#0a0a0a]/60">
+												{c.text}
+											</p>
 										</div>
 									))}
 								</div>
-							</section>
+							</div>
+
 							{data.host.name.trim() ? (
-								<section className="border-t border-black/[0.06] pt-8">
-									<p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5c6149]">Meet our host</p>
-									<div className="mt-4 flex items-start gap-4">
-										{data.host.imageSrc.trim() ? (
-											<div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[#eee]">
-												<Image src={data.host.imageSrc} alt="" fill className="object-cover" sizes="56px" unoptimized />
-											</div>
-										) : null}
-										<div className="min-w-0">
-											<p className="text-lg font-semibold text-[#1A1A1A]">{data.host.name}</p>
-											<p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-[#5c6149]">{hostRating}</p>
-											<p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#1A1A1A]/70">{hostBio}</p>
+								<div className="flex flex-col gap-6 border border-[#0a0a0a]/10 p-8 sm:flex-row sm:items-center">
+									{data.host.imageSrc.trim() ? (
+										<div className="relative h-24 w-24 shrink-0 overflow-hidden bg-[#0a0a0a]/5">
+											<Image src={data.host.imageSrc} alt="" fill className="object-cover grayscale" sizes="96px" unoptimized />
 										</div>
-									</div>
-								</section>
-							) : null}
-
-						</div>
-
-						<aside className="w-full min-w-0 shrink-0 lg:sticky lg:top-24 lg:mt-[-2.5rem] lg:w-[min(100%,440px)]">
-							<div className="min-w-0 overflow-x-clip rounded-2xl border border-black/[0.06] bg-white p-6 shadow-[0_12px_40px_rgba(0,0,0,0.08)] sm:p-7">
-								{listingPreview ? (
-									<>
-										<p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#1A1A1A]/45">
-											{/* {data.booking.eyebrow} */}
-										</p>
-										{/* <p className="mt-4 min-h-[1.35rem] text-sm font-medium leading-snug text-[#1A1A1A]"> */}
-										<p className="text-[10px] font-medium uppercase leading-snug tracking-[0.2em] text-[#1A1A1A]">
-											{checkingAvailability ? (
-												'Checking...'
-											) : stayRange?.from && stayRange?.to && availabilityMsg ? (
-												availableForCheckout && totalPrice !== null ? (
-													<>
-														Total{' '}
-														<span className="text-[14px] font-semibold tracking-normal">${totalPrice}</span>
-													</>
-												) : (
-													availabilityMsg
-												)
-											) : (
-												'Pick your stay dates - pricing appears here.'
-											)}
-										</p>
-										<div
-											ref={stayPickerRef}
-											className="relative mt-5 min-w-0 border-t border-black/[0.06] pt-6 [--rdp-accent-color:#5c6149] [--rdp-accent-background-color:rgba(92,97,73,0.12)]"
-										>
-											<div className="grid grid-cols-2 gap-2">
-												<div>
-													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">
-														Check in
-													</p>
-													<button
-														type="button"
-														onClick={() => setStayPickerOpen(true)}
-														aria-expanded={stayPickerOpen}
-														aria-haspopup="dialog"
-														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30"
-													>
-														{stayRange?.from ? formatStay(stayRange.from) : 'Add date'}
-													</button>
-												</div>
-												<div>
-													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">
-														Check out
-													</p>
-													<button
-														type="button"
-														onClick={() => setStayPickerOpen(true)}
-														aria-expanded={stayPickerOpen}
-														aria-haspopup="dialog"
-														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30"
-													>
-														{stayRange?.to ? formatStay(stayRange.to) : 'Add date'}
-													</button>
-												</div>
-											</div>
-											{stayPickerOpen ? (
-												<div
-													role="dialog"
-													aria-label="Select stay dates"
-													className="absolute inset-x-0 top-full z-20 mt-2 w-full min-w-0 max-w-full rounded-xl border border-black/10 bg-white p-2 shadow-xl"
-												>
-													<DayPicker
-														mode="range"
-														min={1}
-														selected={stayRange}
-														onSelect={(range) => {
-															setStayRange(range);
-															if (range?.from && range?.to) void checkAvailabilityForDates(range.from, range.to);
-														}}
-														disabled={dayDisabled}
-														numberOfMonths={1}
-														className="mx-auto w-full min-w-0 max-w-full justify-center [--rdp-day-height:2rem] [--rdp-day-width:2rem] [--rdp-day_button-height:1.875rem] [--rdp-day_button-width:1.875rem] [&_.rdp-month]:w-full [&_.rdp-month_caption]:text-sm [&_.rdp-month_grid]:w-full [&_.rdp-nav]:h-8 [&_.rdp-weekday]:p-0 [&_.rdp-weekday]:text-[10px] [&_.rdp-day]:text-[12px]"
-													/>
-													<div className="flex justify-end gap-2">
-														<button type="button" onClick={() => setStayPickerOpen(false)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30">Apply</button>
-														<button type="button" onClick={() => setStayRange(undefined)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30">Clear</button>
-													</div>
-												</div>
-											) : null}
-										</div>
-										<div className="mt-5">
-											<label
-												htmlFor={guestFieldId}
-												className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40"
-											>
-												Guests
-											</label>
-											<Input
-												id={guestFieldId}
-												type="number"
-												inputMode="numeric"
-												min={1}
-												max={guestCap}
-												step={1}
-												value={guestCount}
-												onChange={(e) => {
-													const v = parseInt(e.target.value, 10);
-													if (Number.isNaN(v)) return;
-													setGuestCount(Math.min(guestCap, Math.max(1, v)));
-												}}
-												className="mt-1.5"
-												variant="compact"
-											/>
-											<p className="mt-1 text-[10px] text-[#1A1A1A]/45">Up to {guestCap} guests</p>
-										</div>
-
-										{/* <p className="mt-5 border-t border-black/[0.06] pt-5 text-sm text-[#1A1A1A]/75">{data.booking.guests}</p> */}
-										<button
-											type="button"
-											onClick={() => void handleReserveClick()}
-											disabled={!propertyRef || !stayRange?.from || !stayRange?.to || checkingAvailability}
-											className="mt-6 w-full cursor-pointer rounded-xl bg-[#5c6149] py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-[#4d523e] disabled:cursor-not-allowed disabled:opacity-60"
-										>
-											{checkingAvailability ? 'Checking...' : 'RESERVE'}
-										</button>
-									</>
-								) : (
-									<>
-										<p className="text-[10px] font-medium uppercase leading-snug tracking-[0.2em] text-[#1A1A1A]">
-											{checkingAvailability ? (
-												'Checking...'
-											) : stayRange?.from && stayRange?.to && availabilityMsg ? (
-												availableForCheckout && totalPrice !== null ? (
-													<>
-														Available · Total{' '}
-														<span className="text-[14px] font-semibold tracking-normal">${totalPrice}</span>
-													</>
-												) : (
-													availabilityMsg
-												)
-											) : (
-												'Pick your stay dates - pricing appears here.'
-											)}
-										</p>
-										<div
-											ref={stayPickerRef}
-											className="relative mt-5 min-w-0 border-t border-black/[0.06] pt-6 [--rdp-accent-color:#5c6149] [--rdp-accent-background-color:rgba(92,97,73,0.12)]"
-										>
-											<div className="grid grid-cols-2 gap-2">
-												<div>
-													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">
-														Check in
-													</p>
-													<button
-														type="button"
-														onClick={() => setStayPickerOpen(true)}
-														aria-expanded={stayPickerOpen}
-														aria-haspopup="dialog"
-														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30"
-													>
-														{stayRange?.from ? formatStay(stayRange.from) : 'Add date'}
-													</button>
-												</div>
-												<div>
-													<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40">
-														Check out
-													</p>
-													<button
-														type="button"
-														onClick={() => setStayPickerOpen(true)}
-														aria-expanded={stayPickerOpen}
-														aria-haspopup="dialog"
-														className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2.5 py-3 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30"
-													>
-														{stayRange?.to ? formatStay(stayRange.to) : 'Add date'}
-													</button>
-												</div>
-											</div>
-											{stayPickerOpen ? (
-												<div
-													role="dialog"
-													aria-label="Select stay dates"
-													className="absolute inset-x-0 top-full z-20 mt-2 w-full min-w-0 max-w-full rounded-xl border border-black/10 bg-white p-2 shadow-xl"
-												>
-													<DayPicker
-														mode="range"
-														min={1}
-														selected={stayRange}
-														onSelect={(range) => {
-															setStayRange(range);
-															if (range?.from && range?.to) void checkAvailabilityForDates(range.from, range.to);
-														}}
-														disabled={dayDisabled}
-														numberOfMonths={1}
-														className="mx-auto w-full min-w-0 max-w-full justify-center [--rdp-day-height:2rem] [--rdp-day-width:2rem] [--rdp-day_button-height:1.875rem] [--rdp-day_button-width:1.875rem] [&_.rdp-month]:w-full [&_.rdp-month_caption]:text-sm [&_.rdp-month_grid]:w-full [&_.rdp-nav]:h-8 [&_.rdp-weekday]:p-0 [&_.rdp-weekday]:text-[10px] [&_.rdp-day]:text-[12px]"
-													/>
-													<div className="flex justify-end gap-2">
-														<button type="button" onClick={() => setStayPickerOpen(false)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30">Apply</button>
-														<button type="button" onClick={() => setStayRange(undefined)} className="mt-2 w-fit rounded-lg border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-medium tabular-nums text-[#1A1A1A] outline-none transition hover:border-black/20 focus-visible:ring-2 focus-visible:ring-[#5c6149]/30">Clear</button>
-													</div>
-												</div>
-											) : null}
-										</div>
-										<div className="mt-5">
-											<label
-												htmlFor={guestFieldId}
-												className="text-[9px] font-semibold uppercase tracking-wider text-[#1A1A1A]/40"
-											>
-												Guests
-											</label>
-											<Input
-												id={guestFieldId}
-												type="number"
-												inputMode="numeric"
-												min={1}
-												max={guestCap}
-												step={1}
-												value={guestCount}
-												onChange={(e) => {
-													const v = parseInt(e.target.value, 10);
-													if (Number.isNaN(v)) return;
-													setGuestCount(Math.min(guestCap, Math.max(1, v)));
-												}}
-												className="mt-1.5"
-												variant="compact"
-											/>
-											<p className="mt-1 text-[10px] text-[#1A1A1A]/45">Up to {guestCap} guests</p>
-										</div>
-										{data.booking.price.trim() ? (
-											<p className="mt-4 font-[family-name:var(--font-serif)] text-2xl text-[#1A1A1A]">
-												{data.booking.price}{' '}
-												<span className="text-sm font-normal text-[#1A1A1A]/45">{data.booking.per}</span>
+									) : null}
+									<div>
+										{data.host.label ? (
+											<p className="font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.25em] text-[#0a0a0a]/40">
+												{data.host.label}
 											</p>
 										) : null}
-										<button
-											type="button"
-											onClick={() => void handleReserveClick()}
-											disabled={!propertyRef || !stayRange?.from || !stayRange?.to || checkingAvailability}
-											className="mt-6 w-full cursor-pointer rounded-xl bg-[#5c6149] py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-[#4d523e] disabled:cursor-not-allowed disabled:opacity-60"
-										>
-											{checkingAvailability ? 'Checking...' : 'RESERVE'}
-										</button>
-									</>
-								)}
-							</div>
+										<p className="mt-2 font-[family-name:var(--preview-hikari-display)] text-2xl font-bold">{data.host.name}</p>
+										<p className="mt-1 font-[family-name:var(--preview-hikari-body)] text-xs text-[#d4a853]">{data.host.rating}</p>
+										<p className="mt-3 max-w-lg font-[family-name:var(--preview-hikari-body)] text-sm leading-relaxed text-[#0a0a0a]/65">
+											{hostBio}
+										</p>
+									</div>
+								</div>
+							) : null}
+						</div>
+
+						<aside className="lg:sticky lg:top-8 lg:self-start">
+							<HikariBookingPanel
+								data={data}
+								listingPreview={listingPreview}
+								propertyRef={propertyRef}
+								guestCap={guestCap}
+							/>
 						</aside>
 					</div>
-				</div>
+				</section>
+
+				{data.gallery.large.src.trim() ? (
+					<section className="border-t border-[#0a0a0a]/8">
+						<button
+							type="button"
+							onClick={() => openGallery(data.gallery.large.src.trim())}
+							className="group relative block w-full"
+						>
+							<FillImg
+								src={data.gallery.large.src}
+								className="aspect-[21/8] w-full"
+								sizes="100vw"
+								imgClassName="transition duration-1000 group-hover:scale-[1.02] grayscale group-hover:grayscale-0"
+							/>
+							{data.gallery.large.caption ? (
+								<p className="absolute bottom-6 left-6 font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.3em] text-white">
+									{data.gallery.large.caption}
+								</p>
+							) : null}
+						</button>
+					</section>
+				) : null}
 			</main>
 
-			<footer className="border-t border-black/[0.06] px-4 py-10 sm:px-8">
-				<div className="mx-auto flex max-w-6xl flex-col gap-4 text-[10px] uppercase tracking-[0.15em] text-[#1A1A1A]/40 sm:flex-row sm:items-center sm:justify-between">
-					<div>
-						<span className="font-[family-name:var(--font-serif)] text-sm font-semibold tracking-normal text-[#1A1A1A]">
-							{data.footer.wordmark}
-						</span>
-						{data.footer.tagline ? <span className="ml-2">{data.footer.tagline}</span> : null}
-					</div>
+			<footer className="relative z-10 border-t border-[#0a0a0a] bg-[#0a0a0a] px-5 py-8 text-[#fcfcfa] sm:px-10">
+				<div className="mx-auto flex max-w-[1400px] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<p className="font-[family-name:var(--preview-hikari-display)] text-sm font-bold uppercase tracking-[0.3em]">
+						{data.footer.wordmark}
+					</p>
 					{data.footer.links.length > 0 ? (
-						<div className="flex flex-wrap gap-6">
+						<div className="flex flex-wrap gap-8 font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.2em] text-[#fcfcfa]/45">
 							{data.footer.links.map((l) => (
 								<span key={l.label}>{l.label}</span>
 							))}
 						</div>
 					) : null}
-					<p>{data.footer.copyright}</p>
+					<p className="font-[family-name:var(--preview-hikari-body)] text-xs text-[#fcfcfa]/35">{data.footer.copyright}</p>
 				</div>
 			</footer>
+
 			<PhotoGalleryLightbox
 				images={galleryImages}
 				open={galleryOpen}

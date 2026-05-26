@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -78,27 +79,26 @@ export function ThemesShowcaseModal({ open, onClose }: ThemesShowcaseModalProps)
 						<div className="themes-modal-grid">
 							{PROPERTY_BRANDING_THEME_OPTIONS.map((option) => (
 								<article key={option.id} className="themes-modal-card">
-									<div
-										className="themes-modal-swatch"
-										style={{
-											background: `linear-gradient(135deg, ${option.preview.bg} 0%, ${option.preview.accent}22 100%)`,
-										}}
-									>
-										<span
-											className={
-												option.preview.headlineFont === 'serif'
-													? 'themes-modal-swatch-type themes-modal-swatch-type-serif'
-													: 'themes-modal-swatch-type'
-											}
-										>
-											Aa
-										</span>
-										<span
-											className="themes-modal-swatch-dot"
-											style={{ backgroundColor: option.preview.accent }}
+									<div className="themes-modal-thumb relative aspect-[4/5] overflow-hidden rounded-xl bg-black/5">
+										<Image
+											src={option.image}
+											alt={option.imageAlt}
+											fill
+											sizes="280px"
+											className="object-cover"
 										/>
 									</div>
 									<h3 className="themes-modal-card-title">{option.label}</h3>
+									<div className="mt-2 flex flex-wrap gap-1.5">
+										{option.tags.map((tag) => (
+											<span
+												key={tag}
+												className="rounded-full bg-black/[0.06] px-2 py-0.5 text-xs text-black/55"
+											>
+												{tag}
+											</span>
+										))}
+									</div>
 									<p className="themes-modal-card-desc">{option.description}</p>
 									<button
 										type="button"

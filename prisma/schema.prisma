@@ -29,6 +29,7 @@ enum UserRole {
 enum PropertyBrandingTheme {
   CANVAS
   ARCHITECTURA
+  MIZU
 }
 
 enum BookingStatus {

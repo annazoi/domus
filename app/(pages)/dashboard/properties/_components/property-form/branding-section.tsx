@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button, cn, useToast } from '@/components/ui';
@@ -49,11 +50,11 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 	return (
 		<PropertyFormSection id="branding" title="Branding">
 			<p className="max-w-2xl text-sm leading-relaxed text-[#1A1A1A]/65">
-				Choose how this listing appears on your public property page. Theme colors and typography are applied site-wide
-				for this home.
+				Choose a site template for this listing. Each design is fully customisable — swap photos, colors, and copy
+				without touching code.
 			</p>
 
-			<div className="grid gap-4 sm:grid-cols-2">
+			<div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
 				{PROPERTY_BRANDING_THEME_OPTIONS.map((option) => {
 					const active = selected === option.id;
 					return (
@@ -64,28 +65,33 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 								active ? 'border-camel ring-2 ring-camel/25' : 'border-black/[0.06] hover:border-black/15',
 							)}
 						>
-							<div className="flex flex-1 flex-col p-5 text-left">
-								<div
-									className="mb-4 flex h-24 items-end justify-between overflow-hidden rounded-xl px-4 pb-3 shadow-inner"
-									style={{
-										background: `linear-gradient(135deg, ${option.preview.bg} 0%, ${option.preview.accent}22 100%)`,
-									}}
-								>
-									<span
-										className={cn(
-											'text-lg leading-tight tracking-tight text-[#1A1A1A]',
-											option.preview.headlineFont === 'serif' ? 'font-serif' : 'font-sans',
-										)}
-									>
-										Aa
+							<div className="relative aspect-[4/5] w-full overflow-hidden bg-[#1A1A1A]/5">
+								<Image
+									src={option.image}
+									alt={option.imageAlt}
+									fill
+									sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+									className="object-cover"
+								/>
+								{active ? (
+									<span className="absolute left-3 top-3 rounded-full bg-camel px-3 py-1 text-xs font-medium text-white">
+										Selected
 									</span>
-									<span
-										className="h-9 w-9 rounded-full border border-black/10 shadow-sm"
-										style={{ backgroundColor: option.preview.accent }}
-									/>
+								) : null}
+							</div>
+							<div className="flex flex-1 flex-col p-5 text-left">
+								<p className="font-serif text-2xl tracking-tight text-[#1A1A1A]">{option.label}</p>
+								<div className="mt-2 flex flex-wrap gap-2">
+									{option.tags.map((tag) => (
+										<span
+											key={tag}
+											className="rounded-full bg-[#1A1A1A]/[0.06] px-2.5 py-0.5 text-xs text-[#1A1A1A]/65"
+										>
+											{tag}
+										</span>
+									))}
 								</div>
-								<p className="font-medium text-[#1A1A1A]">{option.label}</p>
-								<p className="mt-2 text-sm text-[#1A1A1A]/55">{option.description}</p>
+								<p className="mt-3 text-sm leading-relaxed text-[#1A1A1A]/55">{option.description}</p>
 							</div>
 							<div className="flex gap-2 px-4 pb-4 pt-1">
 								<Button
@@ -112,7 +118,7 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 									}}
 								>
 									<Eye className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
-									Preview theme
+									Preview
 								</Button>
 							</div>
 						</div>
