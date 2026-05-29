@@ -6,6 +6,7 @@ import { X } from 'lucide-react';
 import { Button, Input, Textarea, useToast } from '@/components/ui';
 import { useUpdateHostCustomer } from '@/features/customers/hooks/use-host-customers';
 import type { HostCustomerRow, UpdateHostCustomerInput } from '@/features/customers/interfaces/host-customer.interface';
+import { CustomerTotalSpent } from './customer-total-spent';
 
 type CustomerFormState = {
 	first_name: string;
@@ -143,7 +144,7 @@ export function CustomerDetailModal({
 								</h3>
 								<p className="mt-2 text-sm text-[#1A1A1A]/60">
 									{customer.booking_count} {customer.booking_count === 1 ? 'booking' : 'bookings'} ·{' '}
-									{Number.isFinite(customer.total_spent) ? customer.total_spent.toFixed(2) : '—'} spent
+									<CustomerTotalSpent amount={customer.total_spent} />
 								</p>
 							</div>
 							<Button type="button" variant="ghostPill" className="shrink-0 p-2" onClick={onClose} aria-label="Close">
