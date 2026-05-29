@@ -1,3 +1,7 @@
+import type { BookingStatus } from './booking-status';
+
+export type { BookingStatus };
+
 export interface Booking {
 	id: string;
 	property_id: string;
@@ -5,11 +9,12 @@ export interface Booking {
 	guest_name: string;
 	start_date: string;
 	end_date: string;
-	status: 'pending' | 'confirmed' | 'cancelled';
+	status: BookingStatus;
 	property_title: string;
 }
 
 export interface HostBookingDetail extends Booking {
+	customer_id: string;
 	guest_user_id: string;
 	guests: number;
 	total_price: number;
@@ -45,3 +50,24 @@ export interface HostBookingDetail extends Booking {
 		country: string | null;
 	};
 }
+
+export type UpdateHostBookingInput = {
+	start_date: string;
+	end_date: string;
+	guests: number;
+	total_price: number;
+	status: BookingStatus;
+	customer: {
+		first_name: string;
+		last_name: string;
+		email: string;
+		phone: string | null;
+		vat_number: string | null;
+		notes: string | null;
+		address: string | null;
+		city: string | null;
+		state: string | null;
+		zip: string | null;
+		country: string | null;
+	};
+};

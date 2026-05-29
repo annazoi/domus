@@ -1,12 +1,13 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
 	createBooking,
 	listBookings,
 	listMyTrips,
+	updateBooking,
 	type CreateBookingPayload,
 	type CreateBookingResponse,
 } from '../services/bookings.services';
-import type { HostBookingDetail } from '../interfaces/booking.interface';
+import type { HostBookingDetail, UpdateHostBookingInput } from '../interfaces/booking.interface';
 
 export const bookingsQueryKey = {
 	all: ['bookings'] as const,
@@ -30,5 +31,16 @@ export const useGuestTrips = () => {
 export const useCreateBooking = () => {
 	return useMutation<CreateBookingResponse, Error, CreateBookingPayload>({
 		mutationFn: createBooking,
+	});
+};
+
+export const useUpdateBooking = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({ id, input }: { id: string; input: UpdateHostBookingInput }) => updateBooking(id, input),
+		onSuccess: () => {
+			void queryClient.invalidateQueries({ queryKey: bookingsQueryKey.all });
+			void queryClient.invalidateQueries({ queryKey: ['host-customers'] });
+		},
 	});
 };

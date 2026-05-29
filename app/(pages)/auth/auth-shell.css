@@ -64,7 +64,7 @@
   left: 2.5rem;
   z-index: 2;
   color: white;
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-domus), Georgia, serif;
   font-size: 1.5rem;
 }
 
@@ -75,7 +75,7 @@
   right: 2.5rem;
   z-index: 2;
   color: white;
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-domus), Georgia, serif;
   font-weight: 300;
   font-size: 2.5rem;
   line-height: 1.15;
@@ -108,7 +108,7 @@
 }
 
 .login-card h1 {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-domus), Georgia, serif;
   font-weight: 300;
   font-size: clamp(2.5rem, 6vw, 3.75rem);
   margin-top: 1.5rem;
@@ -224,7 +224,7 @@
 
 .login-mobile-brand {
   display: block;
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-domus), Georgia, serif;
   font-size: 1.25rem;
 }
 

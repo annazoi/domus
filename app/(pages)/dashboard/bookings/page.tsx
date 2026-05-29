@@ -77,7 +77,12 @@ export default function BookingsPage() {
 				</div>
 			) : null}
 
-			<BookingDetailModal open={selected !== null} booking={selected} onClose={() => setSelected(null)} />
+			<BookingDetailModal
+				open={selected !== null}
+				booking={selected}
+				onClose={() => setSelected(null)}
+				onUpdated={setSelected}
+			/>
 		</div>
 	);
 }

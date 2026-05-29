@@ -1,6 +1,6 @@
 import axiosInstance from '@/config/api/axios';
 import { ApiRoutes } from '@/config/api/routes';
-import type { Booking, HostBookingDetail } from '../interfaces/booking.interface';
+import type { Booking, HostBookingDetail, UpdateHostBookingInput } from '../interfaces/booking.interface';
 
 export type CreateBookingPayload = {
 	property_id: string;
@@ -34,5 +34,10 @@ export const listMyTrips = async () => {
 
 export const createBooking = async (payload: CreateBookingPayload) => {
 	const response = await axiosInstance.post<CreateBookingResponse>(ApiRoutes.bookings.create, payload);
+	return response.data;
+};
+
+export const updateBooking = async (id: string, input: UpdateHostBookingInput) => {
+	const response = await axiosInstance.patch<HostBookingDetail>(ApiRoutes.bookings.booking(id), input);
 	return response.data;
 };

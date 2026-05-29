@@ -34,11 +34,11 @@
   --color-dom-muted: #8a807a;
   --color-dom-gold: #c8a96a;
 
-  --font-dom-display: var(--font-instrument-serif), Georgia, serif;
   --shadow-dom-soft: 0 30px 60px -20px rgba(0, 0, 0, 0.35);
 
-  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-serif), ui-serif, Georgia, serif;
+  --font-sans: var(--font-domus), Georgia, serif;
+  --font-serif: var(--font-domus), Georgia, serif;
+  --font-display: var(--font-domus), Georgia, serif;
 }
 
 :root {
@@ -50,7 +50,14 @@
 
 @layer base {
   html, body {
-    @apply antialiased h-full;
+    @apply antialiased h-full font-sans;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
   }
 
   * {
@@ -123,7 +130,7 @@
   box-shadow: 0 16px 36px rgb(26 26 26 / 0.14);
   backdrop-filter: blur(4px);
   overflow: hidden;
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-domus), Georgia, serif;
 }
 
 .pac-item {

@@ -136,7 +136,7 @@ function MessagesContent() {
 									type="button"
 									onClick={() => setActiveId(c.id)}
 									className={cn(
-										'flex w-full gap-3 border-b border-black/[0.03] px-4 py-3 text-left transition hover:bg-black/[0.02]',
+										'flex w-full gap-3 border-b border-black/[0.03] px-4 py-3 text-left transition hover:bg-black/[0.02] cursor-pointer',
 										c.id === activeConversationId && 'bg-camel/8',
 									)}
 								>

@@ -5,7 +5,6 @@ html:has(.domus-landing) {
 .domus-landing {
   background: #efe9df;
   color: #1d1916;
-  font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
   min-height: 100vh;
@@ -22,14 +21,8 @@ html:has(.domus-landing) {
 }
 
 .domus-landing .h-display {
-  font-family: var(--font-sans), system-ui, sans-serif;
   letter-spacing: -0.04em;
-  font-weight: 800;
   line-height: 0.92;
-}
-
-.domus-landing .font-display {
-  font-family: var(--font-instrument-serif), Georgia, serif;
 }
 
 .domus-landing .pill {
@@ -137,7 +130,6 @@ html:has(.domus-landing) {
 }
 
 .domus-landing .menu-panel a {
-  font-family: var(--font-instrument-serif), Georgia, serif;
   font-size: 1.875rem;
   line-height: 2.25rem;
 }
@@ -283,7 +275,6 @@ html:has(.domus-landing) {
   position: absolute;
   top: 1.25rem;
   right: 1.5rem;
-  font-family: var(--font-instrument-serif), Georgia, serif;
   font-size: clamp(3.5rem, 8vw, 5.5rem);
   line-height: 1;
   color: rgb(29 25 22 / 0.06);
@@ -337,7 +328,6 @@ html:has(.domus-landing) {
 }
 
 .domus-landing .pricing-currency {
-  font-family: var(--font-instrument-serif), Georgia, serif;
   font-size: 1.75rem;
   line-height: 1.2;
   margin-top: 0.65rem;
@@ -345,9 +335,7 @@ html:has(.domus-landing) {
 }
 
 .domus-landing .pricing-value {
-  font-family: var(--font-sans), system-ui, sans-serif;
   font-size: clamp(4rem, 12vw, 5.5rem);
-  font-weight: 800;
   letter-spacing: -0.05em;
   line-height: 0.9;
 }
