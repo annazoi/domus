@@ -2,14 +2,16 @@
 
 import { Button, Skeleton } from '@/components/ui';
 import type { HostCustomerRow } from '@/features/customers/interfaces/host-customer.interface';
+import { CUSTOMER_SEARCH_MIN_LENGTH } from '../_utils/filter-host-customers';
 
 type HostCustomersListProps = {
 	customers: HostCustomerRow[];
 	loading: boolean;
+	searchQuery?: string;
 	onSelect: (customer: HostCustomerRow) => void;
 };
 
-export function HostCustomersList({ customers, loading, onSelect }: HostCustomersListProps) {
+export function HostCustomersList({ customers, loading, searchQuery = '', onSelect }: HostCustomersListProps) {
 	if (loading) {
 		return (
 			<div className="overflow-hidden rounded-2xl bg-white/80">
@@ -29,11 +31,14 @@ export function HostCustomersList({ customers, loading, onSelect }: HostCustomer
 	}
 
 	if (customers.length === 0) {
+		const hasActiveSearch = searchQuery.trim().length >= CUSTOMER_SEARCH_MIN_LENGTH;
 		return (
 			<div className="rounded-2xl bg-white/80 p-8 text-center">
-				<p className="font-serif text-2xl">No customers yet</p>
+				<p className="font-serif text-2xl">{hasActiveSearch ? 'No matching customers' : 'No customers yet'}</p>
 				<p className="mt-2 text-sm text-[#1A1A1A]/60">
-					Customers appear after guests book your properties with billing details on file.
+					{hasActiveSearch
+						? 'Try a different name, email, phone number, or location.'
+						: 'Customers appear after guests book your properties with billing details on file.'}
 				</p>
 			</div>
 		);

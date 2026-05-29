@@ -1,7 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
-import { Button, Skeleton } from '@/components/ui';
+import { Skeleton } from '@/components/ui';
 import { useBookings } from '@/features/bookings/hooks/use-bookings';
 import type { HostBookingDetail } from '@/features/bookings/interfaces/booking.interface';
 import { BookingDetailModal } from './_components/booking-detail-modal';
@@ -42,24 +43,36 @@ export default function BookingsPage() {
 			{!loading && bookings.length > 0 ? (
 				<div className="overflow-hidden rounded-2xl bg-white/80">
 					{bookings.map((booking) => (
-						<Button
-							type="button"
+						<div
 							key={booking.id}
-							variant="custom"
-							className="cursor-pointer flex h-auto w-full flex-col items-start gap-2 border-b border-black/5 px-5 py-5 text-left font-normal transition hover:bg-black/[0.02] last:border-b-0 md:flex-row md:flex-wrap md:items-baseline md:gap-x-8 md:gap-y-2 md:px-8 md:py-6 lg:gap-x-12 lg:px-10"
+							role="button"
+							tabIndex={0}
+							className="cursor-pointer flex w-full flex-col items-start gap-2 border-b border-black/5 px-5 py-5 text-left transition hover:bg-black/[0.02] last:border-b-0 md:flex-row md:flex-wrap md:items-baseline md:gap-x-8 md:gap-y-2 md:px-8 md:py-6 lg:gap-x-12 lg:px-10"
 							onClick={() => setSelected(booking)}
+							onKeyDown={(event) => {
+								if (event.key === 'Enter' || event.key === ' ') {
+									event.preventDefault();
+									setSelected(booking);
+								}
+							}}
 						>
 							<span className="max-w-full shrink-0 text-lg font-medium leading-snug md:text-[1.05rem]">{booking.guest_name}</span>
-							<span className="min-w-0 flex-1 text-base leading-snug text-[#1A1A1A]/70 md:text-[1rem]">
+							<Link
+								href={`/${encodeURIComponent(booking.property.slug)}`}
+								target="_blank"
+								rel="noopener noreferrer"
+								onClick={(event) => event.stopPropagation()}
+								className="min-w-0 flex-1 text-base leading-snug text-[#1A1A1A]/70 transition hover:text-camel md:text-[1rem]"
+							>
 								{booking.property_title}
-							</span>
+							</Link>
 							<span className="shrink-0 text-sm text-[#1A1A1A]/60 md:text-base">
 								{booking.start_date} – {booking.end_date}
 							</span>
 							<span className="shrink-0 text-sm capitalize text-[#1A1A1A]/80 md:ml-auto md:text-base">
 								{booking.status}
 							</span>
-						</Button>
+						</div>
 					))}
 				</div>
 			) : null}
