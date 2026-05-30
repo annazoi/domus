@@ -1,0 +1,131 @@
+.domus-date-picker-field,
+.domus-date-picker-field__wrapper,
+.domus-date-picker-field .react-datepicker-wrapper,
+.domus-date-picker-field .react-datepicker__input-container {
+	display: block;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+}
+
+.domus-date-picker-field .react-datepicker-wrapper {
+	padding: 0;
+	border: 0;
+}
+
+.domus-date-picker-field .react-datepicker__input-container {
+	position: relative;
+}
+
+.domus-react-datepicker-popper {
+	z-index: 100 !important;
+}
+
+.domus-react-datepicker {
+	min-width: 18.5rem;
+	font-family: inherit;
+	border: 1px solid rgb(26 26 26 / 0.08);
+	border-radius: 1rem;
+	box-shadow: 0 20px 50px -12px rgb(26 26 26 / 0.18);
+	overflow: hidden;
+}
+
+.domus-react-datepicker .react-datepicker__month-container {
+	float: none;
+	width: 100%;
+}
+
+.domus-react-datepicker .react-datepicker__header {
+	background: linear-gradient(
+		to bottom right,
+		color-mix(in srgb, var(--color-camel) 8%, white),
+		white
+	);
+	border-bottom: 1px solid rgb(26 26 26 / 0.05);
+	padding-top: 0.85rem;
+}
+
+.domus-react-datepicker .react-datepicker__current-month {
+	font-size: 1.05rem;
+	font-weight: 500;
+	color: #1a1a1a;
+	margin-bottom: 0.65rem;
+	padding: 0 0.5rem;
+}
+
+.domus-react-datepicker .react-datepicker__navigation {
+	top: 0.95rem;
+}
+
+.domus-react-datepicker .react-datepicker__navigation-icon::before {
+	border-color: var(--color-camel);
+	border-width: 2px 2px 0 0;
+	height: 7px;
+	width: 7px;
+}
+
+.domus-react-datepicker .react-datepicker__day-names,
+.domus-react-datepicker .react-datepicker__week {
+	display: flex;
+	justify-content: space-around;
+	margin: 0;
+}
+
+.domus-react-datepicker .react-datepicker__day-name {
+	color: rgb(26 26 26 / 0.4);
+	font-size: 0.65rem;
+	font-weight: 500;
+	letter-spacing: 0.12em;
+	line-height: 2.25rem;
+	margin: 0;
+	text-transform: uppercase;
+	width: 2.25rem;
+}
+
+.domus-react-datepicker .react-datepicker__day {
+	border-radius: 0.625rem;
+	color: #1a1a1a;
+	font-size: 0.875rem;
+	line-height: 2.25rem;
+	margin: 0.1rem;
+	width: 2.25rem;
+}
+
+.domus-react-datepicker .react-datepicker__day:hover {
+	background: color-mix(in srgb, var(--color-camel) 12%, transparent);
+	border-radius: 0.625rem;
+}
+
+.domus-react-datepicker .react-datepicker__day--selected,
+.domus-react-datepicker .react-datepicker__day--keyboard-selected {
+	background: color-mix(in srgb, var(--color-camel) 22%, transparent) !important;
+	color: var(--color-camel-dark) !important;
+	font-weight: 500;
+}
+
+.domus-react-datepicker .react-datepicker__day--today {
+	font-weight: 600;
+	outline: 1px solid color-mix(in srgb, var(--color-camel) 35%, transparent);
+	outline-offset: -1px;
+}
+
+.domus-react-datepicker .react-datepicker__day--disabled {
+	color: rgb(26 26 26 / 0.28);
+}
+
+.domus-react-datepicker .react-datepicker__day--outside-month {
+	color: rgb(26 26 26 / 0.28);
+}
+
+.domus-react-datepicker .react-datepicker__today-button {
+	background: white;
+	border-top: 1px solid rgb(26 26 26 / 0.06);
+	color: var(--color-camel-dark);
+	font-size: 0.8125rem;
+	font-weight: 500;
+	padding: 0.65rem;
+}
+
+.domus-react-datepicker-popper .react-datepicker__triangle {
+	display: none;
+}

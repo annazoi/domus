@@ -15,6 +15,16 @@ export const formatDisplayDate = (value: string) => {
 	});
 };
 
+export const formatEuropeanDate = (value: string) => {
+	if (!value) return '-';
+	const parsed = toUtcDay(value);
+	if (!parsed.isValid) return value;
+	return parsed.toFormat('dd/MM/yyyy');
+};
+
+export const formatEuropeanDateRange = (start: string, end: string) =>
+	`${formatEuropeanDate(start)} – ${formatEuropeanDate(end)}`;
+
 export const toUtcDay = (value: string | DateTime) => {
 	if (typeof value === 'string') {
 		return DateTime.fromISO(value, { zone: 'utc' }).startOf('day');

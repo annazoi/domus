@@ -70,7 +70,7 @@ export function CustomerEditForm({
 	onUpdated,
 }: {
 	customer: HostCustomerRow;
-	onUpdated: (customer: HostCustomerRow) => void;
+	onUpdated?: (customer: HostCustomerRow) => void;
 }) {
 	const { push } = useToast();
 	const { mutateAsync: saveCustomer, isPending: saving } = useUpdateHostCustomer();
@@ -95,7 +95,7 @@ export function CustomerEditForm({
 
 		try {
 			const updated = await saveCustomer({ id: customer.id, input: payload });
-			onUpdated(updated);
+			onUpdated?.(updated);
 			push({ title: 'Customer updated', tone: 'success' });
 		} catch {
 			push({ title: 'Could not update customer', tone: 'error' });
@@ -106,10 +106,20 @@ export function CustomerEditForm({
 		<form className="rounded-2xl bg-white/80 px-5 py-6 sm:px-8 md:py-8" onSubmit={handleSubmit}>
 			<div className="grid gap-5 sm:grid-cols-2">
 				<Field label="First name">
-					<Input value={form.first_name} onChange={(event) => setField('first_name', event.target.value)} required />
+					<Input
+						value={form.first_name}
+						onChange={(event) => setField('first_name', event.target.value)}
+						placeholder="First name"
+						required
+					/>
 				</Field>
 				<Field label="Last name">
-					<Input value={form.last_name} onChange={(event) => setField('last_name', event.target.value)} required />
+					<Input
+						value={form.last_name}
+						onChange={(event) => setField('last_name', event.target.value)}
+						placeholder="Last name"
+						required
+					/>
 				</Field>
 				<div className="sm:col-span-2">
 					<Field label="Email">
@@ -117,36 +127,57 @@ export function CustomerEditForm({
 							type="email"
 							value={form.email}
 							onChange={(event) => setField('email', event.target.value)}
+							placeholder="guest@example.com"
 							required
 						/>
 					</Field>
 				</div>
 				<Field label="Phone">
-					<Input value={form.phone} onChange={(event) => setField('phone', event.target.value)} />
+					<Input
+						value={form.phone}
+						onChange={(event) => setField('phone', event.target.value)}
+						placeholder="+1 555 000 0000"
+					/>
 				</Field>
 				<Field label="VAT number">
-					<Input value={form.vat_number} onChange={(event) => setField('vat_number', event.target.value)} />
+					<Input
+						value={form.vat_number}
+						onChange={(event) => setField('vat_number', event.target.value)}
+						placeholder="Optional"
+					/>
 				</Field>
 				<div className="sm:col-span-2">
 					<Field label="Address">
-						<Input value={form.address} onChange={(event) => setField('address', event.target.value)} />
+						<Input
+							value={form.address}
+							onChange={(event) => setField('address', event.target.value)}
+							placeholder="Street address"
+						/>
 					</Field>
 				</div>
 				<Field label="City">
-					<Input value={form.city} onChange={(event) => setField('city', event.target.value)} />
+					<Input value={form.city} onChange={(event) => setField('city', event.target.value)} placeholder="City" />
 				</Field>
 				<Field label="State">
-					<Input value={form.state} onChange={(event) => setField('state', event.target.value)} />
+					<Input
+						value={form.state}
+						onChange={(event) => setField('state', event.target.value)}
+						placeholder="State or region"
+					/>
 				</Field>
 				<Field label="ZIP">
-					<Input value={form.zip} onChange={(event) => setField('zip', event.target.value)} />
+					<Input value={form.zip} onChange={(event) => setField('zip', event.target.value)} placeholder="Postal code" />
 				</Field>
 				<Field label="Country">
-					<Input value={form.country} onChange={(event) => setField('country', event.target.value)} />
+					<Input value={form.country} onChange={(event) => setField('country', event.target.value)} placeholder="Country" />
 				</Field>
 				<div className="sm:col-span-2">
 					<Field label="Notes">
-						<Textarea value={form.notes} onChange={(event) => setField('notes', event.target.value)} />
+						<Textarea
+							value={form.notes}
+							onChange={(event) => setField('notes', event.target.value)}
+							placeholder="Internal notes about this guest…"
+						/>
 					</Field>
 				</div>
 			</div>

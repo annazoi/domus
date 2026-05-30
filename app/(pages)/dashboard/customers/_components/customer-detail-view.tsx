@@ -31,7 +31,7 @@ export function CustomerDetailView({
 	activeTab: CustomerDetailTab;
 	onTabChange: (tab: CustomerDetailTab) => void;
 	onBack: () => void;
-	onUpdated: (customer: HostCustomerRow) => void;
+	onUpdated?: (customer: HostCustomerRow) => void;
 }) {
 	const name = `${customer.first_name} ${customer.last_name}`.trim() || 'Customer';
 	const location = [customer.city, customer.country].filter(Boolean).join(', ');

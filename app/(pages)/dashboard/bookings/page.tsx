@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Skeleton } from '@/components/ui';
 import { useBookings } from '@/features/bookings/hooks/use-bookings';
 import type { HostBookingDetail } from '@/features/bookings/interfaces/booking.interface';
+import { formatEuropeanDateRange } from '@/features/property-availability/utils/date';
 import { BookingDetailModal } from './_components/booking-detail-modal';
 
 export default function BookingsPage() {
@@ -62,12 +63,12 @@ export default function BookingsPage() {
 								target="_blank"
 								rel="noopener noreferrer"
 								onClick={(event) => event.stopPropagation()}
-								className="min-w-0 flex-1 text-base leading-snug text-[#1A1A1A]/70 transition hover:text-camel md:text-[1rem]"
+								className="max-w-fit flex-1 text-base leading-snug text-[#1A1A1A]/70 transition hover:text-camel md:text-[1rem]"
 							>
 								{booking.property_title}
 							</Link>
-							<span className="shrink-0 text-sm text-[#1A1A1A]/60 md:text-base">
-								{booking.start_date} – {booking.end_date}
+							<span className="shrink-0 text-sm text-[#1A1A1A]/60 md:text-base ml-auto">
+								{formatEuropeanDateRange(booking.start_date, booking.end_date)}
 							</span>
 							<span className="shrink-0 text-sm capitalize text-[#1A1A1A]/80 md:ml-auto md:text-base">
 								{booking.status}

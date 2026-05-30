@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Home, Mail, MessageCircle, Phone, Users, X } from 'lucide-react';
-import { Button, Input, Select, Textarea, useToast } from '@/components/ui';
+import { Button, DatePickerField, Input, Select, Textarea, useToast } from '@/components/ui';
 import { useUpdateBooking } from '@/features/bookings/hooks/use-bookings';
 import { BookingStatus } from '@/features/bookings/interfaces/booking-status';
 import type { HostBookingDetail, UpdateHostBookingInput } from '@/features/bookings/interfaces/booking.interface';
@@ -78,9 +78,9 @@ function Panel({ title, children }: { title: string; children: ReactNode }) {
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
 	return (
-		<label className="block">
+		<label className="block min-w-0">
 			<span className="text-xs font-medium uppercase tracking-wide text-[#1A1A1A]/45">{label}</span>
-			<div className="mt-1.5">{children}</div>
+			<div className="mt-1.5 min-w-0">{children}</div>
 		</label>
 	);
 }
@@ -181,6 +181,18 @@ export function BookingDetailModal({
 		if (booking) setForm(toFormState(booking));
 	}, [booking]);
 
+	useEffect(() => {
+		if (!open) return;
+		const blockEscapeClose = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') {
+				event.preventDefault();
+				event.stopPropagation();
+			}
+		};
+		document.addEventListener('keydown', blockEscapeClose, true);
+		return () => document.removeEventListener('keydown', blockEscapeClose, true);
+	}, [open]);
+
 	const setField = <K extends keyof BookingFormState>(key: K, value: BookingFormState[K]) => {
 		setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
 	};
@@ -212,6 +224,7 @@ export function BookingDetailModal({
 			const updated = await saveBooking({ id: booking.id, input: payload });
 			onUpdated?.(updated);
 			push({ title: 'Booking updated', tone: 'success' });
+			onClose();
 		} catch {
 			push({ title: 'Could not update booking', tone: 'error' });
 		}
@@ -231,14 +244,13 @@ export function BookingDetailModal({
 					animate={{ opacity: 1 }}
 					exit={{ opacity: 0 }}
 					transition={{ duration: 0.18 }}
-					onClick={onClose}
 				>
 					<div className="absolute inset-0 bg-black/45 backdrop-blur-[2px]" aria-hidden />
 					<motion.div
 						role="dialog"
 						aria-modal
 						aria-labelledby="booking-detail-title"
-						className="relative z-10 flex max-h-[min(90vh,820px)] w-full max-w-[min(100vw-2rem,28rem)] flex-col overflow-hidden rounded-2xl border border-black/10 bg-cream shadow-xl sm:max-w-2xl md:max-w-3xl"
+						className="relative z-10 flex max-h-[min(90vh,820px)] w-full max-w-[min(100vw-2rem,28rem)] flex-col overflow-hidden rounded-2xl border border-black/10 bg-cream shadow-xl sm:max-w-2xl md:max-w-3xl lg:min-w-[64rem] lg:max-w-[min(100vw-2rem,64rem)]"
 						initial={{ opacity: 0, scale: 0.96, y: 10 }}
 						animate={{ opacity: 1, scale: 1, y: 0 }}
 						exit={{ opacity: 0, scale: 0.96, y: 10 }}
@@ -273,7 +285,7 @@ export function BookingDetailModal({
 									<Button
 										type="button"
 										variant="ghostPill"
-										className="gap-2 px-3 py-2 text-sm"
+										className="gap-2 px-3 py-2 text-sm flex items-center"
 										onClick={openMessages}
 										disabled={createConversation.isPending}
 									>
@@ -309,18 +321,19 @@ export function BookingDetailModal({
 								<Panel title="Stay details">
 									<div className="grid gap-4 sm:grid-cols-2">
 										<Field label="Check-in">
-											<Input
-												type="date"
+											<DatePickerField
 												value={form.start_date}
-												onChange={(event) => setField('start_date', event.target.value)}
+												onChange={(value) => setField('start_date', value)}
+												placeholder="Check-in date"
 												required
 											/>
 										</Field>
 										<Field label="Check-out">
-											<Input
-												type="date"
+											<DatePickerField
 												value={form.end_date}
-												onChange={(event) => setField('end_date', event.target.value)}
+												onChange={(value) => setField('end_date', value)}
+												placeholder="Check-out date"
+												minDate={form.start_date}
 												required
 											/>
 										</Field>
@@ -331,6 +344,7 @@ export function BookingDetailModal({
 												step={1}
 												value={form.guests}
 												onChange={(event) => setField('guests', event.target.value)}
+												placeholder="2"
 												required
 											/>
 										</Field>
@@ -341,6 +355,7 @@ export function BookingDetailModal({
 												step="0.01"
 												value={form.total_price}
 												onChange={(event) => setField('total_price', event.target.value)}
+												placeholder="0.00"
 												required
 											/>
 										</Field>
@@ -377,6 +392,7 @@ export function BookingDetailModal({
 											<Input
 												value={form.first_name}
 												onChange={(event) => setField('first_name', event.target.value)}
+												placeholder="First name"
 												required
 											/>
 										</Field>
@@ -384,6 +400,7 @@ export function BookingDetailModal({
 											<Input
 												value={form.last_name}
 												onChange={(event) => setField('last_name', event.target.value)}
+												placeholder="Last name"
 												required
 											/>
 										</Field>
@@ -393,36 +410,69 @@ export function BookingDetailModal({
 													type="email"
 													value={form.email}
 													onChange={(event) => setField('email', event.target.value)}
+													placeholder="guest@example.com"
 													required
 												/>
 											</Field>
 										</div>
 										<Field label="Phone">
-											<Input value={form.phone} onChange={(event) => setField('phone', event.target.value)} />
+											<Input
+												value={form.phone}
+												onChange={(event) => setField('phone', event.target.value)}
+												placeholder="+1 555 000 0000"
+											/>
 										</Field>
 										<Field label="VAT number">
-											<Input value={form.vat_number} onChange={(event) => setField('vat_number', event.target.value)} />
+											<Input
+												value={form.vat_number}
+												onChange={(event) => setField('vat_number', event.target.value)}
+												placeholder="Optional"
+											/>
 										</Field>
 										<div className="sm:col-span-2">
 											<Field label="Address">
-												<Input value={form.address} onChange={(event) => setField('address', event.target.value)} />
+												<Input
+													value={form.address}
+													onChange={(event) => setField('address', event.target.value)}
+													placeholder="Street address"
+												/>
 											</Field>
 										</div>
 										<Field label="City">
-											<Input value={form.city} onChange={(event) => setField('city', event.target.value)} />
+											<Input
+												value={form.city}
+												onChange={(event) => setField('city', event.target.value)}
+												placeholder="City"
+											/>
 										</Field>
 										<Field label="State">
-											<Input value={form.state} onChange={(event) => setField('state', event.target.value)} />
+											<Input
+												value={form.state}
+												onChange={(event) => setField('state', event.target.value)}
+												placeholder="State or region"
+											/>
 										</Field>
 										<Field label="ZIP">
-											<Input value={form.zip} onChange={(event) => setField('zip', event.target.value)} />
+											<Input
+												value={form.zip}
+												onChange={(event) => setField('zip', event.target.value)}
+												placeholder="Postal code"
+											/>
 										</Field>
 										<Field label="Country">
-											<Input value={form.country} onChange={(event) => setField('country', event.target.value)} />
+											<Input
+												value={form.country}
+												onChange={(event) => setField('country', event.target.value)}
+												placeholder="Country"
+											/>
 										</Field>
 										<div className="sm:col-span-2">
 											<Field label="Notes">
-												<Textarea value={form.notes} onChange={(event) => setField('notes', event.target.value)} />
+												<Textarea
+													value={form.notes}
+													onChange={(event) => setField('notes', event.target.value)}
+													placeholder="Internal notes about this booking…"
+												/>
 											</Field>
 										</div>
 									</div>
