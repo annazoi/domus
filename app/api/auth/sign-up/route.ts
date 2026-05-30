@@ -1,4 +1,5 @@
 import { isGuestAccount } from '@/app/api/_utils/guest-account';
+import { hashPassword } from '@/app/api/_utils/password';
 import { prisma } from '@/lib/prisma';
 
 interface RegisterPayload {
@@ -34,6 +35,8 @@ export async function POST(request: Request) {
 			return Response.json({ message: 'Password must be at least 8 characters.' }, { status: 400 });
 		}
 
+		const hashedPassword = hashPassword(password);
+
 		const existingUser = await prisma.user.findUnique({
 			where: { email },
 			select: { id: true, password: true },
@@ -56,7 +59,7 @@ export async function POST(request: Request) {
 				data: {
 					first_name,
 					last_name,
-					password,
+					password: hashedPassword,
 					is_archived: false,
 				},
 				select: {
@@ -73,7 +76,7 @@ export async function POST(request: Request) {
 					first_name,
 					last_name,
 					email,
-					password,
+					password: hashedPassword,
 					is_archived: false,
 				},
 				select: {

@@ -30,6 +30,7 @@
 		"embla-carousel-react": "^8.6.0",
 		"framer-motion": "^12.38.0",
 		"gsap": "^3.15.0",
+		"jsonwebtoken": "^9.0.3",
 		"lucide-react": "^1.8.0",
 		"luxon": "^3.7.2",
 		"next": "16.2.3",
@@ -51,6 +52,7 @@
 	"devDependencies": {
 		"@tailwindcss/postcss": "^4.2.2",
 		"@types/google.maps": "^3.64.0",
+		"@types/jsonwebtoken": "^9.0.10",
 		"@types/node": "^20",
 		"@types/react": "^19",
 		"@types/react-datepicker": "^6.2.0",
