@@ -60,6 +60,12 @@ export const ApiRoutes = {
 		prefix: '/conversations',
 		messages: (id: string) => `/conversations/${id}/messages`,
 	},
+	stripe: {
+		connectCreateAccount: '/stripe/connect/create-account',
+		connectStatus: '/stripe/connect/status',
+		checkout: '/stripe/checkout',
+		webhook: '/stripe/webhook',
+	},
 	property_images: {
 		byProperty: (id: string) => `/properties/${id}/images`,
 		byPropertyImage: (propertyId: string, imageId: string) =>

@@ -53,6 +53,10 @@ model User {
   is_verified  Boolean @default(false)
   is_host     Boolean  @default(false)
   is_archived Boolean  @default(true)
+  stripe_account_id            String?  @unique
+  stripe_onboarding_completed  Boolean  @default(false)
+  charges_enabled              Boolean  @default(false)
+  payouts_enabled              Boolean  @default(false)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -192,6 +196,8 @@ model Booking {
   guests       Int
   total_price  Decimal
   status       BookingStatus  @default(CONFIRMED)
+  stripe_session_id   String?  @unique
+  payment_intent_id   String?
   created_at   DateTime       @default(now())
   updated_at   DateTime       @updatedAt
 

@@ -2,9 +2,9 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button, Input } from '@/components/ui';
-import { useCreateBooking } from '@/features/bookings/hooks/use-bookings';
+import { Button } from '@/components/ui';
 import { useServices } from '@/features/services/hooks/use-services';
+import { createStripeCheckout } from '@/features/stripe/services/stripe.services';
 import { formatDisplayDate } from '@/features/property-availability/utils/date';
 import BookingServicesCard, {
 	buildSelectedServices,
@@ -31,9 +31,11 @@ export default function ConfirmAndPayContent() {
 		[params],
 	);
 
-	const [error, setError] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(
+		params.get('cancelled') === '1' ? 'Payment was cancelled. You can try again when ready.' : null,
+	);
 	const [serviceQuantities, setServiceQuantities] = useState<Record<string, number>>({});
-	const { mutateAsync: createBooking, isPending } = useCreateBooking();
+	const [isPending, setIsPending] = useState(false);
 	const { data: services, isLoading: servicesLoading, isError: servicesError } = useServices(
 		booking.property_id,
 	);
@@ -80,9 +82,10 @@ export default function ConfirmAndPayContent() {
 			return;
 		}
 		setError(null);
+		setIsPending(true);
 		try {
 			const selectedServices = buildSelectedServices(serviceQuantities);
-			const result = await createBooking({
+			const result = await createStripeCheckout({
 				property_id: booking.property_id,
 				check_in: booking.check_in,
 				check_out: booking.check_out,
@@ -95,9 +98,10 @@ export default function ConfirmAndPayContent() {
 				},
 				...(selectedServices.length > 0 ? { services: selectedServices } : {}),
 			});
-			router.push(`/bookings/${result.booking_id}`);
+			window.location.assign(result.checkout_url);
 		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Could not complete booking.');
+			setIsPending(false);
+			setError(err instanceof Error ? err.message : 'Could not start checkout.');
 		}
 	};
 
@@ -106,17 +110,11 @@ export default function ConfirmAndPayContent() {
 			<div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[1fr_360px]">
 				<section className="rounded-2xl bg-white p-6 shadow-sm sm:p-8">
 					<p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-camel">Confirm and pay</p>
-					<h1 className="mt-3 font-serif text-3xl text-[#1A1A1A]">Payment method</h1>
-
-					<div className="mt-8 space-y-4">
-						<Input variant="compact" placeholder="Cardholder name" />
-						<Input variant="compact" placeholder="Card number" />
-						<div className="grid grid-cols-2 gap-3">
-							<Input variant="compact" placeholder="MM/YY" />
-							<Input variant="compact" placeholder="CVC" />
-						</div>
-						<Input variant="compact" placeholder="Country" />
-					</div>
+					<h1 className="mt-3 font-serif text-3xl text-[#1A1A1A]">Secure checkout</h1>
+					<p className="mt-4 text-sm text-[#1A1A1A]/65">
+						You will be redirected to Stripe to complete payment. Your card details are handled securely by
+						Stripe.
+					</p>
 
 					<BookingServicesCard
 						services={availableServices}
@@ -135,7 +133,7 @@ export default function ConfirmAndPayContent() {
 						disabled={isPending}
 						onClick={() => void handlePay()}
 					>
-						{isPending ? 'Processing...' : `Pay $${grandTotal.toFixed(2)}`}
+						{isPending ? 'Redirecting to Stripe…' : `Pay €${grandTotal.toFixed(2)}`}
 					</Button>
 				</section>
 
@@ -170,7 +168,7 @@ export default function ConfirmAndPayContent() {
 								{availableServices.map((service) => (
 									<div key={service.id} className="flex justify-between gap-2 text-sm">
 										<span className="text-[#1A1A1A]/75">{service.name}</span>
-										<span className="font-medium text-[#1A1A1A]">${service.price.toFixed(2)}</span>
+										<span className="font-medium text-[#1A1A1A]">€{service.price.toFixed(2)}</span>
 									</div>
 								))}
 							</div>
@@ -185,7 +183,7 @@ export default function ConfirmAndPayContent() {
 										<span className="text-[#1A1A1A]/75">
 											{line.name} × {line.quantity}
 										</span>
-										<span className="font-medium text-[#1A1A1A]">${line.lineTotal.toFixed(2)}</span>
+										<span className="font-medium text-[#1A1A1A]">€{line.lineTotal.toFixed(2)}</span>
 									</div>
 								))}
 							</div>
@@ -193,17 +191,17 @@ export default function ConfirmAndPayContent() {
 						<div className="mt-3 space-y-2 border-t border-black/10 pt-3">
 							<div className="flex justify-between gap-2">
 								<span>Stay</span>
-								<span className="font-medium text-[#1A1A1A]">${booking.total_price.toFixed(2)}</span>
+								<span className="font-medium text-[#1A1A1A]">€{booking.total_price.toFixed(2)}</span>
 							</div>
 							{extrasTotal > 0 ? (
 								<div className="flex justify-between gap-2">
 									<span>Extras</span>
-									<span className="font-medium text-[#1A1A1A]">${extrasTotal.toFixed(2)}</span>
+									<span className="font-medium text-[#1A1A1A]">€{extrasTotal.toFixed(2)}</span>
 								</div>
 							) : null}
 							<div className="flex justify-between gap-2">
 								<span>Total</span>
-								<span className="font-semibold text-[#1A1A1A]">${grandTotal.toFixed(2)}</span>
+								<span className="font-semibold text-[#1A1A1A]">€{grandTotal.toFixed(2)}</span>
 							</div>
 						</div>
 					</div>

@@ -70,7 +70,7 @@ export async function checkAvailabilityInternal(
 	const overlappingBooking = await db.booking.findFirst({
 		where: {
 			property_id: property.id,
-			status: BookingStatus.CONFIRMED,
+			status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING] },
 			AND: [{ check_in: { lt: checkOut.toJSDate() } }, { check_out: { gt: checkIn.toJSDate() } }],
 		},
 		select: { id: true },
