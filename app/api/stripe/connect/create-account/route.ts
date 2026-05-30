@@ -1,6 +1,6 @@
 import { getUserIdFromRequest } from '@/app/api/_utils/auth';
 import { getAppUrl } from '@/lib/stripe/app-url';
-import { createOnboardingLink } from '@/lib/stripe/connect';
+import { createOnboardingLink, stripeConnectErrorResponse } from '@/lib/stripe/connect';
 
 export async function POST(request: Request) {
 	const userId = getUserIdFromRequest(request);
@@ -19,11 +19,9 @@ export async function POST(request: Request) {
 			stripe_account_id: result.stripe_account_id,
 		});
 	} catch (error) {
-		if (error instanceof Error && error.message === 'USER_NOT_FOUND') {
-			return Response.json({ message: 'User not found.' }, { status: 404 });
-		}
-		if (error instanceof Error && error.message === 'NOT_A_HOST') {
-			return Response.json({ message: 'Only hosts can connect Stripe accounts.' }, { status: 403 });
+		const err = stripeConnectErrorResponse(error);
+		if (err) {
+			return Response.json(err.body, { status: err.status });
 		}
 		throw error;
 	}

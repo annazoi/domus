@@ -1,7 +1,60 @@
-import type Stripe from 'stripe';
+import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 import { getStripeClient } from '@/lib/stripe/client';
 import { STRIPE_CONNECT_DEFAULT_COUNTRY } from '@/lib/stripe/constants';
+
+export class StripeConnectError extends Error {
+	constructor(
+		message: string,
+		readonly code: 'STRIPE_NOT_CONFIGURED' | 'NOT_A_HOST' | 'USER_NOT_FOUND' | 'STRIPE_API_ERROR',
+	) {
+		super(message);
+		this.name = 'StripeConnectError';
+	}
+}
+
+const emptyConnectStatus = (): StripeConnectStatus => ({
+	stripe_account_id: null,
+	stripe_onboarding_completed: false,
+	charges_enabled: false,
+	payouts_enabled: false,
+	details_submitted: false,
+});
+
+function isMissingStripeConnectAccountError(error: unknown) {
+	if (!(error instanceof Stripe.errors.StripeInvalidRequestError)) {
+		return false;
+	}
+	return error.code === 'resource_missing' || error.param === 'account';
+}
+
+function toStripeConnectError(error: unknown): StripeConnectError {
+	if (error instanceof StripeConnectError) {
+		return error;
+	}
+	if (error instanceof Error && error.message === 'STRIPE_SECRET_KEY is not configured.') {
+		return new StripeConnectError('Stripe is not configured on the server.', 'STRIPE_NOT_CONFIGURED');
+	}
+	if (error instanceof Stripe.errors.StripeError) {
+		return new StripeConnectError(error.message, 'STRIPE_API_ERROR');
+	}
+	if (error instanceof Error) {
+		return new StripeConnectError(error.message, 'STRIPE_API_ERROR');
+	}
+	return new StripeConnectError('Could not connect to Stripe.', 'STRIPE_API_ERROR');
+}
+
+async function clearUserStripeConnect(userId: string) {
+	await prisma.user.update({
+		where: { id: userId },
+		data: {
+			stripe_account_id: null,
+			stripe_onboarding_completed: false,
+			charges_enabled: false,
+			payouts_enabled: false,
+		},
+	});
+}
 
 export type StripeConnectStatus = {
 	stripe_account_id: string | null;
@@ -25,8 +78,27 @@ export function mapAccountToStatus(account: Stripe.Account): Omit<StripeConnectS
 }
 
 export async function syncUserStripeAccountStatus(userId: string, accountId: string) {
-	const stripe = getStripeClient();
-	const account = await stripe.accounts.retrieve(accountId);
+	let stripe: Stripe;
+	try {
+		stripe = getStripeClient();
+	} catch (error) {
+		throw toStripeConnectError(error);
+	}
+
+	let account: Stripe.Account;
+	try {
+		account = await stripe.accounts.retrieve(accountId);
+	} catch (error) {
+		if (isMissingStripeConnectAccountError(error)) {
+			await clearUserStripeConnect(userId);
+			throw new StripeConnectError(
+				'Stripe account is no longer valid for this environment. Please connect again.',
+				'STRIPE_API_ERROR',
+			);
+		}
+		throw toStripeConnectError(error);
+	}
+
 	const status = mapAccountToStatus(account);
 
 	await prisma.user.update({
@@ -58,12 +130,12 @@ async function ensureUserIsHost(userId: string) {
 	});
 
 	if (!user) {
-		throw new Error('USER_NOT_FOUND');
+		throw new StripeConnectError('User not found.', 'USER_NOT_FOUND');
 	}
 
 	if (!user.is_host) {
 		if (user._count.properties === 0) {
-			throw new Error('NOT_A_HOST');
+			throw new StripeConnectError('Only hosts can connect Stripe accounts.', 'NOT_A_HOST');
 		}
 		await prisma.user.update({
 			where: { id: userId },
@@ -77,24 +149,42 @@ async function ensureUserIsHost(userId: string) {
 export async function getOrCreateExpressAccount(userId: string) {
 	const user = await ensureUserIsHost(userId);
 
-	const stripe = getStripeClient();
-
-	if (user.stripe_account_id) {
-		return user.stripe_account_id;
+	let stripe: Stripe;
+	try {
+		stripe = getStripeClient();
+	} catch (error) {
+		throw toStripeConnectError(error);
 	}
 
-	const account = await stripe.accounts.create({
-		type: 'express',
-		country: STRIPE_CONNECT_DEFAULT_COUNTRY,
-		email: user.email,
-		capabilities: {
-			card_payments: { requested: true },
-			transfers: { requested: true },
-		},
-		metadata: {
-			user_id: user.id,
-		},
-	});
+	if (user.stripe_account_id) {
+		try {
+			await stripe.accounts.retrieve(user.stripe_account_id);
+			return user.stripe_account_id;
+		} catch (error) {
+			if (!isMissingStripeConnectAccountError(error)) {
+				throw toStripeConnectError(error);
+			}
+			await clearUserStripeConnect(userId);
+		}
+	}
+
+	let account: Stripe.Account;
+	try {
+		account = await stripe.accounts.create({
+			type: 'express',
+			country: STRIPE_CONNECT_DEFAULT_COUNTRY,
+			email: user.email,
+			capabilities: {
+				card_payments: { requested: true },
+				transfers: { requested: true },
+			},
+			metadata: {
+				user_id: user.id,
+			},
+		});
+	} catch (error) {
+		throw toStripeConnectError(error);
+	}
 
 	await prisma.user.update({
 		where: { id: userId },
@@ -106,16 +196,32 @@ export async function getOrCreateExpressAccount(userId: string) {
 
 export async function createOnboardingLink(userId: string, returnUrl: string, refreshUrl: string) {
 	const accountId = await getOrCreateExpressAccount(userId);
-	const stripe = getStripeClient();
+	let stripe: Stripe;
+	try {
+		stripe = getStripeClient();
+	} catch (error) {
+		throw toStripeConnectError(error);
+	}
 
-	const accountLink = await stripe.accountLinks.create({
-		account: accountId,
-		type: 'account_onboarding',
-		return_url: returnUrl,
-		refresh_url: refreshUrl,
-	});
+	let accountLink: Stripe.AccountLink;
+	try {
+		accountLink = await stripe.accountLinks.create({
+			account: accountId,
+			type: 'account_onboarding',
+			return_url: returnUrl,
+			refresh_url: refreshUrl,
+		});
+	} catch (error) {
+		throw toStripeConnectError(error);
+	}
 
-	await syncUserStripeAccountStatus(userId, accountId);
+	try {
+		await syncUserStripeAccountStatus(userId, accountId);
+	} catch (error) {
+		if (!(error instanceof StripeConnectError) || error.code !== 'STRIPE_API_ERROR') {
+			throw error;
+		}
+	}
 
 	return {
 		url: accountLink.url,
@@ -135,21 +241,40 @@ export async function getConnectStatusForUser(userId: string): Promise<StripeCon
 	});
 
 	if (!user) {
-		throw new Error('USER_NOT_FOUND');
+		throw new StripeConnectError('User not found.', 'USER_NOT_FOUND');
 	}
 
 	if (!user.stripe_account_id) {
-		return {
-			stripe_account_id: null,
-			stripe_onboarding_completed: false,
-			charges_enabled: false,
-			payouts_enabled: false,
-			details_submitted: false,
-		};
+		return emptyConnectStatus();
 	}
 
-	const synced = await syncUserStripeAccountStatus(userId, user.stripe_account_id);
-	return synced;
+	try {
+		return await syncUserStripeAccountStatus(userId, user.stripe_account_id);
+	} catch (error) {
+		if (error instanceof StripeConnectError && error.code === 'STRIPE_NOT_CONFIGURED') {
+			throw error;
+		}
+		return emptyConnectStatus();
+	}
+}
+
+export function stripeConnectErrorResponse(error: unknown) {
+	if (!(error instanceof StripeConnectError)) {
+		return null;
+	}
+
+	switch (error.code) {
+		case 'USER_NOT_FOUND':
+			return { status: 404, body: { message: error.message } };
+		case 'NOT_A_HOST':
+			return { status: 403, body: { message: error.message } };
+		case 'STRIPE_NOT_CONFIGURED':
+			return { status: 503, body: { message: error.message } };
+		case 'STRIPE_API_ERROR':
+			return { status: 502, body: { message: error.message } };
+		default:
+			return { status: 500, body: { message: error.message } };
+	}
 }
 
 export async function handleAccountUpdated(account: Stripe.Account) {
