@@ -67,6 +67,7 @@ model User {
   bookings_as_guest     Booking[]              @relation("GuestBookings")
   bookings_as_host      Booking[]              @relation("HostBookings")
   service_orders        ServiceOrder[]
+  host_services         Service[]
   documents             Document[]             @relation("UserDocuments")
   host_conversations    Conversation[]         @relation("HostConversations")
   guest_conversations   Conversation[]         @relation("GuestConversations")
@@ -242,16 +243,20 @@ model PropertyService {
 }
 
 model Service {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  price       Decimal
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id                 String   @id @default(uuid())
+  host_user_id       String
+  name               String
+  description        String?
+  price              Decimal
+  quantifiable_item  Boolean  @default(false)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
 
+  host              User              @relation(fields: [host_user_id], references: [id])
   property_services PropertyService[]
   orders            ServiceOrder[]
 
+  @@index([host_user_id])
   @@map("services")
 }
 

@@ -42,6 +42,7 @@ const navItems: NavItem[] = [
 	{ label: 'Properties', href: '/dashboard/properties', icon: <Home className="h-4 w-4" /> },
 	{ label: 'Bookings', href: '/dashboard/bookings', icon: <BarChart3 className="h-4 w-4" /> },
 	{ label: 'Customers', href: '/dashboard/customers', icon: <Users className="h-4 w-4" /> },
+	{ label: 'Services', href: '/dashboard/services', icon: <Wrench className="h-4 w-4" /> },
 	{ label: 'My trips', href: '/dashboard/trips', icon: <Luggage className="h-4 w-4" /> },
 	{ label: 'Messages', href: '/dashboard/messages', icon: <MessageCircle className="h-4 w-4" /> },
 	{ label: 'Calendar', href: '/dashboard/calendar', icon: <CalendarDays className="h-4 w-4" /> },

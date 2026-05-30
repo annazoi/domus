@@ -3,6 +3,7 @@ import { listServices } from '../services/services.services';
 import type { Service } from '../interfaces/service.interface';
 
 export const servicesQueryKey = {
+	all: ['services'] as const,
 	byProperty: (propertyId: string) => ['services', propertyId] as const,
 };
 

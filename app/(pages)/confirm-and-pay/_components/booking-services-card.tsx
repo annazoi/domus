@@ -110,6 +110,13 @@ function ServiceRow({
 	onQuantityChange: (serviceId: string, quantity: number) => void;
 }) {
 	const selected = quantity > 0;
+	const setQuantity = (next: number) => {
+		if (!service.quantifiable_item) {
+			onQuantityChange(service.id, next > 0 ? 1 : 0);
+			return;
+		}
+		onQuantityChange(service.id, next);
+	};
 
 	return (
 		<motion.div
@@ -125,12 +132,12 @@ function ServiceRow({
 				'cursor-pointer rounded-xl border p-4',
 				selected && 'ring-1 ring-camel/25',
 			)}
-			onClick={() => onQuantityChange(service.id, selected ? 0 : 1)}
+			onClick={() => setQuantity(selected ? 0 : 1)}
 		>
 			<div className="flex items-start gap-3">
 				<Checkbox
 					checked={selected}
-					onChange={(e) => onQuantityChange(service.id, e.target.checked ? 1 : 0)}
+					onChange={(e) => setQuantity(e.target.checked ? 1 : 0)}
 					onClick={(e) => e.stopPropagation()}
 					className="mt-1 accent-camel"
 					aria-label={`Add ${service.name}`}
@@ -154,7 +161,7 @@ function ServiceRow({
 						</motion.p>
 					</div>
 					<AnimatePresence initial={false}>
-						{selected ? (
+						{selected && service.quantifiable_item ? (
 							<motion.div
 								key="qty-controls"
 								initial={{ opacity: 0, height: 0, marginTop: 0 }}
@@ -166,9 +173,9 @@ function ServiceRow({
 							>
 								<QuantityStepper
 									quantity={quantity}
-									onDecrement={() => onQuantityChange(service.id, Math.max(1, quantity - 1))}
-									onIncrement={() => onQuantityChange(service.id, quantity + 1)}
-									onChange={(next) => onQuantityChange(service.id, next)}
+									onDecrement={() => setQuantity(Math.max(1, quantity - 1))}
+									onIncrement={() => setQuantity(quantity + 1)}
+									onChange={(next) => setQuantity(next)}
 								/>
 							</motion.div>
 						) : null}

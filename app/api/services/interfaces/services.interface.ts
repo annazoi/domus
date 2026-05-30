@@ -1,8 +1,8 @@
-export type PropertyServiceInput = {
-	id?: string;
+export type ServiceInput = {
 	name: string;
 	description?: string | null;
 	price: number;
+	quantifiable_item?: boolean;
 };
 
 export type ServiceRow = {
@@ -10,4 +10,13 @@ export type ServiceRow = {
 	name: string;
 	description: string | null;
 	price: number;
+	quantifiable_item: boolean;
+};
+
+export type HostServiceRow = ServiceRow & {
+	property_count: number;
+};
+
+export type PropertyServiceLinksInput = {
+	service_ids: string[];
 };

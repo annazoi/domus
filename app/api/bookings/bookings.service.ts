@@ -62,6 +62,16 @@ const hostBookingSelect = {
 			country: true,
 		},
 	},
+	service_orders: {
+		select: {
+			id: true,
+			service_id: true,
+			quantity: true,
+			unit_price: true,
+			service: { select: { name: true } },
+		},
+		orderBy: { service: { name: 'asc' } },
+	},
 } as const;
 
 type HostBookingRow = Awaited<ReturnType<typeof prisma.booking.findFirst<{ select: typeof hostBookingSelect }>>>;
@@ -129,6 +139,14 @@ function mapHostBookingRow(row: NonNullable<HostBookingRow>) {
 			zip: row.customer.zip,
 			country: row.customer.country,
 		},
+		service_orders: row.service_orders.map((order) => ({
+			id: order.id,
+			service_id: order.service_id,
+			name: order.service.name,
+			quantity: order.quantity,
+			unit_price: Number(order.unit_price),
+			line_total: Number(order.unit_price) * order.quantity,
+		})),
 	};
 }
 

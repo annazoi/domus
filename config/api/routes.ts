@@ -47,6 +47,8 @@ export const ApiRoutes = {
 	},
 	services: {
 		list: (propertyId: string) => `/services?property_id=${encodeURIComponent(propertyId)}`,
+		listMine: '/services?host_id=me',
+		service: (id: string) => `/services/${id}`,
 		byProperty: (propertyId: string) => `/properties/${propertyId}/services`,
 	},
 	customers: {

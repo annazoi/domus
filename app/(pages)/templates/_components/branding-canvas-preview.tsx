@@ -76,7 +76,7 @@ function HikariBookingPanel({
 						className="bg-[#fcfcfa] p-4 text-left"
 					>
 						<p className="font-[family-name:var(--preview-hikari-body)] text-[9px] uppercase tracking-[0.2em] text-[#0a0a0a]/40">In</p>
-						<p className="mt-1 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold">
+						<p className="cursor-pointer mt-1 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold">
 							{booking.stayRange?.from ? formatStay(booking.stayRange.from) : data.booking.arrival || '—'}
 						</p>
 					</button>
@@ -86,7 +86,7 @@ function HikariBookingPanel({
 						className="bg-[#fcfcfa] p-4 text-left"
 					>
 						<p className="font-[family-name:var(--preview-hikari-body)] text-[9px] uppercase tracking-[0.2em] text-[#0a0a0a]/40">Out</p>
-						<p className="mt-1 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold">
+						<p className="cursor-pointer mt-1 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold">
 							{booking.stayRange?.to ? formatStay(booking.stayRange.to) : data.booking.departure || '—'}
 						</p>
 					</button>
@@ -111,7 +111,7 @@ function HikariBookingPanel({
 						<button
 							type="button"
 							onClick={() => booking.setStayPickerOpen(false)}
-							className="mt-2 w-full border-t border-[#0a0a0a]/10 py-2 font-[family-name:var(--preview-hikari-body)] text-xs uppercase tracking-widest"
+							className="cursor-pointer mt-2 w-full border-t border-[#0a0a0a]/10 py-2 font-[family-name:var(--preview-hikari-body)] text-xs uppercase tracking-widest"
 						>
 							Apply
 						</button>
@@ -142,7 +142,7 @@ function HikariBookingPanel({
 				type="button"
 				onClick={() => void booking.handleReserveClick()}
 				disabled={listingPreview && (!propertyRef || !booking.stayRange?.from || !booking.stayRange?.to || booking.checkingAvailability)}
-				className="group mt-8 flex w-full items-center justify-between bg-[#0a0a0a] px-5 py-4 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold uppercase tracking-[0.2em] text-[#fcfcfa] transition hover:bg-[#d4a853] hover:text-[#0a0a0a] disabled:opacity-50"
+				className="cursor-pointer group mt-8 flex w-full items-center justify-between bg-[#0a0a0a] px-5 py-4 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold uppercase tracking-[0.2em] text-[#fcfcfa] transition hover:bg-[#d4a853] hover:text-[#0a0a0a] disabled:opacity-50"
 			>
 				<span>{booking.checkingAvailability ? 'Checking…' : data.booking.cta}</span>
 				<ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden />

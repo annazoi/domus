@@ -13,6 +13,15 @@ export interface Booking {
 	property_title: string;
 }
 
+export interface BookingServiceOrder {
+	id: string;
+	service_id: string;
+	name: string;
+	quantity: number;
+	unit_price: number;
+	line_total: number;
+}
+
 export interface HostBookingDetail extends Booking {
 	customer_id: string;
 	guest_user_id: string;
@@ -22,6 +31,7 @@ export interface HostBookingDetail extends Booking {
 	check_out_iso: string;
 	created_at: string;
 	updated_at: string;
+	service_orders: BookingServiceOrder[];
 	property: {
 		slug: string;
 		address: string;

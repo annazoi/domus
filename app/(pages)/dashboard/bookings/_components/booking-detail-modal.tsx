@@ -85,6 +85,10 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 	);
 }
 
+function formatMoney(value: number) {
+	return `$${value.toFixed(2)}`;
+}
+
 function ReadOnlyRow({ icon, label, value }: { icon: ReactNode; label: string; value: string | null | undefined }) {
 	const display = value?.trim() ? value : '—';
 	return (
@@ -233,6 +237,8 @@ export function BookingDetailModal({
 	const displayName = form
 		? `${form.first_name} ${form.last_name}`.trim() || booking?.guest_name || 'Guest'
 		: booking?.guest_name || 'Guest';
+	const extrasTotal = booking?.service_orders.reduce((sum, order) => sum + order.line_total, 0) ?? 0;
+	const stayTotal = Math.max(0, (booking?.total_price ?? 0) - extrasTotal);
 
 	return (
 		<AnimatePresence>
@@ -373,6 +379,39 @@ export function BookingDetailModal({
 										</div>
 									</div>
 								</Panel>
+
+								{booking.service_orders.length > 0 ? (
+									<Panel title="Guest extras">
+										{booking.service_orders.map((order) => (
+											<div
+												key={order.id}
+												className="flex items-start justify-between gap-3 border-b border-black/[0.05] py-4 last:border-b-0"
+											>
+												<div className="min-w-0">
+													<p className="text-base leading-snug text-[#1A1A1A]">{order.name}</p>
+													<p className="mt-1 text-sm text-[#1A1A1A]/55">
+														{formatMoney(order.unit_price)} × {order.quantity}
+													</p>
+												</div>
+												<p className="shrink-0 text-sm font-medium text-camel">{formatMoney(order.line_total)}</p>
+											</div>
+										))}
+										<div className="mt-4 space-y-2 border-t border-black/[0.05] pt-4 text-sm">
+											<div className="flex justify-between gap-3 text-[#1A1A1A]/70">
+												<span>Stay</span>
+												<span>{formatMoney(stayTotal)}</span>
+											</div>
+											<div className="flex justify-between gap-3 text-[#1A1A1A]/70">
+												<span>Extras</span>
+												<span>{formatMoney(extrasTotal)}</span>
+											</div>
+											<div className="flex justify-between gap-3 font-medium text-[#1A1A1A]">
+												<span>Total</span>
+												<span>{formatMoney(booking.total_price)}</span>
+											</div>
+										</div>
+									</Panel>
+								) : null}
 
 								<Panel title="Guest account">
 									<ReadOnlyRow

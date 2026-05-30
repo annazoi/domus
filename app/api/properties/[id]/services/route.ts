@@ -1,11 +1,7 @@
 import { getHostIdFromRequest } from '@/app/api/_utils/auth';
 import { prisma } from '@/lib/prisma';
 import { servicesService } from '@/app/api/services/services.service';
-import type { PropertyServiceInput } from '@/app/api/services/interfaces/services.interface';
-
-interface ServicesPayload {
-	services?: PropertyServiceInput[];
-}
+import type { PropertyServiceLinksInput } from '@/app/api/services/interfaces/services.interface';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
 	const { id } = await params;
@@ -30,30 +26,27 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 	});
 	if (!property) return Response.json({ message: 'Property not found' }, { status: 404 });
 
-	let body: ServicesPayload;
+	let body: PropertyServiceLinksInput;
 	try {
-		body = (await request.json()) as ServicesPayload;
+		body = (await request.json()) as PropertyServiceLinksInput;
 	} catch {
 		return Response.json({ message: 'Invalid JSON body.' }, { status: 400 });
 	}
 
-	const services = body.services ?? [];
-	for (const item of services) {
-		if (!item.name?.trim()) {
-			return Response.json({ message: 'Each service needs a name.' }, { status: 400 });
-		}
-		if (typeof item.price !== 'number' || !Number.isFinite(item.price) || item.price < 0) {
-			return Response.json({ message: 'Each service needs a valid price.' }, { status: 400 });
-		}
+	if (!Array.isArray(body.service_ids)) {
+		return Response.json({ message: 'service_ids must be an array.' }, { status: 400 });
 	}
 
-	const result = await servicesService.syncForProperty(id, services);
+	const result = await servicesService.syncPropertyLinks(id, hostId, body);
 	if (result.error === 'PROPERTY_NOT_FOUND') {
 		return Response.json({ message: 'Property not found' }, { status: 404 });
 	}
+	if (result.error === 'INVALID_SERVICE') {
+		return Response.json({ message: 'One or more services are invalid.' }, { status: 400 });
+	}
 	if (result.error === 'SERVICE_IN_USE') {
 		return Response.json(
-			{ message: 'Cannot remove a service that is already booked.' },
+			{ message: 'Cannot remove a service that is already booked for this property.' },
 			{ status: 409 },
 		);
 	}

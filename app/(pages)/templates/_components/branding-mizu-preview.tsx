@@ -195,9 +195,10 @@ function MizuBookingPanel({
 			: data.booking.price.trim()
 				? `${data.booking.price} ${data.booking.per}`
 				: 'Choose dates to see your total';
+	const calendarMonth = stayRange?.from ?? stayRange?.to ?? new Date();
 
 	return (
-		<div className="overflow-hidden rounded-[1.75rem] border border-[#6b9a8f]/25 bg-[#fff9f4] shadow-[0_24px_60px_-28px_rgba(26,46,53,0.35)]">
+		<div className="rounded-[1.75rem] border border-[#6b9a8f]/25 bg-[#fff9f4] shadow-[0_24px_60px_-28px_rgba(26,46,53,0.35)]">
 			<div className="border-b border-[#6b9a8f]/15 bg-gradient-to-br from-[#6b9a8f]/12 to-transparent px-6 py-5">
 				<div className="flex items-center gap-2 text-[#4d7c6f]">
 					<Droplets className="h-4 w-4" strokeWidth={1.5} aria-hidden />
@@ -223,30 +224,31 @@ function MizuBookingPanel({
 				) : null}
 			</div>
 
-			<div className="p-6">
+			<div className="overflow-visible p-6">
 				<p className="font-[family-name:var(--preview-mizu-body)] text-sm leading-snug text-[#1a2e35]/70">{priceLine}</p>
 
-				<div
-					ref={stayPickerRef}
-					className="relative mt-5 [--rdp-accent-color:#4d7c6f] [--rdp-accent-background-color:rgba(77,124,111,0.14)]"
-				>
+				<div ref={stayPickerRef} className="relative z-20 mt-5">
 					<div className="grid grid-cols-2 gap-3">
 						<div className="rounded-2xl bg-[#f3ebe3]/80 p-3">
-							<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1a2e35]/45">Arrive</p>
+							<p className="font-[family-name:var(--preview-mizu-body)] text-[9px] font-semibold uppercase tracking-wider text-[#1a2e35]/45">
+								Arrive
+							</p>
 							<button
 								type="button"
 								onClick={() => setStayPickerOpen(true)}
-								className="mt-1 w-full text-left font-[family-name:var(--preview-mizu-body)] text-sm font-medium text-[#1a2e35]"
+								className="cursor-pointer mt-1 w-full text-left font-[family-name:var(--preview-mizu-body)] text-sm font-medium text-[#1a2e35]"
 							>
 								{stayRange?.from ? formatStay(stayRange.from) : data.booking.arrival || 'Select'}
 							</button>
 						</div>
 						<div className="rounded-2xl bg-[#f3ebe3]/80 p-3">
-							<p className="text-[9px] font-semibold uppercase tracking-wider text-[#1a2e35]/45">Depart</p>
+							<p className="font-[family-name:var(--preview-mizu-body)] text-[9px] font-semibold uppercase tracking-wider text-[#1a2e35]/45">
+								Depart
+							</p>
 							<button
 								type="button"
 								onClick={() => setStayPickerOpen(true)}
-								className="mt-1 w-full text-left font-[family-name:var(--preview-mizu-body)] text-sm font-medium text-[#1a2e35]"
+								className="cursor-pointer mt-1 w-full text-left font-[family-name:var(--preview-mizu-body)] text-sm font-medium text-[#1a2e35]"
 							>
 								{stayRange?.to ? formatStay(stayRange.to) : data.booking.departure || 'Select'}
 							</button>
@@ -256,11 +258,12 @@ function MizuBookingPanel({
 						<div
 							role="dialog"
 							aria-label="Select stay dates"
-							className="absolute inset-x-0 top-full z-20 mt-2 rounded-2xl border border-[#6b9a8f]/20 bg-white p-2 shadow-xl"
+							className="absolute left-0 right-0 top-full z-50 mt-2 rounded-2xl border border-[#6b9a8f]/20 bg-white p-4 shadow-[0_20px_50px_-16px_rgba(26,46,53,0.35)]"
 						>
 							<DayPicker
 								mode="range"
 								min={1}
+								defaultMonth={calendarMonth}
 								selected={stayRange}
 								onSelect={(range) => {
 									setStayRange(range);
@@ -268,20 +271,45 @@ function MizuBookingPanel({
 								}}
 								disabled={listingPreview ? dayDisabled : undefined}
 								numberOfMonths={1}
-								className="mx-auto [--rdp-day-height:2rem] [--rdp-day-width:2rem]"
+								className={cn(
+									'w-full font-[family-name:var(--preview-mizu-body)]',
+									'[--rdp-accent-color:#4d7c6f]',
+									'[--rdp-accent-background-color:rgba(77,124,111,0.14)]',
+									'[--rdp-day-height:2.35rem]',
+									'[--rdp-day-width:2.35rem]',
+									'[--rdp-day_button-height:2.1rem]',
+									'[--rdp-day_button-width:2.1rem]',
+									'[--rdp-day_button-border-radius:0.5rem]',
+									'[--rdp-nav_button-height:2rem]',
+									'[--rdp-nav_button-width:2rem]',
+									'[--rdp-today-color:#1a2e35]',
+									'[--rdp-outside-opacity:0.35]',
+									'[--rdp-disabled-opacity:0.35]',
+									'[&_.rdp-month]:w-full',
+									'[&_.rdp-month_grid]:w-full',
+									'[&_.rdp-month_caption]:mb-2',
+									'[&_.rdp-caption_label]:text-sm [&_.rdp-caption_label]:font-semibold [&_.rdp-caption_label]:text-[#1a2e35]',
+									'[&_.rdp-weekday]:text-[10px] [&_.rdp-weekday]:font-medium [&_.rdp-weekday]:uppercase [&_.rdp-weekday]:tracking-[0.18em] [&_.rdp-weekday]:text-[#1a2e35]/45',
+									'[&_.rdp-button_previous]:rounded-lg [&_.rdp-button_next]:rounded-lg',
+									'[&_.rdp-button_previous]:border [&_.rdp-button_next]:border',
+									'[&_.rdp-button_previous]:border-[#6b9a8f]/25 [&_.rdp-button_next]:border-[#6b9a8f]/25',
+									'[&_.rdp-day_button]:text-sm [&_.rdp-day_button]:font-medium [&_.rdp-day_button]:text-[#1a2e35]',
+									'[&_.rdp-day_button]:transition-colors [&_.rdp-day_button]:duration-150',
+									'[&_.rdp-day_button:hover:not(:disabled)]:bg-[#f3ebe3]',
+								)}
 							/>
-							<div className="flex justify-end gap-2 px-1 pb-1">
+							<div className="mt-3 flex justify-end gap-2 border-t border-[#6b9a8f]/15 pt-3">
 								<button
 									type="button"
 									onClick={() => setStayPickerOpen(false)}
-									className="rounded-full px-3 py-1.5 text-xs font-medium text-[#4d7c6f]"
+									className="cursor-pointer rounded-full bg-[#4d7c6f] px-4 py-1.5 font-[family-name:var(--preview-mizu-body)] text-xs font-semibold text-white"
 								>
 									Done
 								</button>
 								<button
 									type="button"
 									onClick={() => setStayRange(undefined)}
-									className="rounded-full px-3 py-1.5 text-xs text-[#1a2e35]/50"
+									className="cursor-pointer rounded-full px-3 py-1.5 font-[family-name:var(--preview-mizu-body)] text-xs text-[#1a2e35]/50"
 								>
 									Clear
 								</button>
@@ -313,7 +341,7 @@ function MizuBookingPanel({
 					type="button"
 					onClick={() => void handleReserveClick()}
 					disabled={listingPreview && (!propertyRef || !stayRange?.from || !stayRange?.to || checkingAvailability)}
-					className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#4d7c6f] py-4 font-[family-name:var(--preview-mizu-body)] text-sm font-semibold tracking-wide text-white transition hover:bg-[#3d665b] disabled:cursor-not-allowed disabled:opacity-55"
+					className="cursor-pointer mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#4d7c6f] py-4 font-[family-name:var(--preview-mizu-body)] text-sm font-semibold tracking-wide text-white transition hover:bg-[#3d665b] disabled:cursor-not-allowed disabled:opacity-55"
 				>
 					{checkingAvailability ? 'Checking…' : data.booking.cta}
 					<ChevronDown className="h-4 w-4 -rotate-90" aria-hidden />
@@ -599,7 +627,7 @@ export function MizuPreview({
 						) : null}
 					</div>
 
-					<aside className="w-full shrink-0 lg:sticky lg:top-8 lg:w-[min(100%,400px)]">
+					<aside className="w-full shrink-0 overflow-visible lg:sticky lg:top-8 lg:z-30 lg:w-[min(100%,400px)]">
 						<MizuBookingPanel
 							data={data}
 							listingPreview={listingPreview}

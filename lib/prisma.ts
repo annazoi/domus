@@ -1,12 +1,25 @@
 import '@/config/load-env';
+import fs from 'fs';
+import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 
+const CLIENT_SCHEMA_PATH = path.join(process.cwd(), 'node_modules/.prisma/client/schema.prisma');
+
 const globalForPrisma = global as unknown as {
 	prisma: PrismaClient | undefined;
 	prismaConnectionString: string | undefined;
+	prismaSchemaMtime: number | undefined;
 };
+
+function getGeneratedClientSchemaMtime() {
+	try {
+		return fs.statSync(CLIENT_SCHEMA_PATH).mtimeMs;
+	} catch {
+		return 0;
+	}
+}
 
 function createPrismaClient(connectionString: string) {
 	const pool = new Pool({ connectionString });
@@ -20,8 +33,13 @@ function getPrismaClient() {
 		throw new Error('DATABASE_URL is not set. Add it to .env.local or .env.');
 	}
 
+	const schemaMtime = getGeneratedClientSchemaMtime();
 	const cached = globalForPrisma.prisma;
-	if (cached && globalForPrisma.prismaConnectionString === connectionString) {
+	if (
+		cached &&
+		globalForPrisma.prismaConnectionString === connectionString &&
+		globalForPrisma.prismaSchemaMtime === schemaMtime
+	) {
 		return cached;
 	}
 
@@ -32,6 +50,7 @@ function getPrismaClient() {
 	const client = createPrismaClient(connectionString);
 	globalForPrisma.prisma = client;
 	globalForPrisma.prismaConnectionString = connectionString;
+	globalForPrisma.prismaSchemaMtime = schemaMtime;
 	return client;
 }
 
