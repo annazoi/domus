@@ -107,9 +107,15 @@ export const propertyService = {
 	},
 
 	create(hostId: string, body: UpsertPropertyInput, slug: string) {
-		return prisma.property.create({
-			data: toPropertyData({ body, hostId, slug }),
-			include: propertyInclude,
+		return prisma.$transaction(async (tx) => {
+			await tx.user.update({
+				where: { id: hostId },
+				data: { is_host: true },
+			});
+			return tx.property.create({
+				data: toPropertyData({ body, hostId, slug }),
+				include: propertyInclude,
+			});
 		});
 	},
 

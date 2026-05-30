@@ -45,7 +45,7 @@ export async function syncUserStripeAccountStatus(userId: string, accountId: str
 	};
 }
 
-export async function getOrCreateExpressAccount(userId: string) {
+async function ensureUserIsHost(userId: string) {
 	const user = await prisma.user.findUnique({
 		where: { id: userId },
 		select: {
@@ -53,15 +53,29 @@ export async function getOrCreateExpressAccount(userId: string) {
 			email: true,
 			is_host: true,
 			stripe_account_id: true,
+			_count: { select: { properties: true } },
 		},
 	});
 
 	if (!user) {
 		throw new Error('USER_NOT_FOUND');
 	}
+
 	if (!user.is_host) {
-		throw new Error('NOT_A_HOST');
+		if (user._count.properties === 0) {
+			throw new Error('NOT_A_HOST');
+		}
+		await prisma.user.update({
+			where: { id: userId },
+			data: { is_host: true },
+		});
 	}
+
+	return user;
+}
+
+export async function getOrCreateExpressAccount(userId: string) {
+	const user = await ensureUserIsHost(userId);
 
 	const stripe = getStripeClient();
 

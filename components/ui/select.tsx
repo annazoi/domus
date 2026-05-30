@@ -2,17 +2,20 @@
 
 import {
 	Children,
+	type CSSProperties,
 	type ReactNode,
 	forwardRef,
 	isValidElement,
 	useCallback,
 	useEffect,
 	useId,
+	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
 	type SelectHTMLAttributes,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 import { cn } from './cn';
 
@@ -63,9 +66,35 @@ function readOptions(children: ReactNode): Opt[] {
 	return out;
 }
 
-const menu = cn(
-	'absolute left-0 right-0 top-[calc(100%+0.375rem)] z-50 max-h-[min(16rem,50vh)] overflow-auto rounded-xl border border-black/[0.08] bg-white py-1 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)]',
+const MENU_GAP_PX = 6;
+const MENU_MAX_HEIGHT_PX = 256;
+
+const menuPanel = cn(
+	'fixed z-[100] overflow-auto rounded-xl border border-black/[0.08] bg-white py-1 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)]',
 );
+
+function computeMenuStyle(trigger: DOMRect): CSSProperties {
+	const maxMenuHeight = Math.min(MENU_MAX_HEIGHT_PX, window.innerHeight * 0.5);
+	const spaceBelow = window.innerHeight - trigger.bottom - MENU_GAP_PX;
+	const spaceAbove = trigger.top - MENU_GAP_PX;
+	const openUp = spaceBelow < Math.min(maxMenuHeight, 120) && spaceAbove > spaceBelow;
+
+	if (openUp) {
+		return {
+			left: trigger.left,
+			width: trigger.width,
+			maxHeight: Math.min(maxMenuHeight, spaceAbove),
+			bottom: window.innerHeight - trigger.top + MENU_GAP_PX,
+		};
+	}
+
+	return {
+		left: trigger.left,
+		width: trigger.width,
+		maxHeight: Math.min(maxMenuHeight, spaceBelow),
+		top: trigger.bottom + MENU_GAP_PX,
+	};
+}
 
 const row = cn(
 	'flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#1A1A1A] transition-colors',
@@ -95,7 +124,19 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
 	const opts = useMemo(() => readOptions(children), [children]);
 	const [open, setOpen] = useState(false);
 	const [hi, setHi] = useState(0);
+	const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
 	const rootRef = useRef<HTMLDivElement>(null);
+	const triggerRef = useRef<HTMLButtonElement>(null);
+	const menuRef = useRef<HTMLUListElement>(null);
+
+	const setTriggerRef = useCallback(
+		(node: HTMLButtonElement | null) => {
+			triggerRef.current = node;
+			if (typeof ref === 'function') ref(node);
+			else if (ref) ref.current = node;
+		},
+		[ref],
+	);
 	const isControlled = valueProp !== undefined;
 	const selected = isControlled ? String(valueProp) : undefined;
 	const [uncontrolled, setUncontrolled] = useState(defaultValue !== undefined ? String(defaultValue) : '');
@@ -114,10 +155,30 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
 		[isControlled, onChange, opts],
 	);
 
+	useLayoutEffect(() => {
+		if (!open || !triggerRef.current) return;
+
+		const updateMenuPosition = () => {
+			if (!triggerRef.current) return;
+			setMenuStyle(computeMenuStyle(triggerRef.current.getBoundingClientRect()));
+		};
+
+		updateMenuPosition();
+		window.addEventListener('resize', updateMenuPosition);
+		window.addEventListener('scroll', updateMenuPosition, true);
+		return () => {
+			window.removeEventListener('resize', updateMenuPosition);
+			window.removeEventListener('scroll', updateMenuPosition, true);
+		};
+	}, [open]);
+
 	useEffect(() => {
 		if (!open) return;
 		const close = (e: MouseEvent) => {
-			if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+			const target = e.target as Node;
+			if (rootRef.current?.contains(target)) return;
+			if (menuRef.current?.contains(target)) return;
+			setOpen(false);
 		};
 		document.addEventListener('mousedown', close);
 		return () => document.removeEventListener('mousedown', close);
@@ -183,7 +244,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
 			</select>
 			<button
 				type="button"
-				ref={ref}
+				ref={setTriggerRef}
 				id={id}
 				disabled={disabled}
 				role="combobox"
@@ -218,33 +279,42 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
 					<ChevronDown className="h-full w-full shrink-0" strokeWidth={1.5} />
 				</span>
 			</button>
-			{open && (
-				<ul id={listId} role="listbox" tabIndex={-1} className={menu}>
-					{opts.map((o, i) => {
-						const active = i === hi;
-						const sel = o.value === current;
-						return (
-							<li key={o.value} role="presentation">
-								<button
-									type="button"
-									role="option"
-									aria-selected={sel}
-									data-active={active ? '' : undefined}
-									data-disabled={o.disabled ? '' : undefined}
-									disabled={o.disabled}
-									id={`${uid}-opt-${i}`}
-									className={row}
-									onMouseEnter={() => !o.disabled && setHi(i)}
-									onClick={() => selectAt(i)}
-								>
-									<span className="min-w-0 flex-1 truncate">{o.label}</span>
-									{sel && <Check className="h-3.5 w-3.5 shrink-0 text-camel" strokeWidth={2} aria-hidden />}
-								</button>
-							</li>
-						);
-					})}
-				</ul>
-			)}
+			{open &&
+				createPortal(
+					<ul
+						ref={menuRef}
+						id={listId}
+						role="listbox"
+						tabIndex={-1}
+						className={menuPanel}
+						style={menuStyle}
+					>
+						{opts.map((o, i) => {
+							const active = i === hi;
+							const sel = o.value === current;
+							return (
+								<li key={o.value} role="presentation">
+									<button
+										type="button"
+										role="option"
+										aria-selected={sel}
+										data-active={active ? '' : undefined}
+										data-disabled={o.disabled ? '' : undefined}
+										disabled={o.disabled}
+										id={`${uid}-opt-${i}`}
+										className={row}
+										onMouseEnter={() => !o.disabled && setHi(i)}
+										onClick={() => selectAt(i)}
+									>
+										<span className="min-w-0 flex-1 truncate">{o.label}</span>
+										{sel && <Check className="h-3.5 w-3.5 shrink-0 text-camel" strokeWidth={2} aria-hidden />}
+									</button>
+								</li>
+							);
+						})}
+					</ul>,
+					document.body,
+				)}
 		</div>
 	);
 });

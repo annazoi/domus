@@ -207,7 +207,6 @@ export function BasicInfoSection({
 						{...register('property_type')}
 						value={selectedPropertyType}
 						onChange={handlePropertyTypeChange}
-						className='z-10'
 					>
 						{ApartmentOptions.map((option) => (
 							<option key={option.value} value={option.value}>
