@@ -39,18 +39,10 @@ export function SignUpForm() {
 			setLogin({
 				isLoggedIn: true,
 				user_uuid: userData.user_uuid || userData.uuid,
-				account_uuid: userData.account_uuid,
 				first_name: userData.first_name,
 				last_name: userData.last_name,
 				vat_number: null,
 				email: userData.email,
-				access_token: userData.access_token || userData.token,
-				expires_in: userData.expires_in,
-				avatar: userData.avatar,
-				account: userData.account,
-				login: () => {},
-				logout: () => {},
-				updateUser: () => {},
 			});
 
 			router.push('/dashboard');
@@ -67,9 +59,6 @@ export function SignUpForm() {
 
 	return (
 		<>
-			<Link href="/" className="login-mobile-brand">
-				Domus<span className="clay">.</span>
-			</Link>
 			<h1>Create Platform</h1>
 			<p className="sub">Start building your branded rental experience.</p>
 

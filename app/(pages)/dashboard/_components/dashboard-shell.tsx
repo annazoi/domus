@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
 	createContext,
 	useContext,
+	useEffect,
 	useState,
 	type Dispatch,
 	type ReactNode,
@@ -18,6 +19,7 @@ import {
 	CreditCard,
 	Home,
 	LayoutGrid,
+	LogOut,
 	Luggage,
 	Menu,
 	MessageCircle,
@@ -29,7 +31,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui';
 import Image from 'next/image';
-import logo from '@/public/images/logo.png'
+import logo from '@/public/images/logo.png';
+import { useAuthStore } from '@/store/auth';
 
 type NavItem = {
 	label: string;
@@ -44,10 +47,11 @@ const navItems: NavItem[] = [
 	{ label: 'Customers', href: '/dashboard/customers', icon: <Users className="h-4 w-4" /> },
 	{ label: 'Services', href: '/dashboard/services', icon: <Wrench className="h-4 w-4" /> },
 	{ label: 'My trips', href: '/dashboard/trips', icon: <Luggage className="h-4 w-4" /> },
-	{ label: 'Messages', href: '/dashboard/messages', icon: <MessageCircle className="h-4 w-4" /> },
+	// { label: 'Messages', href: '/dashboard/messages', icon: <MessageCircle className="h-4 w-4" /> },
 	{ label: 'Calendar', href: '/dashboard/calendar', icon: <CalendarDays className="h-4 w-4" /> },
 	{ label: 'Earnings', href: '/dashboard/earnings', icon: <Wallet className="h-4 w-4" /> },
 	// { label: 'Settings', href: '/dashboard/settings', icon: <Settings className="h-4 w-4" /> },
+	{ label: 'Payments', href: '/dashboard/payments', icon: <CreditCard className="h-4 w-4" /> },
 	{ label: 'Subscription', href: '/dashboard/subscription', icon: <CreditCard className="h-4 w-4" /> },
 ];
 
@@ -77,12 +81,42 @@ export function useSetDashboardPageIntro() {
 
 export function DashboardShell({ children }: { children: ReactNode }) {
 	const pathname = usePathname();
+	const logout = useAuthStore((state) => state.logout);
 	const [isCollapsed, setIsCollapsed] = useState(false);
 	const [isMobileOpen, setIsMobileOpen] = useState(false);
 	const [pageIntro, setPageIntro] = useState<ReactNode | null>(null);
+	const [scrolled, setScrolled] = useState(false);
+
+	const activeNav = navItems.find((item) => isItemActive(pathname, item.href));
+	const mobileTitle = activeNav?.label ?? 'Dashboard';
+
+	useEffect(() => {
+		const onScroll = () => setScrolled(window.scrollY > 16);
+		onScroll();
+		window.addEventListener('scroll', onScroll, { passive: true });
+		return () => window.removeEventListener('scroll', onScroll);
+	}, []);
+
+	useEffect(() => {
+		document.body.style.overflow = isMobileOpen ? 'hidden' : '';
+		return () => {
+			document.body.style.overflow = '';
+		};
+	}, [isMobileOpen]);
+
+	const openMobileNav = () => setIsMobileOpen(true);
 
 	return (
 		<div className="dashboard-root min-h-screen bg-[#F7F5F2] text-[#1A1A1A]">
+			{isMobileOpen ? (
+				<button
+					type="button"
+					className="fixed inset-0 z-30 bg-[#1A1A1A]/25 backdrop-blur-[2px] md:hidden"
+					onClick={() => setIsMobileOpen(false)}
+					aria-label="Close sidebar"
+				/>
+			) : null}
+
 			<div className="flex w-full">
 				<aside
 					className={[
@@ -160,28 +194,76 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 						].join(' ')}
 					>
 						<div className="mx-auto w-full max-w-[1600px]">
-							<header className="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 px-5 py-2 md:gap-6 md:px-10">
-								<div className="flex min-w-0 flex-1 items-center gap-3 md:gap-5">
+							<div
+								className={[
+									'flex items-center justify-between gap-3 px-5 py-3 transition-opacity duration-200 md:hidden',
+									scrolled ? 'pointer-events-none invisible h-0 overflow-hidden py-0 opacity-0' : 'opacity-100',
+								].join(' ')}
+							>
+								<Button
+									type="button"
+									variant="ghostIcon"
+									onClick={openMobileNav}
+									className="inline-flex shrink-0"
+									aria-label="Open sidebar"
+								>
+									<Menu className="h-4 w-4" />
+								</Button>
+								<Button
+									type="button"
+									variant="ghostIcon"
+									onClick={() => logout()}
+									className="inline-flex shrink-0"
+									aria-label="Log out"
+								>
+									<LogOut className="h-4 w-4" />
+								</Button>
+							</div>
+
+							{scrolled ? (
+								<header className="fixed inset-x-0 top-0 z-40 flex min-h-16 items-center justify-between gap-3 border-b border-black/[0.07] bg-[#F7F5F2]/94 px-5 py-2 shadow-[0_10px_32px_-22px_rgba(26,26,26,0.35)] backdrop-blur-md md:hidden">
+									<div className="flex min-w-0 flex-1 items-center gap-3">
+										<Button
+											type="button"
+											variant="ghostIcon"
+											onClick={openMobileNav}
+											className="inline-flex shrink-0"
+											aria-label="Open sidebar"
+										>
+											<Menu className="h-4 w-4" />
+										</Button>
+										<p className="min-w-0 truncate font-serif text-lg tracking-tight">{mobileTitle}</p>
+									</div>
 									<Button
 										type="button"
 										variant="ghostIcon"
-										onClick={() => setIsMobileOpen(true)}
-										className="inline-flex shrink-0 md:hidden"
-										aria-label="Open sidebar"
+										onClick={() => logout()}
+										className="inline-flex shrink-0"
+										aria-label="Log out"
 									>
-										<Menu className="h-4 w-4" />
+										<LogOut className="h-4 w-4" />
 									</Button>
-									{pageIntro ? (
-										<div className="min-w-0 flex-1 border-l border-black/10 pl-3 md:border-l-0 md:pl-0">
-											{pageIntro}
-										</div>
-									) : null}
+								</header>
+							) : null}
+
+							<header className="sticky top-0 z-30 hidden min-h-16 items-center justify-between gap-6 border-b border-black/5 bg-[#F7F5F2]/95 px-10 py-2 backdrop-blur-md md:flex">
+								<div className="flex min-w-0 flex-1 items-center gap-5">
+									{pageIntro ? <div className="min-w-0 flex-1">{pageIntro}</div> : null}
 								</div>
 
 								<div className="flex shrink-0 items-center gap-3">
 									<span className="hidden rounded-full bg-camel/15 px-3 py-1 text-xs font-medium text-camel sm:inline-flex">
 										Portfolio Plan
 									</span>
+									<Button
+										type="button"
+										variant="secondary"
+										onClick={() => logout()}
+										className="inline-flex items-center gap-2"
+									>
+										<LogOut className="h-4 w-4" />
+										<span className="hidden sm:inline">Log out</span>
+									</Button>
 								</div>
 							</header>
 

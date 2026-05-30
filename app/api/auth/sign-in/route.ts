@@ -1,5 +1,5 @@
 import { isGuestAccount } from '@/app/api/_utils/guest-account';
-import { verifyPassword } from '@/app/api/_utils/password';
+import { hashPassword, isHashedPassword, verifyPassword } from '@/app/api/_utils/password';
 import { prisma } from '@/lib/prisma';
 
 interface LoginPayload {
@@ -41,7 +41,10 @@ export async function POST(request: Request) {
 
 		await prisma.user.update({
 			where: { id: user.id },
-			data: { is_archived: false },
+			data: {
+				is_archived: false,
+				...(isHashedPassword(user.password) ? {} : { password: hashPassword(password) }),
+			},
 		});
 
 		return Response.json(

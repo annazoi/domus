@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { AuthMobileBrand } from "./_components/auth-mobile-brand";
 import "./auth-shell.css";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
@@ -13,10 +14,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           fill
           priority
           sizes="50vw"
-          className="object-cover"
+          className="login-aside-hero object-cover"
         />
         <Link href="/" className="login-brand">
-          Domus<span className="clay">.</span>
+          <Image src="/images/logo.png" alt="Domus" width={200} height={200} />
         </Link>
         <h2 className="login-quote">
           Own your brand.
@@ -26,8 +27,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       </aside>
 
       <section className="login-form">
+        <AuthMobileBrand />
         <div className="login-card">{children}</div>
-      </section>
-    </main>
+      </section>    </main>
   );
 }

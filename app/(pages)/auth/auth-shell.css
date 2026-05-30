@@ -10,6 +10,31 @@
   color: oklch(0.16 0.012 60);
   display: grid;
   grid-template-columns: 1fr;
+  position: relative;
+}
+
+.login-page::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--clay) 30%,
+    var(--clay) 70%,
+    transparent 100%
+  );
+  z-index: 10;
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .login-page::before {
+    display: none;
+  }
 }
 
 @media (min-width: 768px) {
@@ -31,7 +56,7 @@
   }
 }
 
-.login-aside img {
+.login-aside-hero {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -63,9 +88,7 @@
   top: 2.5rem;
   left: 2.5rem;
   z-index: 2;
-  color: white;
-  font-family: var(--font-domus), Georgia, serif;
-  font-size: 1.5rem;
+
 }
 
 .login-quote {
@@ -88,15 +111,26 @@
   }
 }
 
+.login-brand img {
+  position: static;
+  width: 7.5rem;
+  height: auto;
+  object-fit: contain;
+}
+
 .login-form {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 4rem 1.5rem;
+  justify-content: flex-start;
+  min-height: 100svh;
+  padding: 0 1.5rem 3rem;
 }
 
 @media (min-width: 768px) {
   .login-form {
+    justify-content: center;
+    min-height: auto;
     padding: 4rem;
   }
 }
@@ -104,27 +138,42 @@
 .login-card {
   width: 100%;
   max-width: 28rem;
-  animation: authFadeUp 0.8s both;
+  animation: authFadeUp 0.8s 0.12s both;
+}
+
+@media (max-width: 767px) {
+  .login-card {
+    padding-top: 2rem;
+  }
 }
 
 .login-card h1 {
   font-family: var(--font-domus), Georgia, serif;
   font-weight: 300;
   font-size: clamp(2.5rem, 6vw, 3.75rem);
-  margin-top: 1.5rem;
+  margin-top: 0;
+  animation: authFadeUp 0.8s 0.2s both;
 }
 
 .login-card .sub {
   margin-top: 0.75rem;
   font-size: 0.875rem;
   color: oklch(0.45 0.01 80);
+  animation: authFadeUp 0.8s 0.28s both;
 }
 
 .login-card form {
-  margin-top: 3rem;
+  margin-top: 2.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  animation: authFadeUp 0.8s 0.36s both;
+}
+
+@media (min-width: 768px) {
+  .login-card form {
+    margin-top: 3rem;
+  }
 }
 
 .login-page .field label {
@@ -222,14 +271,55 @@
   color: var(--clay);
 }
 
+.login-mobile-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 28rem;
+  padding: 2.75rem 0 1rem;
+  position: relative;
+  animation: authFadeUp 0.7s both;
+}
+
+.login-mobile-header::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    oklch(0.84 0.014 75) 12%,
+    oklch(0.84 0.014 75) 88%,
+    transparent
+  );
+}
+
 .login-mobile-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  transition: opacity 0.2s ease;
+}
+
+.login-mobile-brand:hover {
+  opacity: 0.72;
+}
+
+.login-mobile-brand-logo {
   display: block;
-  font-family: var(--font-domus), Georgia, serif;
-  font-size: 1.25rem;
+  width: auto;
+  height: clamp(4.5rem, 24vw, 5.75rem);
+  max-width: min(18rem, 88vw);
+  object-fit: contain;
 }
 
 @media (min-width: 768px) {
-  .login-mobile-brand {
+  .login-mobile-header {
     display: none;
   }
 }

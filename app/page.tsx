@@ -1,7 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { type ReactNode, useEffect, useRef } from 'react';
 import heroImage from '@/public/images/landing-hero.png';
 import featureVillaExteriorImage from '@/public/images/landing-feature-exterior.png';
 import featureVillaPoolImage from '@/public/images/landing-feature-pool.png';
@@ -14,19 +15,13 @@ import journalBookingsImage from '@/public/images/landing-journal-bookings.png';
 import journalPricingImage from '@/public/images/landing-journal-pricing.png';
 import journalPhotosImage from '@/public/images/landing-journal-photos.png';
 import logo from '@/public/images/logo.png';
+import { useAuthStore } from '@/store/auth';
+import { LandingNav } from '@/app/_components/landing-nav';
 
 function PillArrow() {
 	return (
 		<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
 			<path d="M7 17L17 7M9 7h8v8" />
-		</svg>
-	);
-}
-
-function MenuBarsIcon() {
-	return (
-		<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
-			<path d="M4 8h16M4 16h16" />
 		</svg>
 	);
 }
@@ -39,8 +34,8 @@ const SCROLL_REVEAL_COPY =
 	'Domus turns your rental into a polished, bookable brand. Direct reservations, Stripe payouts, and guest data built in. You bring the property - we bring the site that makes people want to stay.';
 
 export default function Home() {
-	const [menuOpen, setMenuOpen] = useState(false);
 	const rootRef = useRef<HTMLDivElement>(null);
+	const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
 	useEffect(() => {
 		let ctx: { revert: () => void } | undefined;
@@ -110,60 +105,9 @@ export default function Home() {
 		};
 	}, []);
 
-	const closeMenu = () => setMenuOpen(false);
-
 	return (
 		<div ref={rootRef} className="domus-landing">
-			<div className="fixed top-5 right-5 z-50 flex flex-col items-end gap-3">
-				<a href="#book" className="pill">
-					<span>Book a demo</span>
-					<PillDot>
-						<PillArrow />
-					</PillDot>
-				</a>
-				<button type="button" className="pill" onClick={() => setMenuOpen((o) => !o)}>
-					<span>Menu</span>
-					<PillDot>
-						<MenuBarsIcon />
-					</PillDot>
-				</button>
-				{menuOpen ? (
-					<nav className="menu-panel">
-						<ul>
-							<li>
-								<a href="#home" onClick={closeMenu}>
-									Home
-								</a>
-							</li>
-							<li>
-								<a href="#features" onClick={closeMenu}>
-									Features
-								</a>
-							</li>
-							<li>
-								<a href="#templates" onClick={closeMenu}>
-									Templates
-								</a>
-							</li>
-							<li>
-								<a href="#pricing" onClick={closeMenu}>
-									Pricing
-								</a>
-							</li>
-							<li>
-								<a href="#reviews" onClick={closeMenu}>
-									Reviews
-								</a>
-							</li>
-							<li>
-								<a href="#book" onClick={closeMenu}>
-									Contact
-								</a>
-							</li>
-						</ul>
-					</nav>
-				) : null}
-			</div>
+			<LandingNav isLoggedIn={Boolean(isLoggedIn)} />
 
 			<section id="home" className="relative min-h-screen w-full">
 				<Image
@@ -176,13 +120,13 @@ export default function Home() {
 				/>
 				<div className="absolute inset-0" />
 
-				<div className="relative z-10 px-6 pt-10 md:px-12 flex items-start justify-between">
+				<div className="relative z-10 hidden px-6 pt-10 md:block md:px-12">
 					<a href="#home" className="font-display text-3xl text-dom-cream">
 						<Image src={logo} alt="Domus" width={200} height={200} />
 					</a>
 				</div>
 
-				<div className="relative z-10 px-6 pt-10 md:px-12 md:pt-16">
+				<div className="relative z-10 px-6 pt-24 md:px-12 md:pt-16">
 					<h1 id="heroTitle" className="h-display text-dom-cream text-[18vw] md:text-[14vw] leading-[0.85]">
 						Domus
 					</h1>
@@ -634,6 +578,16 @@ export default function Home() {
 							</div>
 						</div>
 					</form>
+					{isLoggedIn ? (
+						<p className="book-form-auth">
+							Welcome back.{' '}
+							<Link href="/dashboard">Go to dashboard</Link>
+						</p>
+					) : (
+						<p className="book-form-auth">
+							Already have an account? <Link href="/auth/sign-in">Sign in</Link>
+						</p>
+					)}
 				</div>
 			</section>
 

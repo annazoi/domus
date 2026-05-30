@@ -34,11 +34,24 @@ export const useAuthStore = create<UserStore>()(
 				login: (user: LoggedInUser) => {
 					set((state) => ({
 						...state,
-						...user,
+						user_uuid: user.user_uuid,
+						email: user.email,
+						first_name: user.first_name,
+						last_name: user.last_name,
+						vat_number: user.vat_number,
+						isLoggedIn: true,
 					}));
 				},
 				logout: () => {
-					set(initialValues);
+					set((state) => ({
+						...state,
+						isLoggedIn: false,
+						user_uuid: null,
+						first_name: null,
+						last_name: null,
+						vat_number: null,
+						email: null,
+					}));
 					localStorage.removeItem(STORE_KEY);
 					window.location.href = '/auth/sign-in';
 				},
