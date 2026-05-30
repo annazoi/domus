@@ -2,7 +2,7 @@ export type ServiceInput = {
 	name: string;
 	description?: string | null;
 	price: number;
-	quantifiable_item?: boolean;
+	quantitable_item?: boolean;
 };
 
 export type ServiceRow = {
@@ -10,7 +10,7 @@ export type ServiceRow = {
 	name: string;
 	description: string | null;
 	price: number;
-	quantifiable_item: boolean;
+	quantitable_item: boolean;
 };
 
 export type HostServiceRow = ServiceRow & {

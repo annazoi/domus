@@ -96,6 +96,16 @@ export const propertyService = {
 		});
 	},
 
+	findPublishedByRef(ref: string) {
+		return prisma.property.findFirst({
+			where: {
+				OR: [{ id: ref }, { slug: ref }],
+				isPublished: true,
+			},
+			include: propertyInclude,
+		});
+	},
+
 	create(hostId: string, body: UpsertPropertyInput, slug: string) {
 		return prisma.property.create({
 			data: toPropertyData({ body, hostId, slug }),

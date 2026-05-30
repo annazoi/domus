@@ -1,3 +1,4 @@
+import { isGuestAccount } from '@/app/api/_utils/guest-account';
 import { prisma } from '@/lib/prisma';
 
 interface LoginPayload {
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
 			},
 		});
 
-		if (!user || user.password === '' || user.password !== password) {
+		if (!user || isGuestAccount(user.password) || user.password !== password) {
 			return Response.json({ message: 'Invalid credentials. Please try again.' }, { status: 401 });
 		}
 

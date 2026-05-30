@@ -16,21 +16,21 @@ type ServiceDraft = {
 	name: string;
 	description: string;
 	price: string;
-	quantifiable_item: boolean;
+	quantitable_item: boolean;
 };
 
 const emptyDraft = (): ServiceDraft => ({
 	name: '',
 	description: '',
 	price: '',
-	quantifiable_item: false,
+	quantitable_item: false,
 });
 
 const toDraft = (service: HostService): ServiceDraft => ({
 	name: service.name,
 	description: service.description ?? '',
 	price: String(service.price),
-	quantifiable_item: service.quantifiable_item,
+	quantitable_item: service.quantitable_item,
 });
 
 const parseDraft = (draft: ServiceDraft): ServiceInput | null => {
@@ -43,7 +43,7 @@ const parseDraft = (draft: ServiceDraft): ServiceInput | null => {
 		name,
 		description: description || null,
 		price,
-		quantifiable_item: draft.quantifiable_item,
+		quantitable_item: draft.quantitable_item,
 	};
 };
 
@@ -167,14 +167,14 @@ export function HostServicesList() {
 						</div>
 						<label className="flex cursor-pointer items-start gap-3 md:col-span-2">
 							<Checkbox
-								checked={createDraft.quantifiable_item}
+								checked={createDraft.quantitable_item}
 								onChange={(e) =>
-									setCreateDraft((prev) => ({ ...prev, quantifiable_item: e.target.checked }))
+									setCreateDraft((prev) => ({ ...prev, quantitable_item: e.target.checked }))
 								}
 								className="mt-0.5 accent-camel"
 							/>
 							<span>
-								<span className="text-sm font-medium text-[#1A1A1A]">Quantifiable</span>
+								<span className="text-sm font-medium text-[#1A1A1A]">Quantitable</span>
 								<span className="mt-0.5 block text-sm text-[#1A1A1A]/60">
 									Guests can choose a quantity (e.g. bottles of wine). Leave off for one-time extras like
 									late checkout.
@@ -258,14 +258,14 @@ export function HostServicesList() {
 											</div>
 											<label className="flex cursor-pointer items-start gap-3 md:col-span-2">
 												<Checkbox
-													checked={editDraft.quantifiable_item}
+													checked={editDraft.quantitable_item}
 													onChange={(e) =>
-														setEditDraft((prev) => ({ ...prev, quantifiable_item: e.target.checked }))
+														setEditDraft((prev) => ({ ...prev, quantitable_item: e.target.checked }))
 													}
 													className="mt-0.5 accent-camel"
 												/>
 												<span>
-													<span className="text-sm font-medium text-[#1A1A1A]">Quantifiable</span>
+													<span className="text-sm font-medium text-[#1A1A1A]">Quantitable</span>
 													<span className="mt-0.5 block text-sm text-[#1A1A1A]/60">
 														Guests can choose a quantity for this extra.
 													</span>
@@ -296,7 +296,7 @@ export function HostServicesList() {
 											<div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#1A1A1A]/60">
 												<span className="font-medium text-camel">{formatPrice(service.price)}</span>
 												<span className="text-[#1A1A1A]/25">·</span>
-												<span>{service.quantifiable_item ? 'Quantifiable' : 'One per stay'}</span>
+												<span>{service.quantitable_item ? 'Quantitable' : 'One per stay'}</span>
 												<span className="text-[#1A1A1A]/25">·</span>
 												<span>
 													{service.property_count}{' '}

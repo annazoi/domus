@@ -1,3 +1,4 @@
+import { isGuestAccount } from '@/app/api/_utils/guest-account';
 import { prisma } from '@/lib/prisma';
 
 interface RegisterPayload {
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
 		};
 
 		if (existingUser) {
-			if (existingUser.password !== '') {
+			if (!isGuestAccount(existingUser.password)) {
 				return Response.json({ message: 'User already exists with this email.' }, { status: 409 });
 			}
 			user = await prisma.user.update({

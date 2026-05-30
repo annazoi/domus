@@ -1,4 +1,5 @@
 import type { Prisma } from '@prisma/client';
+import { isGuestAccount } from '@/app/api/_utils/guest-account';
 
 export type EnsureGuestAndCustomerInput = {
 	email: string;
@@ -16,7 +17,7 @@ export async function ensureGuestUserAndCustomerForHost(
 
 	let user = await tx.user.findUnique({
 		where: { email },
-		select: { id: true },
+		select: { id: true, password: true },
 	});
 	if (!user) {
 		user = await tx.user.create({
@@ -27,7 +28,12 @@ export async function ensureGuestUserAndCustomerForHost(
 				password: '',
 				phone,
 			},
-			select: { id: true },
+			select: { id: true, password: true },
+		});
+	} else if (isGuestAccount(user.password)) {
+		await tx.user.update({
+			where: { id: user.id },
+			data: { first_name, last_name, phone },
 		});
 	}
 
@@ -44,6 +50,11 @@ export async function ensureGuestUserAndCustomerForHost(
 				email,
 				phone,
 			},
+		});
+	} else {
+		customer = await tx.customer.update({
+			where: { id: customer.id },
+			data: { first_name, last_name, email, phone },
 		});
 	}
 

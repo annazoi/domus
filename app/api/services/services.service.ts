@@ -6,7 +6,7 @@ const serviceSelect = {
 	name: true,
 	description: true,
 	price: true,
-	quantifiable_item: true,
+	quantitable_item: true,
 } as const;
 
 const mapServiceRows = (
@@ -15,7 +15,7 @@ const mapServiceRows = (
 		name: string;
 		description: string | null;
 		price: { toString(): string };
-		quantifiable_item: boolean;
+		quantitable_item: boolean;
 	}[],
 ): ServiceRow[] =>
 	rows.map((row) => ({
@@ -23,7 +23,7 @@ const mapServiceRows = (
 		name: row.name,
 		description: row.description,
 		price: Number(row.price),
-		quantifiable_item: row.quantifiable_item,
+		quantitable_item: row.quantitable_item,
 	}));
 
 async function resolvePropertyId(propertyRef: string) {
@@ -67,7 +67,7 @@ export const servicesService = {
 			name: row.name,
 			description: row.description,
 			price: Number(row.price),
-			quantifiable_item: row.quantifiable_item,
+			quantitable_item: row.quantitable_item,
 			property_count: row._count.property_services,
 		}));
 	},
@@ -79,7 +79,7 @@ export const servicesService = {
 				name: input.name.trim(),
 				description: input.description?.trim() || null,
 				price: input.price,
-				quantifiable_item: input.quantifiable_item ?? false,
+				quantitable_item: input.quantitable_item ?? false,
 			},
 			select: {
 				...serviceSelect,
@@ -92,7 +92,7 @@ export const servicesService = {
 			name: row.name,
 			description: row.description,
 			price: Number(row.price),
-			quantifiable_item: row.quantifiable_item,
+			quantitable_item: row.quantitable_item,
 			property_count: row._count.property_services,
 		} satisfies HostServiceRow;
 	},
@@ -110,7 +110,7 @@ export const servicesService = {
 				name: input.name.trim(),
 				description: input.description?.trim() || null,
 				price: input.price,
-				quantifiable_item: input.quantifiable_item ?? false,
+				quantitable_item: input.quantitable_item ?? false,
 			},
 			select: {
 				...serviceSelect,
@@ -123,7 +123,7 @@ export const servicesService = {
 			name: row.name,
 			description: row.description,
 			price: Number(row.price),
-			quantifiable_item: row.quantifiable_item,
+			quantitable_item: row.quantitable_item,
 			property_count: row._count.property_services,
 		} satisfies HostServiceRow;
 	},

@@ -111,7 +111,7 @@ function ServiceRow({
 }) {
 	const selected = quantity > 0;
 	const setQuantity = (next: number) => {
-		if (!service.quantifiable_item) {
+		if (!service.quantitable_item) {
 			onQuantityChange(service.id, next > 0 ? 1 : 0);
 			return;
 		}
@@ -161,7 +161,7 @@ function ServiceRow({
 						</motion.p>
 					</div>
 					<AnimatePresence initial={false}>
-						{selected && service.quantifiable_item ? (
+						{selected && service.quantitable_item ? (
 							<motion.div
 								key="qty-controls"
 								initial={{ opacity: 0, height: 0, marginTop: 0 }}

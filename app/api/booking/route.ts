@@ -140,15 +140,20 @@ export async function POST(request: Request) {
 					}
 					serviceCatalog = await tx.service.findMany({
 						where: { id: { in: serviceIds } },
+						select: { id: true, price: true, quantitable_item: true },
 					});
 					if (serviceCatalog.length !== serviceIds.length) {
 						throw new Error('INVALID_SERVICE');
 					}
 					const priceById = new Map(serviceCatalog.map((svc) => [svc.id, Number(svc.price)]));
+					const quantitableById = new Map(serviceCatalog.map((svc) => [svc.id, svc.quantitable_item]));
 
 					for (const line of serviceLines) {
 						const unitPrice = priceById.get(line.service_id);
 						if (unitPrice === undefined) continue;
+						if (!quantitableById.get(line.service_id) && line.quantity !== 1) {
+							throw new Error('INVALID_SERVICE_QUANTITY');
+						}
 						totalPrice += unitPrice * line.quantity;
 					}
 				}
@@ -230,6 +235,9 @@ export async function POST(request: Request) {
 	} catch (e) {
 		if (e instanceof Error && e.message === 'INVALID_SERVICE') {
 			return Response.json({ message: 'One or more selected services are invalid.' }, { status: 400 });
+		}
+		if (e instanceof Error && e.message === 'INVALID_SERVICE_QUANTITY') {
+			return Response.json({ message: 'Quantity is not allowed for one or more selected services.' }, { status: 400 });
 		}
 		if (e instanceof BookingUnavailableError) {
 			return Response.json({ error: 'Property not available' }, { status: 400 });

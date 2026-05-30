@@ -6,7 +6,9 @@ import type { PropertyServiceLinksInput } from '@/app/api/services/interfaces/se
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
 	const { id } = await params;
 	const property = await prisma.property.findFirst({
-		where: { id },
+		where: {
+			OR: [{ id }, { slug: id }],
+		},
 		select: { id: true },
 	});
 	if (!property) return Response.json({ message: 'Property not found' }, { status: 404 });

@@ -5,12 +5,16 @@ import { propertyService } from '@/app/api/properties/properties.service';
 import type { UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-	const hostId = getHostIdFromRequest(request);
-	if (!hostId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
-
 	const { id } = await params;
-	let property = await propertyService.findByHostAndId(hostId, id);
-	if (!property) property = await propertyService.findByHostAndSlug(hostId, id);
+	const hostId = getHostIdFromRequest(request);
+
+	if (hostId) {
+		let property = await propertyService.findByHostAndId(hostId, id);
+		if (!property) property = await propertyService.findByHostAndSlug(hostId, id);
+		if (property) return Response.json(mapProperty(property));
+	}
+
+	const property = await propertyService.findPublishedByRef(id);
 	if (!property) return Response.json({ message: 'Property not found' }, { status: 404 });
 	return Response.json(mapProperty(property));
 }

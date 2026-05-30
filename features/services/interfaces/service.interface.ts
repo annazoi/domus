@@ -3,7 +3,7 @@ export type Service = {
 	name: string;
 	description: string | null;
 	price: number;
-	quantifiable_item: boolean;
+	quantitable_item: boolean;
 };
 
 export type HostService = Service & {
@@ -19,5 +19,5 @@ export type ServiceInput = {
 	name: string;
 	description?: string | null;
 	price: number;
-	quantifiable_item?: boolean;
+	quantitable_item?: boolean;
 };
