@@ -1,4 +1,4 @@
-import type Stripe from 'stripe';
+import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 import { getStripeClient } from '@/lib/stripe/client';
 import { STRIPE_CONNECT_DEFAULT_COUNTRY } from '@/lib/stripe/constants';
@@ -10,6 +10,33 @@ export type StripeConnectStatus = {
 	payouts_enabled: boolean;
 	details_submitted: boolean;
 };
+
+const disconnectedConnectStatus = (): StripeConnectStatus => ({
+	stripe_account_id: null,
+	stripe_onboarding_completed: false,
+	charges_enabled: false,
+	payouts_enabled: false,
+	details_submitted: false,
+});
+
+function isStaleStripeAccountError(error: unknown): boolean {
+	return (
+		error instanceof Stripe.errors.StripeError &&
+		(error.code === 'resource_missing' || error.code === 'account_invalid')
+	);
+}
+
+async function clearStaleStripeAccount(userId: string) {
+	await prisma.user.update({
+		where: { id: userId },
+		data: {
+			stripe_account_id: null,
+			stripe_onboarding_completed: false,
+			charges_enabled: false,
+			payouts_enabled: false,
+		},
+	});
+}
 
 export function mapAccountToStatus(account: Stripe.Account): Omit<StripeConnectStatus, 'stripe_account_id'> {
 	const detailsSubmitted = account.details_submitted ?? false;
@@ -66,7 +93,15 @@ export async function getOrCreateExpressAccount(userId: string) {
 	const stripe = getStripeClient();
 
 	if (user.stripe_account_id) {
-		return user.stripe_account_id;
+		try {
+			await stripe.accounts.retrieve(user.stripe_account_id);
+			return user.stripe_account_id;
+		} catch (error) {
+			if (!isStaleStripeAccountError(error)) {
+				throw error;
+			}
+			await clearStaleStripeAccount(userId);
+		}
 	}
 
 	const account = await stripe.accounts.create({
@@ -125,17 +160,18 @@ export async function getConnectStatusForUser(userId: string): Promise<StripeCon
 	}
 
 	if (!user.stripe_account_id) {
-		return {
-			stripe_account_id: null,
-			stripe_onboarding_completed: false,
-			charges_enabled: false,
-			payouts_enabled: false,
-			details_submitted: false,
-		};
+		return disconnectedConnectStatus();
 	}
 
-	const synced = await syncUserStripeAccountStatus(userId, user.stripe_account_id);
-	return synced;
+	try {
+		return await syncUserStripeAccountStatus(userId, user.stripe_account_id);
+	} catch (error) {
+		if (!isStaleStripeAccountError(error)) {
+			throw error;
+		}
+		await clearStaleStripeAccount(userId);
+		return disconnectedConnectStatus();
+	}
 }
 
 export async function handleAccountUpdated(account: Stripe.Account) {

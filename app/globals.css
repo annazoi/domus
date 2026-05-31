@@ -2,25 +2,38 @@
 @import "react-day-picker/style.css";
 
 @theme {
-  --color-stone-50: #fafaf9;
-  --color-stone-100: #f5f5f4;
-  --color-stone-200: #e7e5e4;
-  --color-stone-300: #d6d3d1;
-  --color-stone-400: #a8a29e;
-  --color-stone-500: #78716c;
-  --color-stone-800: #292524;
-  --color-stone-900: #1c1917;
+  --color-stone-50: #f8fafc;
+  --color-stone-100: #f1f5f9;
+  --color-stone-200: #e2e8f0;
+  --color-stone-300: #cbd5e1;
+  --color-stone-400: #94a3b8;
+  --color-stone-500: #64748b;
+  --color-stone-800: #334155;
+  --color-stone-900: #1e293b;
 
-  --color-camel: #b89775;
-  --color-camel-dark: #8b6b4d;
-  --color-camel-light: #d2b48c;
-  --color-camel-deep: #7a6048;
-  --color-cream: #faf9f6;
-  --color-espresso: #3d3229;
+  --color-camel: #9a8570;
+  --color-camel-dark: #826f5c;
+  --color-camel-light: #b8a594;
+  --color-camel-deep: #5f5042;
+  --color-cream: #f4f7f9;
+  --color-espresso: #1e293b;
 
-  --color-primary: #b89775;
-  --color-primary-hover: #8b6b4d;
-  --color-primary-foreground: #faf9f6;
+  --color-dashboard-bg: #e8e8e6;
+  --color-dashboard-panel: #f3f3f1;
+  --color-dashboard-inset: #ececea;
+  --color-dashboard-surface: #fafaf8;
+  --color-dashboard-accent: #6a6258;
+  --color-dashboard-accent-hover: #565048;
+  --color-dashboard-accent-light: #949088;
+  --color-dashboard-accent-deep: #4a433c;
+  --color-dashboard-row-hover: #e3e3e1;
+  --color-dashboard-border: #dcdcd9;
+  --color-dashboard-muted: #6f6860;
+  --shadow-dashboard-panel: 0 10px 36px -20px rgb(0 0 0 / 0.08);
+
+  --color-primary: #9a8570;
+  --color-primary-hover: #826f5c;
+  --color-primary-foreground: #ffffff;
 
   --color-landing-bg: #3d3229;
   --color-landing-ivory: #faf9f6;
@@ -43,9 +56,9 @@
 
 :root {
   --scrollbar-size: 5px;
-  --scrollbar-track: rgb(61 50 41 / 0.1);
-  --scrollbar-thumb: rgb(47 38 32 / 0.5);
-  --scrollbar-thumb-hover: rgb(34 28 23 / 0.72);
+  --scrollbar-track: rgb(30 41 59 / 0.08);
+  --scrollbar-thumb: rgb(100 116 139 / 0.45);
+  --scrollbar-thumb-hover: rgb(71 85 105 / 0.65);
 }
 
 @layer base {
@@ -98,10 +111,48 @@
 }
 
 .dashboard-root {
-  --color-primary: var(--color-camel-light);
-  --color-primary-hover: var(--color-camel);
-  --color-primary-foreground: var(--color-espresso);
-  --color-accent: var(--color-camel);
+  --color-cream: var(--color-dashboard-surface);
+  --color-espresso: #2a2521;
+  --color-camel: var(--color-dashboard-accent);
+  --color-camel-dark: var(--color-dashboard-accent-hover);
+  --color-camel-light: var(--color-dashboard-accent-light);
+  --color-camel-deep: var(--color-dashboard-accent-deep);
+  --color-primary: var(--color-dashboard-accent);
+  --color-primary-hover: var(--color-dashboard-accent-hover);
+  --color-primary-foreground: #fafaf8;
+  --color-accent: var(--color-dashboard-accent);
+  --scrollbar-track: rgb(220 220 218 / 0.5);
+  --scrollbar-thumb: rgb(140 140 136 / 0.35);
+  --scrollbar-thumb-hover: rgb(110 110 106 / 0.5);
+}
+
+.dashboard-root .pac-container {
+  border: 0;
+  background: var(--color-dashboard-surface);
+  box-shadow: 0 16px 36px rgb(0 0 0 / 0.1);
+}
+
+.dashboard-root .pac-item:hover,
+.dashboard-root .pac-item-selected {
+  background: rgb(0 0 0 / 0.04);
+  color: var(--color-espresso);
+}
+
+@utility dashboard-panel {
+  background-color: var(--color-dashboard-panel);
+  box-shadow: var(--shadow-dashboard-panel);
+}
+
+@utility dashboard-inset {
+  background-color: var(--color-dashboard-inset);
+}
+
+@utility dashboard-soft {
+  background-color: var(--color-dashboard-inset);
+}
+
+@utility dashboard-field {
+  background-color: var(--color-dashboard-surface);
 }
 
 .rdp-months {
@@ -115,7 +166,7 @@
 /* TipTap placeholder (minimal rich text) */
 .minimal-rich-text-editor p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  color: rgb(26 26 26 / 0.38);
+  color: rgb(100 100 97 / 0.55);
   float: left;
   height: 0;
   pointer-events: none;
@@ -143,8 +194,8 @@
 
 .pac-item:hover,
 .pac-item-selected {
-  background: rgb(184 151 117 / 0.14);
-  color: rgb(26 26 26);
+  background: rgb(154 133 112 / 0.16);
+  color: rgb(30 41 59);
 }
 
 .pac-item-query {

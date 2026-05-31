@@ -13,13 +13,14 @@ import {
 	useState,
 	type SelectHTMLAttributes,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 import { cn } from './cn';
 
-export type SelectVariant = 'default' | 'settings' | 'auth' | 'compact';
+export type SelectVariant = 'default' | 'dashboard' | 'settings' | 'auth' | 'compact';
 
 const surface = cn(
-	'flex w-full cursor-pointer items-center rounded-xl border border-black/[0.07] bg-white text-left text-[#1A1A1A] outline-none',
+	'flex w-full cursor-pointer items-center rounded-xl border border-black/[0.07] bg-white text-left text-espresso outline-none',
 	'transition-[border-color,box-shadow,background-color] duration-150 ease-out',
 	'hover:border-black/11',
 	'focus-visible:border-camel/38 focus-visible:ring-1 focus-visible:ring-camel/10',
@@ -27,7 +28,11 @@ const surface = cn(
 );
 
 const variantTrigger: Record<SelectVariant, string> = {
-	default: cn(surface, 'py-3 pl-4 pr-10', 'disabled:bg-[#F7F5F2] disabled:text-[#1A1A1A]/38'),
+	default: cn(surface, 'py-3 pl-4 pr-10', 'disabled:bg-cream disabled:text-espresso/38'),
+	dashboard: cn(
+		'flex w-full cursor-pointer items-center rounded-lg border-0 bg-dashboard-bg py-2 pl-3 pr-10 text-left text-espresso outline-none',
+		'transition focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-55',
+	),
 	settings: cn(surface, 'py-3 pl-4 pr-10 text-sm', 'focus-visible:ring-camel/12', 'disabled:opacity-55'),
 	auth: cn(
 		'flex w-full cursor-pointer items-center rounded-sm border border-stone-200/95 bg-white py-3 pl-4 pr-10 text-left font-light text-stone-900 outline-none transition duration-150 ease-out',
@@ -39,9 +44,10 @@ const variantTrigger: Record<SelectVariant, string> = {
 
 const chevronTone: Record<SelectVariant, string> = {
 	default: 'text-camel/40',
+	dashboard: 'text-dashboard-muted',
 	settings: 'text-camel/46',
 	auth: 'text-stone-400',
-	compact: 'text-[#1A1A1A]/30',
+	compact: 'text-espresso/30',
 };
 
 type Opt = { value: string; label: string; disabled?: boolean };
@@ -63,16 +69,24 @@ function readOptions(children: ReactNode): Opt[] {
 	return out;
 }
 
-const menu = cn(
-	'absolute left-0 right-0 top-[calc(100%+0.375rem)] z-50 max-h-[min(16rem,50vh)] overflow-auto rounded-xl border border-black/[0.08] bg-white py-1 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)]',
+const menuClassName = cn(
+	'max-h-[min(16rem,50vh)] overflow-auto rounded-xl bg-dashboard-panel py-1 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.18)]',
 );
 
 const row = cn(
-	'flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#1A1A1A] transition-colors',
-	'hover:bg-camel/[0.07] focus:bg-camel/[0.07] focus:outline-none',
+	'flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm text-espresso transition-colors',
+	'hover:bg-dashboard-row-hover focus:bg-dashboard-row-hover focus:outline-none',
 	'data-disabled:pointer-events-none data-disabled:opacity-40',
-	'data-active:bg-camel/[0.09]',
+	'data-active:bg-dashboard-accent/10',
 );
+
+type MenuPosition = {
+	top?: number;
+	bottom?: number;
+	left: number;
+	width: number;
+	maxHeight: number;
+};
 
 export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & { variant?: SelectVariant };
 
@@ -95,7 +109,10 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
 	const opts = useMemo(() => readOptions(children), [children]);
 	const [open, setOpen] = useState(false);
 	const [hi, setHi] = useState(0);
+	const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
 	const rootRef = useRef<HTMLDivElement>(null);
+	const triggerRef = useRef<HTMLButtonElement>(null);
+	const menuRef = useRef<HTMLUListElement>(null);
 	const isControlled = valueProp !== undefined;
 	const selected = isControlled ? String(valueProp) : undefined;
 	const [uncontrolled, setUncontrolled] = useState(defaultValue !== undefined ? String(defaultValue) : '');
@@ -114,10 +131,50 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
 		[isControlled, onChange, opts],
 	);
 
+	const updateMenuPosition = useCallback(() => {
+		const trigger = triggerRef.current;
+		if (!trigger) return;
+
+		const rect = trigger.getBoundingClientRect();
+		const gap = 6;
+		const preferredMax = Math.min(window.innerHeight * 0.4, 256);
+		const spaceBelow = window.innerHeight - rect.bottom - gap;
+		const spaceAbove = rect.top - gap;
+		const openUp = spaceBelow < 160 && spaceAbove > spaceBelow;
+		const maxHeight = Math.min(preferredMax, openUp ? spaceAbove : spaceBelow);
+
+		setMenuPosition({
+			left: rect.left,
+			width: rect.width,
+			maxHeight: Math.max(maxHeight, 120),
+			...(openUp
+				? { bottom: window.innerHeight - rect.top + gap }
+				: { top: rect.bottom + gap }),
+		});
+	}, []);
+
+	useEffect(() => {
+		if (!open) {
+			setMenuPosition(null);
+			return;
+		}
+
+		updateMenuPosition();
+		window.addEventListener('resize', updateMenuPosition);
+		window.addEventListener('scroll', updateMenuPosition, true);
+		return () => {
+			window.removeEventListener('resize', updateMenuPosition);
+			window.removeEventListener('scroll', updateMenuPosition, true);
+		};
+	}, [open, updateMenuPosition]);
+
 	useEffect(() => {
 		if (!open) return;
 		const close = (e: MouseEvent) => {
-			if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+			const target = e.target as Node;
+			if (rootRef.current?.contains(target)) return;
+			if (menuRef.current?.contains(target)) return;
+			setOpen(false);
 		};
 		document.addEventListener('mousedown', close);
 		return () => document.removeEventListener('mousedown', close);
@@ -168,8 +225,63 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
 		}
 	};
 
+	const setTriggerRef = (node: HTMLButtonElement | null) => {
+		triggerRef.current = node;
+		if (typeof ref === 'function') ref(node);
+		else if (ref) ref.current = node;
+	};
+
+	const menu =
+		open && menuPosition
+			? createPortal(
+					<ul
+						ref={menuRef}
+						id={listId}
+						role="listbox"
+						tabIndex={-1}
+						className={menuClassName}
+						style={{
+							position: 'fixed',
+							top: menuPosition.top,
+							bottom: menuPosition.bottom,
+							left: menuPosition.left,
+							width: menuPosition.width,
+							maxHeight: menuPosition.maxHeight,
+							zIndex: 10000,
+						}}
+					>
+						{opts.map((o, i) => {
+							const active = i === hi;
+							const sel = o.value === current;
+							return (
+								<li key={o.value} role="presentation">
+									<button
+										type="button"
+										role="option"
+										aria-selected={sel}
+										data-active={active ? '' : undefined}
+										data-disabled={o.disabled ? '' : undefined}
+										disabled={o.disabled}
+										id={`${uid}-opt-${i}`}
+										className={row}
+										onMouseEnter={() => !o.disabled && setHi(i)}
+										onClick={() => selectAt(i)}
+									>
+										<span className="min-w-0 flex-1 truncate">{o.label}</span>
+										{sel ? (
+											<Check className="h-3.5 w-3.5 shrink-0 text-dashboard-accent" strokeWidth={2} aria-hidden />
+										) : null}
+									</button>
+								</li>
+							);
+						})}
+					</ul>,
+					document.body,
+				)
+			: null;
+
 	return (
-		<div ref={rootRef} className={cn('relative isolate w-full', className)}>
+		<div ref={rootRef} className={cn('relative w-full', className)}>
 			<select
 				{...selectAttrs}
 				className="sr-only"
@@ -183,7 +295,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
 			</select>
 			<button
 				type="button"
-				ref={ref}
+				ref={setTriggerRef}
 				id={id}
 				disabled={disabled}
 				role="combobox"
@@ -218,33 +330,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
 					<ChevronDown className="h-full w-full shrink-0" strokeWidth={1.5} />
 				</span>
 			</button>
-			{open && (
-				<ul id={listId} role="listbox" tabIndex={-1} className={menu}>
-					{opts.map((o, i) => {
-						const active = i === hi;
-						const sel = o.value === current;
-						return (
-							<li key={o.value} role="presentation">
-								<button
-									type="button"
-									role="option"
-									aria-selected={sel}
-									data-active={active ? '' : undefined}
-									data-disabled={o.disabled ? '' : undefined}
-									disabled={o.disabled}
-									id={`${uid}-opt-${i}`}
-									className={row}
-									onMouseEnter={() => !o.disabled && setHi(i)}
-									onClick={() => selectAt(i)}
-								>
-									<span className="min-w-0 flex-1 truncate">{o.label}</span>
-									{sel && <Check className="h-3.5 w-3.5 shrink-0 text-camel" strokeWidth={2} aria-hidden />}
-								</button>
-							</li>
-						);
-					})}
-				</ul>
-			)}
+			{menu}
 		</div>
 	);
 });

@@ -118,9 +118,9 @@ export function HostServicesList() {
 
 	if (isLoading) {
 		return (
-			<div className="overflow-hidden rounded-2xl bg-white/80">
+			<div className="dashboard-panel overflow-hidden rounded-2xl">
 				{Array.from({ length: 3 }).map((_, index) => (
-					<div key={index} className="border-b border-black/5 px-5 py-5 md:px-8">
+					<div key={index} className="border-b border-dashboard-border px-5 py-5 md:px-8">
 						<Skeleton className="h-5 w-40 bg-black/10" />
 						<Skeleton className="mt-2 h-4 w-64 bg-black/10" />
 					</div>
@@ -132,7 +132,7 @@ export function HostServicesList() {
 	return (
 		<div className="space-y-4">
 			{showCreateForm ? (
-				<div className="rounded-2xl border border-black/8 bg-white/80 p-5 md:p-6">
+				<div className="dashboard-panel rounded-2xl p-5 md:p-6">
 					<p className="text-sm font-medium text-[#1A1A1A]">New service</p>
 					<div className="mt-4 grid gap-3 md:grid-cols-2">
 						<div className="space-y-1.5 md:col-span-2">
@@ -211,19 +211,19 @@ export function HostServicesList() {
 			)}
 
 			{sortedServices.length === 0 ? (
-				<div className="rounded-2xl bg-white/80 p-8 text-center">
+				<div className="dashboard-panel rounded-2xl p-8 text-center">
 					<p className="font-serif text-2xl">No services yet</p>
 					<p className="mt-2 text-sm text-[#1A1A1A]/60">
 						Create extras like wine, breakfast, or late checkout, then attach them to properties under Guest extras.
 					</p>
 				</div>
 			) : (
-				<div className="overflow-hidden rounded-2xl bg-white/80">
+				<div className="dashboard-panel overflow-hidden rounded-2xl">
 					{sortedServices.map((service) => {
 						const isEditing = editingId === service.id;
 
 						return (
-							<div key={service.id} className="border-b border-black/5 px-5 py-5 last:border-b-0 md:px-8 md:py-6">
+							<div key={service.id} className="border-b border-dashboard-border px-5 py-5 last:border-b-0 md:px-8 md:py-6">
 								{isEditing ? (
 									<div className="space-y-3">
 										<div className="grid gap-3 md:grid-cols-2">

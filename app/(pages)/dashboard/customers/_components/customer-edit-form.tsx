@@ -103,7 +103,7 @@ export function CustomerEditForm({
 	};
 
 	return (
-		<form className="rounded-2xl bg-white/80 px-5 py-6 sm:px-8 md:py-8" onSubmit={handleSubmit}>
+		<form className="dashboard-panel rounded-2xl px-5 py-6 sm:px-8 md:py-8" onSubmit={handleSubmit}>
 			<div className="grid gap-5 sm:grid-cols-2">
 				<Field label="First name">
 					<Input

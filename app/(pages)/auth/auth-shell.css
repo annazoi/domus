@@ -2,15 +2,27 @@
   color: var(--clay);
 }
 
-
 .login-page {
-  --clay: #b89775;
+  --clay: #6a6258;
+  --clay-hover: #565048;
+  --clay-ring: rgb(106 98 88 / 0.2);
+  --auth-ink: #2a2521;
+  --auth-muted: #6f6860;
+  --auth-on-accent: #fafaf8;
+  --auth-surface: #fffcf8;
+  --auth-border: #d8d0c4;
+  accent-color: var(--clay);
   min-height: 100svh;
-  background: oklch(0.97 0.008 85);
-  color: oklch(0.16 0.012 60);
+  background: var(--color-dashboard-bg);
+  color: var(--auth-ink);
   display: grid;
   grid-template-columns: 1fr;
   position: relative;
+}
+
+.login-page ::selection {
+  background: rgb(106 98 88 / 0.2);
+  color: var(--auth-ink);
 }
 
 .login-page::before {
@@ -88,7 +100,6 @@
   top: 2.5rem;
   left: 2.5rem;
   z-index: 2;
-
 }
 
 .login-quote {
@@ -143,7 +154,7 @@
 
 @media (max-width: 767px) {
   .login-card {
-    padding-top: 2rem;
+    padding-top: 0.5rem;
   }
 }
 
@@ -152,13 +163,14 @@
   font-weight: 300;
   font-size: clamp(2.5rem, 6vw, 3.75rem);
   margin-top: 0;
+  color: var(--auth-ink);
   animation: authFadeUp 0.8s 0.2s both;
 }
 
 .login-card .sub {
   margin-top: 0.75rem;
   font-size: 0.875rem;
-  color: oklch(0.45 0.01 80);
+  color: var(--auth-muted);
   animation: authFadeUp 0.8s 0.28s both;
 }
 
@@ -182,6 +194,7 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.12em;
+  color: var(--auth-muted);
 }
 
 .login-page .field input {
@@ -189,18 +202,41 @@
   height: 3rem;
   margin-top: 0.5rem;
   padding: 0 1rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--auth-border);
   border-radius: 0.375rem;
-  background: white;
+  background: var(--auth-surface);
+  color: var(--auth-ink);
+  caret-color: var(--auth-ink);
   font-size: 0.875rem;
   font-family: inherit;
   outline: none;
-  transition: all 0.2s;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.login-page .field input:focus {
+.login-page .field input:hover {
+  border-color: #c4b8a9;
+}
+
+.login-page .field input:focus,
+.login-page .field input:focus-visible,
+.login-page .field input:active {
+  outline: none;
   border-color: var(--clay);
-  box-shadow: 0 0 0 4px rgba(184, 151, 117, 0.18);
+  box-shadow: 0 0 0 4px var(--clay-ring);
+}
+
+.login-page .field input:-webkit-autofill,
+.login-page .field input:-webkit-autofill:hover,
+.login-page .field input:-webkit-autofill:focus,
+.login-page .field input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--auth-surface) inset !important;
+  box-shadow: 0 0 0 1000px var(--auth-surface) inset !important;
+  -webkit-text-fill-color: var(--auth-ink) !important;
+  caret-color: var(--auth-ink);
+  border-color: var(--clay);
+  transition: background-color 99999s ease-out;
 }
 
 .login-page .field-head {
@@ -214,8 +250,11 @@
   color: var(--clay);
 }
 
-.login-page .field-head a:hover {
+.login-page .field-head a:hover,
+.login-page .field-head a:focus-visible {
+  color: var(--clay-hover);
   text-decoration: underline;
+  outline: none;
 }
 
 .login-submit {
@@ -225,8 +264,8 @@
   gap: 0.5rem;
   height: 3rem;
   width: 100%;
-  background: oklch(0.16 0.012 60);
-  color: white;
+  background: var(--clay);
+  color: var(--auth-on-accent);
   border: none;
   border-radius: 0.375rem;
   font-size: 0.875rem;
@@ -237,7 +276,12 @@
 }
 
 .login-submit:hover:not(:disabled) {
-  background: var(--clay);
+  background: var(--clay-hover);
+}
+
+.login-submit:focus-visible {
+  outline: 2px solid var(--clay-hover);
+  outline-offset: 2px;
 }
 
 .login-submit:disabled {
@@ -259,16 +303,18 @@
   margin-top: 2.5rem;
   text-align: center;
   font-size: 0.875rem;
-  color: oklch(0.45 0.01 80);
+  color: var(--auth-muted);
 }
 
 .login-card .signup a {
   font-weight: 600;
-  color: oklch(0.16 0.012 60);
+  color: var(--clay);
 }
 
-.login-card .signup a:hover {
-  color: var(--clay);
+.login-card .signup a:hover,
+.login-card .signup a:focus-visible {
+  color: var(--clay-hover);
+  outline: none;
 }
 
 .login-mobile-header {
@@ -292,8 +338,8 @@
   background: linear-gradient(
     90deg,
     transparent,
-    oklch(0.84 0.014 75) 12%,
-    oklch(0.84 0.014 75) 88%,
+    var(--auth-border) 12%,
+    var(--auth-border) 88%,
     transparent
   );
 }
@@ -338,7 +384,7 @@
   margin-top: -0.25rem;
   font-size: 0.75rem;
   text-align: center;
-  color: oklch(0.55 0.01 80);
+  color: var(--auth-muted);
   line-height: 1.4;
 }
 

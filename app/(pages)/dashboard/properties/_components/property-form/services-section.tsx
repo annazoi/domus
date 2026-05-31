@@ -106,7 +106,7 @@ export function ServicesSection({ initialProperty, propertyId: propertyIdProp }:
 										'flex h-auto w-full flex-col items-start rounded-xl border p-4 text-left transition cursor-pointer',
 										selected
 											? 'border-camel/40 bg-camel/5 hover:bg-camel/8'
-											: 'border-black/8 bg-white hover:border-black/15 hover:bg-black/[0.02]',
+											: 'border-dashboard-border/60 bg-dashboard-inset hover:border-dashboard-border hover:bg-dashboard-row-hover',
 									)}
 								>
 									<div className="flex w-full items-start justify-between gap-3">
@@ -119,7 +119,7 @@ export function ServicesSection({ initialProperty, propertyId: propertyIdProp }:
 										<span
 											className={cn(
 												'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition',
-												selected ? 'border-camel bg-camel text-white' : 'border-black/15 bg-white',
+												selected ? 'border-camel bg-camel text-white' : 'border-dashboard-border/70 bg-dashboard-surface',
 											)}
 										>
 											{selected ? <Check className="h-3.5 w-3.5" /> : null}

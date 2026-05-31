@@ -53,7 +53,7 @@ export function CustomerDetailView({
 				All customers
 			</Button>
 
-			<div className="rounded-2xl border border-black/[0.04] bg-white/80 px-5 py-6 sm:px-8 md:py-8">
+			<div className="dashboard-panel rounded-2xl px-5 py-6 sm:px-8 md:py-8">
 				<div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
 					<div className="min-w-0">
 						<p className="text-xs uppercase tracking-[0.2em] text-camel">Customer</p>
@@ -74,7 +74,7 @@ export function CustomerDetailView({
 				</div>
 
 				<nav
-					className="mt-8 flex gap-1 border-b border-black/5"
+					className="mt-8 flex gap-1 border-b border-dashboard-border"
 					role="tablist"
 					aria-label="Customer sections"
 				>

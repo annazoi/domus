@@ -118,7 +118,7 @@ function KazeBookingPanel({
 									booking.setStayRange(range);
 									if (range?.from && range?.to) void booking.checkAvailabilityForDates(range.from, range.to);
 								}}
-								disabled={listingPreview ? booking.dayDisabled : undefined}
+								disabled={propertyRef ? booking.dayDisabled : undefined}
 								numberOfMonths={1}
 								className={cn(
 									'w-full font-[family-name:var(--preview-kaze-body)]',
@@ -147,13 +147,23 @@ function KazeBookingPanel({
 									'[&_.rdp-day_button:hover:not(:disabled)]:bg-[#eef1f4]',
 								)}
 							/>
-							<button
-								type="button"
-								onClick={() => booking.setStayPickerOpen(false)}
-								className="cursor-pointer mt-3 w-full rounded-lg bg-[#1c2430] py-2.5 font-[family-name:var(--preview-kaze-body)] text-xs font-semibold uppercase tracking-widest text-[#fafbfc]"
-							>
-								Confirm
-							</button>
+							<div className="mt-3 flex gap-2">
+								<button
+									type="button"
+									onClick={booking.clearStayRange}
+									disabled={!booking.stayRange?.from && !booking.stayRange?.to}
+									className="cursor-pointer flex-1 rounded-lg border border-[#1c2430]/15 py-2.5 font-[family-name:var(--preview-kaze-body)] text-xs font-semibold uppercase tracking-widest text-[#1c2430]/55 transition hover:border-[#1c2430]/25 hover:text-[#1c2430] disabled:cursor-not-allowed disabled:opacity-40"
+								>
+									Clear
+								</button>
+								<button
+									type="button"
+									onClick={() => booking.setStayPickerOpen(false)}
+									className="cursor-pointer flex-1 rounded-lg bg-[#1c2430] py-2.5 font-[family-name:var(--preview-kaze-body)] text-xs font-semibold uppercase tracking-widest text-[#fafbfc]"
+								>
+									Confirm
+								</button>
+							</div>
 						</div>
 					) : null}
 				</div>

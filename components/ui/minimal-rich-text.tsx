@@ -14,12 +14,11 @@ type MinimalRichTextProps = {
 	value: string;
 	onChange: (html: string) => void;
 	placeholder?: string;
-	/** Tailwind min-height class */
 	editorMinHeight?: string;
 };
 
 const toolbarBtn =
-	'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#1A1A1A]/65 transition hover:bg-black/[0.04] hover:text-[#1A1A1A] disabled:opacity-30';
+	'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-dashboard-muted/90 transition hover:bg-dashboard-row-hover hover:text-espresso disabled:opacity-30';
 
 export function MinimalRichText({
 	id,
@@ -44,7 +43,7 @@ export function MinimalRichText({
 			attributes: {
 				...(id ? { id } : {}),
 				class: cn(
-					'max-w-none px-4 py-3 text-sm leading-relaxed text-[#1A1A1A] focus:outline-none minimal-rich-text-editor',
+					'minimal-rich-text-editor max-w-none bg-dashboard-surface px-4 py-3 text-sm leading-relaxed text-espresso focus:outline-none',
 					editorMinHeight,
 					'[&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5',
 					'[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5',
@@ -68,20 +67,20 @@ export function MinimalRichText({
 	return (
 		<div className="space-y-1.5">
 			{label ? (
-				<label htmlFor={id} className="text-sm font-medium text-[#1A1A1A]">
+				<label htmlFor={id} className="text-sm font-medium text-espresso">
 					{label}
 				</label>
 			) : null}
 			<div
 				data-rich-text-root
-				className="overflow-hidden rounded-xl border border-black/10 bg-white transition hover:border-camel/25 focus-within:border-camel/40 focus-within:ring-2 focus-within:ring-camel/12"
+				className="dashboard-field overflow-hidden rounded-xl"
 			>
 				{editor ? (
-					<div className="flex flex-wrap items-center gap-0.5 border-b border-black/[0.06] bg-[#fafaf8] px-2 py-1.5">
+					<div className="flex flex-wrap items-center gap-0.5 bg-dashboard-inset px-2 py-1.5">
 						<Button
 							type="button"
 							variant="custom"
-							className={cn(toolbarBtn, editor.isActive('bold') && 'bg-black/[0.06] text-[#1A1A1A]')}
+							className={cn(toolbarBtn, editor.isActive('bold') && 'bg-camel/12 text-espresso')}
 							onClick={() => editor.chain().focus().toggleBold().run()}
 							aria-label="Bold"
 						>
@@ -90,17 +89,17 @@ export function MinimalRichText({
 						<Button
 							type="button"
 							variant="custom"
-							className={cn(toolbarBtn, editor.isActive('italic') && 'bg-black/[0.06] text-[#1A1A1A]')}
+							className={cn(toolbarBtn, editor.isActive('italic') && 'bg-camel/12 text-espresso')}
 							onClick={() => editor.chain().focus().toggleItalic().run()}
 							aria-label="Italic"
 						>
 							<Italic className="h-4 w-4" strokeWidth={2} />
 						</Button>
-						<span className="mx-1 h-4 w-px bg-black/10" aria-hidden />
+						<span className="mx-1 h-4 w-px bg-black/8" aria-hidden />
 						<Button
 							type="button"
 							variant="custom"
-							className={cn(toolbarBtn, editor.isActive('bulletList') && 'bg-black/[0.06] text-[#1A1A1A]')}
+							className={cn(toolbarBtn, editor.isActive('bulletList') && 'bg-camel/12 text-espresso')}
 							onClick={() => editor.chain().focus().toggleBulletList().run()}
 							aria-label="Bullet list"
 						>
@@ -109,13 +108,13 @@ export function MinimalRichText({
 						<Button
 							type="button"
 							variant="custom"
-							className={cn(toolbarBtn, editor.isActive('orderedList') && 'bg-black/[0.06] text-[#1A1A1A]')}
+							className={cn(toolbarBtn, editor.isActive('orderedList') && 'bg-camel/12 text-espresso')}
 							onClick={() => editor.chain().focus().toggleOrderedList().run()}
 							aria-label="Numbered list"
 						>
 							<ListOrdered className="h-4 w-4" strokeWidth={2} />
 						</Button>
-						<span className="mx-1 h-4 w-px bg-black/10" aria-hidden />
+						<span className="mx-1 h-4 w-px bg-black/8" aria-hidden />
 						<Button
 							type="button"
 							variant="custom"

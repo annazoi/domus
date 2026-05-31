@@ -98,9 +98,9 @@ function MessagesContent() {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex min-h-[min(720px,calc(100vh-12rem))] flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm md:flex-row">
-				<aside className="flex max-h-[40vh] shrink-0 flex-col border-b border-black/5 md:max-h-none md:w-[300px] md:border-b-0 md:border-r">
-					<div className="flex items-center justify-between gap-2 border-b border-black/5 px-4 py-3">
+			<div className="dashboard-panel flex min-h-[min(720px,calc(100vh-12rem))] flex-col overflow-hidden rounded-2xl md:flex-row">
+				<aside className="flex max-h-[40vh] shrink-0 flex-col border-b border-dashboard-border md:max-h-none md:w-[300px] md:border-b-0 md:border-r">
+					<div className="flex items-center justify-between gap-2 border-b border-dashboard-border px-4 py-3">
 						<span className="text-xs font-medium uppercase tracking-wide text-[#1A1A1A]/45">
 							Conversations
 						</span>
@@ -136,7 +136,7 @@ function MessagesContent() {
 									type="button"
 									onClick={() => setActiveId(c.id)}
 									className={cn(
-										'flex w-full gap-3 border-b border-black/[0.03] px-4 py-3 text-left transition hover:bg-black/[0.02] cursor-pointer',
+										'flex w-full gap-3 border-b border-black/[0.03] px-4 py-3 text-left transition hover:bg-dashboard-row-hover cursor-pointer',
 										c.id === activeConversationId && 'bg-camel/8',
 									)}
 								>
@@ -170,7 +170,7 @@ function MessagesContent() {
 						</div>
 					) : (
 						<>
-							<header className="flex items-center gap-3 border-b border-black/5 px-4 py-3">
+							<header className="flex items-center gap-3 border-b border-dashboard-border px-4 py-3">
 								<span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-camel/15 text-[10px] font-semibold text-camel">
 									{initials(active.other_user_name)}
 								</span>
@@ -194,7 +194,7 @@ function MessagesContent() {
 												'max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
 												m.is_mine
 													? 'rounded-br-md bg-camel text-white'
-													: 'rounded-bl-md bg-black/[0.05] text-[#1A1A1A]',
+													: 'rounded-bl-md bg-dashboard-inset text-espresso',
 											)}
 										>
 											{m.body}

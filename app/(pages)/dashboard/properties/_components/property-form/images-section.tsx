@@ -246,7 +246,7 @@ export function ImagesSection({
 							{staged.map((item) => (
 								<div
 									key={item.id}
-									className="overflow-hidden rounded-xl border border-black/10 bg-white shadow-sm shadow-black/5"
+									className="overflow-hidden rounded-xl border border-dashboard-border/60 bg-dashboard-inset shadow-sm shadow-black/5"
 								>
 									<div className="relative aspect-[4/3] bg-black/5">
 										<img
@@ -257,7 +257,7 @@ export function ImagesSection({
 										<Button
 											type="button"
 											variant="ghostIcon"
-											className="absolute right-2 top-2 h-9 w-9 rounded-full bg-white/90 text-[#1A1A1A] shadow-sm"
+											className="absolute right-2 top-2 h-9 w-9 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm"
 											onClick={() => removeStaged(item.id)}
 											aria-label="Remove from upload queue"
 										>
@@ -391,7 +391,7 @@ function ImageTile({
 				/>
 				<div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 opacity-80" />
 				{image.is_cover ? (
-					<span className="absolute bottom-4 left-4 rounded-full bg-white/90 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#1A1A1A]">
+					<span className="absolute bottom-4 left-4 rounded-full bg-dashboard-surface/95 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-espresso">
 						Hero asset
 					</span>
 				) : null}
@@ -399,7 +399,7 @@ function ImageTile({
 					<Button
 						type="button"
 						variant="ghostIcon"
-						className="h-9 w-9 rounded-full bg-white/90 text-[#1A1A1A] shadow-sm hover:bg-white"
+						className="h-9 w-9 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm hover:bg-dashboard-surface"
 						onClick={() => imageUrl && window.open(imageUrl, '_blank', 'noopener,noreferrer')}
 						aria-label="Open full size"
 					>
@@ -408,7 +408,7 @@ function ImageTile({
 					<Button
 						type="button"
 						variant="ghostIcon"
-						className="h-9 w-9 rounded-full bg-white/90 text-[#1A1A1A] shadow-sm hover:bg-white"
+						className="h-9 w-9 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm hover:bg-dashboard-surface"
 						onClick={() => onDelete(image.id)}
 						aria-label="Remove image"
 					>
@@ -420,7 +420,7 @@ function ImageTile({
 						<Button
 							type="button"
 							variant="secondary"
-							className="rounded-full border-white/30 bg-white/90 px-3 py-1.5 text-xs"
+							className="rounded-full border-dashboard-border/40 bg-dashboard-surface/95 px-3 py-1.5 text-xs"
 							onClick={() => onSetCover(image.id)}
 						>
 							Set as hero

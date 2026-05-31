@@ -10,7 +10,7 @@ import {
 } from '@/config/constants/dropdowns/amenities.options';
 import { useSavePropertyAmenities } from '@/features/property-amenities/hooks/use-property-amenities';
 import type { Property } from '@/features/property/interfaces/property.interface';
-import { PropertyFormSection } from './property-form-section';
+import { PropertyFormSection, dashboardFormFields } from './property-form-section';
 import { amenitiesFormSchema } from './schemas';
 
 type AmenitiesSectionProps = {
@@ -175,7 +175,7 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 				<label htmlFor="amenities-search" className="mb-1.5 block text-sm font-medium text-[#1A1A1A]">
 					Search amenities
 				</label>
-				<div className="flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2">
+				<div className="flex items-center gap-2 rounded-xl border border-dashboard-border/60 bg-dashboard-surface px-3 py-2">
 					<Search className="h-4 w-4 text-[#1A1A1A]/45" aria-hidden="true" />
 					<Input
 						id="amenities-search"
@@ -267,7 +267,7 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 
 			{editingValue ? (
 				<div
-					className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+					className="fixed inset-0 z-50 flex items-center justify-center p-4"
 					role="dialog"
 					aria-modal="true"
 					aria-labelledby="amenity-edit-title"
@@ -279,27 +279,35 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 						setEditingValue(null);
 					}}
 				>
+					<div className="absolute inset-0 bg-black/45 backdrop-blur-[2px]" aria-hidden />
 					<div
-						className="w-full max-w-md rounded-xl border border-black/10 bg-white p-5 shadow-xl"
+						className={cn(
+							'relative z-10 w-full max-w-md rounded-2xl bg-dashboard-panel p-6 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.35)]',
+							dashboardFormFields,
+						)}
 						onClick={(e) => e.stopPropagation()}
 					>
-						<h3 id="amenity-edit-title" className="font-serif text-lg text-[#1A1A1A]">
+						<h3 id="amenity-edit-title" className="font-serif text-lg text-espresso">
 							{editingLabel}
 						</h3>
-						<p className="mt-1 text-xs text-[#1A1A1A]/55">Optional note stored with this amenity.</p>
-						<Textarea
-							value={draftDescription}
-							onChange={(e) => setDraftDescription(e.target.value)}
-							placeholder="Description…"
-							rows={4}
-							className="mt-3 min-h-[100px] text-sm"
-						/>
-						<div className="mt-1 flex items-center justify-between text-xs text-[#1A1A1A]/55">
+						<p className="mt-1 text-xs text-dashboard-muted">Optional note stored with this amenity.</p>
+						<div className="mt-3 rounded-lg bg-dashboard-bg px-3 py-2">
+							<Textarea
+								value={draftDescription}
+								onChange={(e) => setDraftDescription(e.target.value)}
+								placeholder="Description…"
+								rows={4}
+								className="min-h-[100px] border-0 bg-transparent px-0 py-1 text-sm shadow-none focus:ring-0"
+							/>
+						</div>
+						<div className="mt-1 flex items-center justify-between text-xs text-dashboard-muted">
 							<span>{isDescriptionDirty ? 'Typing changes...' : 'Saved value'}</span>
 							<span>{draftDescription.trim().length} chars</span>
 						</div>
 						<div className="mt-3">
-							<label className="mb-1 block text-xs font-medium text-[#1A1A1A]">Quantity</label>
+							<label className="mb-1.5 block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">
+								Quantity
+							</label>
 							<Input
 								type="number"
 								min={1}
@@ -308,17 +316,19 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 								onChange={(e) => setDraftQuantity(e.target.value)}
 								placeholder="e.g. 2"
 							/>
-							<div className="mt-1 text-xs text-[#1A1A1A]/55">
+							<div className="mt-1 text-xs text-dashboard-muted">
 								{isQuantityDirty ? 'Quantity changed' : 'Saved quantity'}
 							</div>
 						</div>
 						<div className="mt-3 space-y-2">
 							<div className="flex items-center justify-between">
-								<label className="block text-xs font-medium text-[#1A1A1A]">Amenity photo</label>
-								<span className="text-xs text-[#1A1A1A]/55">{isImageDirty ? 'Photo changed' : 'Saved photo'}</span>
+								<label className="text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">
+									Amenity photo
+								</label>
+								<span className="text-xs text-dashboard-muted">{isImageDirty ? 'Photo changed' : 'Saved photo'}</span>
 							</div>
 							{editingImagePreview ? (
-								<div className="relative overflow-hidden rounded-lg border border-black/10">
+								<div className="relative overflow-hidden rounded-lg bg-dashboard-bg">
 									<img src={editingImagePreview} alt="" className="h-32 w-full object-cover" />
 									<button
 										type="button"
@@ -330,7 +340,7 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 											}
 											setDraftImageFile(null);
 										}}
-										className="absolute right-2 top-2 rounded-full bg-black/70 p-1 text-white"
+										className="absolute right-2 top-2 rounded-full bg-espresso/80 p-1 text-dashboard-surface"
 										aria-label="Remove amenity photo"
 									>
 										<X className="h-3.5 w-3.5" />
@@ -349,7 +359,7 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 								}}
 							/>
 						</div>
-						<div className="mt-4 flex justify-end gap-2">
+						<div className="mt-5 flex justify-end gap-2">
 							<Button
 								type="button"
 								variant="secondary"

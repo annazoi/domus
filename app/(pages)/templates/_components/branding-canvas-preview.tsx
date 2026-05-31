@@ -105,16 +105,26 @@ function HikariBookingPanel({
 								booking.setStayRange(range);
 								if (range?.from && range?.to) void booking.checkAvailabilityForDates(range.from, range.to);
 							}}
-							disabled={listingPreview ? booking.dayDisabled : undefined}
+							disabled={propertyRef ? booking.dayDisabled : undefined}
 							numberOfMonths={1}
 						/>
-						<button
-							type="button"
-							onClick={() => booking.setStayPickerOpen(false)}
-							className="cursor-pointer mt-2 w-full border-t border-[#0a0a0a]/10 py-2 font-[family-name:var(--preview-hikari-body)] text-xs uppercase tracking-widest"
-						>
-							Apply
-						</button>
+						<div className="mt-2 flex gap-2 border-t border-[#0a0a0a]/10 pt-2">
+							<button
+								type="button"
+								onClick={booking.clearStayRange}
+								disabled={!booking.stayRange?.from && !booking.stayRange?.to}
+								className="cursor-pointer flex-1 py-2 font-[family-name:var(--preview-hikari-body)] text-xs uppercase tracking-widest text-[#0a0a0a]/45 transition hover:text-[#0a0a0a] disabled:cursor-not-allowed disabled:opacity-40"
+							>
+								Clear
+							</button>
+							<button
+								type="button"
+								onClick={() => booking.setStayPickerOpen(false)}
+								className="cursor-pointer flex-1 py-2 font-[family-name:var(--preview-hikari-body)] text-xs uppercase tracking-widest text-[#0a0a0a]"
+							>
+								Apply
+							</button>
+						</div>
 					</div>
 				) : null}
 			</div>

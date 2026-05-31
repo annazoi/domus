@@ -3,7 +3,7 @@ import { Button, Input } from '@/components/ui';
 const fields = [
 	{ label: 'Profile name', placeholder: 'Zoian A.' },
 	{ label: 'Business email', placeholder: 'host@domus.com' },
-	{ label: 'Brand color', placeholder: '#b89775' },
+	{ label: 'Brand color', placeholder: '#9a8570' },
 	{ label: 'Domain', placeholder: 'stays.yourbrand.com' },
 	{ label: 'Payout account', placeholder: '•••• 8743' },
 ];
@@ -16,7 +16,7 @@ export default function SettingsPage() {
 				<h1 className="mt-2 font-serif text-4xl tracking-tight">Account and brand controls</h1>
 			</div>
 
-			<form className="space-y-5 rounded-2xl bg-white/80 p-6">
+			<form className="space-y-5 dashboard-panel rounded-2xl p-6">
 				{fields.map((field) => (
 					<label key={field.label} className="block space-y-2">
 						<span className="text-sm text-[#1A1A1A]/65">{field.label}</span>

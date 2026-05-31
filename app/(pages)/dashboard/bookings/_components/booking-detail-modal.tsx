@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Home, Mail, MessageCircle, Phone, Users, X } from 'lucide-react';
-import { Button, DatePickerField, Input, Select, Textarea, useToast } from '@/components/ui';
+import { Button, DatePickerField, Input, Select, Textarea, cn, useToast } from '@/components/ui';
 import { useUpdateBooking } from '@/features/bookings/hooks/use-bookings';
 import { BookingStatus } from '@/features/bookings/interfaces/booking-status';
 import type { HostBookingDetail, UpdateHostBookingInput } from '@/features/bookings/interfaces/booking.interface';
@@ -47,61 +47,76 @@ function formatBookingRef(id: string) {
 
 function statusStyles(status: BookingStatus) {
 	if (status === BookingStatus.CONFIRMED) {
-		return 'border-camel/20 bg-camel/10 text-camel-dark';
+		return 'bg-camel/12 text-camel-dark';
 	}
 	if (status === BookingStatus.CANCELLED) {
-		return 'border-black/8 bg-black/[0.04] text-[#1A1A1A]/45 line-through decoration-[#1A1A1A]/25';
+		return 'bg-dashboard-bg text-dashboard-muted line-through decoration-dashboard-muted/40';
 	}
-	return 'border-camel/15 bg-cream text-camel-deep';
+	return 'bg-dashboard-surface text-dashboard-muted';
 }
 
 function StatusBadge({ status }: { status: BookingStatus }) {
 	return (
 		<span
-			className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium capitalize tracking-wide ${statusStyles(status)}`}
+			className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium capitalize tracking-wide ${statusStyles(status)}`}
 		>
 			{status}
 		</span>
 	);
 }
 
-function Panel({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, children, className }: { title: string; children: ReactNode; className?: string }) {
 	return (
-		<section className="overflow-hidden rounded-2xl border border-black/[0.05] bg-white/60">
-			<div className="border-b border-black/[0.05] px-5 py-4 md:px-6">
-				<h4 className="font-serif text-xl tracking-tight text-[#1A1A1A]">{title}</h4>
-			</div>
-			<div className="space-y-0 px-5 py-4 md:px-6">{children}</div>
+		<section className={cn('space-y-3', className)}>
+			<h4 className="font-serif text-lg tracking-tight text-espresso">{title}</h4>
+			{children}
 		</section>
 	);
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function FieldGroup({ children, className }: { children: ReactNode; className?: string }) {
+	return <div className={cn('grid gap-3 sm:grid-cols-2', className)}>{children}</div>;
+}
+
+function Field({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
 	return (
-		<label className="block min-w-0">
-			<span className="text-xs font-medium uppercase tracking-wide text-[#1A1A1A]/45">{label}</span>
-			<div className="mt-1.5 min-w-0">{children}</div>
+		<label className={cn('block min-w-0', className)}>
+			<span className="text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">{label}</span>
+			<div className="mt-1.5 min-w-0 rounded-lg bg-dashboard-bg px-3 py-2">{children}</div>
 		</label>
 	);
 }
 
-function formatMoney(value: number) {
-	return `$${value.toFixed(2)}`;
-}
-
-function ReadOnlyRow({ icon, label, value }: { icon: ReactNode; label: string; value: string | null | undefined }) {
+function MetaRow({ icon, label, value }: { icon: ReactNode; label: string; value: string | null | undefined }) {
 	const display = value?.trim() ? value : '—';
 	return (
-		<div className="flex gap-3 border-b border-black/[0.05] py-4 last:border-b-0">
-			<div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/[0.03] text-[#1A1A1A]/45">
-				{icon}
-			</div>
+		<div className="flex gap-3 rounded-lg bg-dashboard-bg px-3 py-2.5">
+			<span className="mt-0.5 text-dashboard-muted">{icon}</span>
 			<div className="min-w-0 flex-1">
-				<p className="text-[10px] uppercase tracking-[0.14em] text-[#1A1A1A]/40">{label}</p>
-				<p className="mt-1 break-words text-base leading-snug text-[#1A1A1A]">{display}</p>
+				<p className="text-[10px] uppercase tracking-[0.14em] text-dashboard-muted">{label}</p>
+				<p className="mt-0.5 break-words text-sm leading-snug text-espresso">{display}</p>
 			</div>
 		</div>
 	);
+}
+
+const modalFields = cn(
+	'[&_input.border]:w-full [&_input.border]:border-0 [&_input.border]:bg-transparent [&_input.border]:px-0 [&_input.border]:py-1',
+	'[&_input.border]:text-espresso [&_input.border]:placeholder:text-dashboard-muted/50',
+	'[&_input.border]:focus:ring-0 [&_input.border]:rounded-none',
+	'[&_textarea]:w-full [&_textarea]:border-0 [&_textarea]:bg-transparent [&_textarea]:px-0 [&_textarea]:py-1',
+	'[&_textarea]:text-espresso [&_textarea]:placeholder:text-dashboard-muted/50 [&_textarea]:focus:ring-0',
+	'[&_button[role=combobox]]:w-full [&_button[role=combobox]]:border-0 [&_button[role=combobox]]:bg-transparent',
+	'[&_button[role=combobox]]:px-0 [&_button[role=combobox]]:py-1 [&_button[role=combobox]]:shadow-none',
+	'[&_button[role=combobox]]:focus-visible:ring-0',
+	'[&_.domus-date-picker-field_button]:w-full [&_.domus-date-picker-field_button]:border-0',
+	'[&_.domus-date-picker-field_button]:bg-transparent [&_.domus-date-picker-field_button]:px-0',
+	'[&_.domus-date-picker-field_button]:py-1 [&_.domus-date-picker-field_button]:text-espresso',
+	'[&_.domus-date-picker-field_button]:shadow-none [&_.domus-date-picker-field_button]:focus-visible:ring-0',
+);
+
+function formatMoney(value: number) {
+	return `$${value.toFixed(2)}`;
 }
 
 function toFormState(booking: HostBookingDetail): BookingFormState {
@@ -256,48 +271,53 @@ export function BookingDetailModal({
 						role="dialog"
 						aria-modal
 						aria-labelledby="booking-detail-title"
-						className="relative z-10 flex max-h-[min(90vh,820px)] w-full max-w-[min(100vw-2rem,28rem)] flex-col overflow-hidden rounded-2xl border border-black/10 bg-cream shadow-xl sm:max-w-2xl md:max-w-3xl lg:min-w-[64rem] lg:max-w-[min(100vw-2rem,64rem)]"
+						className="relative z-10 flex max-h-[min(92vh,860px)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-dashboard-panel shadow-[0_24px_80px_-24px_rgba(0,0,0,0.35)] lg:max-w-5xl"
 						initial={{ opacity: 0, scale: 0.96, y: 10 }}
 						animate={{ opacity: 1, scale: 1, y: 0 }}
 						exit={{ opacity: 0, scale: 0.96, y: 10 }}
 						transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
 						onClick={(event) => event.stopPropagation()}
 					>
-						<div className="relative shrink-0 overflow-hidden border-b border-black/[0.06] px-5 py-6 sm:px-8">
-							<div
-								className="pointer-events-none absolute inset-0"
-								style={{
-									backgroundImage:
-										'linear-gradient(135deg, color-mix(in srgb, var(--color-camel) 14%, transparent), transparent 48%), radial-gradient(circle at 92% 8%, color-mix(in srgb, var(--color-camel) 18%, transparent), transparent 42%)',
-								}}
-							/>
-							<div className="relative flex items-start justify-between gap-4">
+						<div className="shrink-0 px-6 pb-4 pt-6 sm:px-8">
+							<div className="flex items-start justify-between gap-4">
 								<div className="min-w-0 flex-1">
-									<div className="flex flex-wrap items-center gap-3">
-										<p className="text-xs uppercase tracking-[0.2em] text-camel">Booking</p>
+									<div className="flex flex-wrap items-center gap-2.5">
+										<p className="text-[10px] uppercase tracking-[0.18em] text-camel">Booking</p>
 										<StatusBadge status={form.status} />
 									</div>
 									<h3
 										id="booking-detail-title"
-										className="mt-3 break-words font-serif text-3xl tracking-tight text-[#1A1A1A] md:text-4xl"
+										className="mt-2 break-words font-serif text-2xl tracking-tight text-espresso sm:text-3xl"
 									>
 										{displayName}
 									</h3>
-									<p className="mt-2 text-sm text-[#1A1A1A]/55">
-										Ref {formatBookingRef(booking.id)} · Booked {formatWhen(booking.created_at)}
+									<p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-dashboard-muted">
+										<Link
+											href={`/${encodeURIComponent(booking.property.slug)}`}
+											target="_blank"
+											rel="noopener noreferrer"
+											className="inline-flex items-center gap-1.5 text-espresso transition hover:text-camel-dark"
+										>
+											<Home className="h-3.5 w-3.5 shrink-0 text-camel" aria-hidden />
+											{booking.property_title}
+										</Link>
+										<span aria-hidden>·</span>
+										<span>Ref {formatBookingRef(booking.id)}</span>
+										<span aria-hidden>·</span>
+										<span>{formatWhen(booking.created_at)}</span>
 									</p>
 								</div>
-								<div className="flex shrink-0 items-center gap-2">
-									<Button
+								<div className="flex shrink-0 items-center gap-1">
+									{/* <Button
 										type="button"
 										variant="ghostPill"
-										className="gap-2 px-3 py-2 text-sm flex items-center"
+										className="flex items-center gap-2 px-3 py-2 text-sm"
 										onClick={openMessages}
 										disabled={createConversation.isPending}
 									>
 										<MessageCircle className="h-4 w-4" />
 										Message
-									</Button>
+									</Button> */}
 									<Button type="button" variant="ghostPill" className="shrink-0 p-2" onClick={onClose} aria-label="Close">
 										<X className="h-5 w-5" />
 									</Button>
@@ -305,68 +325,51 @@ export function BookingDetailModal({
 							</div>
 						</div>
 
-						<form className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-8 md:py-7" onSubmit={handleSubmit}>
-							<Link
-								href={`/${encodeURIComponent(booking.property.slug)}`}
-								target="_blank"
-								rel="noopener noreferrer"
-								className="group mb-6 flex items-center gap-3 rounded-2xl border border-black/[0.05] bg-white/60 px-5 py-4 transition hover:border-camel/20 hover:bg-white/80"
-							>
-								<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-camel/10 text-camel-dark">
-									<Home className="h-4 w-4" />
-								</div>
-								<div className="min-w-0">
-									<p className="text-[10px] uppercase tracking-[0.16em] text-[#1A1A1A]/45">Property</p>
-									<p className="mt-1 break-words font-serif text-xl tracking-tight text-[#1A1A1A] transition group-hover:text-camel-dark">
-										{booking.property_title}
-									</p>
-								</div>
-							</Link>
-
-							<div className="grid gap-5 lg:grid-cols-2">
-								<Panel title="Stay details">
-									<div className="grid gap-4 sm:grid-cols-2">
-										<Field label="Check-in">
-											<DatePickerField
-												value={form.start_date}
-												onChange={(value) => setField('start_date', value)}
-												placeholder="Check-in date"
-												required
-											/>
-										</Field>
-										<Field label="Check-out">
-											<DatePickerField
-												value={form.end_date}
-												onChange={(value) => setField('end_date', value)}
-												placeholder="Check-out date"
-												minDate={form.start_date}
-												required
-											/>
-										</Field>
-										<Field label="Guests">
-											<Input
-												type="number"
-												min={1}
-												step={1}
-												value={form.guests}
-												onChange={(event) => setField('guests', event.target.value)}
-												placeholder="2"
-												required
-											/>
-										</Field>
-										<Field label="Total price">
-											<Input
-												type="number"
-												min={0}
-												step="0.01"
-												value={form.total_price}
-												onChange={(event) => setField('total_price', event.target.value)}
-												placeholder="0.00"
-												required
-											/>
-										</Field>
-										<div className="sm:col-span-2">
-											<Field label="Status">
+						<form className={cn('flex min-h-0 flex-1 flex-col', modalFields)} onSubmit={handleSubmit}>
+							<div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 sm:px-8">
+								<div className="grid gap-8 lg:grid-cols-2">
+									<Section title="Stay details">
+										<FieldGroup>
+											<Field label="Check-in">
+												<DatePickerField
+													value={form.start_date}
+													onChange={(value) => setField('start_date', value)}
+													placeholder="Check-in date"
+													required
+												/>
+											</Field>
+											<Field label="Check-out">
+												<DatePickerField
+													value={form.end_date}
+													onChange={(value) => setField('end_date', value)}
+													placeholder="Check-out date"
+													minDate={form.start_date}
+													required
+												/>
+											</Field>
+											<Field label="Guests">
+												<Input
+													type="number"
+													min={1}
+													step={1}
+													value={form.guests}
+													onChange={(event) => setField('guests', event.target.value)}
+													placeholder="2"
+													required
+												/>
+											</Field>
+											<Field label="Total price">
+												<Input
+													type="number"
+													min={0}
+													step="0.01"
+													value={form.total_price}
+													onChange={(event) => setField('total_price', event.target.value)}
+													placeholder="0.00"
+													required
+												/>
+											</Field>
+											<Field label="Status" className="sm:col-span-2">
 												<Select
 													value={form.status}
 													onChange={(event) => setField('status', event.target.value as BookingStatus)}
@@ -376,57 +379,61 @@ export function BookingDetailModal({
 													<option value={BookingStatus.CANCELLED}>Cancelled</option>
 												</Select>
 											</Field>
+										</FieldGroup>
+									</Section>
+
+									<Section title="Guest account">
+										<div className="space-y-2">
+											<MetaRow
+												icon={<Users className="h-4 w-4" />}
+												label="Account name"
+												value={`${booking.guest.first_name} ${booking.guest.last_name}`.trim()}
+											/>
+											<MetaRow icon={<Mail className="h-4 w-4" />} label="Email" value={booking.guest.email} />
+											<MetaRow icon={<Phone className="h-4 w-4" />} label="Phone" value={booking.guest.phone} />
 										</div>
-									</div>
-								</Panel>
+									</Section>
+								</div>
 
 								{booking.service_orders.length > 0 ? (
-									<Panel title="Guest extras">
-										{booking.service_orders.map((order) => (
-											<div
-												key={order.id}
-												className="flex items-start justify-between gap-3 border-b border-black/[0.05] py-4 last:border-b-0"
-											>
-												<div className="min-w-0">
-													<p className="text-base leading-snug text-[#1A1A1A]">{order.name}</p>
-													<p className="mt-1 text-sm text-[#1A1A1A]/55">
-														{formatMoney(order.unit_price)} × {order.quantity}
-													</p>
+									<Section title="Guest extras" className="mt-8">
+										<div className="space-y-2">
+											{booking.service_orders.map((order) => (
+												<div
+													key={order.id}
+													className="flex items-start justify-between gap-3 rounded-lg bg-dashboard-bg px-3 py-2.5"
+												>
+														<div className="min-w-0">
+															<p className="text-sm leading-snug text-espresso">{order.name}</p>
+															<p className="mt-0.5 text-xs text-dashboard-muted">
+																{formatMoney(order.unit_price)} × {order.quantity}
+															</p>
+														</div>
+														<p className="shrink-0 text-sm text-camel-dark">{formatMoney(order.line_total)}</p>
+													</div>
+												))}
+											<div className="rounded-lg bg-dashboard-bg px-3 py-2.5 text-sm">
+												<div className="space-y-1.5">
+													<div className="flex justify-between gap-3 text-dashboard-muted">
+														<span>Stay</span>
+														<span>{formatMoney(stayTotal)}</span>
+													</div>
+													<div className="flex justify-between gap-3 text-dashboard-muted">
+														<span>Extras</span>
+														<span>{formatMoney(extrasTotal)}</span>
+													</div>
+													<div className="flex justify-between gap-3 font-medium text-espresso">
+														<span>Total</span>
+														<span>{formatMoney(booking.total_price)}</span>
+													</div>
 												</div>
-												<p className="shrink-0 text-sm font-medium text-camel">{formatMoney(order.line_total)}</p>
-											</div>
-										))}
-										<div className="mt-4 space-y-2 border-t border-black/[0.05] pt-4 text-sm">
-											<div className="flex justify-between gap-3 text-[#1A1A1A]/70">
-												<span>Stay</span>
-												<span>{formatMoney(stayTotal)}</span>
-											</div>
-											<div className="flex justify-between gap-3 text-[#1A1A1A]/70">
-												<span>Extras</span>
-												<span>{formatMoney(extrasTotal)}</span>
-											</div>
-											<div className="flex justify-between gap-3 font-medium text-[#1A1A1A]">
-												<span>Total</span>
-												<span>{formatMoney(booking.total_price)}</span>
 											</div>
 										</div>
-									</Panel>
+									</Section>
 								) : null}
 
-								<Panel title="Guest account">
-									<ReadOnlyRow
-										icon={<Users className="h-4 w-4" />}
-										label="Account name"
-										value={`${booking.guest.first_name} ${booking.guest.last_name}`.trim()}
-									/>
-									<ReadOnlyRow icon={<Mail className="h-4 w-4" />} label="Email" value={booking.guest.email} />
-									<ReadOnlyRow icon={<Phone className="h-4 w-4" />} label="Phone" value={booking.guest.phone} />
-								</Panel>
-							</div>
-
-							<div className="mt-5">
-								<Panel title="Booking profile">
-									<div className="grid gap-4 sm:grid-cols-2">
+								<Section title="Booking profile" className="mt-8">
+									<FieldGroup>
 										<Field label="First name">
 											<Input
 												value={form.first_name}
@@ -443,17 +450,15 @@ export function BookingDetailModal({
 												required
 											/>
 										</Field>
-										<div className="sm:col-span-2">
-											<Field label="Email">
-												<Input
-													type="email"
-													value={form.email}
-													onChange={(event) => setField('email', event.target.value)}
-													placeholder="guest@example.com"
-													required
-												/>
-											</Field>
-										</div>
+										<Field label="Email" className="sm:col-span-2">
+											<Input
+												type="email"
+												value={form.email}
+												onChange={(event) => setField('email', event.target.value)}
+												placeholder="guest@example.com"
+												required
+											/>
+										</Field>
 										<Field label="Phone">
 											<Input
 												value={form.phone}
@@ -468,15 +473,13 @@ export function BookingDetailModal({
 												placeholder="Optional"
 											/>
 										</Field>
-										<div className="sm:col-span-2">
-											<Field label="Address">
-												<Input
-													value={form.address}
-													onChange={(event) => setField('address', event.target.value)}
-													placeholder="Street address"
-												/>
-											</Field>
-										</div>
+										<Field label="Address" className="sm:col-span-2">
+											<Input
+												value={form.address}
+												onChange={(event) => setField('address', event.target.value)}
+												placeholder="Street address"
+											/>
+										</Field>
 										<Field label="City">
 											<Input
 												value={form.city}
@@ -505,20 +508,19 @@ export function BookingDetailModal({
 												placeholder="Country"
 											/>
 										</Field>
-										<div className="sm:col-span-2">
-											<Field label="Notes">
-												<Textarea
-													value={form.notes}
-													onChange={(event) => setField('notes', event.target.value)}
-													placeholder="Internal notes about this booking…"
-												/>
-											</Field>
-										</div>
-									</div>
-								</Panel>
+										<Field label="Notes" className="sm:col-span-2">
+											<Textarea
+												value={form.notes}
+												onChange={(event) => setField('notes', event.target.value)}
+												placeholder="Internal notes about this booking…"
+												className="min-h-24"
+											/>
+										</Field>
+									</FieldGroup>
+								</Section>
 							</div>
 
-							<div className="mt-6 flex flex-wrap justify-end gap-3 border-t border-black/5 pt-5">
+							<div className="flex shrink-0 flex-wrap justify-end gap-3 bg-dashboard-panel px-6 py-4 shadow-[0_-12px_32px_-20px_rgba(0,0,0,0.12)] sm:px-8">
 								<Button type="button" variant="secondary" onClick={onClose} disabled={saving}>
 									Close
 								</Button>

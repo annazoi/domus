@@ -58,7 +58,7 @@ export default function DashboardOverviewPage() {
 			<section className="space-y-5">
 				<h2 className="font-serif text-2xl">Recent activity</h2>
 				{loading ? (
-					<div className="divide-y divide-black/5 rounded-2xl bg-white/70">
+					<div className="dashboard-panel divide-y divide-dashboard-border rounded-2xl">
 						{Array.from({ length: 3 }).map((_, index) => (
 							<div key={index} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
 								<div className="space-y-2">
@@ -71,13 +71,13 @@ export default function DashboardOverviewPage() {
 					</div>
 				) : null}
 				{!loading && stats.recentBookings.length === 0 ? (
-					<div className="rounded-2xl bg-white/70 px-5 py-8 text-center">
+					<div className="dashboard-panel rounded-2xl px-5 py-8 text-center">
 						<p className="font-serif text-2xl">No bookings yet</p>
 						<p className="mt-2 text-sm text-[#1A1A1A]/55">Activity will show up when guests reserve your properties.</p>
 					</div>
 				) : null}
 				{!loading && stats.recentBookings.length > 0 ? (
-					<div className="divide-y divide-black/5 rounded-2xl bg-white/70">
+					<div className="dashboard-panel divide-y divide-dashboard-border rounded-2xl">
 						{stats.recentBookings.map((booking) => (
 							<div key={booking.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
 								<div>

@@ -61,7 +61,7 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 						<div
 							key={option.id}
 							className={cn(
-								'flex flex-col overflow-hidden rounded-2xl border bg-white/90 transition',
+								'flex flex-col overflow-hidden rounded-2xl border border-dashboard-border/60 bg-dashboard-inset transition',
 								active ? 'border-camel ring-2 ring-camel/25' : 'border-black/[0.06] hover:border-black/15',
 							)}
 						>

@@ -78,7 +78,7 @@ export default function CalendarPage() {
 			</div>
 
 			<div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-				<div className="rounded-2xl bg-white/80 p-5">
+				<div className="dashboard-panel rounded-2xl p-5">
 					<div className="mb-5 flex items-center justify-between gap-3">
 						<Button
 							type="button"
@@ -134,17 +134,17 @@ export default function CalendarPage() {
 										variant="custom"
 										onClick={() => setSelectedDate(cell.date)}
 										className={cn(
-											'relative h-14 rounded-xl border text-sm transition',
+											'relative h-14 rounded-xl border-0 text-sm transition',
 											isSelected
-												? 'border-camel bg-camel/15 text-camel-dark'
+												? 'bg-camel/15 text-camel-dark'
 												: activeCount > 0
-													? 'border-camel/25 bg-camel/10 text-camel-dark hover:border-camel/40'
+													? 'bg-camel/10 text-camel-dark hover:bg-camel/15'
 													: cancelledOnly
-														? 'border-black/10 bg-black/[0.03] text-[#1A1A1A]/45 line-through decoration-[#1A1A1A]/20'
+														? 'bg-dashboard-bg text-dashboard-muted/70 line-through decoration-dashboard-muted/25'
 														: cell.isPast
-															? 'border-black/5 bg-white/50 text-[#1A1A1A]/35 hover:border-black/10'
-															: 'border-black/5 bg-white text-[#1A1A1A]/70 hover:border-camel/30',
-											cell.isToday && !isSelected ? 'ring-1 ring-camel/30' : '',
+															? 'bg-dashboard-inset/80 text-dashboard-muted/60 hover:bg-dashboard-inset'
+															: 'bg-dashboard-inset text-dashboard-muted hover:bg-dashboard-surface',
+											cell.isToday && !isSelected ? 'bg-dashboard-surface' : '',
 										)}
 									>
 										<span>{cell.day}</span>
@@ -167,17 +167,17 @@ export default function CalendarPage() {
 
 					<div className="mt-5 flex flex-wrap gap-4 text-xs text-[#1A1A1A]/55">
 						<span className="inline-flex items-center gap-2">
-							<span className="h-3 w-3 rounded border border-camel/25 bg-camel/10" />
+							<span className="h-3 w-3 rounded bg-camel/10" />
 							Has bookings
 						</span>
 						<span className="inline-flex items-center gap-2">
-							<span className="h-3 w-3 rounded border border-black/10 ring-1 ring-camel/30" />
+							<span className="h-3 w-3 rounded bg-dashboard-surface" />
 							Today
 						</span>
 					</div>
 				</div>
 
-				<div className="space-y-4 rounded-2xl bg-white/80 p-5">
+				<div className="space-y-4 dashboard-panel rounded-2xl p-5">
 					<h2 className="font-serif text-2xl">Booking details</h2>
 					<p className="text-sm text-[#1A1A1A]/60">
 						{selectedDate
@@ -193,7 +193,7 @@ export default function CalendarPage() {
 					) : null}
 
 					{!isLoading && selectedDate && selectedDayBookings.length === 0 ? (
-						<p className="rounded-xl border border-black/5 bg-white/70 px-4 py-5 text-sm text-[#1A1A1A]/55">
+						<p className="dashboard-soft rounded-xl px-4 py-5 text-sm text-dashboard-muted">
 							No bookings on this date.
 						</p>
 					) : null}
@@ -213,10 +213,10 @@ export default function CalendarPage() {
 									variant="custom"
 									onClick={() => setSelectedBooking(booking)}
 									className={cn(
-										'flex h-auto w-full flex-col items-start gap-1 rounded-xl border px-4 py-3 text-left transition hover:border-camel/30 hover:bg-camel/[0.04]',
+										'flex h-auto w-full flex-col items-start gap-1 rounded-xl border-0 px-4 py-3 text-left transition hover:bg-dashboard-surface',
 										booking.status === BookingStatus.CANCELLED
-											? 'border-black/5 bg-black/[0.02] opacity-70'
-											: 'border-black/8 bg-white',
+											? 'bg-dashboard-bg/80 opacity-70'
+											: 'bg-dashboard-inset',
 									)}
 								>
 									<span className="font-medium text-[#1A1A1A]">{booking.guest_name}</span>
