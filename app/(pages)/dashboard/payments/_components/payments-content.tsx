@@ -8,7 +8,8 @@ import { useStripeConnectOnboarding, useStripeConnectStatus } from '@/features/s
 export default function PaymentsContent() {
 	const params = useSearchParams();
 	const { data: status, isLoading, isError, refetch } = useStripeConnectStatus();
-	const { mutate: startOnboarding, isPending } = useStripeConnectOnboarding();
+	const { mutate: startOnboarding, isPending, isError: onboardingFailed, error: onboardingError } =
+		useStripeConnectOnboarding();
 
 	useEffect(() => {
 		if (params.get('stripe') === 'return' || params.get('stripe') === 'refresh') {
@@ -52,6 +53,12 @@ export default function PaymentsContent() {
 							<span className="font-medium text-[#1A1A1A]">{status.payouts_enabled ? 'Yes' : 'No'}</span>
 						</div>
 					</div>
+				) : null}
+
+				{onboardingFailed ? (
+					<p className="text-sm text-red-600">
+						{onboardingError instanceof Error ? onboardingError.message : 'Could not start Stripe onboarding.'}
+					</p>
 				) : null}
 
 				{ready ? (

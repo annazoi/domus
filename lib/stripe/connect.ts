@@ -14,11 +14,17 @@ const emptyConnectStatus = (): StripeConnectStatus => ({
 	details_submitted: false,
 });
 
-function isMissingStripeConnectAccountError(error: unknown) {
-	if (!(error instanceof Stripe.errors.StripeInvalidRequestError)) {
+function isStaleStripeAccountError(error: unknown) {
+	if (!(error instanceof Stripe.errors.StripeError)) {
 		return false;
 	}
-	return error.code === 'resource_missing' || error.param === 'account';
+	if (error.code === 'resource_missing' || error.code === 'account_invalid') {
+		return true;
+	}
+	if (error instanceof Stripe.errors.StripeInvalidRequestError) {
+		return error.param === 'account';
+	}
+	return false;
 }
 
 function toStripeConnectError(error: unknown): StripeConnectError {
@@ -29,7 +35,7 @@ function toStripeConnectError(error: unknown): StripeConnectError {
 		return new StripeConnectError('Stripe is not configured on the server.', 'STRIPE_NOT_CONFIGURED');
 	}
 	if (error instanceof Stripe.errors.StripeError) {
-		return new StripeConnectError(error.message, 'STRIPE_API_ERROR');
+		return new StripeConnectError(error.message, 'STRIPE_API_ERROR', error.code);
 	}
 	if (error instanceof Error) {
 		return new StripeConnectError(error.message, 'STRIPE_API_ERROR');
@@ -82,12 +88,8 @@ export async function syncUserStripeAccountStatus(userId: string, accountId: str
 	try {
 		account = await stripe.accounts.retrieve(accountId);
 	} catch (error) {
-		if (isMissingStripeConnectAccountError(error)) {
+		if (isStaleStripeAccountError(error)) {
 			await clearUserStripeConnect(userId);
-			throw new StripeConnectError(
-				'Stripe account is no longer valid for this environment. Please connect again.',
-				'STRIPE_API_ERROR',
-			);
 		}
 		throw toStripeConnectError(error);
 	}
@@ -154,7 +156,7 @@ export async function getOrCreateExpressAccount(userId: string) {
 			await stripe.accounts.retrieve(user.stripe_account_id);
 			return user.stripe_account_id;
 		} catch (error) {
-			if (!isMissingStripeConnectAccountError(error)) {
+			if (!isStaleStripeAccountError(error)) {
 				throw toStripeConnectError(error);
 			}
 			await clearUserStripeConnect(userId);
@@ -210,10 +212,7 @@ export async function createOnboardingLink(userId: string, returnUrl: string, re
 
 	try {
 		await syncUserStripeAccountStatus(userId, accountId);
-	} catch (error) {
-		if (!(error instanceof StripeConnectError) || error.code !== 'STRIPE_API_ERROR') {
-			throw error;
-		}
+	} catch {
 	}
 
 	return {

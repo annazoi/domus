@@ -1,4 +1,11 @@
+import { environments } from '@/config/environments';
+
 export function getAppUrl(request?: Request) {
+	const configured = environments.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
+	if (configured && !configured.includes('localhost')) {
+		return configured;
+	}
+
 	if (request) {
 		const origin = request.headers.get('origin');
 		if (origin) return origin.replace(/\/$/, '');
@@ -8,5 +15,6 @@ export function getAppUrl(request?: Request) {
 			return `${protocol}://${host}`;
 		}
 	}
-	return 'http://localhost:3000';
+
+	return configured || 'http://localhost:3000';
 }
