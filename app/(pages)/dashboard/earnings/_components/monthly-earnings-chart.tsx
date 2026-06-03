@@ -53,7 +53,7 @@ function EarningsTooltip({ active, payload }: EarningsTooltipProps) {
 	const data = payload[0].payload;
 
 	return (
-		<div className="rounded-lg border border-camel/20 bg-white/95 px-3 py-2 shadow-sm backdrop-blur-sm">
+		<div className="rounded-lg border border-camel/20 bg-dashboard-inset px-3 py-2 shadow-sm">
 			<p className="text-[10px] uppercase tracking-[0.16em] text-[#1A1A1A]/45">{data.label}</p>
 			<p className="font-serif text-lg leading-none text-camel-dark">{data.revenueFormatted}</p>
 		</div>
@@ -76,14 +76,14 @@ export function MonthlyEarningsChart({ bars, loading = false }: MonthlyEarningsC
 
 	if (loading) {
 		return (
-			<div className="mt-8 rounded-xl border border-black/[0.04] bg-[#faf9f6]/60 p-4 md:p-6">
+			<div className="mt-8 rounded-xl border border-black/[0.04] bg-dashboard-bg/60 p-4 md:p-6">
 				<Skeleton className="h-[220px] w-full rounded-lg bg-black/8" />
 			</div>
 		);
 	}
 
 	return (
-		<div className="relative mt-8 overflow-hidden rounded-xl border border-black/[0.04] bg-linear-to-br from-[#faf9f6] via-white/90 to-camel/[0.06] p-4 md:p-6">
+		<div className="relative mt-8 overflow-hidden rounded-xl border border-black/[0.04] bg-linear-to-br from-dashboard-bg via-white/90 to-camel/[0.06] p-4 md:p-6">
 			<div
 				className="pointer-events-none absolute inset-0 opacity-[0.35]"
 				style={{
@@ -164,14 +164,14 @@ export function MonthlyEarningsChart({ bars, loading = false }: MonthlyEarningsC
 							strokeWidth={2.25}
 							dot={{
 								r: 4.5,
-								fill: '#fff',
+								fill: '#fafaf8',
 								stroke: CAMEL,
 								strokeWidth: 2,
 							}}
 							activeDot={{
 								r: 6,
 								fill: CAMEL,
-								stroke: '#fff',
+								stroke: '#fafaf8',
 								strokeWidth: 2.5,
 							}}
 							isAnimationActive
@@ -184,7 +184,7 @@ export function MonthlyEarningsChart({ bars, loading = false }: MonthlyEarningsC
 
 			{!hasRevenue ? (
 				<div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-					<p className="rounded-full border border-black/[0.06] bg-white/80 px-4 py-2 text-sm text-[#1A1A1A]/50 backdrop-blur-sm">
+					<p className="rounded-full border border-dashboard-border/60 bg-dashboard-inset px-4 py-2 text-sm text-dashboard-muted">
 						No revenue recorded this month yet
 					</p>
 				</div>

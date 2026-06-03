@@ -114,10 +114,10 @@ export function BasicInfoSection({
 	});
 
 	return (
-		<PropertyFormSection id="basic-info" title={hideSectionHeading ? undefined : 'Basic info'}>
-			<div className="flex flex-col gap-3 rounded-xl border border-black/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+		<PropertyFormSection id="basic-info" title={hideSectionHeading ? undefined : 'Basic info'} flat={hideSectionHeading}>
+			<div className="flex flex-col gap-3 rounded-lg bg-dashboard-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
 				<div className="min-w-0">
-					<p className="text-sm font-medium text-[#1A1A1A]">Listing status</p>
+					<p className="text-sm font-medium text-espresso">Listing status</p>
 					<div className="overflow-hidden">
 						<AnimatePresence mode="wait" initial={false}>
 							<motion.p
@@ -126,7 +126,7 @@ export function BasicInfoSection({
 								animate={{ opacity: 1, x: 0 }}
 								exit={{ opacity: 0, x: -12 }}
 								transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-								className="text-xs text-[#1A1A1A]/55"
+								className="text-xs text-dashboard-muted"
 							>
 								{isVisible ? 'Published: visible to guests.' : 'Draft: hidden from search and listings.'}
 							</motion.p>
@@ -141,13 +141,13 @@ export function BasicInfoSection({
 					aria-label={isVisible ? 'Published: click to unpublish' : 'Draft: click to publish'}
 					onClick={toggleIsVisible}
 					className={[
-						'relative inline-flex h-9 w-14 shrink-0 items-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1A1A]',
-						isVisible ? 'bg-emerald-600' : 'bg-black/15',
+						'relative inline-flex h-9 w-14 shrink-0 items-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dashboard-accent',
+						isVisible ? 'bg-emerald-600' : 'bg-dashboard-border',
 					].join(' ')}
 				>
 					<span
 						className={[
-							'ml-1 inline-block h-7 w-7 rounded-full bg-white shadow transition-transform',
+							'ml-1 inline-block h-7 w-7 rounded-full bg-dashboard-surface shadow transition-transform',
 							isVisible ? 'translate-x-5' : 'translate-x-0',
 						].join(' ')}
 					/>
@@ -155,7 +155,7 @@ export function BasicInfoSection({
 			</div>
 			<div className="grid gap-4 md:grid-cols-2">
 				<div className="space-y-1.5">
-					<label htmlFor="property-title" className="text-sm font-medium text-[#1A1A1A]">
+					<label htmlFor="property-title" className="text-sm font-medium text-espresso">
 						Title *
 					</label>
 					<Input
@@ -167,7 +167,7 @@ export function BasicInfoSection({
 				</div>
 				<div className="space-y-1.5">
 					<div className="flex items-center gap-1.5">
-						<label htmlFor="property-slug" className="text-sm font-medium text-[#1A1A1A]">
+						<label htmlFor="property-slug" className="text-sm font-medium text-espresso">
 							Slug *
 						</label>
 						<div className="group relative">
@@ -176,13 +176,13 @@ export function BasicInfoSection({
 								onClick={() => setSlugHelpOpen((prev) => !prev)}
 								onBlur={() => setSlugHelpOpen(false)}
 								aria-label="What is slug?"
-								className="flex h-4.5 w-4.5 items-center justify-center rounded-full border border-black/20 text-[10px] font-semibold text-[#1A1A1A]/70"
+								className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-dashboard-bg text-[10px] font-semibold text-dashboard-muted"
 							>
 								?
 							</button>
 							<div
 								className={[
-									'pointer-events-none absolute left-1/2 top-full z-20 mt-1 w-56 -translate-x-1/2 rounded-md bg-[#1A1A1A] px-2 py-1.5 text-[11px] text-white shadow-lg transition-opacity',
+									'pointer-events-none absolute left-1/2 top-full z-20 mt-1 w-56 -translate-x-1/2 rounded-md bg-espresso px-2 py-1.5 text-[11px] text-dashboard-surface shadow-lg transition-opacity',
 									slugHelpOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
 								].join(' ')}
 							>
@@ -198,12 +198,12 @@ export function BasicInfoSection({
 					{errors.slug?.message ? <p className="text-xs text-red-700">{errors.slug.message}</p> : null}
 				</div>
 				<div className="space-y-1.5">
-					<label htmlFor="property-type" className="text-sm font-medium text-[#1A1A1A]">
+					<label htmlFor="property-type" className="text-sm font-medium text-espresso">
 						Property type
 					</label>
 					<Select
 						id="property-type"
-						variant="default"
+						variant="dashboard"
 						{...register('property_type')}
 						value={selectedPropertyType}
 						onChange={handlePropertyTypeChange}
@@ -217,12 +217,12 @@ export function BasicInfoSection({
 					</Select>
 				</div>
 				<div className="space-y-1.5">
-					<label htmlFor="property-room-type" className="text-sm font-medium text-[#1A1A1A]">
+					<label htmlFor="property-room-type" className="text-sm font-medium text-espresso">
 						Room type
 					</label>
 					<Select
 						id="property-room-type"
-						variant="default"
+						variant="dashboard"
 						{...register('room_type')}
 						value={selectedRoomType}
 						onChange={handleRoomTypeChange}
@@ -234,12 +234,12 @@ export function BasicInfoSection({
 						))}
 					</Select>
 					{selectedRoomTypeOption ? (
-						<p className="text-xs text-[#1A1A1A]/55">{selectedRoomTypeOption.description}</p>
+						<p className="text-xs text-dashboard-muted">{selectedRoomTypeOption.description}</p>
 					) : null}
 				</div>
 			</div>
 
-			<div className="mt-2 flex justify-end border-t border-black/5 pt-5">
+			<div className="mt-2 flex justify-end pt-2">
 				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
 					{saving ? 'Saving...' : submitLabel}
 				</Button>

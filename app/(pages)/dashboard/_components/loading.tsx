@@ -2,9 +2,9 @@ import { Skeleton } from '@/components/ui';
 
 export default function DashboardLoading() {
 	return (
-		<div className="min-h-screen bg-[#F7F5F2] text-[#1A1A1A]">
+		<div className="min-h-screen bg-dashboard-bg text-espresso">
 			<div className="flex w-full">
-				<aside className="fixed inset-y-0 left-0 hidden w-[250px] border-r border-black/5 bg-[#F7F5F2] px-3 py-6 md:block">
+				<aside className="fixed inset-y-0 left-0 hidden w-[250px] border-r border-black/5 bg-dashboard-bg px-3 py-6 md:block">
 					<Skeleton className="mx-2 h-12 w-24 bg-black/10" />
 					<div className="mt-8 space-y-2">
 						{Array.from({ length: 7 }).map((_, index) => (

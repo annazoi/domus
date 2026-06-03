@@ -102,7 +102,7 @@ export function CustomerSearch({ customers, value, onChange, onSelectCustomer }:
 					}}
 					onKeyDown={handleKeyDown}
 					placeholder="Search by name, email, phone, or location…"
-					className="min-h-12 rounded-2xl border-black/[0.06] bg-white/80 py-3 pl-11 pr-11 text-base shadow-sm backdrop-blur-sm"
+					className="dashboard-panel min-h-12 rounded-2xl py-3 pl-11 pr-11 text-base"
 					autoComplete="off"
 					role="combobox"
 					aria-expanded={isOpen && searchEnabled}
@@ -117,7 +117,7 @@ export function CustomerSearch({ customers, value, onChange, onSelectCustomer }:
 							setIsOpen(false);
 							setActiveIndex(-1);
 						}}
-						className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-[#1A1A1A]/45 transition hover:bg-black/[0.04] hover:text-[#1A1A1A]"
+						className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-[#1A1A1A]/45 transition hover:bg-dashboard-row-hover hover:text-[#1A1A1A]"
 						aria-label="Clear search"
 					>
 						<X className="h-4 w-4" />
@@ -135,7 +135,7 @@ export function CustomerSearch({ customers, value, onChange, onSelectCustomer }:
 				<div
 					id={listboxId}
 					role="listbox"
-					className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-lg"
+					className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border border-dashboard-border/70 bg-dashboard-inset shadow-lg"
 				>
 					{suggestions.length === 0 ? (
 						<p className="px-4 py-3 text-sm text-[#1A1A1A]/45">No customers found.</p>
@@ -151,8 +151,8 @@ export function CustomerSearch({ customers, value, onChange, onSelectCustomer }:
 									aria-selected={activeIndex === index}
 									onMouseEnter={() => setActiveIndex(index)}
 									onClick={() => selectCustomer(customer)}
-									className={`flex w-full flex-col gap-0.5 border-b border-black/[0.04] px-4 py-3 text-left last:border-b-0 ${
-										activeIndex === index ? 'bg-camel/10' : 'hover:bg-black/[0.02]'
+									className={`flex w-full flex-col gap-0.5 border-b border-dashboard-border px-4 py-3 text-left last:border-b-0 ${
+										activeIndex === index ? 'bg-camel/10' : 'hover:bg-dashboard-row-hover'
 									}`}
 								>
 									<span className="font-medium text-[#1A1A1A]">{name}</span>

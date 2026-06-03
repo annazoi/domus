@@ -20,11 +20,11 @@ export default function BookingsPage() {
 			</div>
 
 			{loading ? (
-				<div className="overflow-hidden rounded-2xl bg-white/80">
+				<div className="dashboard-panel overflow-hidden rounded-2xl">
 					{Array.from({ length: 4 }).map((_, index) => (
 						<div
 							key={index}
-							className="flex flex-col gap-3 border-b border-black/5 px-5 py-5 md:flex-row md:flex-wrap md:items-center md:gap-x-8 md:px-8 lg:px-10"
+							className="flex flex-col gap-3 border-b border-dashboard-border px-5 py-5 md:flex-row md:flex-wrap md:items-center md:gap-x-8 md:px-8 lg:px-10"
 						>
 							<Skeleton className="h-5 w-36 bg-black/10 md:h-6" />
 							<Skeleton className="h-4 flex-1 min-w-[12rem] bg-black/10" />
@@ -35,20 +35,20 @@ export default function BookingsPage() {
 				</div>
 			) : null}
 			{!loading && bookings.length === 0 ? (
-				<div className="rounded-2xl bg-white/80 p-8 text-center">
+				<div className="dashboard-panel rounded-2xl p-8 text-center">
 					<p className="font-serif text-2xl">No bookings yet</p>
 					<p className="mt-2 text-sm text-[#1A1A1A]/60">Bookings will appear once guests reserve your properties.</p>
 				</div>
 			) : null}
 
 			{!loading && bookings.length > 0 ? (
-				<div className="overflow-hidden rounded-2xl bg-white/80">
+				<div className="dashboard-panel overflow-hidden rounded-2xl">
 					{bookings.map((booking) => (
 						<div
 							key={booking.id}
 							role="button"
 							tabIndex={0}
-							className="cursor-pointer flex w-full flex-col items-start gap-2 border-b border-black/5 px-5 py-5 text-left transition hover:bg-black/[0.02] last:border-b-0 md:flex-row md:flex-wrap md:items-baseline md:gap-x-8 md:gap-y-2 md:px-8 md:py-6 lg:gap-x-12 lg:px-10"
+							className="cursor-pointer flex w-full flex-col items-start gap-2 border-b border-dashboard-border px-5 py-5 text-left transition hover:bg-dashboard-row-hover last:border-b-0 md:flex-row md:flex-wrap md:items-baseline md:gap-x-8 md:gap-y-2 md:px-8 md:py-6 lg:gap-x-12 lg:px-10"
 							onClick={() => setSelected(booking)}
 							onKeyDown={(event) => {
 								if (event.key === 'Enter' || event.key === ' ') {

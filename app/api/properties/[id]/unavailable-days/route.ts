@@ -1,6 +1,7 @@
+import { BookingStatus } from '@prisma/client';
 import { DateTime } from 'luxon';
+import { eachDayInRange, toApiDate, toUtcDay } from '@/features/property-availability/utils/date';
 import { prisma } from '@/lib/prisma';
-import { toApiDate, toUtcDay } from '@/features/property-availability/utils/date';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
 	const { id } = await params;
@@ -28,7 +29,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 		return Response.json({ message: 'Invalid start or end.' }, { status: 400 });
 	}
 
-	const [blockedRows, availableRows] = await Promise.all([
+	const [blockedRows, availableRows, bookings] = await Promise.all([
 		prisma.propertyAvailability.findMany({
 			where: {
 				property_id: property.id,
@@ -49,6 +50,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 			select: { date: true },
 			orderBy: { date: 'asc' },
 		}),
+		prisma.booking.findMany({
+			where: {
+				property_id: property.id,
+				status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING] },
+				check_in: { lt: rangeEndExclusive.toJSDate() },
+				check_out: { gt: rangeStart.toJSDate() },
+			},
+			select: { check_in: true, check_out: true },
+		}),
 	]);
 
 	const unavailableUnique = new Set<string>();
@@ -59,6 +69,16 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 	const availableUnique = new Set<string>();
 	for (const row of availableRows) {
 		availableUnique.add(toApiDate(row.date.toISOString()));
+	}
+
+	for (const booking of bookings) {
+		const checkIn = DateTime.fromJSDate(booking.check_in, { zone: 'utc' }).startOf('day');
+		const checkOut = DateTime.fromJSDate(booking.check_out, { zone: 'utc' }).startOf('day');
+		for (const day of eachDayInRange(checkIn, checkOut)) {
+			const key = day.toFormat('yyyy-MM-dd');
+			unavailableUnique.add(key);
+			availableUnique.delete(key);
+		}
 	}
 
 	const unavailable_dates = [...unavailableUnique].sort();

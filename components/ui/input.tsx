@@ -8,7 +8,7 @@ export type InputVariant = 'default' | 'auth' | 'settings' | 'plain' | 'compact'
 const variantClasses: Record<InputVariant, string> = {
 	default:
 		'w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-[#1A1A1A] outline-none transition hover:border-camel/25 focus:border-camel/40 focus:ring-2 focus:ring-camel/12',
-	auth: 'w-full rounded-sm border border-stone-200 bg-white px-4 py-3 font-light text-stone-900 outline-none transition placeholder:text-stone-300 focus:border-stone-400 focus:ring-1 focus:ring-stone-400',
+	auth: 'w-full rounded-sm border border-dashboard-border bg-white px-4 py-3 font-light text-espresso outline-none transition placeholder:text-dashboard-muted/50 hover:border-camel/35 focus:border-camel focus:ring-4 focus:ring-camel/20 focus:outline-none',
 	settings:
 		'w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm text-[#1A1A1A] outline-none transition focus:border-camel/45 focus:ring-2 focus:ring-camel/15',
 	plain: 'w-full bg-transparent text-sm text-[#1A1A1A] outline-none placeholder:text-[#1A1A1A]/45',

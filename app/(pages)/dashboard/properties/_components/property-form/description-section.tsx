@@ -121,7 +121,7 @@ export function DescriptionSection({ initialProperty, propertyId: propertyIdProp
 					)}
 				/>
 			</div>
-			<div className="mt-2 flex justify-end border-t border-black/5 pt-5">
+			<div className="mt-2 flex justify-end pt-5">
 				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
 					{saving ? 'Saving...' : 'Save'}
 				</Button>

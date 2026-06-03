@@ -30,7 +30,7 @@ export default function SubscriptionPage() {
 					<div
 						key={plan.name}
 						className={[
-							'rounded-2xl bg-white/85 p-6',
+							'dashboard-panel rounded-2xl p-6',
 							plan.current ? 'ring-1 ring-camel/35' : 'ring-1 ring-black/5',
 						].join(' ')}
 					>

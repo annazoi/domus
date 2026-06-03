@@ -50,7 +50,7 @@ function CustomersPageContent() {
 			</div>
 
 			{customerId && isLoading ? (
-				<div className="space-y-4 rounded-2xl bg-white/80 px-5 py-6 sm:px-8">
+				<div className="space-y-4 dashboard-panel rounded-2xl px-5 py-6 sm:px-8">
 					<Skeleton className="h-5 w-32 bg-black/10" />
 					<Skeleton className="h-10 w-full max-w-md bg-black/10" />
 					<Skeleton className="h-48 w-full bg-black/10" />
@@ -58,7 +58,7 @@ function CustomersPageContent() {
 			) : null}
 
 			{customerId && !isLoading && !selected ? (
-				<div className="rounded-2xl bg-white/80 p-8 text-center">
+				<div className="dashboard-panel rounded-2xl p-8 text-center">
 					<p className="font-serif text-2xl">Customer not found</p>
 					<Button type="button" variant="ghostPill" onClick={handleBack} className="mt-4 text-sm text-camel">
 						Back to all customers
@@ -105,9 +105,9 @@ export default function CustomersPage() {
 						<p className="text-xs uppercase tracking-[0.2em] text-camel">Customers</p>
 						<h1 className="mt-2 font-serif text-4xl tracking-tight">Your guests</h1>
 					</div>
-					<div className="overflow-hidden rounded-2xl bg-white/80">
+					<div className="dashboard-panel overflow-hidden rounded-2xl">
 						{Array.from({ length: 4 }).map((_, index) => (
-							<div key={index} className="border-b border-black/5 px-5 py-5 md:px-8">
+							<div key={index} className="border-b border-dashboard-border px-5 py-5 md:px-8">
 								<Skeleton className="h-5 w-40 bg-black/10" />
 							</div>
 						))}

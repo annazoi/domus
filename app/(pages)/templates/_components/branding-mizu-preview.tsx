@@ -3,16 +3,14 @@
 import Image from 'next/image';
 import { Cormorant_Garamond, DM_Sans } from 'next/font/google';
 import { ChevronDown, Droplets, MapPin, Menu, Star } from 'lucide-react';
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { DayPicker, type DateRange } from 'react-day-picker';
+import { useMemo, useState } from 'react';
+import { DayPicker } from 'react-day-picker';
 import { BrandingPreviewMap } from '@/components/google-maps';
 import { cn, Input } from '@/components/ui';
-import { ApiRoutes } from '@/config/api/routes';
-import { useCheckAvailability } from '@/features/bookings/hooks/use-check-availability';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
 import { AmenityGlyph, FillImg } from './branding-preview-shared';
 import { PhotoGalleryLightbox } from './photo-gallery-carousel';
+import { formatStay, useBrandingStayBooking } from './use-branding-stay-booking';
 
 const cormorant = Cormorant_Garamond({
 	subsets: ['latin'],
@@ -28,36 +26,6 @@ const dmSans = DM_Sans({
 	display: 'swap',
 });
 
-function startOfToday() {
-	const d = new Date();
-	d.setHours(0, 0, 0, 0);
-	return d;
-}
-
-function formatStay(d: Date) {
-	return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-function toDateParam(d: Date) {
-	const y = d.getFullYear();
-	const m = String(d.getMonth() + 1).padStart(2, '0');
-	const day = String(d.getDate()).padStart(2, '0');
-	return `${y}-${m}-${day}`;
-}
-
-function dayStart(d: Date) {
-	const x = new Date(d);
-	x.setHours(0, 0, 0, 0);
-	return x;
-}
-
-function nightsPriced(checkIn: Date, checkOutExclusive: Date, allowed: Set<string>) {
-	for (let c = dayStart(checkIn), end = dayStart(checkOutExclusive); c < end; c.setDate(c.getDate() + 1)) {
-		if (!allowed.has(toDateParam(c))) return false;
-	}
-	return true;
-}
-
 function MizuBookingPanel({
 	data,
 	listingPreview,
@@ -71,131 +39,16 @@ function MizuBookingPanel({
 	guestCap: number;
 	hostRating: string;
 }) {
-	const guestFieldId = useId();
-	const stayPickerRef = useRef<HTMLDivElement>(null);
-	const [stayRange, setStayRange] = useState<DateRange | undefined>();
-	const [stayPickerOpen, setStayPickerOpen] = useState(false);
-	const [guestCount, setGuestCount] = useState(1);
-	const [checkingAvailability, setCheckingAvailability] = useState(false);
-	const [availabilityMsg, setAvailabilityMsg] = useState<string | null>(null);
-	const [availableForCheckout, setAvailableForCheckout] = useState(false);
-	const [totalPrice, setTotalPrice] = useState<number | null>(null);
-	const [allowedDateKeys, setAllowedDateKeys] = useState<Set<string>>(new Set());
-	const todayStart = useMemo(() => startOfToday(), []);
-	const checkAvailabilityMutation = useCheckAvailability();
-	const router = useRouter();
+	const booking = useBrandingStayBooking({ listingPreview, propertyRef, guestCap });
 
-	useEffect(() => {
-		setGuestCount((c) => Math.min(guestCap, Math.max(1, c)));
-	}, [guestCap]);
-
-	useEffect(() => {
-		if (!listingPreview || !propertyRef) return;
-		let cancelled = false;
-		void (async () => {
-			try {
-				const qs = new URLSearchParams({ start: toDateParam(todayStart) });
-				const res = await fetch(`/api${ApiRoutes.properties.unavailableDays(propertyRef)}?${qs}`);
-				if (!res.ok || cancelled) return;
-				const json = (await res.json()) as { available_dates?: string[] };
-				if (!cancelled) setAllowedDateKeys(new Set(json.available_dates ?? []));
-			} catch {
-				if (!cancelled) setAllowedDateKeys(new Set());
-			}
-		})();
-		return () => {
-			cancelled = true;
-		};
-	}, [listingPreview, propertyRef, todayStart]);
-
-	const dayDisabled = useMemo(() => {
-		return (day: Date) => {
-			const d = dayStart(day);
-			if (d.getTime() < todayStart.getTime()) return true;
-			const from = stayRange?.from ? dayStart(stayRange.from) : null;
-			const to = stayRange?.to ? dayStart(stayRange.to) : null;
-			const key = toDateParam(day);
-			if (!from) return !allowedDateKeys.has(key);
-			if (!to) {
-				if (d.getTime() < from.getTime()) return true;
-				if (d.getTime() === from.getTime()) return !allowedDateKeys.has(key);
-				return !nightsPriced(from, d, allowedDateKeys);
-			}
-			if (d.getTime() < from.getTime()) return true;
-			if (d.getTime() === from.getTime()) return !allowedDateKeys.has(key);
-			if (d.getTime() <= to.getTime()) {
-				if (d.getTime() === to.getTime()) return !nightsPriced(from, d, allowedDateKeys);
-				return !allowedDateKeys.has(key);
-			}
-			return !nightsPriced(from, d, allowedDateKeys);
-		};
-	}, [allowedDateKeys, todayStart, stayRange?.from, stayRange?.to]);
-
-	useEffect(() => {
-		if (!stayPickerOpen) return;
-		const onPointerDown = (e: PointerEvent) => {
-			const el = stayPickerRef.current;
-			if (el && !el.contains(e.target as Node)) setStayPickerOpen(false);
-		};
-		document.addEventListener('pointerdown', onPointerDown);
-		return () => document.removeEventListener('pointerdown', onPointerDown);
-	}, [stayPickerOpen]);
-
-	const checkAvailabilityForDates = useCallback(
-		async (from: Date, to: Date) => {
-			if (!propertyRef) return;
-			setCheckingAvailability(true);
-			setAvailabilityMsg(null);
-			try {
-				const result = await checkAvailabilityMutation.mutateAsync({
-					property_id: propertyRef,
-					check_in: toDateParam(from),
-					check_out: toDateParam(to),
-					guests: guestCount,
-				});
-				const available = Boolean(result.isAvailable);
-				const total = typeof result.totalPrice === 'number' ? result.totalPrice : null;
-				setAvailableForCheckout(available);
-				setTotalPrice(total);
-				setAvailabilityMsg(
-					available
-						? `Available${total !== null ? ` · $${total} total` : ''}`
-						: 'Not available for these dates.',
-				);
-				return { available, total };
-			} catch {
-				setAvailableForCheckout(false);
-				setTotalPrice(null);
-				setAvailabilityMsg('Could not check availability.');
-			} finally {
-				setCheckingAvailability(false);
-			}
-		},
-		[propertyRef, guestCount, checkAvailabilityMutation],
-	);
-
-	const handleReserveClick = async () => {
-		if (!stayRange?.from || !stayRange?.to) return;
-		const result = await checkAvailabilityForDates(stayRange.from, stayRange.to);
-		if (!result?.available) return;
-		const qs = new URLSearchParams({
-			property_id: propertyRef,
-			check_in: toDateParam(stayRange.from),
-			check_out: toDateParam(stayRange.to),
-			guests: String(guestCount),
-			total_price: String(result.total ?? 0),
-		});
-		router.push(`/guest-details?${qs.toString()}`);
-	};
-
-	const priceLine = checkingAvailability
+	const priceLine = booking.checkingAvailability
 		? 'Checking availability…'
-		: stayRange?.from && stayRange?.to && availabilityMsg
-			? availabilityMsg
+		: booking.stayRange?.from && booking.stayRange?.to && booking.availabilityMsg
+			? booking.availabilityMsg
 			: data.booking.price.trim()
 				? `${data.booking.price} ${data.booking.per}`
 				: 'Choose dates to see your total';
-	const calendarMonth = stayRange?.from ?? stayRange?.to ?? new Date();
+	const calendarMonth = booking.stayRange?.from ?? booking.stayRange?.to ?? new Date();
 
 	return (
 		<div className="rounded-[1.75rem] border border-[#6b9a8f]/25 bg-[#fff9f4] shadow-[0_24px_60px_-28px_rgba(26,46,53,0.35)]">
@@ -227,7 +80,7 @@ function MizuBookingPanel({
 			<div className="overflow-visible p-6">
 				<p className="font-[family-name:var(--preview-mizu-body)] text-sm leading-snug text-[#1a2e35]/70">{priceLine}</p>
 
-				<div ref={stayPickerRef} className="relative z-20 mt-5">
+				<div ref={booking.stayPickerRef} className="relative z-20 mt-5">
 					<div className="grid grid-cols-2 gap-3">
 						<div className="rounded-2xl bg-[#f3ebe3]/80 p-3">
 							<p className="font-[family-name:var(--preview-mizu-body)] text-[9px] font-semibold uppercase tracking-wider text-[#1a2e35]/45">
@@ -235,10 +88,10 @@ function MizuBookingPanel({
 							</p>
 							<button
 								type="button"
-								onClick={() => setStayPickerOpen(true)}
+								onClick={() => booking.setStayPickerOpen(true)}
 								className="cursor-pointer mt-1 w-full text-left font-[family-name:var(--preview-mizu-body)] text-sm font-medium text-[#1a2e35]"
 							>
-								{stayRange?.from ? formatStay(stayRange.from) : data.booking.arrival || 'Select'}
+								{booking.stayRange?.from ? formatStay(booking.stayRange.from) : data.booking.arrival || 'Select'}
 							</button>
 						</div>
 						<div className="rounded-2xl bg-[#f3ebe3]/80 p-3">
@@ -247,14 +100,14 @@ function MizuBookingPanel({
 							</p>
 							<button
 								type="button"
-								onClick={() => setStayPickerOpen(true)}
+								onClick={() => booking.setStayPickerOpen(true)}
 								className="cursor-pointer mt-1 w-full text-left font-[family-name:var(--preview-mizu-body)] text-sm font-medium text-[#1a2e35]"
 							>
-								{stayRange?.to ? formatStay(stayRange.to) : data.booking.departure || 'Select'}
+								{booking.stayRange?.to ? formatStay(booking.stayRange.to) : data.booking.departure || 'Select'}
 							</button>
 						</div>
 					</div>
-					{stayPickerOpen ? (
+					{booking.stayPickerOpen ? (
 						<div
 							role="dialog"
 							aria-label="Select stay dates"
@@ -264,12 +117,12 @@ function MizuBookingPanel({
 								mode="range"
 								min={1}
 								defaultMonth={calendarMonth}
-								selected={stayRange}
+								selected={booking.stayRange}
 								onSelect={(range) => {
-									setStayRange(range);
-									if (range?.from && range?.to) void checkAvailabilityForDates(range.from, range.to);
+									booking.setStayRange(range);
+									if (range?.from && range?.to) void booking.checkAvailabilityForDates(range.from, range.to);
 								}}
-								disabled={listingPreview ? dayDisabled : undefined}
+								disabled={propertyRef ? booking.dayDisabled : undefined}
 								numberOfMonths={1}
 								className={cn(
 									'w-full font-[family-name:var(--preview-mizu-body)]',
@@ -298,20 +151,21 @@ function MizuBookingPanel({
 									'[&_.rdp-day_button:hover:not(:disabled)]:bg-[#f3ebe3]',
 								)}
 							/>
-							<div className="mt-3 flex justify-end gap-2 border-t border-[#6b9a8f]/15 pt-3">
+							<div className="mt-3 flex gap-2 border-t border-[#6b9a8f]/15 pt-3">
 								<button
 									type="button"
-									onClick={() => setStayPickerOpen(false)}
-									className="cursor-pointer rounded-full bg-[#4d7c6f] px-4 py-1.5 font-[family-name:var(--preview-mizu-body)] text-xs font-semibold text-white"
+									onClick={booking.clearStayRange}
+									disabled={!booking.stayRange?.from && !booking.stayRange?.to}
+									className="cursor-pointer flex-1 rounded-full px-3 py-1.5 font-[family-name:var(--preview-mizu-body)] text-xs text-[#1a2e35]/50 transition hover:text-[#1a2e35] disabled:cursor-not-allowed disabled:opacity-40"
 								>
-									Done
+									Clear
 								</button>
 								<button
 									type="button"
-									onClick={() => setStayRange(undefined)}
-									className="cursor-pointer rounded-full px-3 py-1.5 font-[family-name:var(--preview-mizu-body)] text-xs text-[#1a2e35]/50"
+									onClick={() => booking.setStayPickerOpen(false)}
+									className="cursor-pointer flex-1 rounded-full bg-[#4d7c6f] px-4 py-1.5 font-[family-name:var(--preview-mizu-body)] text-xs font-semibold text-white"
 								>
-									Clear
+									Done
 								</button>
 							</div>
 						</div>
@@ -319,18 +173,18 @@ function MizuBookingPanel({
 				</div>
 
 				<div className="mt-4">
-					<label htmlFor={guestFieldId} className="text-[9px] font-semibold uppercase tracking-wider text-[#1a2e35]/45">
+					<label htmlFor={booking.guestFieldId} className="text-[9px] font-semibold uppercase tracking-wider text-[#1a2e35]/45">
 						Guests
 					</label>
 					<Input
-						id={guestFieldId}
+						id={booking.guestFieldId}
 						type="number"
 						min={1}
 						max={guestCap}
-						value={guestCount}
+						value={booking.guestCount}
 						onChange={(e) => {
 							const v = parseInt(e.target.value, 10);
-							if (!Number.isNaN(v)) setGuestCount(Math.min(guestCap, Math.max(1, v)));
+							if (!Number.isNaN(v)) booking.setGuestCount(Math.min(guestCap, Math.max(1, v)));
 						}}
 						className="mt-1.5"
 						variant="compact"
@@ -339,11 +193,11 @@ function MizuBookingPanel({
 
 				<button
 					type="button"
-					onClick={() => void handleReserveClick()}
-					disabled={listingPreview && (!propertyRef || !stayRange?.from || !stayRange?.to || checkingAvailability)}
+					onClick={() => void booking.handleReserveClick()}
+					disabled={listingPreview && (!propertyRef || !booking.stayRange?.from || !booking.stayRange?.to || booking.checkingAvailability)}
 					className="cursor-pointer mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#4d7c6f] py-4 font-[family-name:var(--preview-mizu-body)] text-sm font-semibold tracking-wide text-white transition hover:bg-[#3d665b] disabled:cursor-not-allowed disabled:opacity-55"
 				>
-					{checkingAvailability ? 'Checking…' : data.booking.cta}
+					{booking.checkingAvailability ? 'Checking…' : data.booking.cta}
 					<ChevronDown className="h-4 w-4 -rotate-90" aria-hidden />
 				</button>
 				{data.booking.disclaimer ? (

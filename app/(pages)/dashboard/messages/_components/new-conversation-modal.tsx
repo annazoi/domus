@@ -101,7 +101,7 @@ export function NewConversationModal({
 						role="dialog"
 						aria-modal
 						aria-labelledby="new-conversation-title"
-						className="relative z-10 w-full max-w-md rounded-2xl border border-black/10 bg-white p-5 shadow-xl"
+						className="relative z-10 w-full max-w-md rounded-2xl border border-dashboard-border/70 bg-dashboard-inset p-5 shadow-xl"
 						initial={{ opacity: 0, scale: 0.96, y: 8 }}
 						animate={{ opacity: 1, scale: 1, y: 0 }}
 						exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -153,7 +153,7 @@ export function NewConversationModal({
 												setPropertyId('');
 											}}
 											className={cn(
-												'flex w-full flex-col gap-0.5 border-b border-black/[0.04] px-4 py-3 text-left last:border-b-0 hover:bg-black/[0.02]',
+												'flex w-full flex-col gap-0.5 border-b border-dashboard-border px-4 py-3 text-left last:border-b-0 hover:bg-dashboard-row-hover',
 												selectedUser?.id === user.id && 'bg-camel/8',
 											)}
 										>

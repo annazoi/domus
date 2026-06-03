@@ -73,8 +73,8 @@ export function WebsiteBuilderClient() {
 	const chip = current ? (current.city || labelPropertyType(current.property_type)) : '';
 
 	return (
-		<div className="flex min-h-[calc(100vh-6rem)] flex-col gap-0 rounded-2xl border border-black/[0.06] bg-white/50 shadow-sm lg:flex-row">
-			<aside className="flex w-full shrink-0 flex-col gap-8 border-b border-black/[0.06] p-5 lg:w-[min(100%,18rem)] lg:border-b-0 lg:border-r lg:p-6">
+		<div className="dashboard-panel flex min-h-[calc(100vh-6rem)] flex-col gap-0 rounded-2xl lg:flex-row">
+			<aside className="flex w-full shrink-0 flex-col gap-8 border-b border-dashboard-border p-5 lg:w-[min(100%,18rem)] lg:border-b-0 lg:border-r lg:p-6">
 				<div>
 					<p className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-[#1A1A1A]/45">Current page</p>
 					{isLoading ? (
@@ -147,7 +147,7 @@ export function WebsiteBuilderClient() {
 				</div>
 			</aside>
 
-			<div className="relative flex min-h-[28rem] flex-1 flex-col bg-[#EBE9E4]">
+			<div className="relative flex min-h-[28rem] flex-1 flex-col bg-dom-sand">
 				<div className="flex flex-1 items-center justify-center overflow-auto p-4 md:p-8">
 					{!isLoading && !current ? (
 						<p className="max-w-sm text-center text-sm text-[#1A1A1A]/55">
@@ -165,7 +165,7 @@ export function WebsiteBuilderClient() {
 							style={{ maxWidth: previewMax }}
 						>
 							<div
-								className="overflow-hidden rounded-xl bg-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)]"
+								className="overflow-hidden rounded-xl bg-dashboard-surface shadow-[0_20px_50px_-12px_rgba(90,75,60,0.12)]"
 								style={asymmetric ? { paddingBottom: '2.5rem' } : undefined}
 							>
 								<div
@@ -222,7 +222,7 @@ export function WebsiteBuilderClient() {
 											)}
 										</div>
 										{chip ? (
-											<div className="absolute bottom-3 left-3 max-w-[85%] rounded bg-white px-3 py-2 shadow-sm">
+											<div className="absolute bottom-3 left-3 max-w-[85%] rounded bg-dashboard-inset px-3 py-2 shadow-sm">
 												<p className="truncate text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-camel">
 													{chip}
 												</p>
@@ -235,14 +235,14 @@ export function WebsiteBuilderClient() {
 					) : null}
 				</div>
 
-				<div className="flex shrink-0 justify-center border-t border-black/[0.06] bg-[#F7F5F2]/90 px-4 py-3 backdrop-blur-sm">
-					<div className="inline-flex rounded-full border border-black/[0.08] bg-white/90 p-1 shadow-sm">
+				<div className="flex shrink-0 justify-center border-t border-black/[0.06] bg-dashboard-bg/90 px-4 py-3 backdrop-blur-sm">
+					<div className="inline-flex rounded-full border border-dashboard-border/70 bg-dashboard-inset p-1 shadow-sm">
 						<button
 							type="button"
 							onClick={() => setView('desktop')}
 							className={[
 								'inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium uppercase tracking-wide transition',
-								view === 'desktop' ? 'bg-[#1A1A1A] text-white' : 'text-[#1A1A1A]/55 hover:text-[#1A1A1A]',
+								view === 'desktop' ? 'bg-espresso text-white' : 'text-espresso/55 hover:text-espresso',
 							].join(' ')}
 						>
 							<Monitor className="h-4 w-4" aria-hidden />
@@ -253,7 +253,7 @@ export function WebsiteBuilderClient() {
 							onClick={() => setView('mobile')}
 							className={[
 								'inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium uppercase tracking-wide transition',
-								view === 'mobile' ? 'bg-[#1A1A1A] text-white' : 'text-[#1A1A1A]/55 hover:text-[#1A1A1A]',
+								view === 'mobile' ? 'bg-espresso text-white' : 'text-espresso/55 hover:text-espresso',
 							].join(' ')}
 						>
 							<Smartphone className="h-4 w-4" aria-hidden />

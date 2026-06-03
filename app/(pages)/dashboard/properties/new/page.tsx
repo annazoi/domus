@@ -20,34 +20,35 @@ export default function NewPropertyPage() {
 
 	return createPortal(
 		<motion.div
-			className="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto bg-black/45 p-4 pt-12 pb-10 sm:pt-20"
+			className="dashboard-root fixed inset-0 z-[70] flex items-center justify-center p-4"
 			role="presentation"
 			initial={{ opacity: 0 }}
 			animate={{ opacity: 1 }}
 			transition={{ duration: 0.18 }}
 		>
+			<div className="absolute inset-0 bg-black/45 backdrop-blur-[2px]" aria-hidden />
 			<motion.div
 				role="dialog"
 				aria-modal
 				aria-labelledby="create-property-modal-title"
-				className="relative z-10 my-auto w-full max-w-3xl rounded-2xl border border-black/10 bg-[#f7f6f2] shadow-xl"
-				initial={{ opacity: 0, scale: 0.96, y: 12 }}
+				className="relative z-10 flex max-h-[min(92vh,720px)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-dashboard-panel shadow-[0_24px_80px_-24px_rgba(0,0,0,0.35)]"
+				initial={{ opacity: 0, scale: 0.96, y: 10 }}
 				animate={{ opacity: 1, scale: 1, y: 0 }}
 				transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
 			>
-				<header className="flex flex-wrap items-start justify-between gap-4 border-b border-black/10 px-5 py-4">
+				<header className="flex shrink-0 flex-wrap items-start justify-between gap-4 px-6 pb-4 pt-6 sm:px-8">
 					<div className="min-w-0">
-						<p className="text-[10px] uppercase tracking-[0.2em] text-camel">New listing</p>
-						<h1 id="create-property-modal-title" className="mt-1 font-serif text-2xl text-[#1A1A1A]">
+						<p className="text-[10px] uppercase tracking-[0.18em] text-dashboard-accent">New listing</p>
+						<h1 id="create-property-modal-title" className="mt-2 font-serif text-2xl tracking-tight text-espresso sm:text-3xl">
 							Basic info
 						</h1>
-						<p className="mt-1 text-sm text-[#1A1A1A]/60">Submit to create the listing, then fill in the rest.</p>
+						<p className="mt-2 text-sm text-dashboard-muted">Submit to create the listing, then fill in the rest.</p>
 					</div>
 					<Link href="/dashboard/properties" className={buttonClassName('ghostPill')}>
 						Cancel
 					</Link>
 				</header>
-				<div className="max-h-[min(75vh,calc(100vh-6rem))] overflow-y-auto px-5 py-4">
+				<div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 sm:px-8">
 					<BasicInfoSection
 						mode="create"
 						hideSectionHeading

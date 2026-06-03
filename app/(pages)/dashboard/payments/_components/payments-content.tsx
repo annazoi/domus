@@ -29,7 +29,7 @@ export default function PaymentsContent() {
 				</p>
 			</div>
 
-			<section className="space-y-5 rounded-2xl bg-white/80 p-6">
+			<section className="space-y-5 dashboard-panel rounded-2xl p-6">
 				{isLoading ? <p className="text-sm text-[#1A1A1A]/55">Loading payout status…</p> : null}
 				{isError ? <p className="text-sm text-red-600">Could not load Stripe status.</p> : null}
 

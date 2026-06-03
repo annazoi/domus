@@ -68,6 +68,34 @@ html:has(.domus-landing) {
   color: #1d1916;
 }
 
+.domus-landing .menu-panel {
+  background: #3a3530;
+  color: #efe9df;
+  border-radius: 1.5rem;
+  padding: 2rem;
+  width: 18rem;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.35);
+}
+
+.domus-landing .menu-panel ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.domus-landing .menu-panel li + li {
+  margin-top: 0.75rem;
+}
+
+.domus-landing .menu-panel a {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+
+.domus-landing .menu-panel a:hover {
+  opacity: 0.7;
+}
+
 .domus-landing .ghost-text {
   -webkit-text-stroke: 1px rgba(239, 233, 223, 0.18);
   color: transparent;
@@ -110,30 +138,10 @@ html:has(.domus-landing) {
   overflow: hidden;
 }
 
-.domus-landing .menu-panel {
-  background: #3a3530;
-  color: #efe9df;
-  border-radius: 1.5rem;
-  padding: 2rem;
-  width: 18rem;
-  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.35);
-}
-
-.domus-landing .landing-nav-desktop {
-  position: fixed;
-  top: 1.25rem;
-  right: 1.25rem;
-  z-index: 50;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.75rem;
-}
-
 .domus-landing .landing-nav-bar {
   position: sticky;
   top: 0;
   z-index: 60;
-  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
@@ -143,6 +151,19 @@ html:has(.domus-landing) {
     background 0.35s ease,
     border-color 0.35s ease,
     box-shadow 0.35s ease;
+}
+
+@media (max-width: 767px) {
+  .domus-landing .landing-nav-bar {
+    display: flex;
+  }
+}
+
+@media (min-width: 768px) {
+  .domus-landing .landing-nav-bar,
+  .domus-landing .landing-nav-drawer {
+    display: none;
+  }
 }
 
 .domus-landing .landing-nav-bar--hero {
@@ -381,30 +402,6 @@ html:has(.domus-landing) {
     opacity: 1;
     transition: none;
   }
-}
-
-.domus-landing .menu-panel ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.domus-landing .menu-panel li + li {
-  margin-top: 0.75rem;
-}
-
-.domus-landing .menu-panel a {
-  font-size: 1.875rem;
-  line-height: 2.25rem;
-}
-
-.domus-landing .menu-panel a:hover {
-  opacity: 0.7;
-}
-
-.domus-landing .menu-panel-divider {
-  margin: 1.25rem 0;
-  border-top: 1px solid rgba(239, 233, 223, 0.15);
 }
 
 .domus-landing .book-form-auth {

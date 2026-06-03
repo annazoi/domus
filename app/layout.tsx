@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${domusFont.variable} h-full antialiased`}>
-      <body className="font-sans text-stone-900 bg-stone-50 selection:bg-stone-200">
+      <body className="font-sans text-stone-900 bg-stone-50 selection:bg-camel/25 selection:text-espresso">
         <Providers>{children}</Providers>
       </body>
     </html>

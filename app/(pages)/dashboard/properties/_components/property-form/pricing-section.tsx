@@ -23,7 +23,7 @@ import {
 import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { toApiDate } from '@/features/property-availability/utils/date';
 import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
-import { PropertyFormSection } from './property-form-section';
+import { PropertyFormSection, dashboardFormFields } from './property-form-section';
 import { pricingFormSchema, type PricingFormValues } from './schemas';
 import { mergeAvailabilityRowsInCache } from './utils/availability-cache';
 
@@ -336,8 +336,8 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 				Nightly rates are set per day on the property calendar.
 			</p>
 			<div className="mt-4 grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
-				<div className="rounded-2xl bg-white/75 p-5">
-					<div className="mb-5 flex items-center justify-between gap-3 border-b border-black/5 pb-4">
+				<div className="dashboard-panel rounded-2xl p-5">
+					<div className="mb-5 flex items-center justify-between gap-3 border-b border-dashboard-border pb-4">
 						<Button
 							type="button"
 							variant="iconSquare"
@@ -411,7 +411,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 					>
 						{clearingAvailability ? 'Removing...' : 'Remove all availability'}
 					</Button>
-					<div className="rounded-2xl border border-black/8 bg-white/75 p-4">
+					<div className="dashboard-panel rounded-2xl p-4">
 						<p className="text-sm font-medium text-[#1A1A1A]">Single day edit</p>
 						<p className="mt-1 text-xs text-[#1A1A1A]/60">
 							Click any date on the calendar, then update that day here.
@@ -495,20 +495,17 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 						role="dialog"
 						aria-modal
 						aria-labelledby="availability-range-title"
-						className="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+						className={cn(
+							'relative z-10 w-full max-w-md rounded-2xl bg-dashboard-panel p-6 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.35)]',
+							dashboardFormFields,
+						)}
 						onClick={(e) => e.stopPropagation()}
 					>
-						<div className="mb-6 flex items-start justify-between gap-4">
-							<h3 id="availability-range-title" className="font-serif text-xl text-[#1A1A1A]">
+						<div className="mb-5 flex items-start justify-between gap-4">
+							<h3 id="availability-range-title" className="font-serif text-xl text-espresso">
 								Availability &amp; pricing
 							</h3>
-							<Button
-								type="button"
-								variant="ghostIcon"
-								onClick={closeModal}
-								className="rounded-full text-[#1A1A1A]/60 hover:bg-black/5"
-								aria-label="Close"
-							>
+							<Button type="button" variant="ghostIcon" onClick={closeModal} aria-label="Close">
 								<X className="h-5 w-5" />
 							</Button>
 						</div>
@@ -516,7 +513,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 						<div className="space-y-4">
 							{ranges.map((rangeItem, index) => (
 								<div key={rangeItem.id} className="relative">
-									<label className="block text-sm text-[#1A1A1A]/70">
+									<label className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">
 										Date range {index + 1}
 										<Input
 											variant="compact"
@@ -546,7 +543,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 									) : null}
 									{activeRangeId === rangeItem.id ? (
 										<div
-											className="absolute left-0 right-0 top-full z-[70] mt-2 w-full rounded-xl border border-black/10 bg-white p-3 shadow-xl [--rdp-accent-color:#1A1A1A] [--rdp-accent-background-color:rgba(26,26,26,0.08)] [&_.rdp-month]:w-full [&_.rdp-month_grid]:w-full [&_.rdp-day]:transition-[background,background-color] [&_.rdp-day]:duration-200 [&_.rdp-day]:ease-out [&_.rdp-day_button]:transition-[color,background-color,border-color,transform,box-shadow] [&_.rdp-day_button]:duration-200 [&_.rdp-day_button]:ease-out [&_.rdp-day_button]:active:scale-[0.94]"
+											className="absolute left-0 right-0 top-full z-[70] mt-2 w-full rounded-xl bg-dashboard-bg p-3 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.2)] [--rdp-accent-color:var(--color-dashboard-accent-deep)] [--rdp-accent-background-color:rgba(106,98,88,0.12)] [&_.rdp-month]:w-full [&_.rdp-month_grid]:w-full [&_.rdp-day]:transition-[background,background-color] [&_.rdp-day]:duration-200 [&_.rdp-day]:ease-out [&_.rdp-day_button]:transition-[color,background-color,border-color,transform,box-shadow] [&_.rdp-day_button]:duration-200 [&_.rdp-day_button]:ease-out [&_.rdp-day_button]:active:scale-[0.94]"
 										>
 											<DayPicker
 												mode="range"
@@ -564,7 +561,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 												}
 												className="w-full"
 											/>
-											<div className="mt-3 flex justify-end border-t border-black/8 pt-3">
+											<div className="mt-3 flex justify-end pt-2">
 												<Button
 													type="button"
 													variant="primarySm"
@@ -578,7 +575,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 									) : null}
 								</div>
 							))}
-							<label className="block text-sm text-[#1A1A1A]/70">
+							<label className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">
 								Price for this range (per night)
 								<Input
 									type="number"
@@ -590,16 +587,16 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 									className="mt-1.5"
 								/>
 							</label>
-							<label className="flex cursor-pointer items-center gap-3 rounded-xl border border-black/8 px-4 py-3">
+							<label className="flex cursor-pointer items-center gap-3 rounded-lg bg-dashboard-bg px-4 py-3">
 								<Checkbox checked={isAvailable} onChange={(e) => setIsAvailable(e.target.checked)} />
-								<span className="text-sm text-[#1A1A1A]">Available for booking</span>
+								<span className="text-sm text-espresso">Available for booking</span>
 							</label>
-							<label className="block text-sm text-[#1A1A1A]/70">
+							<label className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">
 								Reason (when unavailable)
 								<select
 									value={reason}
 									onChange={(e) => setReason(e.target.value as AvailabilityStatusType | '')}
-									className="mt-1.5 h-10 w-full rounded-xl border border-black/10 px-3 text-sm"
+									className="mt-1.5 h-10 w-full rounded-lg border-0 bg-dashboard-bg px-3 text-sm text-espresso focus:outline-none focus:ring-0"
 								>
 									<option value="">None</option>
 									<option value={AvailabilityStatus.BLOCKED}>Blocked</option>
@@ -616,7 +613,6 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 							<Button
 								type="button"
 								variant="primary"
-								className="opacity-90"
 								disabled={disableApplyRanges}
 								onClick={() => void handleApplyRanges()}
 							>
@@ -679,9 +675,9 @@ type DayCellProps = {
 
 function DayCell({ day, selected, availability, isPast, onClick }: DayCellProps) {
 	const stateClass = isPast
-		? 'cursor-not-allowed border-black/5 bg-black/[0.03] text-[#1A1A1A]/30'
+		? 'cursor-not-allowed border-dashboard-border/40 bg-dashboard-bg/80 text-dashboard-muted/50'
 		: !availability
-			? 'border-black/5 bg-white text-[#1A1A1A]/70 hover:border-camel/30'
+			? 'border-dashboard-border/50 bg-dashboard-inset text-dashboard-muted hover:border-camel/30'
 			: availability.is_available
 				? 'border-emerald-200 bg-emerald-50 text-emerald-900'
 				: 'border-red-200 bg-red-50 text-red-800';

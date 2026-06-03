@@ -115,49 +115,6 @@ export function LandingNav({ isLoggedIn }: LandingNavProps) {
 				</div>
 			</header>
 
-			<div className="landing-nav-desktop hidden md:flex">
-				<Link href={authHref} className="pill">
-					<span>{authLabel}</span>
-					<PillDot>
-						<PillArrow />
-					</PillDot>
-				</Link>
-				<button type="button" className="pill" onClick={() => setMenuOpen((open) => !open)} aria-expanded={menuOpen}>
-					<span>{menuOpen ? 'Close' : 'Menu'}</span>
-					<PillDot>
-						<MenuIcon open={menuOpen} />
-					</PillDot>
-				</button>
-				{menuOpen ? (
-					<nav className="menu-panel" aria-label="Site">
-						<ul>
-							{NAV_LINKS.map((item) => (
-								<li key={item.href}>
-									<a href={item.href} onClick={closeMenu}>
-										{item.label}
-									</a>
-								</li>
-							))}
-						</ul>
-						<div className="menu-panel-divider" />
-						<ul>
-							<li>
-								<Link href={authHref} onClick={closeMenu}>
-									{authLabel}
-								</Link>
-							</li>
-							{isLoggedIn ? null : (
-								<li>
-									<Link href="/auth/sign-up" onClick={closeMenu}>
-										Create platform
-									</Link>
-								</li>
-							)}
-						</ul>
-					</nav>
-				) : null}
-			</div>
-
 			<div
 				id="landing-mobile-menu"
 				className={['landing-nav-drawer md:hidden', menuOpen ? 'landing-nav-drawer--open' : ''].join(' ')}

@@ -33,7 +33,7 @@ export function PropertyFormSidebar({
 	onEditAvailability,
 }: PropertyFormSidebarProps) {
 	return (
-		<aside className="sticky top-24 space-y-4 rounded-2xl bg-white/80 p-5">
+		<aside className="sticky top-24 space-y-4 dashboard-panel rounded-2xl p-5">
 			<nav className="space-y-1" role="tablist" aria-label="Property form sections">
 				{sidebarItems.map((item) => {
 					const selected = activeTab === item.id;

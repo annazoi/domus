@@ -107,11 +107,11 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 	const openMobileNav = () => setIsMobileOpen(true);
 
 	return (
-		<div className="dashboard-root min-h-screen bg-[#F7F5F2] text-[#1A1A1A]">
+		<div className="dashboard-root min-h-screen bg-dashboard-bg text-espresso selection:bg-dashboard-accent/20 selection:text-espresso">
 			{isMobileOpen ? (
 				<button
 					type="button"
-					className="fixed inset-0 z-30 bg-[#1A1A1A]/25 backdrop-blur-[2px] md:hidden"
+					className="fixed inset-0 z-30 bg-espresso/25 backdrop-blur-[2px] md:hidden"
 					onClick={() => setIsMobileOpen(false)}
 					aria-label="Close sidebar"
 				/>
@@ -120,7 +120,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 			<div className="flex w-full">
 				<aside
 					className={[
-						'fixed inset-y-0 left-0 z-40 border-r border-black/5 bg-[#F7F5F2] px-3 py-6 transition-all duration-200',
+						'fixed inset-y-0 left-0 z-40 bg-dashboard-bg px-3 py-6 transition-all duration-200',
 						isCollapsed ? 'w-[84px]' : 'w-[250px]',
 						isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
 					].join(' ')}
@@ -159,15 +159,15 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 									href={item.href}
 									onClick={() => setIsMobileOpen(false)}
 									className={[
-										'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors duration-200',
-										active ? 'text-[#1A1A1A]' : 'text-[#1A1A1A]/65 hover:text-[#1A1A1A]',
+										'group relative flex select-none items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors duration-200',
+										active ? 'text-espresso' : 'text-dashboard-muted hover:bg-dashboard-row-hover hover:text-espresso',
 										isCollapsed ? 'justify-center' : '',
 									].join(' ')}
 								>
 									{active ? (
 										<motion.span
 											layoutId="dashboard-nav-active"
-											className="absolute inset-0 rounded-xl bg-black/5"
+											className="absolute inset-0 rounded-xl bg-dashboard-panel shadow-sm"
 											transition={navSpring}
 										/>
 									) : null}
@@ -177,7 +177,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 											isCollapsed ? 'justify-center' : '',
 										].join(' ')}
 									>
-										<span className={active ? 'text-camel' : 'text-[#1A1A1A]/45'}>{item.icon}</span>
+										<span className={active ? 'text-camel-dark' : 'text-dashboard-muted'}>{item.icon}</span>
 										<span className={isCollapsed ? 'hidden' : 'inline'}>{item.label}</span>
 									</span>
 								</Link>
@@ -221,7 +221,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 							</div>
 
 							{scrolled ? (
-								<header className="fixed inset-x-0 top-0 z-40 flex min-h-16 items-center justify-between gap-3 border-b border-black/[0.07] bg-[#F7F5F2]/94 px-5 py-2 shadow-[0_10px_32px_-22px_rgba(26,26,26,0.35)] backdrop-blur-md md:hidden">
+								<header className="fixed inset-x-0 top-0 z-40 flex min-h-16 items-center justify-between gap-3 border-b border-black/[0.07] bg-dashboard-bg/94 px-5 py-2 shadow-[0_10px_32px_-22px_rgba(30,41,59,0.2)] backdrop-blur-md md:hidden">
 									<div className="flex min-w-0 flex-1 items-center gap-3">
 										<Button
 											type="button"
@@ -246,13 +246,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 								</header>
 							) : null}
 
-							<header className="sticky top-0 z-30 hidden min-h-16 items-center justify-between gap-6 border-b border-black/5 bg-[#F7F5F2]/95 px-10 py-2 backdrop-blur-md md:flex">
+							<header className="sticky top-0 z-30 hidden min-h-16 items-center justify-between gap-6 bg-dashboard-bg/95 px-10 py-2 backdrop-blur-md md:flex">
 								<div className="flex min-w-0 flex-1 items-center gap-5">
 									{pageIntro ? <div className="min-w-0 flex-1">{pageIntro}</div> : null}
 								</div>
 
 								<div className="flex shrink-0 items-center gap-3">
-									<span className="hidden rounded-full bg-camel/15 px-3 py-1 text-xs font-medium text-camel sm:inline-flex">
+									<span className="hidden rounded-full bg-dashboard-accent/12 px-3 py-1 text-xs font-medium text-dashboard-accent sm:inline-flex">
 										Portfolio Plan
 									</span>
 									<Button

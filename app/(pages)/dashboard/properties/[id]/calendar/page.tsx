@@ -74,7 +74,7 @@ export default function PropertyCalendarPage() {
 			</div>
 
 			<div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-				<div className="rounded-2xl bg-white/80 p-5">
+				<div className="dashboard-panel rounded-2xl p-5">
 					<div className="mb-4 grid grid-cols-7 text-center text-xs text-[#1A1A1A]/45">
 						{['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((name) => (
 							<div key={name}>{name}</div>
@@ -98,12 +98,12 @@ export default function PropertyCalendarPage() {
 									className={cn(
 										'h-14 rounded-xl border text-sm',
 										isPast
-											? 'cursor-not-allowed border-black/5 bg-black/[0.03] text-[#1A1A1A]/30'
+											? 'cursor-not-allowed border-dashboard-border/40 bg-dashboard-bg/80 text-dashboard-muted/50'
 											: selectedDate === date
 												? 'border-camel bg-camel/10'
 												: unavailable
 													? 'border-red-200 bg-red-50 text-red-700'
-													: 'border-black/10 bg-white hover:border-camel/40',
+													: 'border-dashboard-border/60 bg-dashboard-inset hover:border-camel/40',
 									)}
 								>
 									{day}
@@ -113,7 +113,7 @@ export default function PropertyCalendarPage() {
 					</div>
 				</div>
 
-				<div className="space-y-4 rounded-2xl bg-white/80 p-5">
+				<div className="space-y-4 dashboard-panel rounded-2xl p-5">
 					<h2 className="font-serif text-2xl">Date settings</h2>
 					<p className="text-sm text-[#1A1A1A]/60">
 						{selectedDate ? `Selected: ${selectedDate}` : 'Select a date to update availability.'}

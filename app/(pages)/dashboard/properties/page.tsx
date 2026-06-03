@@ -26,25 +26,25 @@ export default function PropertiesPage() {
 			{loading ? (
 				<div className="space-y-4">
 					{Array.from({ length: 3 }).map((_, index) => (
-						<div key={index} className="grid grid-cols-1 gap-4 rounded-2xl bg-white/80 p-4 md:grid-cols-[140px_1fr_auto]">
-							<Skeleton className="h-24 w-full rounded-xl bg-black/10" />
+						<div key={index} className="grid grid-cols-1 gap-4 dashboard-panel rounded-2xl p-4 md:grid-cols-[140px_1fr_auto]">
+							<Skeleton className="dashboard-inset h-24 w-full rounded-xl" />
 							<div className="space-y-2 py-1">
-								<Skeleton className="h-5 w-52 bg-black/10" />
-								<Skeleton className="h-4 w-28 bg-black/10" />
+								<Skeleton className="h-5 w-52 rounded-md bg-dashboard-border/50" />
+								<Skeleton className="h-4 w-28 rounded-md bg-dashboard-border/40" />
 							</div>
 							<div className="flex items-center gap-2 md:justify-end">
-								<Skeleton className="h-7 w-20 rounded-full bg-black/10" />
-								<Skeleton className="h-4 w-10 bg-black/10" />
-								<Skeleton className="h-4 w-10 bg-black/10" />
+								<Skeleton className="h-7 w-20 rounded-full bg-dashboard-inset" />
+								<Skeleton className="h-4 w-10 rounded-md bg-dashboard-border/40" />
+								<Skeleton className="h-4 w-10 rounded-md bg-dashboard-border/40" />
 							</div>
 						</div>
 					))}
 				</div>
 			) : null}
 			{!loading && properties.length === 0 ? (
-				<div className="rounded-2xl bg-white/80 p-8 text-center">
+				<div className="dashboard-panel rounded-2xl p-8 text-center">
 					<p className="font-serif text-2xl">No properties yet</p>
-					<p className="mt-2 text-sm text-[#1A1A1A]/60">Create your first listing to start receiving bookings.</p>
+					<p className="mt-2 text-sm text-dashboard-muted">Create your first listing to start receiving bookings.</p>
 				</div>
 			) : null}
 
@@ -53,27 +53,27 @@ export default function PropertiesPage() {
 					const cover = property.images.find((image) => image.is_cover) ?? property.images[0];
 					const coverUrl = cover?.document?.url;
 					return (
-						<div key={property.id} className="grid grid-cols-1 gap-4 rounded-2xl bg-white/80 p-4 md:grid-cols-[140px_1fr_auto]">
+						<div key={property.id} className="grid grid-cols-1 gap-4 dashboard-panel rounded-2xl p-4 md:grid-cols-[140px_1fr_auto]">
 							<div
-								className="h-24 rounded-xl bg-camel/10 bg-cover bg-center"
+								className="dashboard-inset h-24 rounded-xl bg-cover bg-center"
 								style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
 							/>
 							<div className="py-1">
-								<p className="font-medium">{property.title}</p>
-								<p className="text-sm text-[#1A1A1A]/55">{property.city || 'City not set'}</p>
+								<p className="font-medium text-espresso">{property.title}</p>
+								<p className="text-sm text-dashboard-muted">{property.city || 'City not set'}</p>
 							</div>
 							<div className="flex items-center gap-2 md:justify-end">
-								<span className="rounded-full bg-black/5 px-3 py-1 text-xs capitalize">
+								<span className="dashboard-inset rounded-full px-3 py-1 text-xs capitalize text-espresso/85">
 									{property.isVisible ? 'published' : 'draft'}
 								</span>
-								<Link href={`/dashboard/properties/${property.id}`} className="text-sm text-[#1A1A1A]/70 hover:text-camel">
+								<Link href={`/dashboard/properties/${property.id}`} className="text-sm text-dashboard-muted transition hover:text-camel">
 									Edit
 								</Link>
 								<Link
 									href={`/${encodeURIComponent(property.slug)}`}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="text-sm text-[#1A1A1A]/70 hover:text-camel"
+									className="text-sm text-dashboard-muted transition hover:text-camel"
 								>
 									View
 								</Link>

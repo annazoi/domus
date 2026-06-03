@@ -64,15 +64,20 @@ export function useBrandingStayBooking({
 	}, [guestCap]);
 
 	useEffect(() => {
-		if (!listingPreview || !propertyRef) return;
+		if (!propertyRef) return;
 		let cancelled = false;
 		void (async () => {
 			try {
 				const qs = new URLSearchParams({ start: toDateParam(todayStart) });
 				const res = await fetch(`/api${ApiRoutes.properties.unavailableDays(propertyRef)}?${qs}`);
 				if (!res.ok || cancelled) return;
-				const json = (await res.json()) as { available_dates?: string[] };
-				if (!cancelled) setAllowedDateKeys(new Set(json.available_dates ?? []));
+				const json = (await res.json()) as { available_dates?: string[]; unavailable_dates?: string[] };
+				if (cancelled) return;
+				const allowed = new Set(json.available_dates ?? []);
+				for (const date of json.unavailable_dates ?? []) {
+					allowed.delete(date);
+				}
+				setAllowedDateKeys(allowed);
 			} catch {
 				if (!cancelled) setAllowedDateKeys(new Set());
 			}
@@ -80,7 +85,7 @@ export function useBrandingStayBooking({
 		return () => {
 			cancelled = true;
 		};
-	}, [listingPreview, propertyRef, todayStart]);
+	}, [propertyRef, todayStart]);
 
 	const dayDisabled = useMemo(() => {
 		return (day: Date) => {
@@ -89,7 +94,6 @@ export function useBrandingStayBooking({
 			const from = stayRange?.from ? dayStart(stayRange.from) : null;
 			const to = stayRange?.to ? dayStart(stayRange.to) : null;
 			const key = toDateParam(day);
-			if (!listingPreview) return false;
 			if (!from) return !allowedDateKeys.has(key);
 			if (!to) {
 				if (d.getTime() < from.getTime()) return true;
@@ -104,7 +108,7 @@ export function useBrandingStayBooking({
 			}
 			return !nightsPriced(from, d, allowedDateKeys);
 		};
-	}, [allowedDateKeys, listingPreview, todayStart, stayRange?.from, stayRange?.to]);
+	}, [allowedDateKeys, todayStart, stayRange?.from, stayRange?.to]);
 
 	useEffect(() => {
 		if (!stayPickerOpen) return;
@@ -163,6 +167,14 @@ export function useBrandingStayBooking({
 		router.push(`/guest-details?${qs.toString()}`);
 	};
 
+	const clearStayRange = useCallback(() => {
+		setStayRange(undefined);
+		setAvailabilityMsg(null);
+		setAvailableForCheckout(false);
+		setTotalPrice(null);
+		setCheckingAvailability(false);
+	}, []);
+
 	return {
 		guestFieldId,
 		stayPickerRef,
@@ -179,5 +191,6 @@ export function useBrandingStayBooking({
 		dayDisabled,
 		checkAvailabilityForDates,
 		handleReserveClick,
+		clearStayRange,
 	};
 }
