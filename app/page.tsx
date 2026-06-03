@@ -115,18 +115,20 @@ export default function Home() {
 	}, []);
 
 	const closeMenu = () => setMenuOpen(false);
+	const authHref = isLoggedIn ? '/dashboard' : '/auth/sign-in';
+	const authLabel = isLoggedIn ? 'Dashboard' : 'Sign in';
 
 	return (
 		<div ref={rootRef} className="domus-landing">
 			<LandingNav isLoggedIn={Boolean(isLoggedIn)} />
 
 			<div className="fixed top-5 right-5 z-50 hidden flex-col items-end gap-3 md:flex">
-				<a href="#book" className="pill">
-					<span>Book a demo</span>
+				<Link href={authHref} className="pill">
+					<span>{authLabel}</span>
 					<PillDot>
 						<PillArrow />
 					</PillDot>
-				</a>
+				</Link>
 				<button type="button" className="pill" onClick={() => setMenuOpen((open) => !open)}>
 					<span>Menu</span>
 					<PillDot>

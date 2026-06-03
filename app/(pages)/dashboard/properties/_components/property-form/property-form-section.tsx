@@ -9,6 +9,9 @@ type PropertyFormSectionProps = {
 };
 
 const fieldSurface = cn(
+	'[&_.places-address-field]:rounded-lg [&_.places-address-field]:border-0 [&_.places-address-field]:bg-dashboard-bg',
+	'[&_.places-address-field]:shadow-none [&_.places-address-field]:focus-within:border-0 [&_.places-address-field]:focus-within:ring-0',
+	'[&_.places-address-field_input]:py-2 [&_.places-address-field_input]:pr-3 [&_.places-address-field_input]:shadow-none',
 	'[&_input.border]:w-full [&_input.border]:rounded-lg [&_input.border]:border-0 [&_input.border]:bg-dashboard-bg',
 	'[&_input.border]:px-3 [&_input.border]:py-2 [&_input.border]:text-espresso [&_input.border]:shadow-none',
 	'[&_input.border]:placeholder:text-dashboard-muted/55',

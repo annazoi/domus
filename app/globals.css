@@ -172,6 +172,13 @@
   pointer-events: none;
 }
 
+/* Google Places: we render our own leading icon in .places-address-field */
+.pac-target-input {
+  background-image: none !important;
+  background-repeat: no-repeat !important;
+  padding-left: 0 !important;
+}
+
 /* Google Places dropdown polish (Property > Location) */
 .pac-container {
   margin-top: 8px;

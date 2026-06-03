@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ChangeEvent, type ComponentPropsWithoutRef } from 'react';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/components/ui/cn';
 import { placeResultToSelection, type PlaceSelection } from './place-selection';
 import { MapPin, Loader2 } from 'lucide-react';
 
@@ -52,17 +53,26 @@ export function PlacesAutocompleteInput({
 	}, [placesLibraryReady]);
 
 	return (
-		<div className="relative">
+		<div
+			className={cn(
+				'places-address-field flex w-full items-center overflow-hidden rounded-xl border border-black/10 bg-white',
+				'transition hover:border-camel/25 focus-within:border-camel/40 focus-within:ring-2 focus-within:ring-camel/12',
+			)}
+		>
 			<span
 				aria-hidden
-				className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[13px] text-camel/70"
+				className="flex h-12 w-10 shrink-0 items-center justify-center text-dashboard-muted"
 			>
-				{placesLibraryReady ? <MapPin className="w-4 h-4" /> : <Loader2 className="w-4 h-4 animate-spin" />}
+				{placesLibraryReady ? (
+					<MapPin className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+				) : (
+					<Loader2 className="h-4 w-4 shrink-0 animate-spin" strokeWidth={1.75} />
+				)}
 			</span>
 			<Input
 				ref={inputRef}
-				variant="default"
-				className="pl-10 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]"
+				variant="plain"
+				className="min-w-0 flex-1 py-3 pr-4 text-sm shadow-none"
 				{...inputProps}
 				onChange={onChange}
 			/>
