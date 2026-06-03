@@ -1,6 +1,7 @@
 import { getUserIdFromRequest } from '@/app/api/_utils/auth';
 import { getAppUrl } from '@/lib/stripe/app-url';
-import { createOnboardingLink, stripeConnectErrorResponse } from '@/lib/stripe/connect';
+import { createOnboardingLink } from '@/lib/stripe/connect';
+import { stripeConnectErrorResponse } from '@/lib/stripe/connect-errors';
 
 export async function POST(request: Request) {
 	const userId = getUserIdFromRequest(request);
