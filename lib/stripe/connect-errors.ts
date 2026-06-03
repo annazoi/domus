@@ -1,7 +1,12 @@
 export class StripeConnectError extends Error {
 	constructor(
 		message: string,
-		readonly code: 'STRIPE_NOT_CONFIGURED' | 'NOT_A_HOST' | 'USER_NOT_FOUND' | 'STRIPE_API_ERROR',
+		readonly code:
+			| 'STRIPE_NOT_CONFIGURED'
+			| 'STRIPE_CONNECT_NOT_ENABLED'
+			| 'NOT_A_HOST'
+			| 'USER_NOT_FOUND'
+			| 'STRIPE_API_ERROR',
 		readonly stripeCode?: string,
 	) {
 		super(message);
@@ -25,6 +30,8 @@ export function stripeConnectErrorResponse(error: unknown) {
 		case 'NOT_A_HOST':
 			return { status: 403, body };
 		case 'STRIPE_NOT_CONFIGURED':
+			return { status: 503, body };
+		case 'STRIPE_CONNECT_NOT_ENABLED':
 			return { status: 503, body };
 		case 'STRIPE_API_ERROR':
 			return { status: 502, body };

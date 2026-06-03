@@ -35,6 +35,13 @@ function toStripeConnectError(error: unknown): StripeConnectError {
 		return new StripeConnectError('Stripe is not configured on the server.', 'STRIPE_NOT_CONFIGURED');
 	}
 	if (error instanceof Stripe.errors.StripeError) {
+		if (error.code === 'platform_account_required') {
+			return new StripeConnectError(
+				'Stripe Connect is not enabled for this Stripe account. In the Stripe Dashboard open Settings → Connect, complete platform setup, then set STRIPE_SECRET_KEY to that platform account’s secret key (test and live separately).',
+				'STRIPE_CONNECT_NOT_ENABLED',
+				error.code,
+			);
+		}
 		return new StripeConnectError(error.message, 'STRIPE_API_ERROR', error.code);
 	}
 	if (error instanceof Error) {
