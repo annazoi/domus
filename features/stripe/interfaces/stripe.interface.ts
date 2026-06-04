@@ -8,7 +8,12 @@ export interface StripeConnectStatus {
 
 export interface StripeConnectOnboardingResponse {
 	url: string;
+	onboarding_link?: string;
 	stripe_account_id: string;
+}
+
+export interface StripeLoginLinkResponse {
+	url: string;
 }
 
 export interface StripeCheckoutResponse {

@@ -61,8 +61,11 @@ export const ApiRoutes = {
 		messages: (id: string) => `/conversations/${id}/messages`,
 	},
 	stripe: {
-		connectCreateAccount: '/stripe/connect/create-account',
-		connectStatus: '/stripe/connect/status',
+		accounts: '/stripe/accounts',
+		onboardingLink: '/stripe/accounts/onboarding-link',
+		loginLink: '/stripe/accounts/login-link',
+		connectCreateAccount: '/stripe/accounts',
+		connectStatus: '/stripe/accounts',
 		checkout: '/stripe/checkout',
 		webhook: '/stripe/webhook',
 	},

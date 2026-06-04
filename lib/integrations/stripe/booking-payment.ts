@@ -4,10 +4,7 @@ import { DateTime } from 'luxon';
 import { eachDayInRange } from '@/features/property-availability/utils/date';
 import { prisma } from '@/lib/prisma';
 
-type DbClient = Pick<
-	PrismaClient,
-	'propertyAvailability' | 'booking'
->;
+type DbClient = Pick<PrismaClient, 'propertyAvailability' | 'booking'>;
 
 function toUtcDayFromJsDate(d: Date) {
 	return DateTime.fromJSDate(d, { zone: 'utc' }).startOf('day');
@@ -57,7 +54,7 @@ export async function reserveBookingAvailability(
 export async function confirmPaidBooking(
 	bookingId: string,
 	data: {
-		stripeSessionId: string;
+		stripeSessionId?: string | null;
 		paymentIntentId: string | null;
 	},
 ) {
@@ -90,7 +87,7 @@ export async function confirmPaidBooking(
 			where: { id: bookingId },
 			data: {
 				status: BookingStatus.CONFIRMED,
-				stripe_session_id: data.stripeSessionId,
+				...(data.stripeSessionId ? { stripe_session_id: data.stripeSessionId } : {}),
 				...(data.paymentIntentId ? { payment_intent_id: data.paymentIntentId } : {}),
 			},
 		});
@@ -131,4 +128,9 @@ export async function findBookingIdByStripeSession(stripeSessionId: string) {
 		select: { id: true },
 	});
 	return booking?.id ?? null;
+}
+
+export function getBookingIdFromMetadata(metadata: Record<string, string> | null | undefined) {
+	const bookingId = metadata?.booking_id?.trim();
+	return bookingId && bookingId.length > 0 ? bookingId : null;
 }

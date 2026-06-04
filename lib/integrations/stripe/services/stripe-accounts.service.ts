@@ -1,10 +1,17 @@
 import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
-import { getStripeClient } from '@/lib/stripe/client';
-import { STRIPE_CONNECT_DEFAULT_COUNTRY } from '@/lib/stripe/constants';
-import { StripeConnectError } from '@/lib/stripe/connect-errors';
+import { getStripeClient } from '@/lib/integrations/stripe/config';
+import { STRIPE_CONNECT_DEFAULT_COUNTRY } from '@/lib/integrations/stripe/fees';
+import { StripeConnectError } from '@/lib/integrations/stripe/errors';
+import { getHostBillingUrls } from '@/lib/integrations/stripe/urls';
 
-export { StripeConnectError, stripeConnectErrorResponse } from '@/lib/stripe/connect-errors';
+export type StripeConnectStatus = {
+	stripe_account_id: string | null;
+	stripe_onboarding_completed: boolean;
+	charges_enabled: boolean;
+	payouts_enabled: boolean;
+	details_submitted: boolean;
+};
 
 const emptyConnectStatus = (): StripeConnectStatus => ({
 	stripe_account_id: null,
@@ -62,14 +69,6 @@ async function clearUserStripeConnect(userId: string) {
 	});
 }
 
-export type StripeConnectStatus = {
-	stripe_account_id: string | null;
-	stripe_onboarding_completed: boolean;
-	charges_enabled: boolean;
-	payouts_enabled: boolean;
-	details_submitted: boolean;
-};
-
 export function mapAccountToStatus(account: Stripe.Account): Omit<StripeConnectStatus, 'stripe_account_id'> {
 	const detailsSubmitted = account.details_submitted ?? false;
 	const chargesEnabled = account.charges_enabled ?? false;
@@ -119,15 +118,13 @@ export async function syncUserStripeAccountStatus(userId: string, accountId: str
 	};
 }
 
-async function ensureUserIsHost(userId: string) {
+async function getUserForConnect(userId: string) {
 	const user = await prisma.user.findUnique({
 		where: { id: userId },
 		select: {
 			id: true,
 			email: true,
-			is_host: true,
 			stripe_account_id: true,
-			_count: { select: { properties: true } },
 		},
 	});
 
@@ -135,21 +132,11 @@ async function ensureUserIsHost(userId: string) {
 		throw new StripeConnectError('User not found.', 'USER_NOT_FOUND');
 	}
 
-	if (!user.is_host) {
-		if (user._count.properties === 0) {
-			throw new StripeConnectError('Only hosts can connect Stripe accounts.', 'NOT_A_HOST');
-		}
-		await prisma.user.update({
-			where: { id: userId },
-			data: { is_host: true },
-		});
-	}
-
 	return user;
 }
 
-export async function getOrCreateExpressAccount(userId: string) {
-	const user = await ensureUserIsHost(userId);
+export async function createConnectAccount(userId: string) {
+	const user = await getUserForConnect(userId);
 
 	let stripe: Stripe;
 	try {
@@ -196,8 +183,10 @@ export async function getOrCreateExpressAccount(userId: string) {
 	return account.id;
 }
 
-export async function createOnboardingLink(userId: string, returnUrl: string, refreshUrl: string) {
-	const accountId = await getOrCreateExpressAccount(userId);
+export async function generateOnboardingLink(userId: string, request?: Request) {
+	const accountId = await createConnectAccount(userId);
+	const { returnUrl, refreshUrl } = getHostBillingUrls(request);
+
 	let stripe: Stripe;
 	try {
 		stripe = getStripeClient();
@@ -228,7 +217,7 @@ export async function createOnboardingLink(userId: string, returnUrl: string, re
 	};
 }
 
-export async function getConnectStatusForUser(userId: string): Promise<StripeConnectStatus> {
+export async function getConnectAccountStatus(userId: string): Promise<StripeConnectStatus> {
 	const user = await prisma.user.findUnique({
 		where: { id: userId },
 		select: {
@@ -255,6 +244,60 @@ export async function getConnectStatusForUser(userId: string): Promise<StripeCon
 		}
 		return emptyConnectStatus();
 	}
+}
+
+export async function getAccountLoginLink(userId: string) {
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+		select: { stripe_account_id: true },
+	});
+
+	if (!user?.stripe_account_id) {
+		throw new StripeConnectError('No Stripe account connected.', 'STRIPE_API_ERROR');
+	}
+
+	let stripe: Stripe;
+	try {
+		stripe = getStripeClient();
+	} catch (error) {
+		throw toStripeConnectError(error);
+	}
+
+	try {
+		const link = await stripe.accounts.createLoginLink(user.stripe_account_id);
+		return { url: link.url };
+	} catch (error) {
+		throw toStripeConnectError(error);
+	}
+}
+
+export async function deleteConnectAccount(userId: string) {
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+		select: { stripe_account_id: true },
+	});
+
+	if (!user?.stripe_account_id) {
+		await clearUserStripeConnect(userId);
+		return;
+	}
+
+	let stripe: Stripe;
+	try {
+		stripe = getStripeClient();
+	} catch (error) {
+		throw toStripeConnectError(error);
+	}
+
+	try {
+		await stripe.accounts.del(user.stripe_account_id);
+	} catch (error) {
+		if (!isStaleStripeAccountError(error)) {
+			throw toStripeConnectError(error);
+		}
+	}
+
+	await clearUserStripeConnect(userId);
 }
 
 export async function handleAccountUpdated(account: Stripe.Account) {

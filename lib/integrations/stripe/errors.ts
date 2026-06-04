@@ -39,3 +39,28 @@ export function stripeConnectErrorResponse(error: unknown) {
 			return { status: 500, body };
 	}
 }
+
+export class StripeCheckoutError extends Error {
+	constructor(
+		message: string,
+		readonly code:
+			| 'BOOKING_NOT_FOUND'
+			| 'BOOKING_NOT_PAYABLE'
+			| 'HOST_NOT_READY'
+			| 'INVALID_AMOUNT',
+	) {
+		super(message);
+		this.name = 'StripeCheckoutError';
+	}
+}
+
+export function stripeCheckoutErrorResponse(error: unknown) {
+	if (!(error instanceof StripeCheckoutError)) {
+		return null;
+	}
+
+	const status =
+		error.code === 'BOOKING_NOT_FOUND' ? 404 : error.code === 'HOST_NOT_READY' ? 422 : 400;
+
+	return { status, body: { message: error.message, code: error.code } };
+}

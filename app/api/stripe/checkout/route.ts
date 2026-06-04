@@ -4,8 +4,7 @@ import {
 	createBookingRecord,
 	parseCreateBookingBody,
 } from '@/app/api/booking/create-booking.service';
-import { getAppUrl } from '@/lib/stripe/app-url';
-import { createCheckoutSessionForBooking, StripeCheckoutError } from '@/lib/stripe/checkout';
+import { createCheckoutSession, getAppUrl, stripeCheckoutErrorResponse } from '@/lib/integrations/stripe';
 import { prisma } from '@/lib/prisma';
 
 interface CheckoutBody {
@@ -73,10 +72,11 @@ export async function POST(request: Request) {
 	}).toString()}`;
 
 	try {
-		const session = await createCheckoutSessionForBooking({
+		const session = await createCheckoutSession({
 			bookingId,
 			successUrl,
 			cancelUrl,
+			customerEmail: body.guest?.email?.trim(),
 		});
 
 		return Response.json({
@@ -85,14 +85,9 @@ export async function POST(request: Request) {
 			booking_id: session.booking_id,
 		});
 	} catch (error) {
-		if (error instanceof StripeCheckoutError) {
-			const status =
-				error.code === 'BOOKING_NOT_FOUND'
-					? 404
-					: error.code === 'HOST_NOT_READY'
-						? 422
-						: 400;
-			return Response.json({ message: error.message, code: error.code }, { status });
+		const err = stripeCheckoutErrorResponse(error);
+		if (err) {
+			return Response.json(err.body, { status: err.status });
 		}
 		throw error;
 	}

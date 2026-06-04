@@ -1,7 +1,9 @@
 import { environments } from '@/config/environments';
 
 export function getAppUrl(request?: Request) {
-	const configured = environments.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
+	const appUrl = process.env.APP_URL?.replace(/\/$/, '');
+	const publicUrl = environments.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
+	const configured = appUrl || publicUrl;
 	if (configured && !configured.includes('localhost')) {
 		return configured;
 	}
@@ -17,4 +19,12 @@ export function getAppUrl(request?: Request) {
 	}
 
 	return configured || 'http://localhost:3000';
+}
+
+export function getHostBillingUrls(request?: Request) {
+	const base = getAppUrl(request);
+	return {
+		returnUrl: `${base}/dashboard/payments?stripe=return`,
+		refreshUrl: `${base}/dashboard/payments?stripe=refresh`,
+	};
 }

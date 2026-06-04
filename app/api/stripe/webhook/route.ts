@@ -1,4 +1,4 @@
-import { dispatchStripeWebhookEvent, constructStripeEvent } from '@/lib/stripe/webhooks';
+import { constructStripeEvent, dispatchStripeWebhookEvent } from '@/lib/integrations/stripe';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

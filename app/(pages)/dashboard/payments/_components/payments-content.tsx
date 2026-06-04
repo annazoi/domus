@@ -3,13 +3,20 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui';
-import { useStripeConnectOnboarding, useStripeConnectStatus } from '@/features/stripe/hooks/use-stripe-connect';
+import {
+	useStripeConnectOnboarding,
+	useStripeConnectStatus,
+	useStripeLoginLink,
+	useStripeOnboardingLink,
+} from '@/features/stripe/hooks/use-stripe-connect';
 
 export default function PaymentsContent() {
 	const params = useSearchParams();
 	const { data: status, isLoading, isError, refetch } = useStripeConnectStatus();
 	const { mutate: startOnboarding, isPending, isError: onboardingFailed, error: onboardingError } =
 		useStripeConnectOnboarding();
+	const { mutate: refreshOnboarding, isPending: isRefreshing } = useStripeOnboardingLink();
+	const { mutate: openDashboard, isPending: isOpeningDashboard } = useStripeLoginLink();
 
 	useEffect(() => {
 		if (params.get('stripe') === 'return' || params.get('stripe') === 'refresh') {
@@ -62,16 +69,38 @@ export default function PaymentsContent() {
 				) : null}
 
 				{ready ? (
-					<p className="text-sm text-emerald-700">Your Stripe account is connected and ready to receive payouts.</p>
+					<div className="space-y-3">
+						<p className="text-sm text-emerald-700">Your Stripe account is connected and ready to receive payouts.</p>
+						<Button
+							type="button"
+							variant="secondary"
+							disabled={isOpeningDashboard}
+							onClick={() => openDashboard()}
+						>
+							{isOpeningDashboard ? 'Opening…' : 'Open Stripe dashboard'}
+						</Button>
+					</div>
 				) : (
-					<Button
-						type="button"
-						variant="primarySm"
-						disabled={isPending || isLoading}
-						onClick={() => startOnboarding()}
-					>
-						{isPending ? 'Redirecting…' : status?.stripe_account_id ? 'Continue Stripe setup' : 'Connect with Stripe'}
-					</Button>
+					<div className="flex flex-wrap gap-3">
+						<Button
+							type="button"
+							variant="primarySm"
+							disabled={isPending || isLoading}
+							onClick={() => startOnboarding()}
+						>
+							{isPending ? 'Redirecting…' : status?.stripe_account_id ? 'Continue Stripe setup' : 'Connect with Stripe'}
+						</Button>
+						{status?.stripe_account_id ? (
+							<Button
+								type="button"
+								variant="secondary"
+								disabled={isRefreshing || isLoading}
+								onClick={() => refreshOnboarding()}
+							>
+								{isRefreshing ? 'Redirecting…' : 'Refresh onboarding link'}
+							</Button>
+						) : null}
+					</div>
 				)}
 			</section>
 		</div>

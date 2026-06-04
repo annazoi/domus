@@ -1,35 +1,24 @@
 import { BookingStatus } from '@prisma/client';
-import { getStripeClient } from '@/lib/stripe/client';
+import { getStripeClient, PaymentContext } from '@/lib/integrations/stripe/config';
 import {
 	computePlatformFeeAmount,
 	eurosToCents,
 	STRIPE_CURRENCY,
-} from '@/lib/stripe/constants';
+} from '@/lib/integrations/stripe/fees';
+import { StripeCheckoutError } from '@/lib/integrations/stripe/errors';
 import { prisma } from '@/lib/prisma';
 
-export class StripeCheckoutError extends Error {
-	constructor(
-		message: string,
-		readonly code:
-			| 'BOOKING_NOT_FOUND'
-			| 'BOOKING_NOT_PAYABLE'
-			| 'HOST_NOT_READY'
-			| 'INVALID_AMOUNT',
-	) {
-		super(message);
-		this.name = 'StripeCheckoutError';
-	}
-}
-
-export async function createCheckoutSessionForBooking(params: {
+export async function createCheckoutSession(params: {
 	bookingId: string;
 	successUrl: string;
 	cancelUrl: string;
+	customerEmail?: string;
 }) {
 	const booking = await prisma.booking.findUnique({
 		where: { id: params.bookingId },
 		include: {
 			property: { select: { title: true } },
+			guest: { select: { email: true } },
 			host: {
 				select: {
 					stripe_account_id: true,
@@ -57,6 +46,13 @@ export async function createCheckoutSessionForBooking(params: {
 	}
 
 	const stripe = getStripeClient();
+	const platformFeeAmount = computePlatformFeeAmount(amountCents);
+	const paymentMetadata = {
+		booking_id: booking.id,
+		host_user_id: booking.host_user_id,
+		property_id: booking.property_id,
+		context: PaymentContext.BOOKING_PAYMENT,
+	};
 
 	if (booking.stripe_session_id) {
 		const existing = await stripe.checkout.sessions.retrieve(booking.stripe_session_id);
@@ -69,18 +65,13 @@ export async function createCheckoutSessionForBooking(params: {
 		}
 	}
 
-	const applicationFeeAmount = computePlatformFeeAmount(amountCents);
-
 	const session = await stripe.checkout.sessions.create({
 		mode: 'payment',
 		success_url: params.successUrl,
 		cancel_url: params.cancelUrl,
 		client_reference_id: booking.id,
-		metadata: {
-			booking_id: booking.id,
-			host_user_id: booking.host_user_id,
-			property_id: booking.property_id,
-		},
+		customer_email: params.customerEmail ?? booking.guest.email,
+		metadata: paymentMetadata,
 		line_items: [
 			{
 				quantity: 1,
@@ -95,15 +86,11 @@ export async function createCheckoutSessionForBooking(params: {
 			},
 		],
 		payment_intent_data: {
-			application_fee_amount: applicationFeeAmount,
+			application_fee_amount: platformFeeAmount,
 			transfer_data: {
 				destination: booking.host.stripe_account_id,
 			},
-			metadata: {
-				booking_id: booking.id,
-				host_user_id: booking.host_user_id,
-				property_id: booking.property_id,
-			},
+			metadata: paymentMetadata,
 		},
 	});
 
@@ -121,4 +108,20 @@ export async function createCheckoutSessionForBooking(params: {
 		session_id: session.id,
 		booking_id: booking.id,
 	};
+}
+
+export async function getCheckoutSession(sessionId: string) {
+	return getStripeClient().checkout.sessions.retrieve(sessionId);
+}
+
+export async function getPaymentIntent(paymentIntentId: string) {
+	return getStripeClient().paymentIntents.retrieve(paymentIntentId);
+}
+
+export async function getCharge(chargeId: string) {
+	return getStripeClient().charges.retrieve(chargeId);
+}
+
+export async function refundPayment(chargeId: string) {
+	return getStripeClient().refunds.create({ charge: chargeId });
 }

@@ -6,10 +6,14 @@ export const STRIPE_CURRENCY = (environments.STRIPE_CURRENCY ?? 'eur').toLowerCa
 
 export const STRIPE_CONNECT_DEFAULT_COUNTRY = (environments.STRIPE_CONNECT_DEFAULT_COUNTRY ?? 'IE').toUpperCase();
 
+export function eurosToCents(amount: number) {
+	return Math.round(amount * 100);
+}
+
 export function computePlatformFeeAmount(amountCents: number) {
 	return Math.round((amountCents * STRIPE_PLATFORM_FEE_PERCENT) / 100);
 }
 
-export function eurosToCents(amount: number) {
-	return Math.round(amount * 100);
+export function computePayoutAmount(amountCents: number, platformFeeCents: number) {
+	return amountCents - platformFeeCents;
 }
