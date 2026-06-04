@@ -47,7 +47,7 @@ export function CustomerDetailView({
 				type="button"
 				variant="ghostPill"
 				onClick={onBack}
-				className="group -ml-2 flex items-center gap-2 px-3 py-2 text-sm text-[#1A1A1A]/60 transition hover:text-[#1A1A1A]"
+				className="group -ml-2 flex items-center gap-2 px-3 py-2 text-sm text-espresso/60 transition hover:text-espresso"
 			>
 				<ArrowLeft className="h-4 w-4 transition group-hover:-translate-x-0.5" />
 				All customers
@@ -57,18 +57,18 @@ export function CustomerDetailView({
 				<div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
 					<div className="min-w-0">
 						<p className="text-xs uppercase tracking-[0.2em] text-camel">Customer</p>
-						<h2 className="mt-1 break-words font-serif text-3xl tracking-tight text-[#1A1A1A] md:text-4xl">
+						<h2 className="mt-1 break-words font-serif text-3xl tracking-tight text-espresso md:text-4xl">
 							{name}
 						</h2>
-						<p className="mt-2 text-sm text-[#1A1A1A]/60">{customer.email}</p>
-						{customer.phone ? <p className="mt-0.5 text-sm text-[#1A1A1A]/55">{customer.phone}</p> : null}
-						{location ? <p className="mt-1 text-sm text-[#1A1A1A]/50">{location}</p> : null}
+						<p className="mt-2 text-sm text-espresso/60">{customer.email}</p>
+						{customer.phone ? <p className="mt-0.5 text-sm text-espresso/55">{customer.phone}</p> : null}
+						{location ? <p className="mt-1 text-sm text-espresso/50">{location}</p> : null}
 					</div>
-					<div className="flex shrink-0 flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-[#1A1A1A]/65">
+					<div className="flex shrink-0 flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-espresso/65">
 						<span>
 							{customer.booking_count} {customer.booking_count === 1 ? 'booking' : 'bookings'}
 						</span>
-						<span className="text-[#1A1A1A]/25">·</span>
+						<span className="text-espresso/25">·</span>
 						<CustomerTotalSpent amount={customer.total_spent} className="font-medium text-camel" />
 					</div>
 				</div>
@@ -91,8 +91,8 @@ export function CustomerDetailView({
 								onClick={() => onTabChange(tab.id)}
 								className={`relative rounded-none border-0 bg-transparent px-4 py-3 text-sm font-medium transition ${
 									selected
-										? 'text-[#1A1A1A] after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-camel'
-										: 'text-[#1A1A1A]/50 hover:text-[#1A1A1A]/80 cursor-pointer'
+										? 'text-espresso after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-camel'
+										: 'text-espresso/50 hover:text-espresso/80 cursor-pointer'
 								}`}
 							>
 								{tab.label}

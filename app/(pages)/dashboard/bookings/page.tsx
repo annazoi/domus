@@ -37,7 +37,7 @@ export default function BookingsPage() {
 			{!loading && bookings.length === 0 ? (
 				<div className="dashboard-panel rounded-2xl p-8 text-center">
 					<p className="font-serif text-2xl">No bookings yet</p>
-					<p className="mt-2 text-sm text-[#1A1A1A]/60">Bookings will appear once guests reserve your properties.</p>
+					<p className="mt-2 text-sm text-espresso/60">Bookings will appear once guests reserve your properties.</p>
 				</div>
 			) : null}
 
@@ -63,14 +63,14 @@ export default function BookingsPage() {
 								target="_blank"
 								rel="noopener noreferrer"
 								onClick={(event) => event.stopPropagation()}
-								className="max-w-fit flex-1 text-base leading-snug text-[#1A1A1A]/70 transition hover:text-camel md:text-[1rem]"
+								className="max-w-fit flex-1 text-base leading-snug text-espresso/70 transition hover:text-camel md:text-[1rem]"
 							>
 								{booking.property_title}
 							</Link>
-							<span className="shrink-0 text-sm text-[#1A1A1A]/60 md:text-base ml-auto">
+							<span className="shrink-0 text-sm text-espresso/60 md:text-base ml-auto">
 								{formatEuropeanDateRange(booking.start_date, booking.end_date)}
 							</span>
-							<span className="shrink-0 text-sm capitalize text-[#1A1A1A]/80 md:ml-auto md:text-base">
+							<span className="shrink-0 text-sm capitalize text-espresso/80 md:ml-auto md:text-base">
 								{booking.status}
 							</span>
 						</div>

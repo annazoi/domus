@@ -4,11 +4,11 @@ import { useCallback, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui';
 import { useServices } from '@/features/services/hooks/use-services';
+import { useBookingQuote } from '@/features/bookings/hooks/use-booking-quote';
 import { createStripeCheckout } from '@/features/stripe/services/stripe.services';
 import { formatDisplayDate } from '@/features/property-availability/utils/date';
 import BookingServicesCard, {
 	buildSelectedServices,
-	computeExtrasTotal,
 } from './_components/booking-services-card';
 import { ArrowLeft } from 'lucide-react';
 
@@ -53,24 +53,34 @@ export default function ConfirmAndPayContent() {
 		});
 	}, []);
 
-	const selectedServiceLines = useMemo(
-		() =>
-			availableServices
-				.filter((service) => (serviceQuantities[service.id] ?? 0) > 0)
-				.map((service) => ({
-					id: service.id,
-					name: service.name,
-					quantity: serviceQuantities[service.id] ?? 0,
-					lineTotal: service.price * (serviceQuantities[service.id] ?? 0),
-				})),
-		[availableServices, serviceQuantities],
+	const selectedServices = useMemo(
+		() => buildSelectedServices(serviceQuantities),
+		[serviceQuantities],
 	);
 
-	const extrasTotal = useMemo(
-		() => computeExtrasTotal(availableServices, serviceQuantities),
-		[availableServices, serviceQuantities],
+	const quoteEnabled = Boolean(
+		booking.property_id && booking.check_in && booking.check_out && booking.guests > 0,
 	);
-	const grandTotal = booking.total_price + extrasTotal;
+
+	const {
+		data: quote,
+		isFetching: quoteLoading,
+		isError: quoteError,
+		error: quoteErrorObject,
+	} = useBookingQuote(
+		{
+			property_id: booking.property_id,
+			check_in: booking.check_in,
+			check_out: booking.check_out,
+			guests: booking.guests,
+			services: selectedServices,
+		},
+		quoteEnabled,
+	);
+
+	const snapshot = quote?.snapshot ?? null;
+	const grandTotal = snapshot?.total ?? booking.total_price;
+	const canPay = Boolean(snapshot) && !quoteLoading && !quoteError;
 
 	const handlePay = async () => {
 		if (!booking.property_id || !booking.check_in || !booking.check_out) {
@@ -84,7 +94,6 @@ export default function ConfirmAndPayContent() {
 		setError(null);
 		setIsPending(true);
 		try {
-			const selectedServices = buildSelectedServices(serviceQuantities);
 			const result = await createStripeCheckout({
 				property_id: booking.property_id,
 				check_in: booking.check_in,
@@ -106,7 +115,7 @@ export default function ConfirmAndPayContent() {
 	};
 
 	return (
-		<div className="min-h-screen bg-[#f7f5f2] px-4 py-8 sm:px-8">
+		<div className="min-h-screen bg-[#f9f8f6] px-4 py-8 sm:px-8">
 			<div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[1fr_360px]">
 				<section className="rounded-2xl bg-white p-6 shadow-sm sm:p-8">
 					<p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-camel">Confirm and pay</p>
@@ -125,15 +134,26 @@ export default function ConfirmAndPayContent() {
 					/>
 
 					{error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+					{quoteError && !error ? (
+						<p className="mt-4 text-sm text-red-600">
+							{quoteErrorObject instanceof Error
+								? quoteErrorObject.message
+								: 'Could not load the latest price.'}
+						</p>
+					) : null}
 
 					<Button
 						type="button"
 						variant="primarySm"
 						className="mt-8 w-full"
-						disabled={isPending}
+						disabled={isPending || !canPay}
 						onClick={() => void handlePay()}
 					>
-						{isPending ? 'Redirecting to Stripe…' : `Pay €${grandTotal.toFixed(2)}`}
+						{isPending
+							? 'Redirecting to Stripe…'
+							: quoteLoading
+								? 'Updating price…'
+								: `Pay €${grandTotal.toFixed(2)}`}
 					</Button>
 				</section>
 
@@ -156,49 +176,30 @@ export default function ConfirmAndPayContent() {
 							<span>Guests</span>
 							<span className="font-medium text-[#1A1A1A]">{booking.guests}</span>
 						</div>
-						{servicesLoading ? (
-							<p className="text-sm text-[#1A1A1A]/55">Loading extras…</p>
-						) : servicesError ? (
-							<p className="text-sm text-red-600">Could not load extras.</p>
-						) : availableServices.length > 0 ? (
+						{snapshot ? (
 							<div className="space-y-2 border-t border-black/10 pt-3">
 								<p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-camel">
-									Available extras
+									Price breakdown
 								</p>
-								{availableServices.map((service) => (
-									<div key={service.id} className="flex justify-between gap-2 text-sm">
-										<span className="text-[#1A1A1A]/75">{service.name}</span>
-										<span className="font-medium text-[#1A1A1A]">€{service.price.toFixed(2)}</span>
-									</div>
-								))}
+								{snapshot.lines
+									.filter((line) => line.amount !== 0)
+									.map((line, index) => (
+										<div
+											key={`${line.reference_uuid ?? line.type}-${index}`}
+											className="flex justify-between gap-2 text-sm"
+										>
+											<span className="text-[#1A1A1A]/75">
+												{line.label}
+												{line.quantity > 1 ? ` × ${line.quantity}` : ''}
+											</span>
+											<span className="font-medium text-[#1A1A1A]">€{line.amount.toFixed(2)}</span>
+										</div>
+									))}
 							</div>
-						) : null}
-						{selectedServiceLines.length > 0 ? (
-							<div className="space-y-2 border-t border-black/10 pt-3">
-								<p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-camel">
-									Selected extras
-								</p>
-								{selectedServiceLines.map((line) => (
-									<div key={line.id} className="flex justify-between gap-2 text-sm">
-										<span className="text-[#1A1A1A]/75">
-											{line.name} × {line.quantity}
-										</span>
-										<span className="font-medium text-[#1A1A1A]">€{line.lineTotal.toFixed(2)}</span>
-									</div>
-								))}
-							</div>
+						) : quoteLoading ? (
+							<p className="text-sm text-[#1A1A1A]/55">Calculating price…</p>
 						) : null}
 						<div className="mt-3 space-y-2 border-t border-black/10 pt-3">
-							<div className="flex justify-between gap-2">
-								<span>Stay</span>
-								<span className="font-medium text-[#1A1A1A]">€{booking.total_price.toFixed(2)}</span>
-							</div>
-							{extrasTotal > 0 ? (
-								<div className="flex justify-between gap-2">
-									<span>Extras</span>
-									<span className="font-medium text-[#1A1A1A]">€{extrasTotal.toFixed(2)}</span>
-								</div>
-							) : null}
 							<div className="flex justify-between gap-2">
 								<span>Total</span>
 								<span className="font-semibold text-[#1A1A1A]">€{grandTotal.toFixed(2)}</span>

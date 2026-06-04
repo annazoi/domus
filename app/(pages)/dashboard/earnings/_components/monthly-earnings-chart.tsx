@@ -54,7 +54,7 @@ function EarningsTooltip({ active, payload }: EarningsTooltipProps) {
 
 	return (
 		<div className="rounded-lg border border-camel/20 bg-dashboard-inset px-3 py-2 shadow-sm">
-			<p className="text-[10px] uppercase tracking-[0.16em] text-[#1A1A1A]/45">{data.label}</p>
+			<p className="text-[10px] uppercase tracking-[0.16em] text-espresso/45">{data.label}</p>
 			<p className="font-serif text-lg leading-none text-camel-dark">{data.revenueFormatted}</p>
 		</div>
 	);
@@ -110,7 +110,7 @@ export function MonthlyEarningsChart({ bars, loading = false }: MonthlyEarningsC
 							</linearGradient>
 						</defs>
 
-						<CartesianGrid strokeDasharray="4 6" stroke="#1A1A1A" strokeOpacity={0.06} vertical={false} />
+						<CartesianGrid strokeDasharray="4 6" stroke="#1a1a1a" strokeOpacity={0.06} vertical={false} />
 
 						<XAxis
 							dataKey="label"

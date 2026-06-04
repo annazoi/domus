@@ -83,7 +83,7 @@ export function DescriptionSection({ initialProperty, propertyId: propertyIdProp
 			/>
 			<div className="space-y-1.5">
 				<div className="flex items-center gap-1.5">
-					<label htmlFor="property-location-access" className="text-sm font-medium text-[#1A1A1A]">
+					<label htmlFor="property-location-access" className="text-sm font-medium text-espresso">
 						Access
 					</label>
 					<div className="group relative">
@@ -92,13 +92,13 @@ export function DescriptionSection({ initialProperty, propertyId: propertyIdProp
 							onClick={() => setAccessHelpOpen((prev) => !prev)}
 							onBlur={() => setAccessHelpOpen(false)}
 							aria-label="What is access?"
-							className="flex h-4.5 w-4.5 items-center justify-center rounded-full border border-black/20 text-[10px] font-semibold text-[#1A1A1A]/70"
+							className="flex h-4.5 w-4.5 items-center justify-center rounded-full border border-black/20 text-[10px] font-semibold text-espresso/70"
 						>
 							?
 						</button>
 						<div
 							className={[
-								'pointer-events-none absolute left-1/2 top-full z-20 mt-1 w-64 -translate-x-1/2 rounded-md bg-[#1A1A1A] px-2 py-1.5 text-[11px] text-white shadow-lg transition-opacity',
+								'pointer-events-none absolute left-1/2 top-full z-20 mt-1 w-64 -translate-x-1/2 rounded-md bg-espresso px-2 py-1.5 text-[11px] text-white shadow-lg transition-opacity',
 								accessHelpOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
 							].join(' ')}
 						>

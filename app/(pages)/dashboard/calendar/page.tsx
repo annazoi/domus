@@ -88,7 +88,7 @@ export default function CalendarPage() {
 						>
 							<ChevronLeft className="h-4 w-4" />
 						</Button>
-						<p className="font-serif text-xl tracking-tight text-[#1A1A1A]">{monthLabel}</p>
+						<p className="font-serif text-xl tracking-tight text-espresso">{monthLabel}</p>
 						<Button
 							type="button"
 							variant="ghostIcon"
@@ -99,7 +99,7 @@ export default function CalendarPage() {
 						</Button>
 					</div>
 
-					<div className="mb-2 grid grid-cols-7 text-center text-xs text-[#1A1A1A]/45">
+					<div className="mb-2 grid grid-cols-7 text-center text-xs text-espresso/45">
 						{weekdays.map((name) => (
 							<div key={name} className="py-2">
 								{name}
@@ -165,7 +165,7 @@ export default function CalendarPage() {
 						</div>
 					)}
 
-					<div className="mt-5 flex flex-wrap gap-4 text-xs text-[#1A1A1A]/55">
+					<div className="mt-5 flex flex-wrap gap-4 text-xs text-espresso/55">
 						<span className="inline-flex items-center gap-2">
 							<span className="h-3 w-3 rounded bg-camel/10" />
 							Has bookings
@@ -179,7 +179,7 @@ export default function CalendarPage() {
 
 				<div className="space-y-4 dashboard-panel rounded-2xl p-5">
 					<h2 className="font-serif text-2xl">Booking details</h2>
-					<p className="text-sm text-[#1A1A1A]/60">
+					<p className="text-sm text-espresso/60">
 						{selectedDate
 							? formatDisplayDate(selectedDate)
 							: 'Select a date to view reservations for that day.'}
@@ -201,7 +201,7 @@ export default function CalendarPage() {
 					{!isLoading && selectedDayBookings.length > 0 ? (
 						<div className="space-y-3">
 							{selectedDayActiveBookings.length > 0 ? (
-								<p className="text-xs uppercase tracking-[0.14em] text-[#1A1A1A]/40">
+								<p className="text-xs uppercase tracking-[0.14em] text-espresso/40">
 									{selectedDayActiveBookings.length}{' '}
 									{selectedDayActiveBookings.length === 1 ? 'stay' : 'stays'}
 								</p>
@@ -219,17 +219,17 @@ export default function CalendarPage() {
 											: 'bg-dashboard-inset',
 									)}
 								>
-									<span className="font-medium text-[#1A1A1A]">{booking.guest_name}</span>
+									<span className="font-medium text-espresso">{booking.guest_name}</span>
 									<Link
 										href={`/${encodeURIComponent(booking.property.slug)}`}
 										target="_blank"
 										rel="noopener noreferrer"
 										onClick={(event) => event.stopPropagation()}
-										className="text-sm text-[#1A1A1A]/65 transition hover:text-camel"
+										className="text-sm text-espresso/65 transition hover:text-camel"
 									>
 										{booking.property_title}
 									</Link>
-									<span className="text-sm text-[#1A1A1A]/55">
+									<span className="text-sm text-espresso/55">
 										{booking.start_date} – {booking.end_date}
 									</span>
 									<span className="text-xs capitalize text-camel-dark">{statusLabel(booking.status)}</span>

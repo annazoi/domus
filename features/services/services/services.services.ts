@@ -1,6 +1,6 @@
 import axiosInstance from '@/config/api/axios';
 import { ApiRoutes } from '@/config/api/routes';
-import type { HostService, Service, ServiceInput } from '../interfaces/service.interface';
+import type { HostService, Service, ServiceImage, ServiceInput } from '../interfaces/service.interface';
 
 export const listServices = async (propertyId: string) => {
 	const response = await axiosInstance.get<Service[]>(ApiRoutes.services.list(propertyId));
@@ -36,4 +36,23 @@ export const updateHostService = async (id: string, input: ServiceInput) => {
 
 export const deleteHostService = async (id: string) => {
 	await axiosInstance.delete(ApiRoutes.services.service(id));
+};
+
+export const uploadServiceImages = async (serviceId: string, files: File[], descriptions?: string[]) => {
+	const formData = new FormData();
+	files.forEach((file) => formData.append('files', file));
+	if (descriptions?.length) {
+		formData.append('descriptions', JSON.stringify(descriptions));
+	}
+
+	const response = await axiosInstance.post<ServiceImage[]>(ApiRoutes.services.images(serviceId), formData, {
+		headers: {
+			'Content-Type': 'multipart/form-data',
+		},
+	});
+	return response.data;
+};
+
+export const deleteServiceImage = async (serviceId: string, imageId: string) => {
+	await axiosInstance.delete(ApiRoutes.services.image(serviceId, imageId));
 };

@@ -37,7 +37,7 @@ export default function SubscriptionPage() {
 						<div className="flex items-start justify-between">
 							<div>
 								<p className="font-serif text-3xl">{plan.name}</p>
-								<p className="mt-1 text-sm text-[#1A1A1A]/55">{plan.description}</p>
+								<p className="mt-1 text-sm text-espresso/55">{plan.description}</p>
 							</div>
 							{plan.current ? (
 								<span className="rounded-full bg-camel/12 px-3 py-1 text-xs text-camel">Current</span>
@@ -45,7 +45,7 @@ export default function SubscriptionPage() {
 						</div>
 
 						<p className="mt-5 font-serif text-4xl">{plan.price}</p>
-						<ul className="mt-5 space-y-2 text-sm text-[#1A1A1A]/70">
+						<ul className="mt-5 space-y-2 text-sm text-espresso/70">
 							{plan.features.map((feature) => (
 								<li key={feature}>- {feature}</li>
 							))}

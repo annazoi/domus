@@ -1,12 +1,49 @@
 import { BookingStatus } from '@prisma/client';
 import { getStripeClient, PaymentContext } from '@/lib/integrations/stripe/config';
 import {
+	centsToEuros,
 	computePlatformFeeAmount,
+	estimateStripeFeeAmount,
 	eurosToCents,
 	STRIPE_CURRENCY,
 } from '@/lib/integrations/stripe/fees';
 import { StripeCheckoutError } from '@/lib/integrations/stripe/errors';
+import { upsertPendingBookingPayment } from '@/lib/integrations/stripe/payment-records';
+import { PriceLineType, type PriceSnapshot } from '@/lib/pricing/price-snapshot';
 import { prisma } from '@/lib/prisma';
+
+function parseSnapshot(value: unknown): PriceSnapshot | null {
+	if (!value || typeof value !== 'object') return null;
+	const snapshot = value as Partial<PriceSnapshot>;
+	if (!Array.isArray(snapshot.lines) || typeof snapshot.total_cents !== 'number') return null;
+	return snapshot as PriceSnapshot;
+}
+
+function buildLineItems(snapshot: PriceSnapshot, fallbackName: string) {
+	const items = snapshot.lines
+		.filter((line) => line.amount > 0)
+		.map((line) => ({
+			quantity: line.quantity > 0 ? line.quantity : 1,
+			price_data: {
+				currency: snapshot.currency || STRIPE_CURRENCY,
+				unit_amount: eurosToCents(line.quantity > 0 ? line.unit_amount : line.amount),
+				product_data: { name: line.label },
+			},
+		}));
+
+	if (items.length === 0) {
+		items.push({
+			quantity: 1,
+			price_data: {
+				currency: snapshot.currency || STRIPE_CURRENCY,
+				unit_amount: snapshot.total_cents,
+				product_data: { name: fallbackName },
+			},
+		});
+	}
+
+	return items;
+}
 
 export async function createCheckoutSession(params: {
 	bookingId: string;
@@ -40,18 +77,52 @@ export async function createCheckoutSession(params: {
 		throw new StripeCheckoutError('Host is not ready to accept payments.', 'HOST_NOT_READY');
 	}
 
-	const amountCents = eurosToCents(Number(booking.total_price));
+	const snapshot = parseSnapshot(booking.price_snapshot);
+	const amountCents = snapshot ? snapshot.total_cents : eurosToCents(Number(booking.total_price));
 	if (amountCents <= 0) {
 		throw new StripeCheckoutError('Invalid booking amount.', 'INVALID_AMOUNT');
 	}
 
+	const effectiveSnapshot: PriceSnapshot =
+		snapshot ?? {
+			currency: STRIPE_CURRENCY,
+			nights: booking.nights ?? 0,
+			lines: [
+				{
+					type: PriceLineType.ACCOMMODATION,
+					label: booking.property.title,
+					unit_amount: Number(booking.total_price),
+					quantity: 1,
+					amount: Number(booking.total_price),
+				},
+			],
+			subtotal_accommodation: Number(booking.total_price),
+			subtotal_extras: 0,
+			fees: 0,
+			discount_amount: 0,
+			total: Number(booking.total_price),
+			total_cents: amountCents,
+		};
+
 	const stripe = getStripeClient();
 	const platformFeeAmount = computePlatformFeeAmount(amountCents);
-	const paymentMetadata = {
+	const stripeFeeEstimate = estimateStripeFeeAmount(amountCents);
+	const payoutEstimateCents = amountCents - platformFeeAmount - stripeFeeEstimate;
+
+	const extraServiceIds = effectiveSnapshot.lines
+		.filter((line) => line.type === PriceLineType.EXTRA_SERVICE && line.reference_uuid)
+		.map((line) => line.reference_uuid as string);
+
+	const paymentMetadata: Record<string, string> = {
 		booking_id: booking.id,
 		host_user_id: booking.host_user_id,
+		guest_user_id: booking.guest_user_id,
 		property_id: booking.property_id,
 		context: PaymentContext.BOOKING_PAYMENT,
+		check_in: booking.check_in.toISOString().slice(0, 10),
+		check_out: booking.check_out.toISOString().slice(0, 10),
+		total_cents: String(amountCents),
+		...(extraServiceIds.length > 0 ? { extra_service_ids: extraServiceIds.join(',') } : {}),
 	};
 
 	if (booking.stripe_session_id) {
@@ -72,19 +143,7 @@ export async function createCheckoutSession(params: {
 		client_reference_id: booking.id,
 		customer_email: params.customerEmail ?? booking.guest.email,
 		metadata: paymentMetadata,
-		line_items: [
-			{
-				quantity: 1,
-				price_data: {
-					currency: STRIPE_CURRENCY,
-					unit_amount: amountCents,
-					product_data: {
-						name: booking.property.title,
-						description: `Stay ${booking.check_in.toISOString().slice(0, 10)} – ${booking.check_out.toISOString().slice(0, 10)}`,
-					},
-				},
-			},
-		],
+		line_items: buildLineItems(effectiveSnapshot, booking.property.title),
 		payment_intent_data: {
 			application_fee_amount: platformFeeAmount,
 			transfer_data: {
@@ -94,14 +153,38 @@ export async function createCheckoutSession(params: {
 		},
 	});
 
+	if (session.amount_total !== amountCents) {
+		try {
+			await stripe.checkout.sessions.expire(session.id);
+		} catch {
+		}
+		throw new StripeCheckoutError(
+			'Checkout total does not match the quoted price. Please refresh your quote.',
+			'INVALID_AMOUNT',
+		);
+	}
+
+	if (!session.url) {
+		throw new Error('Stripe did not return a checkout URL.');
+	}
+
 	await prisma.booking.update({
 		where: { id: booking.id },
 		data: { stripe_session_id: session.id },
 	});
 
-	if (!session.url) {
-		throw new Error('Stripe did not return a checkout URL.');
-	}
+	await upsertPendingBookingPayment({
+		bookingId: booking.id,
+		guestUserId: booking.guest_user_id,
+		hostUserId: booking.host_user_id,
+		amount: Number(booking.total_price),
+		currency: effectiveSnapshot.currency || STRIPE_CURRENCY,
+		stripeSessionId: session.id,
+		stripePaymentUrl: session.url,
+		platformFeeAmount: centsToEuros(platformFeeAmount),
+		stripeFeeEstimate: centsToEuros(stripeFeeEstimate),
+		payoutEstimate: centsToEuros(payoutEstimateCents),
+	});
 
 	return {
 		checkout_url: session.url,
@@ -120,6 +203,10 @@ export async function getPaymentIntent(paymentIntentId: string) {
 
 export async function getCharge(chargeId: string) {
 	return getStripeClient().charges.retrieve(chargeId);
+}
+
+export async function getBalanceTransaction(balanceTransactionId: string) {
+	return getStripeClient().balanceTransactions.retrieve(balanceTransactionId);
 }
 
 export async function refundPayment(chargeId: string) {

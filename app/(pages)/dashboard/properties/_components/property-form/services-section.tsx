@@ -70,12 +70,12 @@ export function ServicesSection({ initialProperty, propertyId: propertyIdProp }:
 
 	return (
 		<PropertyFormSection id="services" title="Guest extras">
-			<p className="text-sm text-[#1A1A1A]/65">
+			<p className="text-sm text-espresso/65">
 				Choose which services guests can add at checkout for this property.
 			</p>
 
 			{!propertyId ? (
-				<p className="text-sm text-[#1A1A1A]/55">Create the property in Basic info before linking services.</p>
+				<p className="text-sm text-espresso/55">Create the property in Basic info before linking services.</p>
 			) : isLoading ? (
 				<div className="space-y-3">
 					{Array.from({ length: 3 }).map((_, index) => (
@@ -83,7 +83,7 @@ export function ServicesSection({ initialProperty, propertyId: propertyIdProp }:
 					))}
 				</div>
 			) : hostServices.length === 0 ? (
-				<div className="rounded-xl border border-dashed border-black/12 px-4 py-6 text-sm text-[#1A1A1A]/55">
+				<div className="rounded-xl border border-dashed border-black/12 px-4 py-6 text-sm text-espresso/55">
 					No services yet.{' '}
 					<Link href="/dashboard/services" className="text-camel underline-offset-2 hover:underline">
 						Create services
@@ -111,9 +111,9 @@ export function ServicesSection({ initialProperty, propertyId: propertyIdProp }:
 								>
 									<div className="flex w-full items-start justify-between gap-3">
 										<div className="min-w-0">
-											<p className="text-sm font-medium text-[#1A1A1A]">{service.name}</p>
+											<p className="text-sm font-medium text-espresso">{service.name}</p>
 											{service.description ? (
-												<p className="mt-1 text-sm text-[#1A1A1A]/60">{service.description}</p>
+												<p className="mt-1 text-sm text-espresso/60">{service.description}</p>
 											) : null}
 										</div>
 										<span

@@ -38,7 +38,7 @@ export function CustomerBookingsList({ customerId }: { customerId: string }) {
 		return (
 			<div className="dashboard-panel rounded-2xl p-8 text-center">
 				<p className="font-serif text-2xl">No bookings yet</p>
-				<p className="mt-2 text-sm text-[#1A1A1A]/60">This customer has not made any reservations.</p>
+				<p className="mt-2 text-sm text-espresso/60">This customer has not made any reservations.</p>
 			</div>
 		);
 	}
@@ -65,14 +65,14 @@ export function CustomerBookingsList({ customerId }: { customerId: string }) {
 							target="_blank"
 							rel="noopener noreferrer"
 							onClick={(event) => event.stopPropagation()}
-							className="min-w-0 flex-1 text-lg font-medium leading-snug text-[#1A1A1A] transition hover:text-camel md:text-[1.05rem]"
+							className="min-w-0 flex-1 text-lg font-medium leading-snug text-espresso transition hover:text-camel md:text-[1.05rem]"
 						>
 							{booking.property_title}
 						</Link>
-						<span className="shrink-0 text-sm text-[#1A1A1A]/60 md:text-base">
+						<span className="shrink-0 text-sm text-espresso/60 md:text-base">
 							{booking.start_date} – {booking.end_date}
 						</span>
-						<span className="shrink-0 text-sm capitalize text-[#1A1A1A]/80 md:ml-auto md:text-base">
+						<span className="shrink-0 text-sm capitalize text-espresso/80 md:ml-auto md:text-base">
 							{booking.status}
 						</span>
 					</div>

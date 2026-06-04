@@ -75,7 +75,7 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 		<PropertyFormSection id="house-rules" title="House rules">
 			<div className="grid gap-4 md:grid-cols-2">
 				<div className="space-y-1.5">
-					<label htmlFor="property-check-in-time" className="text-sm font-medium text-[#1A1A1A]">
+					<label htmlFor="property-check-in-time" className="text-sm font-medium text-espresso">
 						Check-in time
 					</label>
 					<Controller
@@ -102,7 +102,7 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 					/>
 				</div>
 				<div className="space-y-1.5">
-					<label htmlFor="property-check-out-time" className="text-sm font-medium text-[#1A1A1A]">
+					<label htmlFor="property-check-out-time" className="text-sm font-medium text-espresso">
 						Check-out time
 					</label>
 					<Controller

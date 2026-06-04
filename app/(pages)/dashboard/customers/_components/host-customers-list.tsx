@@ -36,7 +36,7 @@ export function HostCustomersList({ customers, loading, searchQuery = '', onSele
 		return (
 			<div className="dashboard-panel rounded-2xl p-8 text-center">
 				<p className="font-serif text-2xl">{hasActiveSearch ? 'No matching customers' : 'No customers yet'}</p>
-				<p className="mt-2 text-sm text-[#1A1A1A]/60">
+				<p className="mt-2 text-sm text-espresso/60">
 					{hasActiveSearch
 						? 'Try a different name, email, phone number, or location.'
 						: 'Customers appear after guests book your properties with billing details on file.'}
@@ -60,15 +60,15 @@ export function HostCustomersList({ customers, loading, searchQuery = '', onSele
 					>
 						<div className="min-w-0 shrink-0 md:max-w-[14rem]">
 							<p className="text-lg font-medium leading-snug md:text-xl">{name}</p>
-							<p className="mt-0.5 truncate text-sm text-[#1A1A1A]/65 md:text-base">{customer.email}</p>
+							<p className="mt-0.5 truncate text-sm text-espresso/65 md:text-base">{customer.email}</p>
 							{customer.phone ? (
-								<p className="mt-0.5 text-sm text-[#1A1A1A]/55">{customer.phone}</p>
+								<p className="mt-0.5 text-sm text-espresso/55">{customer.phone}</p>
 							) : null}
 						</div>
-						<p className="min-w-0 flex-1 text-base leading-snug text-[#1A1A1A]/70 md:text-lg">
+						<p className="min-w-0 flex-1 text-base leading-snug text-espresso/70 md:text-lg">
 							{location || '—'}
 						</p>
-						<span className="shrink-0 text-sm text-[#1A1A1A]/70 md:text-base">
+						<span className="shrink-0 text-sm text-espresso/70 md:text-base">
 							{customer.booking_count} {customer.booking_count === 1 ? 'booking' : 'bookings'}
 						</span>
 						<CustomerTotalSpent

@@ -49,7 +49,7 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 
 	return (
 		<PropertyFormSection id="branding" title="Branding">
-			<p className="max-w-2xl text-sm leading-relaxed text-[#1A1A1A]/65">
+			<p className="max-w-2xl text-sm leading-relaxed text-espresso/65">
 				Choose a site template for this listing. Each design is fully customisable — swap photos, colors, and copy
 				without touching code.
 			</p>
@@ -65,7 +65,7 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 								active ? 'border-camel ring-2 ring-camel/25' : 'border-black/[0.06] hover:border-black/15',
 							)}
 						>
-							<div className="relative aspect-[4/5] w-full overflow-hidden bg-[#1A1A1A]/5">
+							<div className="relative aspect-[4/5] w-full overflow-hidden bg-espresso/5">
 								<Image
 									src={option.image}
 									alt={option.imageAlt}
@@ -80,18 +80,18 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 								) : null}
 							</div>
 							<div className="flex flex-1 flex-col p-5 text-left">
-								<p className="font-serif text-2xl tracking-tight text-[#1A1A1A]">{option.label}</p>
+								<p className="font-serif text-2xl tracking-tight text-espresso">{option.label}</p>
 								<div className="mt-2 flex flex-wrap gap-2">
 									{option.tags.map((tag) => (
 										<span
 											key={tag}
-											className="rounded-full bg-[#1A1A1A]/[0.06] px-2.5 py-0.5 text-xs text-[#1A1A1A]/65"
+											className="rounded-full bg-espresso/[0.06] px-2.5 py-0.5 text-xs text-espresso/65"
 										>
 											{tag}
 										</span>
 									))}
 								</div>
-								<p className="mt-3 text-sm leading-relaxed text-[#1A1A1A]/55">{option.description}</p>
+								<p className="mt-3 text-sm leading-relaxed text-espresso/55">{option.description}</p>
 							</div>
 							<div className="flex gap-2 px-4 pb-4 pt-1">
 								<Button

@@ -59,7 +59,7 @@ function toPayload(form: CustomerFormState): UpdateHostCustomerInput {
 function Field({ label, children }: { label: string; children: ReactNode }) {
 	return (
 		<label className="block">
-			<span className="text-xs font-medium uppercase tracking-wide text-[#1A1A1A]/45">{label}</span>
+			<span className="text-xs font-medium uppercase tracking-wide text-espresso/45">{label}</span>
 			<div className="mt-1.5">{children}</div>
 		</label>
 	);

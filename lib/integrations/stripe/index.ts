@@ -21,7 +21,9 @@ export {
 	createCheckoutSession,
 	getCheckoutSession,
 	getCharge,
+	getBalanceTransaction,
 	getPaymentIntent,
 	refundPayment,
 } from './services/stripe-payments.service';
 export { dispatchStripeWebhookEvent } from './services/stripe-payments-webhooks.service';
+export { cancelBookingAndRelease } from './booking-payment';

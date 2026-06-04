@@ -24,7 +24,7 @@ export default function EarningsPage() {
 
 				<div className="relative flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
 					<div>
-						<p className="text-sm text-[#1A1A1A]/55">Monthly earnings summary</p>
+						<p className="text-sm text-espresso/55">Monthly earnings summary</p>
 						{loading ? (
 							<Skeleton className="mt-2 h-4 w-28 bg-black/10" />
 						) : (
@@ -62,7 +62,7 @@ export default function EarningsPage() {
 				{!loading && stats.recentTransactions.length === 0 ? (
 					<div className="dashboard-panel rounded-2xl p-8 text-center">
 						<p className="font-serif text-2xl">No transactions yet</p>
-						<p className="mt-2 text-sm text-[#1A1A1A]/60">Earnings appear when guests complete bookings.</p>
+						<p className="mt-2 text-sm text-espresso/60">Earnings appear when guests complete bookings.</p>
 					</div>
 				) : null}
 				{!loading && stats.recentTransactions.length > 0 ? (
@@ -71,7 +71,7 @@ export default function EarningsPage() {
 							<div key={tx.bookingId} className="flex items-center justify-between border-b border-dashboard-border px-5 py-4 last:border-b-0">
 								<div>
 									<p className="font-medium">{tx.guest}</p>
-									<p className="text-sm text-[#1A1A1A]/55">
+									<p className="text-sm text-espresso/55">
 										{tx.id} - {tx.date}
 									</p>
 								</div>

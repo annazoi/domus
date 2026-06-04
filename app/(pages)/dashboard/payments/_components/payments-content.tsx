@@ -31,33 +31,33 @@ export default function PaymentsContent() {
 			<div>
 				<p className="text-xs uppercase tracking-[0.2em] text-camel">Payments</p>
 				<h1 className="mt-2 font-serif text-4xl tracking-tight">Stripe payouts</h1>
-				<p className="mt-3 max-w-2xl text-sm text-[#1A1A1A]/65">
+				<p className="mt-3 max-w-2xl text-sm text-espresso/65">
 					Connect your Stripe Express account to receive payouts when guests book your properties. Domus
 					automatically deducts the platform commission at checkout.
 				</p>
 			</div>
 
 			<section className="space-y-5 dashboard-panel rounded-2xl p-6">
-				{isLoading ? <p className="text-sm text-[#1A1A1A]/55">Loading payout status…</p> : null}
+				{isLoading ? <p className="text-sm text-dashboard-muted">Loading payout status…</p> : null}
 				{isError ? <p className="text-sm text-red-600">Could not load Stripe status.</p> : null}
 
 				{status ? (
 					<div className="grid gap-3 text-sm sm:grid-cols-2">
-						<div className="flex justify-between gap-3 rounded-xl bg-[#f7f5f2] px-4 py-3">
-							<span className="text-[#1A1A1A]/65">Account</span>
-							<span className="font-medium text-[#1A1A1A]">{status.stripe_account_id ?? 'Not connected'}</span>
+						<div className="flex justify-between gap-3 rounded-xl bg-dashboard-inset px-4 py-3">
+							<span className="text-espresso/65">Account</span>
+							<span className="font-medium text-espresso">{status.stripe_account_id ?? 'Not connected'}</span>
 						</div>
-						<div className="flex justify-between gap-3 rounded-xl bg-[#f7f5f2] px-4 py-3">
-							<span className="text-[#1A1A1A]/65">Details submitted</span>
-							<span className="font-medium text-[#1A1A1A]">{status.details_submitted ? 'Yes' : 'No'}</span>
+						<div className="flex justify-between gap-3 rounded-xl bg-dashboard-inset px-4 py-3">
+							<span className="text-espresso/65">Details submitted</span>
+							<span className="font-medium text-espresso">{status.details_submitted ? 'Yes' : 'No'}</span>
 						</div>
-						<div className="flex justify-between gap-3 rounded-xl bg-[#f7f5f2] px-4 py-3">
-							<span className="text-[#1A1A1A]/65">Charges enabled</span>
-							<span className="font-medium text-[#1A1A1A]">{status.charges_enabled ? 'Yes' : 'No'}</span>
+						<div className="flex justify-between gap-3 rounded-xl bg-dashboard-inset px-4 py-3">
+							<span className="text-espresso/65">Charges enabled</span>
+							<span className="font-medium text-espresso">{status.charges_enabled ? 'Yes' : 'No'}</span>
 						</div>
-						<div className="flex justify-between gap-3 rounded-xl bg-[#f7f5f2] px-4 py-3">
-							<span className="text-[#1A1A1A]/65">Payouts enabled</span>
-							<span className="font-medium text-[#1A1A1A]">{status.payouts_enabled ? 'Yes' : 'No'}</span>
+						<div className="flex justify-between gap-3 rounded-xl bg-dashboard-inset px-4 py-3">
+							<span className="text-espresso/65">Payouts enabled</span>
+							<span className="font-medium text-espresso">{status.payouts_enabled ? 'Yes' : 'No'}</span>
 						</div>
 					</div>
 				) : null}

@@ -19,7 +19,7 @@ export default function SettingsPage() {
 			<form className="space-y-5 dashboard-panel rounded-2xl p-6">
 				{fields.map((field) => (
 					<label key={field.label} className="block space-y-2">
-						<span className="text-sm text-[#1A1A1A]/65">{field.label}</span>
+						<span className="text-sm text-espresso/65">{field.label}</span>
 						<Input variant="settings" type="text" placeholder={field.placeholder} />
 					</label>
 				))}

@@ -76,7 +76,7 @@ export function WebsiteBuilderClient() {
 		<div className="dashboard-panel flex min-h-[calc(100vh-6rem)] flex-col gap-0 rounded-2xl lg:flex-row">
 			<aside className="flex w-full shrink-0 flex-col gap-8 border-b border-dashboard-border p-5 lg:w-[min(100%,18rem)] lg:border-b-0 lg:border-r lg:p-6">
 				<div>
-					<p className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-[#1A1A1A]/45">Current page</p>
+					<p className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-espresso/45">Current page</p>
 					{isLoading ? (
 						<Skeleton className="mt-2 h-10 w-full bg-black/10" />
 					) : (
@@ -102,13 +102,13 @@ export function WebsiteBuilderClient() {
 				</div>
 
 				<div className="space-y-4">
-					<p className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-[#1A1A1A]/45">Layout</p>
-					<label className="flex cursor-pointer items-center gap-3 text-sm text-[#1A1A1A]/85">
+					<p className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-espresso/45">Layout</p>
+					<label className="flex cursor-pointer items-center gap-3 text-sm text-espresso/85">
 						<Checkbox checked={asymmetric} onChange={(e) => setAsymmetric(e.target.checked)} className="accent-camel" />
 						Asymmetric image
 					</label>
 					<div>
-						<div className="flex justify-between text-xs text-[#1A1A1A]/50">
+						<div className="flex justify-between text-xs text-espresso/50">
 							<span>Vertical padding</span>
 							<span className="font-medium tabular-nums text-camel">{verticalPad}px</span>
 						</div>
@@ -122,7 +122,7 @@ export function WebsiteBuilderClient() {
 						/>
 					</div>
 					<div>
-						<div className="flex justify-between text-xs text-[#1A1A1A]/50">
+						<div className="flex justify-between text-xs text-espresso/50">
 							<span>Image emphasis</span>
 							<span className="font-medium tabular-nums text-camel">{imageShare}%</span>
 						</div>
@@ -150,7 +150,7 @@ export function WebsiteBuilderClient() {
 			<div className="relative flex min-h-[28rem] flex-1 flex-col bg-dom-sand">
 				<div className="flex flex-1 items-center justify-center overflow-auto p-4 md:p-8">
 					{!isLoading && !current ? (
-						<p className="max-w-sm text-center text-sm text-[#1A1A1A]/55">
+						<p className="max-w-sm text-center text-sm text-espresso/55">
 							Add a property to preview how it will look on your site.
 						</p>
 					) : isLoading ? (
@@ -182,14 +182,14 @@ export function WebsiteBuilderClient() {
 										style={{ flex: `1 1 ${100 - imageShare}%` }}
 									>
 										<p className="text-[0.65rem] font-medium uppercase tracking-[0.25em] text-camel">{kicker}</p>
-										<h2 className="mt-3 font-serif text-2xl leading-tight tracking-tight text-[#1A1A1A] md:text-3xl">
+										<h2 className="mt-3 font-serif text-2xl leading-tight tracking-tight text-espresso md:text-3xl">
 											{current.title}
 										</h2>
-										<p className="mt-2 text-xs text-[#1A1A1A]/45">
+										<p className="mt-2 text-xs text-espresso/45">
 											{current.max_guests} guests · {current.bedrooms} bedrooms · {current.beds} beds ·{' '}
 											{current.bathrooms} baths
 										</p>
-										<p className="mt-4 text-sm leading-relaxed text-[#1A1A1A]/65">{body}</p>
+										<p className="mt-4 text-sm leading-relaxed text-espresso/65">{body}</p>
 										<button
 											type="button"
 											className="mt-6 inline-flex w-fit items-center gap-1 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-camel transition hover:text-camel-dark"
@@ -216,7 +216,7 @@ export function WebsiteBuilderClient() {
 													sizes="(max-width: 768px) 100vw, 480px"
 												/>
 											) : (
-												<div className="flex min-h-[200px] w-full items-center justify-center bg-camel/10 text-sm text-[#1A1A1A]/45 md:min-h-[300px]">
+												<div className="flex min-h-[200px] w-full items-center justify-center bg-camel/10 text-sm text-espresso/45 md:min-h-[300px]">
 													No photo yet
 												</div>
 											)}

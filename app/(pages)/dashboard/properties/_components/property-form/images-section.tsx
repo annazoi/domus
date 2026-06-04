@@ -179,18 +179,18 @@ export function ImagesSection({
 				<div className="min-w-0 flex-1 space-y-8">
 					<header className="flex flex-col gap-2">
 						<div>
-							<p className="mt-2 max-w-xl text-sm leading-relaxed text-[#1A1A1A]/65">
+							<p className="mt-2 max-w-xl text-sm leading-relaxed text-espresso/65">
 								Curate high-resolution visuals that define the atmosphere. Order sets the story visitors
 								follow: lead with your strongest impression.
 							</p>
 						</div>
-						<p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#1A1A1A]/45">
+						<p className="text-[10px] font-medium uppercase tracking-[0.2em] text-espresso/45">
 							Recommended 1920×1080
 						</p>
 					</header>
 
 					{mode === 'create' && !propertyId ? (
-						<p className="text-sm text-[#1A1A1A]/60">
+						<p className="text-sm text-espresso/60">
 							Save the property from Basic info first, then return here to import assets.
 						</p>
 					) : null}
@@ -223,19 +223,19 @@ export function ImagesSection({
 							}}
 							className={[
 								'cursor-pointer flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-16 transition',
-								fileZoneOver ? 'border-[#C45C26]/60 bg-[#C45C26]/[0.04]' : 'border-black/15 bg-stone-50/80',
+								fileZoneOver ? 'border-[#C45C26]/60 bg-[#C45C26]/[0.04]' : 'border-black/10 bg-white',
 							].join(' ')}
 						>
-							<ImageIcon className="h-10 w-10 text-[#1A1A1A]/25" strokeWidth={1.25} />
+							<ImageIcon className="h-10 w-10 text-espresso/25" strokeWidth={1.25} />
 							<div className="text-center">
-								<p className="font-serif text-xl text-[#1A1A1A]">Import Visual Assets</p>
-								<p className="mt-2 text-[10px] font-medium uppercase tracking-[0.28em] text-[#1A1A1A]/50">
+								<p className="font-serif text-xl text-espresso">Import Visual Assets</p>
+								<p className="mt-2 text-[10px] font-medium uppercase tracking-[0.28em] text-espresso/50">
 									Click or drag files to this area
 								</p>
 							</div>
 						</button>
 						{staged.length > 0 ? (
-							<p className="mt-2 text-xs text-[#1A1A1A]/55">
+							<p className="mt-2 text-xs text-espresso/55">
 								{staged.length} image{staged.length === 1 ? '' : 's'} staged - add captions below, then Save.
 							</p>
 						) : null}
@@ -265,7 +265,7 @@ export function ImagesSection({
 										</Button>
 									</div>
 									<div className="space-y-1.5 p-3">
-										<label className="text-xs font-medium text-[#1A1A1A]" htmlFor={`staged-desc-${item.id}`}>
+										<label className="text-xs font-medium text-espresso" htmlFor={`staged-desc-${item.id}`}>
 											Description
 										</label>
 										<Textarea
@@ -284,7 +284,7 @@ export function ImagesSection({
 
 					{propertyId && ordered.length > 0 ? (
 						<div className="space-y-4">
-							<h3 className="font-serif text-lg text-[#1A1A1A]">Uploaded images</h3>
+							<h3 className="font-serif text-lg text-espresso">Uploaded images</h3>
 							<div className="grid gap-8 sm:grid-cols-2">
 							{ordered.map((image, i) => (
 								<figure
@@ -308,30 +308,30 @@ export function ImagesSection({
 				</div>
 
 				{/* <aside className="w-full shrink-0 space-y-8 lg:w-[min(100%,280px)]">
-					<div className="rounded-xl bg-stone-100/90 p-5">
-						<h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#1A1A1A]/55">
+					<div className="rounded-xl bg-dashboard-inset p-5">
+						<h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-espresso/55">
 							Image health
 						</h3>
 						<dl className="mt-4 divide-y divide-black/10 text-sm">
 							<div className="flex justify-between gap-4 py-3 first:pt-0">
-								<dt className="text-[#1A1A1A]/55">Resolution</dt>
+								<dt className="text-espresso/55">Resolution</dt>
 								<dd className="font-medium text-[#C45C26]">Sharp</dd>
 							</div>
 							<div className="flex justify-between gap-4 py-3">
-								<dt className="text-[#1A1A1A]/55">Aspect ratio</dt>
-								<dd className="text-[#1A1A1A]/80">Balanced</dd>
+								<dt className="text-espresso/55">Aspect ratio</dt>
+								<dd className="text-espresso/80">Balanced</dd>
 							</div>
 							<div className="flex justify-between gap-4 py-3">
-								<dt className="text-[#1A1A1A]/55">Color profile</dt>
+								<dt className="text-espresso/55">Color profile</dt>
 								<dd className="font-medium text-[#C45C26]">sRGB</dd>
 							</div>
 						</dl>
 					</div>
 					<div>
-						<h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#1A1A1A]/55">
+						<h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-espresso/55">
 							Curation tips
 						</h3>
-						<p className="mt-3 text-sm italic leading-relaxed text-[#1A1A1A]/70">
+						<p className="mt-3 text-sm italic leading-relaxed text-espresso/70">
 							Lead with a single hero that communicates location and scale. Keep lighting consistent across the
 							set so the listing feels like one coherent space.
 						</p>
@@ -430,7 +430,7 @@ function ImageTile({
 			</div>
 			{description ? (
 				<figcaption className="mt-4">
-					<p className="text-sm leading-relaxed text-[#1A1A1A]/80">{description}</p>
+					<p className="text-sm leading-relaxed text-espresso/80">{description}</p>
 				</figcaption>
 			) : null}
 		</>

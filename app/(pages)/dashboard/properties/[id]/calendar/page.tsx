@@ -75,7 +75,7 @@ export default function PropertyCalendarPage() {
 
 			<div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
 				<div className="dashboard-panel rounded-2xl p-5">
-					<div className="mb-4 grid grid-cols-7 text-center text-xs text-[#1A1A1A]/45">
+					<div className="mb-4 grid grid-cols-7 text-center text-xs text-espresso/45">
 						{['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((name) => (
 							<div key={name}>{name}</div>
 						))}
@@ -115,7 +115,7 @@ export default function PropertyCalendarPage() {
 
 				<div className="space-y-4 dashboard-panel rounded-2xl p-5">
 					<h2 className="font-serif text-2xl">Date settings</h2>
-					<p className="text-sm text-[#1A1A1A]/60">
+					<p className="text-sm text-espresso/60">
 						{selectedDate ? `Selected: ${selectedDate}` : 'Select a date to update availability.'}
 					</p>
 					<Input

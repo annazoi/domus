@@ -43,7 +43,7 @@ export function PropertyForm({ mode, initialProperty }: PropertyFormProps) {
 				<p className="text-[10px] uppercase tracking-[0.2em] text-camel sm:text-xs">
 					{mode === 'create' ? 'Create property' : 'Edit property'}
 				</p>
-				<h1 className="truncate font-serif text-xl leading-tight text-[#1A1A1A] sm:text-2xl md:text-3xl">
+				<h1 className="truncate font-serif text-xl leading-tight text-espresso sm:text-2xl md:text-3xl">
 					{mode === 'create' ? 'New listing' : 'Property details'}
 				</h1>
 		</div>

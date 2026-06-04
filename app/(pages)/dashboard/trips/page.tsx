@@ -34,13 +34,13 @@ export default function TripsPage() {
 			{!loading && trips.length === 0 ? (
 				<div className="dashboard-panel rounded-2xl p-8 text-center">
 					<p className="font-serif text-2xl">No trips yet</p>
-					<p className="mt-2 text-sm text-[#1A1A1A]/60">After you book a stay, it will show up here when you sign in with the same email.</p>
+					<p className="mt-2 text-sm text-espresso/60">After you book a stay, it will show up here when you sign in with the same email.</p>
 				</div>
 			) : null}
 
 			{trips.length > 0 ? (
 				<div className="dashboard-panel overflow-hidden rounded-2xl">
-					<div className="hidden grid-cols-4 gap-4 border-b border-dashboard-border px-5 py-3 text-xs uppercase tracking-wide text-[#1A1A1A]/45 md:grid">
+					<div className="hidden grid-cols-4 gap-4 border-b border-dashboard-border px-5 py-3 text-xs uppercase tracking-wide text-espresso/45 md:grid">
 						<span>Host</span>
 						<span>Property</span>
 						<span>Dates</span>
@@ -54,8 +54,8 @@ export default function TripsPage() {
 							className="grid w-full grid-cols-1 gap-2 border-b border-dashboard-border px-5 py-4 text-left font-normal transition hover:bg-dashboard-row-hover md:grid-cols-4 md:gap-4"
 						>
 							<span className="font-medium">{trip.guest_name}</span>
-							<span className="text-sm text-[#1A1A1A]/65">{trip.property_title}</span>
-							<span className="text-sm text-[#1A1A1A]/65">
+							<span className="text-sm text-espresso/65">{trip.property_title}</span>
+							<span className="text-sm text-espresso/65">
 								{trip.start_date} - {trip.end_date}
 							</span>
 							<span className="text-sm capitalize">{trip.status}</span>

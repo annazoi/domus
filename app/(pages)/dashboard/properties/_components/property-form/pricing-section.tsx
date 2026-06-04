@@ -332,7 +332,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 
 	return (
 		<PropertyFormSection id="pricing-availability" title="Pricing & availability">
-			<p className="text-sm text-[#1A1A1A]/65">
+			<p className="text-sm text-espresso/65">
 				Nightly rates are set per day on the property calendar.
 			</p>
 			<div className="mt-4 grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
@@ -347,7 +347,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 						>
 							<ChevronLeft className="h-5 w-5" />
 						</Button>
-						<p className="min-w-0 flex-1 text-center font-serif text-lg tracking-tight text-[#1A1A1A]">
+						<p className="min-w-0 flex-1 text-center font-serif text-lg tracking-tight text-espresso">
 							{label}
 						</p>
 						<Button
@@ -360,7 +360,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 						</Button>
 					</div>
 
-					<div className="grid grid-cols-7 gap-2 text-center text-xs text-[#1A1A1A]/50">
+					<div className="grid grid-cols-7 gap-2 text-center text-xs text-espresso/50">
 						{weekdays.map((w) => (
 							<div key={w} className="py-2">
 								{w}
@@ -412,11 +412,11 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 						{clearingAvailability ? 'Removing...' : 'Remove all availability'}
 					</Button>
 					<div className="dashboard-panel rounded-2xl p-4">
-						<p className="text-sm font-medium text-[#1A1A1A]">Single day edit</p>
-						<p className="mt-1 text-xs text-[#1A1A1A]/60">
+						<p className="text-sm font-medium text-espresso">Single day edit</p>
+						<p className="mt-1 text-xs text-espresso/60">
 							Click any date on the calendar, then update that day here.
 						</p>
-						<p className="mt-2 text-sm text-[#1A1A1A]/70">
+						<p className="mt-2 text-sm text-espresso/70">
 							{singleDayDate ? DateTime.fromISO(singleDayDate, { zone: 'utc' }).toFormat('MMM d, yyyy') : 'No date selected'}
 						</p>
 						<Input
@@ -435,7 +435,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 								onChange={(e) => setSingleDayAvailable(e.target.checked)}
 								disabled={!singleDayDate}
 							/>
-							<span className="text-sm text-[#1A1A1A]">Available for booking</span>
+							<span className="text-sm text-espresso">Available for booking</span>
 						</label>
 						<select
 							value={singleDayReason}

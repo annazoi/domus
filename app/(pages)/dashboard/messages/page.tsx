@@ -101,7 +101,7 @@ function MessagesContent() {
 			<div className="dashboard-panel flex min-h-[min(720px,calc(100vh-12rem))] flex-col overflow-hidden rounded-2xl md:flex-row">
 				<aside className="flex max-h-[40vh] shrink-0 flex-col border-b border-dashboard-border md:max-h-none md:w-[300px] md:border-b-0 md:border-r">
 					<div className="flex items-center justify-between gap-2 border-b border-dashboard-border px-4 py-3">
-						<span className="text-xs font-medium uppercase tracking-wide text-[#1A1A1A]/45">
+						<span className="text-xs font-medium uppercase tracking-wide text-espresso/45">
 							Conversations
 						</span>
 						<Button
@@ -116,10 +116,10 @@ function MessagesContent() {
 					</div>
 					<ul className="flex-1 overflow-y-auto">
 						{conversationsLoading && (
-							<li className="px-4 py-6 text-sm text-[#1A1A1A]/45">Loading…</li>
+							<li className="px-4 py-6 text-sm text-espresso/45">Loading…</li>
 						)}
 						{!conversationsLoading && conversations.length === 0 && (
-							<li className="space-y-3 px-4 py-6 text-sm text-[#1A1A1A]/45">
+							<li className="space-y-3 px-4 py-6 text-sm text-espresso/45">
 								<p>No conversations yet.</p>
 								<Button
 									type="button"
@@ -145,12 +145,12 @@ function MessagesContent() {
 									</span>
 									<span className="min-w-0 flex-1">
 										<span className="flex items-baseline justify-between gap-2">
-											<span className="truncate font-medium text-[#1A1A1A]">{c.other_user_name}</span>
-											<span className="shrink-0 text-[10px] text-[#1A1A1A]/40">
+											<span className="truncate font-medium text-espresso">{c.other_user_name}</span>
+											<span className="shrink-0 text-[10px] text-espresso/40">
 												{relativeTime(c.updated_at)}
 											</span>
 										</span>
-										<span className="line-clamp-1 text-xs text-[#1A1A1A]/50">
+										<span className="line-clamp-1 text-xs text-espresso/50">
 											{c.preview ?? 'No messages yet'}
 										</span>
 										<span className="mt-0.5 block truncate text-[10px] text-camel/80">
@@ -165,7 +165,7 @@ function MessagesContent() {
 
 				<section className="flex min-h-0 min-w-0 flex-1 flex-col">
 					{!active ? (
-						<div className="flex flex-1 items-center justify-center px-4 text-sm text-[#1A1A1A]/45">
+						<div className="flex flex-1 items-center justify-center px-4 text-sm text-espresso/45">
 							Select a conversation
 						</div>
 					) : (
@@ -175,14 +175,14 @@ function MessagesContent() {
 									{initials(active.other_user_name)}
 								</span>
 								<div className="min-w-0">
-									<p className="truncate font-medium text-[#1A1A1A]">{active.other_user_name}</p>
-									<p className="truncate text-xs text-[#1A1A1A]/50">{active.property_title}</p>
+									<p className="truncate font-medium text-espresso">{active.other_user_name}</p>
+									<p className="truncate text-xs text-espresso/50">{active.property_title}</p>
 								</div>
 							</header>
 
 							<div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
 								{messagesLoading && (
-									<p className="text-center text-sm text-[#1A1A1A]/45">Loading messages…</p>
+									<p className="text-center text-sm text-espresso/45">Loading messages…</p>
 								)}
 								{displayMessages.map((m) => (
 									<div
@@ -212,7 +212,7 @@ function MessagesContent() {
 											e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), void sendMessage())
 										}
 										placeholder="Type a message…"
-										className="min-h-11 flex-1 rounded-xl border border-black/10 bg-[#fafafa] px-4 text-sm outline-none ring-camel placeholder:text-[#1A1A1A]/35 focus:border-camel/40 focus:ring-2"
+										className="min-h-11 flex-1 rounded-xl border border-black/10 bg-[#fafafa] px-4 text-sm outline-none ring-camel placeholder:text-espresso/35 focus:border-camel/40 focus:ring-2"
 									/>
 									<Button
 										type="button"
@@ -239,7 +239,7 @@ function MessagesContent() {
 
 export default function MessagesPage() {
 	return (
-		<Suspense fallback={<div className="py-12 text-sm text-[#1A1A1A]/45">Loading…</div>}>
+		<Suspense fallback={<div className="py-12 text-sm text-espresso/45">Loading…</div>}>
 			<MessagesContent />
 		</Suspense>
 	);

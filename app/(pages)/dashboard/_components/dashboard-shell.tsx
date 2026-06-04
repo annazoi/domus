@@ -107,7 +107,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 	const openMobileNav = () => setIsMobileOpen(true);
 
 	return (
-		<div className="dashboard-root min-h-screen bg-dashboard-bg text-espresso selection:bg-dashboard-accent/20 selection:text-espresso">
+		<div className="dashboard-root min-h-screen bg-dashboard-bg text-espresso selection:bg-camel/20 selection:text-espresso">
 			{isMobileOpen ? (
 				<button
 					type="button"

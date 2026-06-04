@@ -41,15 +41,20 @@ export const ApiRoutes = {
 	bookings: {
 		prefix: '/bookings',
 		create: '/booking',
+		quote: '/bookings/quote',
 		listMine: '/bookings?host_id=me',
 		listMyTrips: '/bookings?guest_id=me',
 		booking: (id: string) => `/bookings/${id}`,
+		cancel: (id: string) => `/bookings/${id}/cancel`,
 	},
 	services: {
 		list: (propertyId: string) => `/services?property_id=${encodeURIComponent(propertyId)}`,
 		listMine: '/services?host_id=me',
 		service: (id: string) => `/services/${id}`,
 		byProperty: (propertyId: string) => `/properties/${propertyId}/services`,
+		images: (id: string) => `/services/${id}/images`,
+		image: (serviceId: string, imageId: string) =>
+			`/services/${serviceId}/images?${toSearchParams({ image_id: imageId })}`,
 	},
 	customers: {
 		prefix: '/customers',

@@ -30,8 +30,9 @@ const surface = cn(
 const variantTrigger: Record<SelectVariant, string> = {
 	default: cn(surface, 'py-3 pl-4 pr-10', 'disabled:bg-cream disabled:text-espresso/38'),
 	dashboard: cn(
-		'flex w-full cursor-pointer items-center rounded-lg border-0 bg-dashboard-bg py-2 pl-3 pr-10 text-left text-espresso outline-none',
-		'transition focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-55',
+		surface,
+		'rounded-xl py-2.5 pl-3 pr-10 text-sm',
+		'disabled:opacity-55',
 	),
 	settings: cn(surface, 'py-3 pl-4 pr-10 text-sm', 'focus-visible:ring-camel/12', 'disabled:opacity-55'),
 	auth: cn(
@@ -44,7 +45,7 @@ const variantTrigger: Record<SelectVariant, string> = {
 
 const chevronTone: Record<SelectVariant, string> = {
 	default: 'text-camel/40',
-	dashboard: 'text-dashboard-muted',
+	dashboard: 'text-espresso/40',
 	settings: 'text-camel/46',
 	auth: 'text-stone-400',
 	compact: 'text-espresso/30',

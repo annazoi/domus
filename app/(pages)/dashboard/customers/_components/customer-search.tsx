@@ -88,7 +88,7 @@ export function CustomerSearch({ customers, value, onChange, onSelectCustomer }:
 				Search customers
 			</label>
 			<div className="relative">
-				<Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#1A1A1A]/40" aria-hidden />
+				<Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-espresso/40" aria-hidden />
 				<Input
 					id="customer-search"
 					type="search"
@@ -117,7 +117,7 @@ export function CustomerSearch({ customers, value, onChange, onSelectCustomer }:
 							setIsOpen(false);
 							setActiveIndex(-1);
 						}}
-						className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-[#1A1A1A]/45 transition hover:bg-dashboard-row-hover hover:text-[#1A1A1A]"
+						className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-espresso/45 transition hover:bg-dashboard-row-hover hover:text-espresso"
 						aria-label="Clear search"
 					>
 						<X className="h-4 w-4" />
@@ -126,7 +126,7 @@ export function CustomerSearch({ customers, value, onChange, onSelectCustomer }:
 			</div>
 
 			{trimmed.length > 0 && trimmed.length < CUSTOMER_SEARCH_MIN_LENGTH ? (
-				<p className="mt-2 text-xs text-[#1A1A1A]/45">
+				<p className="mt-2 text-xs text-espresso/45">
 					Type at least {CUSTOMER_SEARCH_MIN_LENGTH} characters to search.
 				</p>
 			) : null}
@@ -138,7 +138,7 @@ export function CustomerSearch({ customers, value, onChange, onSelectCustomer }:
 					className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border border-dashboard-border/70 bg-dashboard-inset shadow-lg"
 				>
 					{suggestions.length === 0 ? (
-						<p className="px-4 py-3 text-sm text-[#1A1A1A]/45">No customers found.</p>
+						<p className="px-4 py-3 text-sm text-espresso/45">No customers found.</p>
 					) : (
 						suggestions.map((customer, index) => {
 							const name = getCustomerDisplayName(customer);
@@ -155,9 +155,9 @@ export function CustomerSearch({ customers, value, onChange, onSelectCustomer }:
 										activeIndex === index ? 'bg-camel/10' : 'hover:bg-dashboard-row-hover'
 									}`}
 								>
-									<span className="font-medium text-[#1A1A1A]">{name}</span>
-									<span className="text-sm text-[#1A1A1A]/55">{customer.email}</span>
-									{location ? <span className="text-xs text-[#1A1A1A]/45">{location}</span> : null}
+									<span className="font-medium text-espresso">{name}</span>
+									<span className="text-sm text-espresso/55">{customer.email}</span>
+									{location ? <span className="text-xs text-espresso/45">{location}</span> : null}
 								</button>
 							);
 						})

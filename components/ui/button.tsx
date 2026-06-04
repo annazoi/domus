@@ -36,14 +36,14 @@ const variantClasses: Record<ButtonVariant, string> = {
 	primarySm:
 		'cursor-pointer rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:-translate-y-0.5 hover:bg-primary-hover disabled:opacity-60 disabled:pointer-events-none',
 	secondary:
-		'cursor-pointer rounded-full bg-dashboard-bg px-4 py-2 text-sm text-espresso transition hover:bg-dashboard-row-hover disabled:opacity-60 disabled:pointer-events-none',
+		'cursor-pointer rounded-full border border-black/10 bg-white px-4 py-2 text-sm text-espresso transition hover:bg-dashboard-row-hover disabled:opacity-60 disabled:pointer-events-none',
 	ghost:
-		'cursor-pointer rounded-md p-2 text-dashboard-accent transition hover:bg-dashboard-row-hover hover:text-espresso focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
+		'cursor-pointer rounded-md p-2 text-camel transition hover:bg-dashboard-row-hover hover:text-espresso focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
 	ghostIcon:
-		'cursor-pointer rounded-md p-2 text-dashboard-accent transition hover:bg-dashboard-row-hover hover:text-espresso inline-flex items-center justify-center',
+		'cursor-pointer rounded-md p-2 text-camel transition hover:bg-dashboard-row-hover hover:text-espresso inline-flex items-center justify-center',
 	iconSquare:
-		'flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-dashboard-bg text-espresso/70 transition hover:bg-dashboard-row-hover hover:text-espresso',
-	auth: 'inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-sm bg-stone-900 py-3.5 text-sm font-medium text-stone-50 transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-70',
+		'flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-black/10 bg-white text-espresso/70 transition hover:bg-dashboard-row-hover hover:text-espresso',
+	auth: 'inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-primary py-3.5 text-sm font-medium text-primary-foreground transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-70',
 	dangerLink: 'cursor-pointer text-sm text-[#1A1A1A]/70 transition hover:text-red-700',
 	tab: 'block w-full cursor-pointer rounded-lg px-3 py-2 text-left text-sm text-dashboard-muted transition hover:bg-dashboard-row-hover hover:text-espresso',
 	tabActive:

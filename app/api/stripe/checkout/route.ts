@@ -20,6 +20,7 @@ interface CheckoutBody {
 		phone?: string;
 	};
 	services?: { service_id?: string; quantity?: number }[];
+	extra_service_ids?: string[];
 }
 
 export async function POST(request: Request) {

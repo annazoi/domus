@@ -40,15 +40,15 @@ export default function DashboardOverviewPage() {
 				) : (
 					<>
 						<div>
-							<p className="text-sm text-[#1A1A1A]/55">Total bookings</p>
+							<p className="text-sm text-espresso/55">Total bookings</p>
 							<p className="mt-2 font-serif text-5xl">{stats.totalBookings}</p>
 						</div>
 						<div>
-							<p className="text-sm text-[#1A1A1A]/55">Revenue this month</p>
+							<p className="text-sm text-espresso/55">Revenue this month</p>
 							<p className="mt-2 font-serif text-5xl">{formatOverviewCurrency(stats.revenueThisMonth)}</p>
 						</div>
 						<div>
-							<p className="text-sm text-[#1A1A1A]/55">Occupancy rate</p>
+							<p className="text-sm text-espresso/55">Occupancy rate</p>
 							<p className="mt-2 font-serif text-5xl">{formatOverviewPercent(stats.occupancyRate)}</p>
 						</div>
 					</>
@@ -73,7 +73,7 @@ export default function DashboardOverviewPage() {
 				{!loading && stats.recentBookings.length === 0 ? (
 					<div className="dashboard-panel rounded-2xl px-5 py-8 text-center">
 						<p className="font-serif text-2xl">No bookings yet</p>
-						<p className="mt-2 text-sm text-[#1A1A1A]/55">Activity will show up when guests reserve your properties.</p>
+						<p className="mt-2 text-sm text-espresso/55">Activity will show up when guests reserve your properties.</p>
 					</div>
 				) : null}
 				{!loading && stats.recentBookings.length > 0 ? (
@@ -82,10 +82,10 @@ export default function DashboardOverviewPage() {
 							<div key={booking.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
 								<div>
 									<p className="font-medium">{booking.guest_name}</p>
-									<p className="text-sm text-[#1A1A1A]/55">
+									<p className="text-sm text-espresso/55">
 										{booking.start_date} – {booking.end_date}
 									</p>
-									<p className="text-sm text-[#1A1A1A]/45">{booking.property_title}</p>
+									<p className="text-sm text-espresso/45">{booking.property_title}</p>
 								</div>
 								<span className="rounded-full bg-camel/10 px-3 py-1 text-xs capitalize text-camel">
 									{booking.status}

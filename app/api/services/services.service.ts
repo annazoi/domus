@@ -1,5 +1,19 @@
+import { PricingUnit } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import type { HostServiceRow, PropertyServiceLinksInput, ServiceInput, ServiceRow } from './interfaces/services.interface';
+import type {
+	HostServiceRow,
+	PropertyServiceLinksInput,
+	ServiceImageRow,
+	ServiceInput,
+	ServiceRow,
+} from './interfaces/services.interface';
+
+const serviceImageSelect = {
+	id: true,
+	order: true,
+	description: true,
+	document: { select: { url: true } },
+} as const;
 
 const serviceSelect = {
 	id: true,
@@ -7,24 +21,67 @@ const serviceSelect = {
 	description: true,
 	price: true,
 	quantitable_item: true,
+	pricing_unit: true,
+	active: true,
+	max_quantity: true,
+	images: {
+		orderBy: { order: 'asc' as const },
+		select: serviceImageSelect,
+	},
 } as const;
 
-const mapServiceRows = (
-	rows: {
-		id: string;
-		name: string;
-		description: string | null;
-		price: { toString(): string };
-		quantitable_item: boolean;
-	}[],
-): ServiceRow[] =>
-	rows.map((row) => ({
-		id: row.id,
-		name: row.name,
-		description: row.description,
-		price: Number(row.price),
-		quantitable_item: row.quantitable_item,
-	}));
+type ServiceImageSelectRow = {
+	id: string;
+	order: number;
+	description: string | null;
+	document: { url: string } | null;
+};
+
+type ServiceSelectRow = {
+	id: string;
+	name: string;
+	description: string | null;
+	price: { toString(): string };
+	quantitable_item: boolean;
+	pricing_unit: PricingUnit;
+	active: boolean;
+	max_quantity: number | null;
+	images: ServiceImageSelectRow[];
+};
+
+const mapServiceImageRow = (row: ServiceImageSelectRow): ServiceImageRow => ({
+	id: row.id,
+	order: row.order,
+	description: row.description,
+	url: row.document?.url ?? null,
+});
+
+const mapServiceRow = (row: ServiceSelectRow): ServiceRow => ({
+	id: row.id,
+	name: row.name,
+	description: row.description,
+	price: Number(row.price),
+	quantitable_item: row.quantitable_item,
+	pricing_unit: row.pricing_unit,
+	active: row.active,
+	max_quantity: row.max_quantity,
+	images: row.images.map(mapServiceImageRow),
+});
+
+const mapServiceRows = (rows: ServiceSelectRow[]): ServiceRow[] => rows.map(mapServiceRow);
+
+const serviceDataFromInput = (input: ServiceInput) => {
+	const quantitable = input.quantitable_item ?? false;
+	return {
+		name: input.name.trim(),
+		description: input.description?.trim() || null,
+		price: input.price,
+		quantitable_item: quantitable,
+		pricing_unit: input.pricing_unit ?? PricingUnit.PER_STAY,
+		active: input.active ?? true,
+		max_quantity: quantitable ? input.max_quantity ?? null : null,
+	};
+};
 
 async function resolvePropertyId(propertyRef: string) {
 	const property = await prisma.property.findFirst({
@@ -63,11 +120,7 @@ export const servicesService = {
 		});
 
 		return rows.map((row) => ({
-			id: row.id,
-			name: row.name,
-			description: row.description,
-			price: Number(row.price),
-			quantitable_item: row.quantitable_item,
+			...mapServiceRow(row),
 			property_count: row._count.property_services,
 		}));
 	},
@@ -76,10 +129,7 @@ export const servicesService = {
 		const row = await prisma.service.create({
 			data: {
 				host_user_id: hostUserId,
-				name: input.name.trim(),
-				description: input.description?.trim() || null,
-				price: input.price,
-				quantitable_item: input.quantitable_item ?? false,
+				...serviceDataFromInput(input),
 			},
 			select: {
 				...serviceSelect,
@@ -88,11 +138,7 @@ export const servicesService = {
 		});
 
 		return {
-			id: row.id,
-			name: row.name,
-			description: row.description,
-			price: Number(row.price),
-			quantitable_item: row.quantitable_item,
+			...mapServiceRow(row),
 			property_count: row._count.property_services,
 		} satisfies HostServiceRow;
 	},
@@ -106,12 +152,7 @@ export const servicesService = {
 
 		const row = await prisma.service.update({
 			where: { id: serviceId },
-			data: {
-				name: input.name.trim(),
-				description: input.description?.trim() || null,
-				price: input.price,
-				quantitable_item: input.quantitable_item ?? false,
-			},
+			data: serviceDataFromInput(input),
 			select: {
 				...serviceSelect,
 				_count: { select: { property_services: true } },
@@ -119,11 +160,7 @@ export const servicesService = {
 		});
 
 		return {
-			id: row.id,
-			name: row.name,
-			description: row.description,
-			price: Number(row.price),
-			quantitable_item: row.quantitable_item,
+			...mapServiceRow(row),
 			property_count: row._count.property_services,
 		} satisfies HostServiceRow;
 	},

@@ -120,7 +120,7 @@ export function NewConversationModal({
 
 						<div className="mt-5 space-y-4">
 							<div>
-								<label htmlFor="user-search" className="text-xs font-medium uppercase tracking-wide text-[#1A1A1A]/45">
+								<label htmlFor="user-search" className="text-xs font-medium uppercase tracking-wide text-espresso/45">
 									Find user by email or name
 								</label>
 								<input
@@ -136,13 +136,13 @@ export function NewConversationModal({
 							{searchQuery.trim().length >= 3 ? (
 								<div className="max-h-40 overflow-y-auto rounded-xl border border-black/5">
 									{isSearching ? (
-										<p className="flex items-center gap-2 px-4 py-3 text-sm text-[#1A1A1A]/45">
+										<p className="flex items-center gap-2 px-4 py-3 text-sm text-espresso/45">
 											<Loader2 className="h-4 w-4 animate-spin" />
 											Searching…
 										</p>
 									) : null}
 									{!isSearching && searchResults.length === 0 ? (
-										<p className="px-4 py-3 text-sm text-[#1A1A1A]/45">No users found.</p>
+										<p className="px-4 py-3 text-sm text-espresso/45">No users found.</p>
 									) : null}
 									{searchResults.map((user) => (
 										<button
@@ -157,22 +157,22 @@ export function NewConversationModal({
 												selectedUser?.id === user.id && 'bg-camel/8',
 											)}
 										>
-											<span className="font-medium text-[#1A1A1A]">{user.email}</span>
-											<span className="text-xs text-[#1A1A1A]/50">{displayName(user)}</span>
+											<span className="font-medium text-espresso">{user.email}</span>
+											<span className="text-xs text-espresso/50">{displayName(user)}</span>
 										</button>
 									))}
 								</div>
 							) : (
-								<p className="text-xs text-[#1A1A1A]/45">Type at least 3 characters to search.</p>
+								<p className="text-xs text-espresso/45">Type at least 3 characters to search.</p>
 							)}
 
 							{selectedUser ? (
 								<div>
-									<label htmlFor="conversation-property" className="text-xs font-medium uppercase tracking-wide text-[#1A1A1A]/45">
+									<label htmlFor="conversation-property" className="text-xs font-medium uppercase tracking-wide text-espresso/45">
 										Property
 									</label>
 									{propertyOptions.length === 0 ? (
-										<p className="mt-1.5 text-sm text-[#1A1A1A]/45">
+										<p className="mt-1.5 text-sm text-espresso/45">
 											{myProperties.length > 0
 												? 'You need at least one property.'
 												: 'This host has no published properties to message about.'}

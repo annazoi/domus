@@ -65,7 +65,7 @@ export default function GuestDetailsContent() {
 	};
 
 	return (
-		<div className="min-h-screen bg-[#f7f5f2] px-4 py-8 sm:px-8">
+		<div className="min-h-screen bg-[#f9f8f6] px-4 py-8 sm:px-8">
 			<div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[1fr_360px]">
 				<section className="rounded-2xl bg-white p-6 shadow-sm sm:p-8">
 					<p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-camel">Step 1 of 2</p>

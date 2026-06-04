@@ -1,3 +1,4 @@
+import { PricingUnit } from '@prisma/client';
 import { getHostIdFromRequest } from '@/app/api/_utils/auth';
 import { servicesService } from './services.service';
 import type { ServiceInput } from './interfaces/services.interface';
@@ -52,6 +53,25 @@ export async function POST(request: Request) {
 	}
 	if (typeof body.price !== 'number' || !Number.isFinite(body.price) || body.price < 0) {
 		return Response.json({ message: 'Service price must be a valid non-negative number.' }, { status: 400 });
+	}
+	if (body.pricing_unit !== undefined && !Object.values(PricingUnit).includes(body.pricing_unit)) {
+		return Response.json({ message: 'Invalid pricing unit.' }, { status: 400 });
+	}
+	if (
+		body.max_quantity !== undefined &&
+		body.max_quantity !== null &&
+		(!Number.isInteger(body.max_quantity) || body.max_quantity < 1)
+	) {
+		return Response.json({ message: 'max_quantity must be a positive integer.' }, { status: 400 });
+	}
+	if (
+		body.quantitable_item &&
+		(typeof body.max_quantity !== 'number' || !Number.isInteger(body.max_quantity) || body.max_quantity < 1)
+	) {
+		return Response.json(
+			{ message: 'A max quantity of at least 1 is required for quantitable services.' },
+			{ status: 400 },
+		);
 	}
 
 	try {

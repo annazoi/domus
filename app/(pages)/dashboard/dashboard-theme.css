@@ -1,0 +1,41 @@
+.dashboard-root .dashboard-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-camel);
+}
+
+.dashboard-root .dashboard-page-title {
+  font-family: var(--font-serif);
+  font-size: 2.25rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--color-espresso);
+}
+
+.dashboard-root .dashboard-section-title {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  line-height: 1.2;
+  color: var(--color-espresso);
+}
+
+.dashboard-root .dashboard-lead {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: rgb(26 26 26 / 0.65);
+}
+
+.dashboard-root input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+.dashboard-root textarea,
+.dashboard-root select {
+  background-color: #ffffff;
+  border-color: rgb(0 0 0 / 0.1);
+  color: var(--color-espresso);
+}
+
+.dashboard-root input::placeholder,
+.dashboard-root textarea::placeholder {
+  color: rgb(26 26 26 / 0.4);
+}

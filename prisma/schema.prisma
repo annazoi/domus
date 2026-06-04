@@ -38,6 +38,25 @@ enum BookingStatus {
   PENDING
 }
 
+enum PaymentType {
+  ONLINE
+  OFFLINE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum PricingUnit {
+  PER_STAY
+  PER_NIGHT
+  PER_GUEST
+  PER_GUEST_PER_NIGHT
+}
+
 model User {
   id         String   @id @default(uuid())
   email      String   @unique
@@ -70,8 +89,11 @@ model User {
   property_availability PropertyAvailability[]
   bookings_as_guest     Booking[]              @relation("GuestBookings")
   bookings_as_host      Booking[]              @relation("HostBookings")
+  payments_as_guest     Payment[]              @relation("GuestPayments")
+  payments_as_host      Payment[]              @relation("HostPayments")
   service_orders        ServiceOrder[]
   host_services         Service[]
+  service_images        ServiceImage[]
   documents             Document[]             @relation("UserDocuments")
   host_conversations    Conversation[]         @relation("HostConversations")
   guest_conversations   Conversation[]         @relation("GuestConversations")
@@ -194,7 +216,15 @@ model Booking {
   check_in     DateTime
   check_out    DateTime
   guests       Int
+  nights       Int?
   total_price  Decimal
+  currency     String         @default("eur")
+  subtotal_accommodation Decimal?
+  subtotal_extras        Decimal?
+  fees                   Decimal?
+  discount_amount        Decimal?
+  payment_type PaymentType    @default(ONLINE)
+  price_snapshot Json?
   status       BookingStatus  @default(CONFIRMED)
   stripe_session_id   String?  @unique
   payment_intent_id   String?
@@ -206,11 +236,44 @@ model Booking {
   customer Customer @relation(fields: [customer_id], references: [id])
   host     User     @relation("HostBookings", fields: [host_user_id], references: [id])
   service_orders ServiceOrder[]
+  payments       Payment[]
 
   @@index([property_id])
   @@index([guest_user_id])
   @@index([property_id, check_in, check_out])
   @@map("bookings")
+}
+
+model Payment {
+  id                    String        @id @default(uuid())
+  booking_id            String
+  guest_user_id         String
+  host_user_id          String
+  amount                Decimal
+  currency              String        @default("eur")
+  status                PaymentStatus @default(PENDING)
+  context               String        @default("BOOKING_PAYMENT")
+  stripe_session_id     String?       @unique
+  stripe_payment_intent String?       @unique
+  stripe_charge_id      String?
+  stripe_payment_url    String?
+  stripe_receipt_url    String?
+  stripe_transfer_id    String?
+  platform_fee_amount   Decimal?
+  stripe_fee_amount     Decimal?
+  net_amount            Decimal?
+  payout_amount         Decimal?
+  created_at            DateTime      @default(now())
+  updated_at            DateTime      @updatedAt
+
+  booking Booking @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  guest   User    @relation("GuestPayments", fields: [guest_user_id], references: [id])
+  host    User    @relation("HostPayments", fields: [host_user_id], references: [id])
+
+  @@index([booking_id])
+  @@index([stripe_payment_intent])
+  @@index([host_user_id])
+  @@map("payments")
 }
 
 model ServiceOrder {
@@ -255,15 +318,36 @@ model Service {
   description        String?
   price              Decimal
   quantitable_item   Boolean  @default(false)
+  pricing_unit       PricingUnit @default(PER_STAY)
+  active             Boolean  @default(true)
+  max_quantity       Int?
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
 
   host              User              @relation(fields: [host_user_id], references: [id])
   property_services PropertyService[]
   orders            ServiceOrder[]
+  images            ServiceImage[]
 
   @@index([host_user_id])
   @@map("services")
+}
+
+model ServiceImage {
+  id          String   @id @default(uuid())
+  user_id     String
+  service_id  String
+  document_id String?  @unique
+  description String?
+  order       Int
+  created_at  DateTime @default(now())
+
+  service  Service   @relation(fields: [service_id], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [user_id], references: [id])
+  document Document? @relation(fields: [document_id], references: [id])
+
+  @@index([service_id, order])
+  @@map("service_images")
 }
 
 model PropertyAvailability {
@@ -338,6 +422,7 @@ model Document {
 
   user             User             @relation("UserDocuments", fields: [user_id], references: [id])
   property_image   PropertyImage?
+  service_image    ServiceImage?
   property_amenity PropertyAmenity? @relation(fields: [property_amenity_id], references: [id])
   user_avatar   User?            @relation("UserAvatar")
   user_banner   User?            @relation("UserBanner")

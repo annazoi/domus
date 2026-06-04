@@ -11,27 +11,27 @@
   --color-stone-800: #334155;
   --color-stone-900: #1e293b;
 
-  --color-camel: #9a8570;
+  --color-camel: #968370;
   --color-camel-dark: #826f5c;
   --color-camel-light: #b8a594;
   --color-camel-deep: #5f5042;
-  --color-cream: #f4f7f9;
-  --color-espresso: #1e293b;
+  --color-cream: #f9f8f6;
+  --color-espresso: #1a1a1a;
 
-  --color-dashboard-bg: #e8e8e6;
-  --color-dashboard-panel: #f3f3f1;
-  --color-dashboard-inset: #ececea;
-  --color-dashboard-surface: #fafaf8;
-  --color-dashboard-accent: #6a6258;
-  --color-dashboard-accent-hover: #565048;
-  --color-dashboard-accent-light: #949088;
-  --color-dashboard-accent-deep: #4a433c;
-  --color-dashboard-row-hover: #e3e3e1;
-  --color-dashboard-border: #dcdcd9;
-  --color-dashboard-muted: #6f6860;
-  --shadow-dashboard-panel: 0 10px 36px -20px rgb(0 0 0 / 0.08);
+  --color-dashboard-bg: #f9f8f6;
+  --color-dashboard-panel: #ffffff;
+  --color-dashboard-inset: #f5f3ef;
+  --color-dashboard-surface: #ffffff;
+  --color-dashboard-accent: #968370;
+  --color-dashboard-accent-hover: #826f5c;
+  --color-dashboard-accent-light: #b8a594;
+  --color-dashboard-accent-deep: #5f5042;
+  --color-dashboard-row-hover: #f0ebe6;
+  --color-dashboard-border: rgb(0 0 0 / 0.1);
+  --color-dashboard-muted: #6b6560;
+  --shadow-dashboard-panel: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 
-  --color-primary: #9a8570;
+  --color-primary: #968370;
   --color-primary-hover: #826f5c;
   --color-primary-foreground: #ffffff;
 
@@ -111,19 +111,26 @@
 }
 
 .dashboard-root {
-  --color-cream: var(--color-dashboard-surface);
-  --color-espresso: #2a2521;
-  --color-camel: var(--color-dashboard-accent);
-  --color-camel-dark: var(--color-dashboard-accent-hover);
-  --color-camel-light: var(--color-dashboard-accent-light);
-  --color-camel-deep: var(--color-dashboard-accent-deep);
-  --color-primary: var(--color-dashboard-accent);
-  --color-primary-hover: var(--color-dashboard-accent-hover);
-  --color-primary-foreground: #fafaf8;
-  --color-accent: var(--color-dashboard-accent);
-  --scrollbar-track: rgb(220 220 218 / 0.5);
-  --scrollbar-thumb: rgb(140 140 136 / 0.35);
-  --scrollbar-thumb-hover: rgb(110 110 106 / 0.5);
+  --color-cream: var(--color-dashboard-bg);
+  --color-espresso: #1a1a1a;
+  --color-camel: #968370;
+  --color-camel-dark: #826f5c;
+  --color-camel-light: #b8a594;
+  --color-camel-deep: #5f5042;
+  --color-primary: #968370;
+  --color-primary-hover: #826f5c;
+  --color-primary-foreground: #ffffff;
+  --color-accent: #968370;
+  --scrollbar-track: rgb(249 248 246 / 0.9);
+  --scrollbar-thumb: rgb(150 131 112 / 0.4);
+  --scrollbar-thumb-hover: rgb(130 111 92 / 0.55);
+  color: var(--color-espresso);
+  background-color: var(--color-dashboard-bg);
+}
+
+.dashboard-root ::selection {
+  background-color: rgb(150 131 112 / 0.22);
+  color: var(--color-espresso);
 }
 
 .dashboard-root .pac-container {

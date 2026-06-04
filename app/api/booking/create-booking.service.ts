@@ -1,7 +1,8 @@
 import { BookingStatus, Prisma } from '@prisma/client';
-import { checkAvailabilityInternal } from '@/app/api/booking/check-availability.service';
 import { ensureGuestUserAndCustomerForHost } from '@/app/api/booking/ensure-guest-and-customer';
 import { toUtcDay } from '@/features/property-availability/utils/date';
+import { calculateBookingPrice, type BookingPriceError } from '@/lib/pricing/booking-pricing.service';
+import type { PriceSnapshot } from '@/lib/pricing/price-snapshot';
 import { prisma } from '@/lib/prisma';
 
 class BookingUnavailableError extends Error {
@@ -39,47 +40,56 @@ export type CreateBookingResult =
 	| { ok: true; booking: Awaited<ReturnType<typeof prisma.booking.create>> }
 	| { ok: false; error: CreateBookingErrorCode };
 
+const PRICE_ERROR_TO_BOOKING_ERROR: Record<BookingPriceError, CreateBookingErrorCode> = {
+	invalid_input: 'INVALID_INPUT',
+	not_found: 'NOT_FOUND',
+	guests_exceed_capacity: 'GUESTS_EXCEED',
+	unavailable: 'UNAVAILABLE',
+	invalid_service: 'INVALID_SERVICE',
+	invalid_service_quantity: 'INVALID_SERVICE_QUANTITY',
+};
+
+function snapshotToJson(snapshot: PriceSnapshot) {
+	return snapshot as unknown as Prisma.InputJsonValue;
+}
+
 export async function createBookingRecord(
 	input: CreateBookingInput,
 	options: { status?: BookingStatus } = {},
 ): Promise<CreateBookingResult> {
 	const status = options.status ?? BookingStatus.PENDING;
 	const serviceLines = input.services ?? [];
+	const extras = serviceLines.map((line) => ({ service_id: line.service_id, quantity: line.quantity }));
 
-	const preTx = await checkAvailabilityInternal({
+	const preTx = await calculateBookingPrice({
 		property_id: input.property_id,
 		check_in: input.check_in,
 		check_out: input.check_out,
 		guests: input.guests,
+		extras,
 	});
 
-	if (preTx.kind === 'invalid_input') {
-		return { ok: false, error: 'INVALID_INPUT' };
-	}
-	if (preTx.kind === 'not_found') {
-		return { ok: false, error: 'NOT_FOUND' };
-	}
-	if (preTx.kind === 'guests_exceed_capacity') {
-		return { ok: false, error: 'GUESTS_EXCEED' };
-	}
-	if (!preTx.isAvailable || preTx.totalPrice === null) {
-		return { ok: false, error: 'UNAVAILABLE' };
+	if (preTx.kind === 'error') {
+		return { ok: false, error: PRICE_ERROR_TO_BOOKING_ERROR[preTx.error] };
 	}
 
 	try {
 		const booking = await prisma.$transaction(
 			async (tx) => {
-				const verified = await checkAvailabilityInternal(
+				const verified = await calculateBookingPrice(
 					{
 						property_id: input.property_id,
 						check_in: input.check_in,
 						check_out: input.check_out,
 						guests: input.guests,
+						extras,
 					},
 					tx,
 				);
 
-				if (verified.kind !== 'ok' || !verified.isAvailable || verified.totalPrice === null) {
+				if (verified.kind === 'error') {
+					if (verified.error === 'invalid_service') throw new Error('INVALID_SERVICE');
+					if (verified.error === 'invalid_service_quantity') throw new Error('INVALID_SERVICE_QUANTITY');
 					throw new BookingUnavailableError();
 				}
 
@@ -91,40 +101,7 @@ export async function createBookingRecord(
 					hostUserId: verified.hostUserId,
 				});
 
-				let totalPrice = verified.totalPrice;
-				let serviceCatalog: { id: string; price: Prisma.Decimal; quantitable_item: boolean }[] = [];
-
-				if (serviceLines.length > 0) {
-					const serviceIds = [...new Set(serviceLines.map((line) => line.service_id))];
-					const links = await tx.propertyService.findMany({
-						where: {
-							property_id: verified.propertyId,
-							service_id: { in: serviceIds },
-						},
-						select: { service_id: true },
-					});
-					if (links.length !== serviceIds.length) {
-						throw new Error('INVALID_SERVICE');
-					}
-					serviceCatalog = await tx.service.findMany({
-						where: { id: { in: serviceIds } },
-						select: { id: true, price: true, quantitable_item: true },
-					});
-					if (serviceCatalog.length !== serviceIds.length) {
-						throw new Error('INVALID_SERVICE');
-					}
-					const priceById = new Map(serviceCatalog.map((svc) => [svc.id, Number(svc.price)]));
-					const quantitableById = new Map(serviceCatalog.map((svc) => [svc.id, svc.quantitable_item]));
-
-					for (const line of serviceLines) {
-						const unitPrice = priceById.get(line.service_id);
-						if (unitPrice === undefined) continue;
-						if (!quantitableById.get(line.service_id) && line.quantity !== 1) {
-							throw new Error('INVALID_SERVICE_QUANTITY');
-						}
-						totalPrice += unitPrice * line.quantity;
-					}
-				}
+				const { snapshot } = verified;
 
 				const created = await tx.booking.create({
 					data: {
@@ -135,29 +112,32 @@ export async function createBookingRecord(
 						check_in: input.check_in,
 						check_out: input.check_out,
 						guests: input.guests,
-						total_price: totalPrice,
+						nights: snapshot.nights,
+						currency: snapshot.currency,
+						total_price: snapshot.total,
+						subtotal_accommodation: snapshot.subtotal_accommodation,
+						subtotal_extras: snapshot.subtotal_extras,
+						fees: snapshot.fees,
+						discount_amount: snapshot.discount_amount,
+						price_snapshot: snapshotToJson(snapshot),
 						status,
 					},
 				});
 
-				if (serviceLines.length > 0) {
-					const priceById = new Map(serviceCatalog.map((svc) => [svc.id, svc.price]));
-
+				if (verified.extras.length > 0) {
 					await Promise.all(
-						serviceLines.map((line) => {
-							const unitPrice = priceById.get(line.service_id);
-							if (!unitPrice) return Promise.resolve();
-							return tx.serviceOrder.create({
+						verified.extras.map((extra) =>
+							tx.serviceOrder.create({
 								data: {
 									user_id: guestUserId,
-									service_id: line.service_id,
+									service_id: extra.service_id,
 									booking_id: created.id,
 									customer_id: customerId,
-									quantity: line.quantity,
-									unit_price: unitPrice,
+									quantity: extra.quantity,
+									unit_price: extra.unit_price,
 								},
-							});
-						}),
+							}),
+						),
 					);
 				}
 
@@ -186,6 +166,27 @@ export async function createBookingRecord(
 	}
 }
 
+export function mergeServiceLines(
+	services: { service_id?: string; quantity?: number }[] | undefined,
+	extraServiceIds: string[] | undefined,
+): BookingServiceLine[] {
+	const byId = new Map<string, number>();
+
+	for (const line of services ?? []) {
+		const id = line.service_id?.trim();
+		if (!id) continue;
+		byId.set(id, line.quantity ?? 1);
+	}
+
+	for (const rawId of extraServiceIds ?? []) {
+		const id = rawId?.trim();
+		if (!id || byId.has(id)) continue;
+		byId.set(id, 1);
+	}
+
+	return [...byId.entries()].map(([service_id, quantity]) => ({ service_id, quantity }));
+}
+
 export function parseCreateBookingBody(body: {
 	property_id?: string;
 	check_in?: string;
@@ -198,6 +199,7 @@ export function parseCreateBookingBody(body: {
 		phone?: string;
 	};
 	services?: { service_id?: string; quantity?: number }[];
+	extra_service_ids?: string[];
 }) {
 	const property_id = body.property_id?.trim();
 	const checkInDay = body.check_in ? toUtcDay(body.check_in) : null;
@@ -224,12 +226,7 @@ export function parseCreateBookingBody(body: {
 		return { ok: false as const, message: 'A valid guest.email is required.' };
 	}
 
-	const serviceLines = (body.services ?? [])
-		.map((line) => ({
-			service_id: line.service_id?.trim() ?? '',
-			quantity: line.quantity ?? 1,
-		}))
-		.filter((line) => line.service_id.length > 0);
+	const serviceLines = mergeServiceLines(body.services, body.extra_service_ids);
 
 	for (const line of serviceLines) {
 		if (!Number.isInteger(line.quantity) || line.quantity <= 0) {
