@@ -6,6 +6,29 @@ import {
 } from '@/app/api/utils/documents/documents.service';
 import { serviceImagesService } from './images.service';
 
+type ServiceImagePayload = {
+	id: string;
+	order: number;
+	description: string | null;
+	url: string | null;
+};
+
+type ReorderPayload = {
+	reorder_ids?: string[];
+};
+
+const mapServiceImage = (image: {
+	id: string;
+	order: number;
+	description: string | null;
+	document: { url: string } | null;
+}): ServiceImagePayload => ({
+	id: image.id,
+	order: image.order,
+	description: image.description,
+	url: image.document?.url ?? null,
+});
+
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
 	const hostId = getHostIdFromRequest(request);
 	if (!hostId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
@@ -15,7 +38,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 	if (!service) return Response.json({ message: 'Service not found' }, { status: 404 });
 
 	const images = await serviceImagesService.listByService(id);
-	return Response.json(images);
+	return Response.json(images.map(mapServiceImage));
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -28,7 +51,19 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
 	const contentType = request.headers.get('content-type') ?? '';
 	if (!contentType.includes('multipart/form-data')) {
-		return Response.json({ message: 'Invalid payload' }, { status: 400 });
+		let body: ReorderPayload;
+		try {
+			body = (await request.json()) as ReorderPayload;
+		} catch {
+			return Response.json({ message: 'Invalid payload' }, { status: 400 });
+		}
+		if (!body.reorder_ids?.length) {
+			return Response.json({ message: 'Invalid payload' }, { status: 400 });
+		}
+
+		await serviceImagesService.reorder(id, body.reorder_ids);
+		const reordered = await serviceImagesService.listByService(id);
+		return Response.json(reordered.map(mapServiceImage));
 	}
 
 	const formData = await request.formData();
@@ -60,7 +95,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 		descriptions,
 		buildImageDocumentCreateInput,
 	});
-	return Response.json(created, { status: 201 });
+	return Response.json(created.map(mapServiceImage), { status: 201 });
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {

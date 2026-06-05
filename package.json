@@ -4,6 +4,7 @@
 	"private": true,
 	"scripts": {
 		"postinstall": "prisma generate",
+		"predev": "prisma generate",
 		"dev": "tsx server.ts",
 		"build": "next build",
 		"start": "tsx server.ts",
@@ -20,6 +21,7 @@
 		"@prisma/adapter-pg": "^7.6.0",
 		"@prisma/client": "^7.6.0",
 		"@tanstack/react-query": "^5.99.0",
+		"@tanstack/react-table": "^8.21.3",
 		"@tiptap/extension-placeholder": "^3.22.4",
 		"@tiptap/react": "^3.22.4",
 		"@tiptap/starter-kit": "^3.22.4",

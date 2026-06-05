@@ -11,8 +11,13 @@ import type {
 
 function getApiErrorMessage(error: unknown, fallback: string) {
 	if (axios.isAxiosError(error)) {
-		const message = error.response?.data?.message;
-		if (typeof message === 'string' && message.length > 0) return message;
+		const data = error.response?.data;
+		if (data && typeof data === 'object') {
+			const message = (data as { message?: unknown }).message;
+			if (typeof message === 'string' && message.length > 0) return message;
+			const err = (data as { error?: unknown }).error;
+			if (typeof err === 'string' && err.length > 0) return err;
+		}
 	}
 	if (error instanceof Error && error.message) return error.message;
 	return fallback;

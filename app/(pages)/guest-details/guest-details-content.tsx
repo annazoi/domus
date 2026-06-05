@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Input } from '@/components/ui';
 import { formatDisplayDate } from '@/features/property-availability/utils/date';
+import { useAuthStore } from '@/store/auth';
 import { ArrowLeft } from 'lucide-react';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -23,11 +24,25 @@ export default function GuestDetailsContent() {
 		[params],
 	);
 
+	const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+	const authFirstName = useAuthStore((state) => state.first_name);
+	const authLastName = useAuthStore((state) => state.last_name);
+	const authEmail = useAuthStore((state) => state.email);
+
 	const [firstName, setFirstName] = useState('');
 	const [lastName, setLastName] = useState('');
 	const [email, setEmail] = useState('');
 	const [phone, setPhone] = useState('');
-	const [error, setError] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(
+		params.get('cancelled') === '1' ? 'Payment was cancelled. You can try again when ready.' : null,
+	);
+
+	useEffect(() => {
+		if (!isLoggedIn) return;
+		if (authFirstName) setFirstName(authFirstName);
+		if (authLastName) setLastName(authLastName);
+		if (authEmail) setEmail(authEmail);
+	}, [isLoggedIn, authFirstName, authLastName, authEmail]);
 
 	const handleContinue = () => {
 		const fn = firstName.trim();
@@ -109,6 +124,7 @@ export default function GuestDetailsContent() {
 									onChange={(e) => setEmail(e.target.value)}
 									placeholder="jane@example.com"
 									autoComplete="email"
+									readOnly={!!isLoggedIn}
 									className="mt-1.5"
 								/>
 							</label>

@@ -13,6 +13,37 @@ export interface Booking {
 	property_title: string;
 }
 
+export interface GuestTripDetail {
+	id: string;
+	property_id: string;
+	host_id: string;
+	host_name: string;
+	start_date: string;
+	end_date: string;
+	status: BookingStatus;
+	property_title: string;
+	guests: number;
+	total_price: number;
+	check_in_iso: string;
+	check_out_iso: string;
+	created_at: string;
+	property: {
+		slug: string;
+		address: string;
+		city: string;
+		country: string;
+		room_type: string;
+		property_type: string;
+	};
+	host: {
+		first_name: string;
+		last_name: string;
+		email: string;
+		phone: string | null;
+	};
+	service_orders: BookingServiceOrder[];
+}
+
 export interface BookingServiceOrder {
 	id: string;
 	service_id: string;

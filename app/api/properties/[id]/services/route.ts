@@ -48,7 +48,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 	}
 	if (result.error === 'SERVICE_IN_USE') {
 		return Response.json(
-			{ message: 'Cannot remove a service that is already booked for this property.' },
+			{
+				message:
+					'This service is included in a current or past booking for this property and cannot be removed yet.',
+			},
 			{ status: 409 },
 		);
 	}

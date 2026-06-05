@@ -14,9 +14,6 @@ export async function upsertPendingBookingPayment(
 		currency: string;
 		stripeSessionId: string;
 		stripePaymentUrl: string | null;
-		platformFeeAmount: number;
-		stripeFeeEstimate: number;
-		payoutEstimate: number;
 	},
 	db: DbClient = prisma,
 ) {
@@ -26,10 +23,10 @@ export async function upsertPendingBookingPayment(
 			amount: params.amount,
 			currency: params.currency,
 			stripe_payment_url: params.stripePaymentUrl,
-			platform_fee_amount: params.platformFeeAmount,
-			stripe_fee_amount: params.stripeFeeEstimate,
-			payout_amount: params.payoutEstimate,
-			net_amount: params.payoutEstimate,
+			platform_fee_amount: 0,
+			stripe_fee_amount: 0,
+			payout_amount: params.amount,
+			net_amount: params.amount,
 		},
 		create: {
 			booking_id: params.bookingId,
@@ -41,10 +38,10 @@ export async function upsertPendingBookingPayment(
 			context: PaymentContext.BOOKING_PAYMENT,
 			stripe_session_id: params.stripeSessionId,
 			stripe_payment_url: params.stripePaymentUrl,
-			platform_fee_amount: params.platformFeeAmount,
-			stripe_fee_amount: params.stripeFeeEstimate,
-			payout_amount: params.payoutEstimate,
-			net_amount: params.payoutEstimate,
+			platform_fee_amount: 0,
+			stripe_fee_amount: 0,
+			payout_amount: params.amount,
+			net_amount: params.amount,
 		},
 	});
 }
@@ -102,9 +99,7 @@ export async function applyChargeFeeBreakdown(
 	params: {
 		paymentIntentId?: string | null;
 		chargeId: string;
-		stripeFeeAmount: number;
-		netAmount: number;
-		payoutAmount: number;
+		amount: number;
 		transferId?: string | null;
 		receiptUrl?: string | null;
 	},
@@ -114,9 +109,9 @@ export async function applyChargeFeeBreakdown(
 		where: paymentMatch({ paymentIntentId: params.paymentIntentId }),
 		data: {
 			stripe_charge_id: params.chargeId,
-			stripe_fee_amount: params.stripeFeeAmount,
-			net_amount: params.netAmount,
-			payout_amount: params.payoutAmount,
+			stripe_fee_amount: 0,
+			net_amount: params.amount,
+			payout_amount: params.amount,
 			...(params.transferId ? { stripe_transfer_id: params.transferId } : {}),
 			...(params.receiptUrl ? { stripe_receipt_url: params.receiptUrl } : {}),
 		},

@@ -3,6 +3,7 @@ import { hasPropertySlugConflict, slugifyPropertySlug } from '@/app/api/_utils/p
 import { mapProperty } from '@/app/api/_utils/property-map';
 import { propertyService } from '@/app/api/properties/properties.service';
 import type { UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
+import { parsePaginationParams } from '@/lib/pagination';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request) {
@@ -13,6 +14,19 @@ export async function GET(request: Request) {
 	const hostFilter = url.searchParams.get('host_id');
 	if (hostFilter && hostFilter !== 'me') {
 		return Response.json({ message: 'Forbidden' }, { status: 403 });
+	}
+
+	const paginationParams = parsePaginationParams(url.searchParams);
+	if (paginationParams) {
+		const result = await propertyService.listByHostPaginated(
+			hostId,
+			paginationParams.page,
+			paginationParams.pageSize,
+		);
+		return Response.json({
+			items: result.items.map(mapProperty),
+			pagination: result.pagination,
+		});
 	}
 
 	const properties = await propertyService.listByHost(hostId);

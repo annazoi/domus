@@ -1,17 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PropertyBrandingTheme } from '../../../app/(pages)/templates/_constants/property-branding-theme';
 import type { UpsertPropertyInput } from '../interfaces/property.interface';
+import type { PaginatedResult } from '@/lib/pagination';
+import type { Property } from '../interfaces/property.interface';
 import {
 	createProperty,
 	deleteProperty,
 	getPropertyById,
 	listProperties,
+	listPropertiesPaginated,
 	patchPropertyBranding,
 	updateProperty,
 } from '../services/property.services';
 
 export const propertyQueryKey = {
 	all: ['properties'] as const,
+	page: (page: number, pageSize: number) => ['properties', page, pageSize] as const,
 	detail: (id: string) => ['properties', id] as const,
 };
 
@@ -19,6 +23,13 @@ export const useProperties = () => {
 	return useQuery({
 		queryKey: propertyQueryKey.all,
 		queryFn: listProperties,
+	});
+};
+
+export const usePropertiesPage = (page: number, pageSize: number) => {
+	return useQuery<PaginatedResult<Property>>({
+		queryKey: propertyQueryKey.page(page, pageSize),
+		queryFn: () => listPropertiesPaginated(page, pageSize),
 	});
 };
 

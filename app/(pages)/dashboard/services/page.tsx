@@ -1,24 +1,28 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Plus, Trash2 } from 'lucide-react';
-import { Button, Checkbox, Input, Skeleton, Textarea, useToast } from '@/components/ui';
+import { Button, Checkbox, cn, ConfirmationDialog, Input, Select, Skeleton, Textarea, useToast } from '@/components/ui';
+import { DashboardPagination } from '@/app/(pages)/dashboard/_components/dashboard-pagination';
 import {
 	useCreateHostService,
 	useDeleteHostService,
-	useHostServices,
+	useHostServicesPage,
 	useUpdateHostService,
 	useUploadServiceImages,
 } from '@/features/services/hooks/use-host-services';
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import type { HostService, ServiceInput } from '@/features/services/interfaces/service.interface';
 import {
+	PRICING_UNIT_DESCRIPTIONS,
 	PRICING_UNIT_LABELS,
 	PRICING_UNIT_OPTIONS,
 	PricingUnit,
 } from '@/features/services/interfaces/pricing-unit';
 import {
 	ServicePhotosEditor,
+	type ServicePhotosEditorHandle,
 	StagedPhotosPicker,
 	useStagedPhotos,
 } from './_components/service-photos-editor';
@@ -74,31 +78,36 @@ const parseDraft = (draft: ServiceDraft): ServiceInput | null => {
 	};
 };
 
-const selectClassName =
-	'w-full rounded-lg border border-dashboard-border bg-white px-3 py-2 text-sm text-espresso outline-none focus:border-camel';
-
 function formatPrice(value: number) {
 	return `$${value.toFixed(2)}`;
 }
 
+const PAGE_SIZE = DEFAULT_PAGE_SIZE;
+
 export function HostServicesList() {
 	const { push } = useToast();
-	const { data: services = [], isLoading } = useHostServices(true);
+	const [page, setPage] = useState(1);
+	const { data, isLoading, isFetching } = useHostServicesPage(page, PAGE_SIZE);
+	const services = data?.items ?? [];
+	const pagination = data?.pagination;
+	const total = pagination?.total ?? 0;
 	const { mutateAsync: createService, isPending: creating } = useCreateHostService();
 	const { mutateAsync: updateService, isPending: updating } = useUpdateHostService();
 	const { mutateAsync: deleteService, isPending: deleting } = useDeleteHostService();
+	const [serviceToDelete, setServiceToDelete] = useState<HostService | null>(null);
 	const { mutateAsync: uploadImages, isPending: uploadingImages } = useUploadServiceImages();
 	const createPhotos = useStagedPhotos();
+	const photosEditorRef = useRef<ServicePhotosEditorHandle>(null);
 
 	const [showCreateForm, setShowCreateForm] = useState(false);
 	const [createDraft, setCreateDraft] = useState<ServiceDraft>(emptyDraft);
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [editDraft, setEditDraft] = useState<ServiceDraft>(emptyDraft);
 
-	const sortedServices = useMemo(
-		() => [...services].sort((a, b) => a.name.localeCompare(b.name)),
-		[services],
-	);
+	useEffect(() => {
+		if (!pagination || page <= pagination.totalPages) return;
+		setPage(pagination.totalPages);
+	}, [page, pagination]);
 
 	const handleCreate = async () => {
 		const payload = parseDraft(createDraft);
@@ -112,8 +121,11 @@ export function HostServicesList() {
 			if (createPhotos.staged.length) {
 				try {
 					await uploadImages({ serviceId: created.id, files: createPhotos.staged.map((s) => s.file) });
-				} catch {
-					push({ title: 'Service created, but photos failed to upload. Add them from Edit.', tone: 'error' });
+				} catch (e) {
+					push({
+						title: e instanceof Error ? e.message : 'Service created, but photos failed to upload. Add them from Edit.',
+						tone: 'error',
+					});
 				}
 			}
 			createPhotos.clear();
@@ -138,6 +150,9 @@ export function HostServicesList() {
 		}
 
 		try {
+			if (photosEditorRef.current) {
+				await photosEditorRef.current.uploadStagedIfAny();
+			}
 			await updateService({ id: serviceId, input: payload });
 			setEditingId(null);
 			push({ title: 'Service updated.', tone: 'success' });
@@ -207,8 +222,8 @@ export function HostServicesList() {
 						</div>
 						<div className="space-y-1.5">
 							<label className="text-sm text-espresso/70">Pricing unit</label>
-							<select
-								className={selectClassName}
+							<Select
+								variant="compact"
 								value={createDraft.pricing_unit}
 								onChange={(e) =>
 									setCreateDraft((prev) => ({ ...prev, pricing_unit: e.target.value as PricingUnit }))
@@ -219,7 +234,10 @@ export function HostServicesList() {
 										{option.label}
 									</option>
 								))}
-							</select>
+							</Select>
+							<p className="text-xs text-espresso/55">
+								{PRICING_UNIT_DESCRIPTIONS[createDraft.pricing_unit]}
+							</p>
 						</div>
 						<label className="flex cursor-pointer items-start gap-3 md:col-span-2">
 							<Checkbox
@@ -295,16 +313,18 @@ export function HostServicesList() {
 				</Button>
 			)}
 
-			{sortedServices.length === 0 ? (
+			{!isLoading && total === 0 ? (
 				<div className="dashboard-panel rounded-2xl p-8 text-center">
 					<p className="font-serif text-2xl">No services yet</p>
 					<p className="mt-2 text-sm text-espresso/60">
 						Create extras like wine, breakfast, or late checkout, then attach them to properties under Guest extras.
 					</p>
 				</div>
-			) : (
+			) : null}
+			{!isLoading && total > 0 ? (
 				<div className="dashboard-panel overflow-hidden rounded-2xl">
-					{sortedServices.map((service) => {
+					<div className={cn('transition-opacity', isFetching && 'pointer-events-none opacity-50')}>
+					{services.map((service) => {
 						const isEditing = editingId === service.id;
 
 						return (
@@ -343,8 +363,8 @@ export function HostServicesList() {
 											</div>
 											<div className="space-y-1.5">
 												<label className="text-sm text-espresso/70">Pricing unit</label>
-												<select
-													className={selectClassName}
+												<Select
+													variant="compact"
 													value={editDraft.pricing_unit}
 													onChange={(e) =>
 														setEditDraft((prev) => ({
@@ -358,7 +378,10 @@ export function HostServicesList() {
 															{option.label}
 														</option>
 													))}
-												</select>
+												</Select>
+												<p className="text-xs text-espresso/55">
+													{PRICING_UNIT_DESCRIPTIONS[editDraft.pricing_unit]}
+												</p>
 											</div>
 											<label className="flex cursor-pointer items-start gap-3 md:col-span-2">
 												<Checkbox
@@ -394,7 +417,7 @@ export function HostServicesList() {
 											) : null}
 										</div>
 										<div className="border-t border-dashboard-border pt-4">
-											<ServicePhotosEditor service={service} />
+											<ServicePhotosEditor ref={photosEditorRef} service={service} />
 										</div>
 										<div className="flex flex-wrap gap-2">
 											<Button
@@ -456,7 +479,7 @@ export function HostServicesList() {
 												variant="ghostPill"
 												disabled={deleting}
 												className="text-espresso/55 hover:text-red-600"
-												onClick={() => void handleDelete(service)}
+												onClick={() => setServiceToDelete(service)}
 												aria-label={`Delete ${service.name}`}
 											>
 												<Trash2 className="h-4 w-4" />
@@ -467,8 +490,35 @@ export function HostServicesList() {
 							</div>
 						);
 					})}
+					</div>
+					{pagination ? (
+						<DashboardPagination
+							page={pagination.page}
+							pageSize={pagination.pageSize}
+							total={pagination.total}
+							onPageChange={setPage}
+							itemLabel="services"
+						/>
+					) : null}
 				</div>
-			)}
+			) : null}
+			<ConfirmationDialog
+				open={serviceToDelete !== null}
+				title="Delete this service?"
+				description={
+					serviceToDelete
+						? `"${serviceToDelete.name}" will be removed from your catalog and unlinked from all properties. This cannot be undone.`
+						: ''
+				}
+				confirmLabel="Delete"
+				confirmVariant="danger"
+				loading={deleting}
+				onCancel={() => setServiceToDelete(null)}
+				onConfirm={() => {
+					if (!serviceToDelete) return;
+					void handleDelete(serviceToDelete).finally(() => setServiceToDelete(null));
+				}}
+			/>
 		</div>
 	);
 }

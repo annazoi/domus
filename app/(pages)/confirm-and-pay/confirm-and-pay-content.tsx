@@ -3,9 +3,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui';
-import { useServices } from '@/features/services/hooks/use-services';
 import { useBookingQuote } from '@/features/bookings/hooks/use-booking-quote';
-import { createStripeCheckout } from '@/features/stripe/services/stripe.services';
+import { startBookingStripeCheckout } from '@/features/bookings/utils/start-booking-stripe-checkout';
+import { useServices } from '@/features/services/hooks/use-services';
 import { formatDisplayDate } from '@/features/property-availability/utils/date';
 import BookingServicesCard, {
 	buildSelectedServices,
@@ -40,7 +40,13 @@ export default function ConfirmAndPayContent() {
 		booking.property_id,
 	);
 
-	const availableServices = services ?? [];
+	const availableServices = useMemo(
+		() => (services ?? []).filter((service) => service.active),
+		[services],
+	);
+
+	const showExtrasSection =
+		!servicesLoading && !servicesError && availableServices.length > 0;
 
 	const handleServiceQuantityChange = useCallback((serviceId: string, quantity: number) => {
 		setServiceQuantities((prev) => {
@@ -73,16 +79,18 @@ export default function ConfirmAndPayContent() {
 			check_in: booking.check_in,
 			check_out: booking.check_out,
 			guests: booking.guests,
-			services: selectedServices,
+			services: showExtrasSection ? selectedServices : [],
 		},
 		quoteEnabled,
 	);
 
 	const snapshot = quote?.snapshot ?? null;
 	const grandTotal = snapshot?.total ?? booking.total_price;
-	const canPay = Boolean(snapshot) && !quoteLoading && !quoteError;
+	const canPay = showExtrasSection
+		? Boolean(snapshot) && !quoteLoading && !quoteError
+		: !quoteLoading && !quoteError && (Boolean(snapshot) || booking.total_price > 0);
 
-	const handlePay = async () => {
+	const handlePay = useCallback(async () => {
 		if (!booking.property_id || !booking.check_in || !booking.check_out) {
 			setError('Booking details are incomplete.');
 			return;
@@ -94,7 +102,7 @@ export default function ConfirmAndPayContent() {
 		setError(null);
 		setIsPending(true);
 		try {
-			const result = await createStripeCheckout({
+			await startBookingStripeCheckout({
 				property_id: booking.property_id,
 				check_in: booking.check_in,
 				check_out: booking.check_out,
@@ -107,12 +115,11 @@ export default function ConfirmAndPayContent() {
 				},
 				...(selectedServices.length > 0 ? { services: selectedServices } : {}),
 			});
-			window.location.assign(result.checkout_url);
 		} catch (err) {
 			setIsPending(false);
 			setError(err instanceof Error ? err.message : 'Could not start checkout.');
 		}
-	};
+	}, [booking, selectedServices]);
 
 	return (
 		<div className="min-h-screen bg-[#f9f8f6] px-4 py-8 sm:px-8">
@@ -125,13 +132,15 @@ export default function ConfirmAndPayContent() {
 						Stripe.
 					</p>
 
-					<BookingServicesCard
-						services={availableServices}
-						isLoading={servicesLoading}
-						isError={servicesError}
-						quantities={serviceQuantities}
-						onQuantityChange={handleServiceQuantityChange}
-					/>
+					{showExtrasSection ? (
+						<BookingServicesCard
+							services={availableServices}
+							isLoading={servicesLoading}
+							isError={servicesError}
+							quantities={serviceQuantities}
+							onQuantityChange={handleServiceQuantityChange}
+						/>
+					) : null}
 
 					{error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
 					{quoteError && !error ? (
@@ -146,12 +155,12 @@ export default function ConfirmAndPayContent() {
 						type="button"
 						variant="primarySm"
 						className="mt-8 w-full"
-						disabled={isPending || !canPay}
+						disabled={isPending || !canPay || servicesLoading}
 						onClick={() => void handlePay()}
 					>
 						{isPending
 							? 'Redirecting to Stripe…'
-							: quoteLoading
+							: quoteLoading || servicesLoading
 								? 'Updating price…'
 								: `Pay €${grandTotal.toFixed(2)}`}
 					</Button>

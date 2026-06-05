@@ -26,6 +26,8 @@ export const ApiRoutes = {
 			`/properties/${id}/check-availability?${toSearchParams({ check_in, check_out, guests })}`,
 		unavailableDays: (id: string) => `/properties/${id}/unavailable-days`,
 		listMine: '/properties?host_id=me',
+		listMinePaginated: (page: number, limit: number) =>
+			`/properties?host_id=me&page=${page}&limit=${limit}`,
 	},
 	images: {
 		prefix: '/images',
@@ -43,13 +45,39 @@ export const ApiRoutes = {
 		create: '/booking',
 		quote: '/bookings/quote',
 		listMine: '/bookings?host_id=me',
+		listMinePaginated: (params: {
+			page: number;
+			limit: number;
+			customer_id?: string;
+			property_id?: string;
+			date_from?: string;
+			date_to?: string;
+			q?: string;
+			sort?: 'check_in' | 'created_at';
+			exclude_cancelled?: boolean;
+		}) =>
+			`/bookings?host_id=me&${toSearchParams({
+				page: params.page,
+				limit: params.limit,
+				customer_id: params.customer_id,
+				property_id: params.property_id,
+				date_from: params.date_from,
+				date_to: params.date_to,
+				q: params.q,
+				sort: params.sort,
+				exclude_cancelled: params.exclude_cancelled ? '1' : undefined,
+			})}`,
 		listMyTrips: '/bookings?guest_id=me',
+		listMyTripsPaginated: (page: number, limit: number) =>
+			`/bookings?guest_id=me&page=${page}&limit=${limit}`,
 		booking: (id: string) => `/bookings/${id}`,
 		cancel: (id: string) => `/bookings/${id}/cancel`,
 	},
 	services: {
 		list: (propertyId: string) => `/services?property_id=${encodeURIComponent(propertyId)}`,
 		listMine: '/services?host_id=me',
+		listMinePaginated: (page: number, limit: number) =>
+			`/services?host_id=me&page=${page}&limit=${limit}`,
 		service: (id: string) => `/services/${id}`,
 		byProperty: (propertyId: string) => `/properties/${propertyId}/services`,
 		images: (id: string) => `/services/${id}/images`,
@@ -59,6 +87,8 @@ export const ApiRoutes = {
 	customers: {
 		prefix: '/customers',
 		listMine: '/customers?host_id=me',
+		listMinePaginated: (page: number, limit: number, q?: string) =>
+			`/customers?host_id=me&${toSearchParams({ page, limit, q })}`,
 		customer: (id: string) => `/customers/${id}`,
 	},
 	conversations: {

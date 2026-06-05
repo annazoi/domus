@@ -1,3 +1,4 @@
+import { getUserIdFromRequest } from '@/app/api/_utils/auth';
 import { Prisma } from '@prisma/client';
 import { BookingStatus } from '@prisma/client';
 import {
@@ -20,7 +21,10 @@ export async function POST(request: Request) {
 	}
 
 	try {
-		const result = await createBookingRecord(parsed.input, { status: BookingStatus.PENDING });
+		const result = await createBookingRecord(parsed.input, {
+			status: BookingStatus.PENDING,
+			authenticatedUserId: getUserIdFromRequest(request),
+		});
 
 		if (!result.ok) {
 			const err = createBookingErrorResponse(result.error);

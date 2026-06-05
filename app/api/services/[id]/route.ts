@@ -50,17 +50,34 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
 	const hostId = getHostIdFromRequest(_request);
-	if (!hostId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
+	if (!hostId) {
+		return Response.json({ message: 'Sign in to manage your services.' }, { status: 401 });
+	}
 
 	const { id } = await params;
-	const result = await servicesService.deleteForHost(hostId, id);
 
-	if (result.error === 'NOT_FOUND') {
-		return Response.json({ message: 'Service not found' }, { status: 404 });
-	}
-	if (result.error === 'SERVICE_IN_USE') {
-		return Response.json({ message: 'Cannot delete a service that is already booked.' }, { status: 409 });
-	}
+	try {
+		const result = await servicesService.deleteForHost(hostId, id);
 
-	return new Response(null, { status: 204 });
+		if (result.error === 'NOT_FOUND') {
+			return Response.json({ message: 'This service could not be found.' }, { status: 404 });
+		}
+		if (result.error === 'SERVICE_IN_USE') {
+			return Response.json(
+				{
+					message:
+						'This service is included in a current or past booking and cannot be deleted yet.',
+				},
+				{ status: 409 },
+			);
+		}
+
+		return new Response(null, { status: 204 });
+	} catch (error) {
+		console.error('DELETE /api/services/[id] failed', error);
+		return Response.json(
+			{ message: 'Something went wrong while deleting the service. Please try again.' },
+			{ status: 500 },
+		);
+	}
 }

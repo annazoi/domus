@@ -24,6 +24,54 @@ function statusLabel(status: HostBookingDetail['status']) {
 	return 'Pending';
 }
 
+function calendarDayClassName({
+	isSelected,
+	isToday,
+	isPast,
+	activeCount,
+	cancelledOnly,
+}: {
+	isSelected: boolean;
+	isToday: boolean;
+	isPast: boolean;
+	activeCount: number;
+	cancelledOnly: boolean;
+}) {
+	return cn(
+		'relative flex h-14 flex-col items-center justify-center overflow-hidden rounded-xl border-0 text-sm transition cursor-pointer',
+		isToday &&
+			cn(
+				activeCount > 0 ? 'bg-camel/15 text-camel-dark' : 'bg-dashboard-inset text-espresso',
+				'font-medium ring-2 ring-camel/40',
+				isSelected && 'ring-camel/55',
+				activeCount > 0 ? 'hover:bg-camel/20' : 'hover:bg-dashboard-row-hover',
+			),
+		!isToday &&
+			isSelected &&
+			'bg-camel/15 text-camel-dark ring-2 ring-camel/45',
+		!isToday &&
+			!isSelected &&
+			activeCount > 0 &&
+			'bg-camel/10 text-camel-dark hover:bg-camel/15',
+		!isToday &&
+			!isSelected &&
+			cancelledOnly &&
+			'bg-dashboard-bg text-dashboard-muted/70 line-through decoration-dashboard-muted/25',
+		!isToday &&
+			!isSelected &&
+			activeCount === 0 &&
+			!cancelledOnly &&
+			isPast &&
+			'bg-dashboard-inset/80 text-dashboard-muted/60 hover:bg-dashboard-inset',
+		!isToday &&
+			!isSelected &&
+			activeCount === 0 &&
+			!cancelledOnly &&
+			!isPast &&
+			'bg-dashboard-inset text-dashboard-muted hover:bg-dashboard-row-hover',
+	);
+}
+
 export default function CalendarPage() {
 	const { data: bookings = [], isLoading } = useBookings();
 	const today = useMemo(() => DateTime.now().startOf('day'), []);
@@ -133,27 +181,30 @@ export default function CalendarPage() {
 										type="button"
 										variant="custom"
 										onClick={() => setSelectedDate(cell.date)}
-										className={cn(
-											'relative h-14 rounded-xl border-0 text-sm transition',
-											isSelected
-												? 'bg-camel/15 text-camel-dark'
-												: activeCount > 0
-													? 'bg-camel/10 text-camel-dark hover:bg-camel/15'
-													: cancelledOnly
-														? 'bg-dashboard-bg text-dashboard-muted/70 line-through decoration-dashboard-muted/25'
-														: cell.isPast
-															? 'bg-dashboard-inset/80 text-dashboard-muted/60 hover:bg-dashboard-inset'
-															: 'bg-dashboard-inset text-dashboard-muted hover:bg-dashboard-surface',
-											cell.isToday && !isSelected ? 'bg-dashboard-surface' : '',
-										)}
+										aria-current={cell.isToday ? 'date' : undefined}
+										className={calendarDayClassName({
+											isSelected,
+											isToday: cell.isToday,
+											isPast: cell.isPast,
+											activeCount,
+											cancelledOnly,
+										})}
 									>
-										<span>{cell.day}</span>
+										{cell.isToday ? (
+											<span className="pointer-events-none absolute inset-x-0 top-1 text-[9px] font-medium uppercase tracking-[0.16em] text-camel/65">
+												Today
+											</span>
+										) : null}
+										<span className={cn(cell.isToday && 'translate-y-1')}>{cell.day}</span>
 										{activeCount > 0 ? (
 											<span className="absolute bottom-1.5 left-1/2 flex -translate-x-1/2 gap-0.5">
 												{Array.from({ length: Math.min(activeCount, 3) }).map((_, dotIndex) => (
 													<span
 														key={dotIndex}
-														className="h-1 w-1 rounded-full bg-camel"
+														className={cn(
+															'h-1 w-1 rounded-full',
+															cell.isToday ? 'bg-camel-dark' : 'bg-camel',
+														)}
 														aria-hidden
 													/>
 												))}
@@ -171,7 +222,7 @@ export default function CalendarPage() {
 							Has bookings
 						</span>
 						<span className="inline-flex items-center gap-2">
-							<span className="h-3 w-3 rounded bg-dashboard-surface" />
+							<span className="h-3 w-3 rounded bg-dashboard-inset ring-2 ring-camel/40" />
 							Today
 						</span>
 					</div>
@@ -213,10 +264,10 @@ export default function CalendarPage() {
 									variant="custom"
 									onClick={() => setSelectedBooking(booking)}
 									className={cn(
-										'flex h-auto w-full flex-col items-start gap-1 rounded-xl border-0 px-4 py-3 text-left transition hover:bg-dashboard-surface',
+										'flex h-auto w-full flex-col items-start gap-1 rounded-xl border-0 px-4 py-3 text-left transition',
 										booking.status === BookingStatus.CANCELLED
-											? 'bg-dashboard-bg/80 opacity-70'
-											: 'bg-dashboard-inset',
+											? 'bg-dashboard-bg/80 opacity-70 cursor-not-allowed'
+											: 'bg-dashboard-inset hover:bg-dashboard-row-hover cursor-pointer',
 									)}
 								>
 									<span className="font-medium text-espresso">{booking.guest_name}</span>

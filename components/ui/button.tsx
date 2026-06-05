@@ -72,7 +72,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 	navLogin:
 		'cursor-pointer rounded-full border border-stone-100/30 px-5 py-2 text-sm font-medium text-stone-100 transition hover:bg-stone-100 hover:text-stone-900',
 	ghostPill:
-		'cursor-pointer rounded-full px-5 py-2.5 text-sm text-dashboard-muted transition hover:bg-dashboard-row-hover hover:text-espresso',
+		'inline-flex cursor-pointer items-center gap-1.5 rounded-full px-5 py-2.5 text-sm text-dashboard-muted transition hover:bg-dashboard-row-hover hover:text-espresso',
 	custom: '',
 };
 

@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { PaginatedResult } from '@/lib/pagination';
 import {
 	createHostService,
 	deleteHostService,
 	deleteServiceImage,
 	listHostServices,
+	listHostServicesPaginated,
+	reorderServiceImages,
 	updateHostService,
 	uploadServiceImages,
 } from '../services/services.services';
@@ -12,12 +15,21 @@ import { servicesQueryKey } from './use-services';
 
 export const hostServicesQueryKey = {
 	all: ['host-services'] as const,
+	page: (page: number, pageSize: number) => ['host-services', page, pageSize] as const,
 };
 
 export const useHostServices = (enabled: boolean) => {
 	return useQuery<HostService[]>({
 		queryKey: hostServicesQueryKey.all,
 		queryFn: listHostServices,
+		enabled,
+	});
+};
+
+export const useHostServicesPage = (page: number, pageSize: number, enabled = true) => {
+	return useQuery<PaginatedResult<HostService>>({
+		queryKey: hostServicesQueryKey.page(page, pageSize),
+		queryFn: () => listHostServicesPaginated(page, pageSize),
 		enabled,
 	});
 };
@@ -59,6 +71,18 @@ export const useUploadServiceImages = () => {
 	return useMutation({
 		mutationFn: ({ serviceId, files, descriptions }: { serviceId: string; files: File[]; descriptions?: string[] }) =>
 			uploadServiceImages(serviceId, files, descriptions),
+		onSuccess: () => {
+			void queryClient.invalidateQueries({ queryKey: hostServicesQueryKey.all });
+			void queryClient.invalidateQueries({ queryKey: servicesQueryKey.all });
+		},
+	});
+};
+
+export const useReorderServiceImages = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({ serviceId, reorder_ids }: { serviceId: string; reorder_ids: string[] }) =>
+			reorderServiceImages(serviceId, reorder_ids),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: hostServicesQueryKey.all });
 			void queryClient.invalidateQueries({ queryKey: servicesQueryKey.all });

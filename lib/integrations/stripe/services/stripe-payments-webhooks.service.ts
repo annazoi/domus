@@ -160,34 +160,12 @@ async function handleChargeUpdated(charge: Stripe.Charge) {
 	const bookingId = await findBookingIdByPaymentIntent(paymentIntentId);
 	if (!bookingId) return;
 
-	const applicationFee = charge.application_fee_amount ?? 0;
 	const transferId = typeof charge.transfer === 'string' ? charge.transfer : charge.transfer?.id ?? null;
-
-	let stripeFeeCents = 0;
-	let netCents = charge.amount - applicationFee;
-
-	if (charge.balance_transaction) {
-		const balanceTransactionId =
-			typeof charge.balance_transaction === 'string'
-				? charge.balance_transaction
-				: charge.balance_transaction.id;
-		try {
-			const balanceTransaction = await getStripeClient().balanceTransactions.retrieve(balanceTransactionId);
-			stripeFeeCents = balanceTransaction.fee;
-			netCents = balanceTransaction.net;
-		} catch (error) {
-			console.error('Could not retrieve balance transaction:', error);
-		}
-	}
-
-	const payoutCents = charge.amount - applicationFee;
 
 	await applyChargeFeeBreakdown({
 		paymentIntentId,
 		chargeId: charge.id,
-		stripeFeeAmount: centsToEuros(stripeFeeCents),
-		netAmount: centsToEuros(netCents),
-		payoutAmount: centsToEuros(payoutCents),
+		amount: centsToEuros(charge.amount),
 		transferId,
 		receiptUrl: charge.receipt_url,
 	});

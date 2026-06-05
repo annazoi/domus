@@ -1,4 +1,5 @@
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, Prisma } from '@prisma/client';
+import { buildPaginationMeta, type PaginatedResult } from '@/lib/pagination';
 import { prisma } from '@/lib/prisma';
 
 const customerSelect = {
@@ -102,7 +103,37 @@ function trimOrNull(value: string | null | undefined) {
 	return trimmed ? trimmed : null;
 }
 
+function buildCustomerListWhere(hostUserId: string, query?: string): Prisma.CustomerWhereInput {
+	const base: Prisma.CustomerWhereInput = { host_user_id: hostUserId };
+	const trimmed = query?.trim();
+	if (!trimmed || trimmed.length < 3) return base;
+
+	return {
+		...base,
+		OR: [
+			{ first_name: { contains: trimmed, mode: 'insensitive' } },
+			{ last_name: { contains: trimmed, mode: 'insensitive' } },
+			{ email: { contains: trimmed, mode: 'insensitive' } },
+			{ phone: { contains: trimmed, mode: 'insensitive' } },
+			{ city: { contains: trimmed, mode: 'insensitive' } },
+			{ country: { contains: trimmed, mode: 'insensitive' } },
+			{ vat_number: { contains: trimmed, mode: 'insensitive' } },
+		],
+	};
+}
+
 export const customersService = {
+	async getHostCustomer(hostUserId: string, customerId: string) {
+		const customer = await prisma.customer.findFirst({
+			where: { id: customerId, host_user_id: hostUserId },
+			select: customerSelect,
+		});
+		if (!customer) return null;
+
+		const { countByCustomer, spentByCustomer } = await loadStatsMaps(hostUserId, [customerId]);
+		return mapCustomerWithStats(customer, countByCustomer, spentByCustomer);
+	},
+
 	async listHostCustomersWithStats(hostUserId: string) {
 		const [customers, { countByCustomer, spentByCustomer }] = await Promise.all([
 			prisma.customer.findMany({
@@ -114,6 +145,34 @@ export const customersService = {
 		]);
 
 		return customers.map((c) => mapCustomerWithStats(c, countByCustomer, spentByCustomer));
+	},
+
+	async listHostCustomersWithStatsPaginated(
+		hostUserId: string,
+		page: number,
+		pageSize: number,
+		query?: string,
+	) {
+		const where = buildCustomerListWhere(hostUserId, query);
+
+		const [total, customers] = await Promise.all([
+			prisma.customer.count({ where }),
+			prisma.customer.findMany({
+				where,
+				orderBy: [{ last_name: 'asc' }, { first_name: 'asc' }],
+				skip: (page - 1) * pageSize,
+				take: pageSize,
+				select: customerSelect,
+			}),
+		]);
+
+		const customerIds = customers.map((customer) => customer.id);
+		const { countByCustomer, spentByCustomer } = await loadStatsMaps(hostUserId, customerIds);
+
+		return {
+			items: customers.map((customer) => mapCustomerWithStats(customer, countByCustomer, spentByCustomer)),
+			pagination: buildPaginationMeta(page, pageSize, total),
+		} satisfies PaginatedResult<ReturnType<typeof mapCustomerWithStats>>;
 	},
 
 	async updateHostCustomer(hostUserId: string, customerId: string, body: UpdateHostCustomerBody) {

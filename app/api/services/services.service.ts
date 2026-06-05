@@ -1,4 +1,6 @@
-import { PricingUnit } from '@prisma/client';
+import { BookingStatus, PricingUnit } from '@prisma/client';
+import { DateTime } from 'luxon';
+import { buildPaginationMeta, type PaginatedResult } from '@/lib/pagination';
 import { prisma } from '@/lib/prisma';
 import type {
 	HostServiceRow,
@@ -83,6 +85,10 @@ const serviceDataFromInput = (input: ServiceInput) => {
 	};
 };
 
+function startOfTodayUtc() {
+	return DateTime.utc().startOf('day').toJSDate();
+}
+
 async function resolvePropertyId(propertyRef: string) {
 	const property = await prisma.property.findFirst({
 		where: {
@@ -99,7 +105,7 @@ export const servicesService = {
 		if (!property) return [];
 
 		const rows = await prisma.propertyService.findMany({
-			where: { property_id: property.id },
+			where: { property_id: property.id, service: { active: true } },
 			orderBy: { service: { name: 'asc' } },
 			select: {
 				service: { select: serviceSelect },
@@ -111,7 +117,7 @@ export const servicesService = {
 
 	async listByHost(hostUserId: string): Promise<HostServiceRow[]> {
 		const rows = await prisma.service.findMany({
-			where: { host_user_id: hostUserId },
+			where: { host_user_id: hostUserId, active: true },
 			orderBy: { name: 'asc' },
 			select: {
 				...serviceSelect,
@@ -123,6 +129,34 @@ export const servicesService = {
 			...mapServiceRow(row),
 			property_count: row._count.property_services,
 		}));
+	},
+
+	async listByHostPaginated(hostUserId: string, page: number, pageSize: number) {
+		const where = { host_user_id: hostUserId, active: true };
+
+		const [total, rows] = await Promise.all([
+			prisma.service.count({ where }),
+			prisma.service.findMany({
+				where,
+				orderBy: { name: 'asc' },
+				skip: (page - 1) * pageSize,
+				take: pageSize,
+				select: {
+					...serviceSelect,
+					_count: { select: { property_services: true } },
+				},
+			}),
+		]);
+
+		const items = rows.map((row) => ({
+			...mapServiceRow(row),
+			property_count: row._count.property_services,
+		}));
+
+		return {
+			items,
+			pagination: buildPaginationMeta(page, pageSize, total),
+		} satisfies PaginatedResult<HostServiceRow>;
 	},
 
 	async createForHost(hostUserId: string, input: ServiceInput) {
@@ -172,12 +206,31 @@ export const servicesService = {
 		});
 		if (!existing) return { error: 'NOT_FOUND' as const };
 
-		const inUse = await prisma.serviceOrder.count({
+		const inActiveStay = await prisma.serviceOrder.count({
+			where: {
+				service_id: serviceId,
+				booking: {
+					status: { not: BookingStatus.CANCELLED },
+					check_in: { lte: startOfTodayUtc() },
+				},
+			},
+		});
+		if (inActiveStay > 0) return { error: 'SERVICE_IN_USE' as const };
+
+		const hasOrders = await prisma.serviceOrder.count({
 			where: { service_id: serviceId },
 		});
-		if (inUse > 0) return { error: 'SERVICE_IN_USE' as const };
 
 		await prisma.propertyService.deleteMany({ where: { service_id: serviceId } });
+
+		if (hasOrders > 0) {
+			await prisma.service.update({
+				where: { id: serviceId },
+				data: { active: false },
+			});
+			return { error: null };
+		}
+
 		await prisma.service.delete({ where: { id: serviceId } });
 
 		return { error: null };
@@ -209,7 +262,14 @@ export const servicesService = {
 		const toRemove = [...existingIds].filter((id) => !incomingIds.has(id));
 		if (toRemove.length) {
 			const inUse = await prisma.serviceOrder.count({
-				where: { service_id: { in: toRemove }, booking: { property_id: property.id } },
+				where: {
+					service_id: { in: toRemove },
+					booking: {
+						property_id: property.id,
+						status: { not: BookingStatus.CANCELLED },
+						check_in: { lte: startOfTodayUtc() },
+					},
+				},
 			});
 			if (inUse > 0) {
 				return { error: 'SERVICE_IN_USE' as const };

@@ -1,40 +1,39 @@
 'use client';
 
-import Link from 'next/link';
-import { useMemo, useState } from 'react';
-import { Skeleton } from '@/components/ui';
+import { useEffect, useState } from 'react';
+import { cn } from '@/components/ui';
 import { BookingDetailModal } from '@/app/(pages)/dashboard/bookings/_components/booking-detail-modal';
-import { useBookings } from '@/features/bookings/hooks/use-bookings';
+import { DashboardPagination } from '@/app/(pages)/dashboard/_components/dashboard-pagination';
+import { useCustomerBookingsPage } from '@/features/bookings/hooks/use-bookings';
 import type { HostBookingDetail } from '@/features/bookings/interfaces/booking.interface';
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination';
+import { CustomerBookingsTable, CustomerBookingsTableSkeleton } from './customer-bookings-table';
+
+const PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
 export function CustomerBookingsList({ customerId }: { customerId: string }) {
-	const { data: bookings = [], isLoading } = useBookings();
+	const [page, setPage] = useState(1);
 	const [selected, setSelected] = useState<HostBookingDetail | null>(null);
+	const { data, isLoading, isFetching } = useCustomerBookingsPage(customerId, page, PAGE_SIZE);
 
-	const customerBookings = useMemo(
-		() => bookings.filter((booking) => booking.customer_id === customerId),
-		[bookings, customerId],
-	);
+	const bookings = data?.items ?? [];
+	const pagination = data?.pagination;
+	const total = pagination?.total ?? 0;
+
+	useEffect(() => {
+		setPage(1);
+	}, [customerId]);
+
+	useEffect(() => {
+		if (!pagination || page <= pagination.totalPages) return;
+		setPage(pagination.totalPages);
+	}, [page, pagination]);
 
 	if (isLoading) {
-		return (
-			<div className="dashboard-panel overflow-hidden rounded-2xl">
-				{Array.from({ length: 3 }).map((_, index) => (
-					<div
-						key={index}
-						className="flex flex-col gap-3 border-b border-dashboard-border px-5 py-5 md:flex-row md:flex-wrap md:items-center md:gap-x-8 md:px-8 lg:px-10"
-					>
-						<Skeleton className="h-5 w-36 bg-black/10 md:h-6" />
-						<Skeleton className="h-4 flex-1 min-w-[12rem] bg-black/10" />
-						<Skeleton className="h-4 w-44 bg-black/10" />
-						<Skeleton className="h-4 w-20 bg-black/10 md:ml-auto" />
-					</div>
-				))}
-			</div>
-		);
+		return <CustomerBookingsTableSkeleton rows={PAGE_SIZE} />;
 	}
 
-	if (customerBookings.length === 0) {
+	if (total === 0) {
 		return (
 			<div className="dashboard-panel rounded-2xl p-8 text-center">
 				<p className="font-serif text-2xl">No bookings yet</p>
@@ -46,37 +45,18 @@ export function CustomerBookingsList({ customerId }: { customerId: string }) {
 	return (
 		<>
 			<div className="dashboard-panel overflow-hidden rounded-2xl">
-				{customerBookings.map((booking) => (
-					<div
-						key={booking.id}
-						role="button"
-						tabIndex={0}
-						className="cursor-pointer flex w-full flex-col items-start gap-2 border-b border-dashboard-border px-5 py-5 text-left transition hover:bg-dashboard-row-hover last:border-b-0 md:flex-row md:flex-wrap md:items-baseline md:gap-x-8 md:gap-y-2 md:px-8 md:py-6 lg:gap-x-12 lg:px-10"
-						onClick={() => setSelected(booking)}
-						onKeyDown={(event) => {
-							if (event.key === 'Enter' || event.key === ' ') {
-								event.preventDefault();
-								setSelected(booking);
-							}
-						}}
-					>
-						<Link
-							href={`/${encodeURIComponent(booking.property.slug)}`}
-							target="_blank"
-							rel="noopener noreferrer"
-							onClick={(event) => event.stopPropagation()}
-							className="min-w-0 flex-1 text-lg font-medium leading-snug text-espresso transition hover:text-camel md:text-[1.05rem]"
-						>
-							{booking.property_title}
-						</Link>
-						<span className="shrink-0 text-sm text-espresso/60 md:text-base">
-							{booking.start_date} – {booking.end_date}
-						</span>
-						<span className="shrink-0 text-sm capitalize text-espresso/80 md:ml-auto md:text-base">
-							{booking.status}
-						</span>
-					</div>
-				))}
+				<div className={cn('transition-opacity', isFetching && 'pointer-events-none opacity-50')}>
+					<CustomerBookingsTable bookings={bookings} onSelect={setSelected} embedded />
+				</div>
+				{pagination ? (
+					<DashboardPagination
+						page={pagination.page}
+						pageSize={pagination.pageSize}
+						total={pagination.total}
+						onPageChange={setPage}
+						itemLabel="bookings"
+					/>
+				) : null}
 			</div>
 
 			<BookingDetailModal

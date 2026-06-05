@@ -36,18 +36,35 @@ function formatPrice(value: number) {
 	return `$${value.toFixed(2)}`;
 }
 
+const SERVICE_QUANTITY_MIN = 1;
+
+function clampServiceQuantity(service: Service, value: number) {
+	if (value <= 0) return 0;
+	if (!service.quantitable_item) return 1;
+	let next = Math.max(SERVICE_QUANTITY_MIN, Math.trunc(value));
+	if (service.max_quantity != null) {
+		next = Math.min(next, service.max_quantity);
+	}
+	return next;
+}
+
 function QuantityStepper({
 	quantity,
+	min,
+	max,
 	onDecrement,
 	onIncrement,
 	onChange,
 }: {
 	quantity: number;
+	min: number;
+	max: number | null;
 	onDecrement: () => void;
 	onIncrement: () => void;
 	onChange: (next: number) => void;
 }) {
-	const atMin = quantity <= 1;
+	const atMin = quantity <= min;
+	const atMax = max != null && quantity >= max;
 
 	return (
 		<div
@@ -75,11 +92,12 @@ function QuantityStepper({
 				<span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-camel/80">Qty</span>
 				<input
 					type="number"
-					min={1}
+					min={min}
+					max={max ?? undefined}
 					value={quantity}
 					onChange={(e) => {
 						const next = Number(e.target.value);
-						if (!Number.isInteger(next) || next < 1) return;
+						if (!Number.isFinite(next)) return;
 						onChange(next);
 					}}
 					className="w-full border-0 bg-transparent text-center text-sm font-semibold leading-none tabular-nums text-[#1A1A1A] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
@@ -89,10 +107,16 @@ function QuantityStepper({
 
 			<motion.button
 				type="button"
-				whileTap={{ scale: 0.92 }}
+				whileTap={atMax ? undefined : { scale: 0.92 }}
 				onClick={onIncrement}
+				disabled={atMax}
 				aria-label="Increase quantity"
-				className="flex h-10 w-9 shrink-0 cursor-pointer items-center justify-center rounded-r-full bg-camel/10 text-camel transition hover:bg-camel/20 hover:text-camel active:bg-camel/90 active:text-white"
+				className={cn(
+					'flex h-10 w-9 shrink-0 items-center justify-center rounded-r-full transition',
+					atMax
+						? 'cursor-not-allowed bg-black/5 text-[#1A1A1A]/30'
+						: 'cursor-pointer bg-camel/10 text-camel hover:bg-camel/20 hover:text-camel active:bg-camel/90 active:text-white',
+				)}
 			>
 				<Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
 			</motion.button>
@@ -111,11 +135,7 @@ function ServiceRow({
 }) {
 	const selected = quantity > 0;
 	const setQuantity = (next: number) => {
-		if (!service.quantitable_item) {
-			onQuantityChange(service.id, next > 0 ? 1 : 0);
-			return;
-		}
-		onQuantityChange(service.id, next);
+		onQuantityChange(service.id, clampServiceQuantity(service, next));
 	};
 
 	return (
@@ -173,10 +193,17 @@ function ServiceRow({
 							>
 								<QuantityStepper
 									quantity={quantity}
-									onDecrement={() => setQuantity(Math.max(1, quantity - 1))}
+									min={SERVICE_QUANTITY_MIN}
+									max={service.max_quantity}
+									onDecrement={() => setQuantity(quantity - 1)}
 									onIncrement={() => setQuantity(quantity + 1)}
 									onChange={(next) => setQuantity(next)}
 								/>
+								{service.max_quantity != null ? (
+									<p className="mt-2 text-xs text-[#1A1A1A]/50">
+										Choose between {SERVICE_QUANTITY_MIN} and {service.max_quantity}
+									</p>
+								) : null}
 							</motion.div>
 						) : null}
 					</AnimatePresence>
@@ -193,7 +220,7 @@ export default function BookingServicesCard({
 	quantities,
 	onQuantityChange,
 }: BookingServicesCardProps) {
-	if (!isLoading && !isError && services.length === 0) {
+	if (!isLoading && (isError || services.length === 0)) {
 		return null;
 	}
 
@@ -225,7 +252,7 @@ export default function BookingServicesCard({
 		>
 			<p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-camel">Extras</p>
 			<h2 className="mt-2 font-serif text-2xl text-[#1A1A1A]">Add to your stay</h2>
-			<p className="mt-1 text-sm text-[#1A1A1A]/60">Optional food, wine, or other services.</p>
+			<p className="mt-1 text-sm text-[#1A1A1A]/60">We've curated the services below to enhance your stay.</p>
 
 			<AnimatePresence mode="wait" initial={false}>
 				{contentKey === 'loading' ? (

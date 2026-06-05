@@ -1,8 +1,14 @@
-import { BookingStatus as PrismaBookingStatus, Reason } from '@prisma/client';
+import { BookingStatus as PrismaBookingStatus, Prisma, Reason } from '@prisma/client';
+import { DateTime } from 'luxon';
 import { BookingStatus } from '@/features/bookings/interfaces/booking-status';
 import type { UpdateHostBookingInput } from '@/features/bookings/interfaces/booking.interface';
 import { eachDayInRange, toApiDate, toUtcDay } from '@/features/property-availability/utils/date';
+import { buildPaginationMeta, type PaginatedResult } from '@/lib/pagination';
 import { prisma } from '@/lib/prisma';
+
+export const BOOKINGS_SEARCH_MIN_LENGTH = 2;
+
+const BOOKING_SEARCH_DATE_FORMATS = ['yyyy-MM-dd', 'dd/MM/yyyy', 'dd-MM-yyyy', 'MM/dd/yyyy'] as const;
 
 type BookingView = {
 	id: string;
@@ -14,6 +20,49 @@ type BookingView = {
 	status: BookingStatus;
 	property_title: string;
 };
+
+const guestBookingSelect = {
+	id: true,
+	property_id: true,
+	host_user_id: true,
+	check_in: true,
+	check_out: true,
+	guests: true,
+	total_price: true,
+	status: true,
+	created_at: true,
+	property: {
+		select: {
+			title: true,
+			slug: true,
+			address: true,
+			city: true,
+			country: true,
+			room_type: true,
+			property_type: true,
+		},
+	},
+	host: {
+		select: {
+			first_name: true,
+			last_name: true,
+			email: true,
+			phone: true,
+		},
+	},
+	service_orders: {
+		select: {
+			id: true,
+			service_id: true,
+			quantity: true,
+			unit_price: true,
+			service: { select: { name: true } },
+		},
+		orderBy: { service: { name: 'asc' } },
+	},
+} as const;
+
+type GuestBookingRow = Awaited<ReturnType<typeof prisma.booking.findFirst<{ select: typeof guestBookingSelect }>>>;
 
 const hostBookingSelect = {
 	id: true,
@@ -93,6 +142,124 @@ function trimOrNull(value: string | null | undefined) {
 	return trimmed ? trimmed : null;
 }
 
+function tryParseBookingSearchDate(query: string) {
+	for (const format of BOOKING_SEARCH_DATE_FORMATS) {
+		const parsed = DateTime.fromFormat(query, format, { zone: 'utc' });
+		if (parsed.isValid) return parsed.startOf('day');
+	}
+
+	const iso = DateTime.fromISO(query, { zone: 'utc' });
+	if (iso.isValid) return iso.startOf('day');
+
+	return null;
+}
+
+function buildHostBookingSearchOr(query: string): Prisma.BookingWhereInput[] {
+	const trimmed = query.trim();
+	const insensitive = { contains: trimmed, mode: 'insensitive' as const };
+	const clauses: Prisma.BookingWhereInput[] = [
+		{ id: insensitive },
+		{ guest_user_id: insensitive },
+		{ customer_id: insensitive },
+		{ property_id: insensitive },
+		{ property: { title: insensitive } },
+		{ guest: { first_name: insensitive } },
+		{ guest: { last_name: insensitive } },
+		{ guest: { email: insensitive } },
+		{ guest: { phone: insensitive } },
+		{ customer: { first_name: insensitive } },
+		{ customer: { last_name: insensitive } },
+		{ customer: { email: insensitive } },
+		{ customer: { phone: insensitive } },
+		{ customer: { vat_number: insensitive } },
+	];
+
+	const searchDate = tryParseBookingSearchDate(trimmed);
+	if (searchDate) {
+		clauses.push({
+			check_in: { lt: searchDate.plus({ days: 1 }).toJSDate() },
+			check_out: { gt: searchDate.toJSDate() },
+		});
+	}
+
+	return clauses;
+}
+
+async function guestBookingAccessWhere(guestUserId: string) {
+	const user = await prisma.user.findUnique({
+		where: { id: guestUserId },
+		select: { email: true },
+	});
+	const guestCustomers = await prisma.customer.findMany({
+		where: { guest_user_id: guestUserId },
+		select: { id: true, email: true },
+	});
+
+	const emails = new Set<string>();
+	const userEmail = user?.email?.trim().toLowerCase();
+	if (userEmail) emails.add(userEmail);
+	for (const customer of guestCustomers) {
+		const customerEmail = customer.email.trim().toLowerCase();
+		if (customerEmail) emails.add(customerEmail);
+	}
+	const emailList = [...emails];
+	const customerIds = guestCustomers.map((customer) => customer.id);
+
+	return {
+		OR: [
+			{ guest_user_id: guestUserId },
+			...(customerIds.length > 0 ? [{ customer_id: { in: customerIds } }] : []),
+			...(emailList.length > 0
+				? [
+						{ customer: { email: { in: emailList, mode: 'insensitive' as const } } },
+						{ guest: { email: { in: emailList, mode: 'insensitive' as const } } },
+					]
+				: []),
+		],
+	};
+}
+
+function mapGuestBookingRow(row: NonNullable<GuestBookingRow>) {
+	const hostName = `${row.host.first_name} ${row.host.last_name}`.trim();
+	return {
+		id: row.id,
+		property_id: row.property_id,
+		host_id: row.host_user_id,
+		host_name: hostName || 'Host',
+		start_date: toApiDate(row.check_in.toISOString()),
+		end_date: toApiDate(row.check_out.toISOString()),
+		status: bookingStatusLabel(row.status),
+		property_title: row.property.title,
+		guests: row.guests,
+		total_price: Number(row.total_price),
+		check_in_iso: row.check_in.toISOString(),
+		check_out_iso: row.check_out.toISOString(),
+		created_at: row.created_at.toISOString(),
+		property: {
+			slug: row.property.slug,
+			address: row.property.address,
+			city: row.property.city,
+			country: row.property.country,
+			room_type: row.property.room_type,
+			property_type: row.property.property_type,
+		},
+		host: {
+			first_name: row.host.first_name,
+			last_name: row.host.last_name,
+			email: row.host.email,
+			phone: row.host.phone,
+		},
+		service_orders: row.service_orders.map((order) => ({
+			id: order.id,
+			service_id: order.service_id,
+			name: order.service.name,
+			quantity: order.quantity,
+			unit_price: Number(order.unit_price),
+			line_total: Number(order.unit_price) * order.quantity,
+		})),
+	};
+}
+
 function mapHostBookingRow(row: NonNullable<HostBookingRow>) {
 	const guestName = `${row.guest.first_name} ${row.guest.last_name}`.trim();
 	return {
@@ -150,9 +317,22 @@ function mapHostBookingRow(row: NonNullable<HostBookingRow>) {
 	};
 }
 
-export const bookingsService = {	async listGuestBookings(guestUserId: string) {
+export const bookingsService = {
+	async getGuestBooking(guestUserId: string, bookingId: string) {
+		const accessWhere = await guestBookingAccessWhere(guestUserId);
+		const row = await prisma.booking.findFirst({
+			where: { id: bookingId, ...accessWhere },
+			select: guestBookingSelect,
+		});
+		if (!row) return null;
+		return mapGuestBookingRow(row);
+	},
+
+	async listGuestBookings(guestUserId: string) {
+		const accessWhere = await guestBookingAccessWhere(guestUserId);
+
 		const rows = await prisma.booking.findMany({
-			where: { guest_user_id: guestUserId },
+			where: accessWhere,
 			orderBy: { check_in: 'desc' },
 			select: {
 				id: true,
@@ -185,6 +365,104 @@ export const bookingsService = {	async listGuestBookings(guestUserId: string) {
 		});
 
 		return rows.map(mapHostBookingRow);
+	},
+
+	async listHostBookingsPaginated(
+		hostId: string,
+		page: number,
+		pageSize: number,
+		options?: {
+			customerId?: string;
+			propertyId?: string;
+			dateFrom?: string;
+			dateTo?: string;
+			search?: string;
+			orderBy?: 'check_in' | 'created_at';
+			excludeCancelled?: boolean;
+		},
+	) {
+		const where: Prisma.BookingWhereInput = {
+			host_user_id: hostId,
+			...(options?.customerId ? { customer_id: options.customerId } : {}),
+			...(options?.propertyId ? { property_id: options.propertyId } : {}),
+			...(options?.excludeCancelled ? { status: { not: PrismaBookingStatus.CANCELLED } } : {}),
+		};
+
+		const search = options?.search?.trim();
+		if (search && search.length >= BOOKINGS_SEARCH_MIN_LENGTH) {
+			where.AND = [...(Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : []), { OR: buildHostBookingSearchOr(search) }];
+		}
+
+		if (options?.dateFrom) {
+			const from = toUtcDay(options.dateFrom);
+			if (from.isValid) {
+				where.check_out = { gt: from.toJSDate() };
+			}
+		}
+
+		if (options?.dateTo) {
+			const toExclusive = toUtcDay(options.dateTo).plus({ days: 1 });
+			if (toExclusive.isValid) {
+				where.check_in = { lt: toExclusive.toJSDate() };
+			}
+		}
+
+		const orderBy = options?.orderBy === 'created_at' ? { created_at: 'desc' as const } : { check_in: 'desc' as const };
+
+		const [total, rows] = await Promise.all([
+			prisma.booking.count({ where }),
+			prisma.booking.findMany({
+				where,
+				orderBy,
+				skip: (page - 1) * pageSize,
+				take: pageSize,
+				select: hostBookingSelect,
+			}),
+		]);
+
+		return {
+			items: rows.map(mapHostBookingRow),
+			pagination: buildPaginationMeta(page, pageSize, total),
+		} satisfies PaginatedResult<ReturnType<typeof mapHostBookingRow>>;
+	},
+
+	async listGuestBookingsPaginated(guestUserId: string, page: number, pageSize: number) {
+		const accessWhere = await guestBookingAccessWhere(guestUserId);
+
+		const [total, rows] = await Promise.all([
+			prisma.booking.count({ where: accessWhere }),
+			prisma.booking.findMany({
+				where: accessWhere,
+				orderBy: { check_in: 'desc' },
+				skip: (page - 1) * pageSize,
+				take: pageSize,
+				select: {
+					id: true,
+					property_id: true,
+					check_in: true,
+					check_out: true,
+					status: true,
+					host: { select: { id: true, first_name: true, last_name: true } },
+					property: { select: { title: true } },
+				},
+			}),
+		]);
+
+		const items = rows.map((row) => ({
+			id: row.id,
+			property_id: row.property_id,
+			host_id: row.host.id,
+			guest_name: `${row.host.first_name} ${row.host.last_name}`.trim(),
+			start_date: toApiDate(row.check_in.toISOString()),
+			end_date: toApiDate(row.check_out.toISOString()),
+			status: bookingStatusLabel(row.status),
+			property_title: row.property.title,
+		}));
+
+		return {
+			items,
+			pagination: buildPaginationMeta(page, pageSize, total),
+		} satisfies PaginatedResult<(typeof items)[number]>;
 	},
 
 	async updateHostBooking(hostId: string, bookingId: string, body: UpdateHostBookingInput) {

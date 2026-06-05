@@ -1,5 +1,6 @@
 import { RoomTypes } from '@/config/constants/dropdowns/room-type.options';
 import type { UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
+import { buildPaginationMeta, type PaginatedResult } from '@/lib/pagination';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { parseTimeToUtcDate } from '../_utils/time-of-day';
@@ -80,6 +81,26 @@ export const propertyService = {
 			orderBy: { created_at: 'desc' },
 			include: propertyInclude,
 		});
+	},
+
+	async listByHostPaginated(hostId: string, page: number, pageSize: number) {
+		const where = { user_id: hostId };
+
+		const [total, rows] = await Promise.all([
+			prisma.property.count({ where }),
+			prisma.property.findMany({
+				where,
+				orderBy: { created_at: 'desc' },
+				skip: (page - 1) * pageSize,
+				take: pageSize,
+				include: propertyInclude,
+			}),
+		]);
+
+		return {
+			items: rows,
+			pagination: buildPaginationMeta(page, pageSize, total),
+		} satisfies PaginatedResult<(typeof rows)[number]>;
 	},
 
 	findByHostAndId(hostId: string, propertyId: string) {

@@ -1,23 +1,22 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui';
+import { useHostCustomersPage } from '@/features/customers/hooks/use-host-customers';
 import type { HostCustomerRow } from '@/features/customers/interfaces/host-customer.interface';
 import {
 	CUSTOMER_SEARCH_MIN_LENGTH,
 	getCustomerDisplayName,
-	searchHostCustomers,
 } from '../_utils/filter-host-customers';
 
 type CustomerSearchProps = {
-	customers: HostCustomerRow[];
 	value: string;
 	onChange: (query: string) => void;
 	onSelectCustomer: (customer: HostCustomerRow) => void;
 };
 
-export function CustomerSearch({ customers, value, onChange, onSelectCustomer }: CustomerSearchProps) {
+export function CustomerSearch({ value, onChange, onSelectCustomer }: CustomerSearchProps) {
 	const listboxId = useId();
 	const rootRef = useRef<HTMLDivElement>(null);
 	const [isOpen, setIsOpen] = useState(false);
@@ -25,11 +24,8 @@ export function CustomerSearch({ customers, value, onChange, onSelectCustomer }:
 
 	const trimmed = value.trim();
 	const searchEnabled = trimmed.length >= CUSTOMER_SEARCH_MIN_LENGTH;
-
-	const suggestions = useMemo(
-		() => searchHostCustomers(customers, value),
-		[customers, value],
-	);
+	const { data: searchData } = useHostCustomersPage(1, 8, searchEnabled ? trimmed : undefined, searchEnabled);
+	const suggestions = searchData?.items ?? [];
 
 	useEffect(() => {
 		setActiveIndex(-1);

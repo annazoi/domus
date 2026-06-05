@@ -1,8 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { Button, Skeleton } from '@/components/ui';
+import { BookingDetailModal } from '@/app/(pages)/dashboard/bookings/_components/booking-detail-modal';
+import { BookingsTable, BookingsTableSkeleton } from '@/app/(pages)/dashboard/bookings/_components/bookings-table';
 import { useBookings } from '@/features/bookings/hooks/use-bookings';
+import type { HostBookingDetail } from '@/features/bookings/interfaces/booking.interface';
 import { useProperties } from '@/features/property/hooks/use-property';
 import {
 	computeOverviewStats,
@@ -18,6 +22,7 @@ const quickActions = [
 export default function DashboardOverviewPage() {
 	const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
 	const { data: properties = [], isLoading: propertiesLoading } = useProperties();
+	const [selected, setSelected] = useState<HostBookingDetail | null>(null);
 
 	const loading = bookingsLoading || propertiesLoading;
 	const stats = computeOverviewStats(bookings, properties.length);
@@ -57,19 +62,7 @@ export default function DashboardOverviewPage() {
 
 			<section className="space-y-5">
 				<h2 className="font-serif text-2xl">Recent activity</h2>
-				{loading ? (
-					<div className="dashboard-panel divide-y divide-dashboard-border rounded-2xl">
-						{Array.from({ length: 3 }).map((_, index) => (
-							<div key={index} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-								<div className="space-y-2">
-									<Skeleton className="h-5 w-36 bg-black/10" />
-									<Skeleton className="h-4 w-28 bg-black/10" />
-								</div>
-								<Skeleton className="h-6 w-20 rounded-full bg-black/10" />
-							</div>
-						))}
-					</div>
-				) : null}
+				{loading ? <BookingsTableSkeleton rows={3} /> : null}
 				{!loading && stats.recentBookings.length === 0 ? (
 					<div className="dashboard-panel rounded-2xl px-5 py-8 text-center">
 						<p className="font-serif text-2xl">No bookings yet</p>
@@ -77,22 +70,7 @@ export default function DashboardOverviewPage() {
 					</div>
 				) : null}
 				{!loading && stats.recentBookings.length > 0 ? (
-					<div className="dashboard-panel divide-y divide-dashboard-border rounded-2xl">
-						{stats.recentBookings.map((booking) => (
-							<div key={booking.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-								<div>
-									<p className="font-medium">{booking.guest_name}</p>
-									<p className="text-sm text-espresso/55">
-										{booking.start_date} – {booking.end_date}
-									</p>
-									<p className="text-sm text-espresso/45">{booking.property_title}</p>
-								</div>
-								<span className="rounded-full bg-camel/10 px-3 py-1 text-xs capitalize text-camel">
-									{booking.status}
-								</span>
-							</div>
-						))}
-					</div>
+					<BookingsTable bookings={stats.recentBookings} onSelect={setSelected} />
 				) : null}
 			</section>
 
@@ -108,6 +86,13 @@ export default function DashboardOverviewPage() {
 					))}
 				</div>
 			</section>
+
+			<BookingDetailModal
+				open={selected !== null}
+				booking={selected}
+				onClose={() => setSelected(null)}
+				onUpdated={setSelected}
+			/>
 		</div>
 	);
 }

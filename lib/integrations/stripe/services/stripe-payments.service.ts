@@ -1,9 +1,7 @@
 import { BookingStatus } from '@prisma/client';
 import { getStripeClient, PaymentContext } from '@/lib/integrations/stripe/config';
 import {
-	centsToEuros,
 	computePlatformFeeAmount,
-	estimateStripeFeeAmount,
 	eurosToCents,
 	STRIPE_CURRENCY,
 } from '@/lib/integrations/stripe/fees';
@@ -106,8 +104,6 @@ export async function createCheckoutSession(params: {
 
 	const stripe = getStripeClient();
 	const platformFeeAmount = computePlatformFeeAmount(amountCents);
-	const stripeFeeEstimate = estimateStripeFeeAmount(amountCents);
-	const payoutEstimateCents = amountCents - platformFeeAmount - stripeFeeEstimate;
 
 	const extraServiceIds = effectiveSnapshot.lines
 		.filter((line) => line.type === PriceLineType.EXTRA_SERVICE && line.reference_uuid)
@@ -181,9 +177,6 @@ export async function createCheckoutSession(params: {
 		currency: effectiveSnapshot.currency || STRIPE_CURRENCY,
 		stripeSessionId: session.id,
 		stripePaymentUrl: session.url,
-		platformFeeAmount: centsToEuros(platformFeeAmount),
-		stripeFeeEstimate: centsToEuros(stripeFeeEstimate),
-		payoutEstimate: centsToEuros(payoutEstimateCents),
 	});
 
 	return {

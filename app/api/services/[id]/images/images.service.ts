@@ -18,6 +18,17 @@ export const serviceImagesService = {
 		});
 	},
 
+	async reorder(serviceId: string, reorderIds: string[]) {
+		await prisma.$transaction(async (tx) => {
+			for (const [index, imageId] of reorderIds.entries()) {
+				await tx.serviceImage.updateMany({
+					where: { id: imageId, service_id: serviceId },
+					data: { order: index },
+				});
+			}
+		});
+	},
+
 	countByService(serviceId: string) {
 		return prisma.serviceImage.count({ where: { service_id: serviceId } });
 	},

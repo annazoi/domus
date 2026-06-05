@@ -55,7 +55,7 @@ function snapshotToJson(snapshot: PriceSnapshot) {
 
 export async function createBookingRecord(
 	input: CreateBookingInput,
-	options: { status?: BookingStatus } = {},
+	options: { status?: BookingStatus; authenticatedUserId?: string | null } = {},
 ): Promise<CreateBookingResult> {
 	const status = options.status ?? BookingStatus.PENDING;
 	const serviceLines = input.services ?? [];
@@ -99,6 +99,7 @@ export async function createBookingRecord(
 					last_name: input.guest.last_name,
 					phone: input.guest.phone,
 					hostUserId: verified.hostUserId,
+					authenticatedUserId: options.authenticatedUserId,
 				});
 
 				const { snapshot } = verified;
@@ -164,6 +165,42 @@ export async function createBookingRecord(
 		}
 		throw e;
 	}
+}
+
+export async function findReusablePendingBooking(input: CreateBookingInput) {
+	const property = await prisma.property.findFirst({
+		where: {
+			OR: [{ id: input.property_id }, { slug: input.property_id }],
+			isPublished: true,
+		},
+		select: { id: true },
+	});
+	if (!property) return null;
+
+	const serviceLines = input.services ?? [];
+	if (serviceLines.length > 0) return null;
+
+	const pending = await prisma.booking.findFirst({
+		where: {
+			property_id: property.id,
+			status: BookingStatus.PENDING,
+			check_in: input.check_in,
+			check_out: input.check_out,
+			guests: input.guests,
+			guest: { email: input.guest.email },
+		},
+		orderBy: { created_at: 'desc' },
+		select: { id: true },
+	});
+
+	if (!pending) return null;
+
+	const serviceOrderCount = await prisma.serviceOrder.count({
+		where: { booking_id: pending.id },
+	});
+	if (serviceOrderCount > 0) return null;
+
+	return pending;
 }
 
 export function mergeServiceLines(
@@ -254,7 +291,11 @@ export function createBookingErrorResponse(error: CreateBookingErrorCode) {
 		case 'INVALID_SERVICE_QUANTITY':
 			return { message: 'Quantity is not allowed for one or more selected services.', status: 400 };
 		case 'UNAVAILABLE':
-			return { message: 'Property not available', status: 400, body: { error: 'Property not available' } };
+			return {
+				message: 'Property is not available for the selected dates.',
+				status: 409,
+				body: { message: 'Property is not available for the selected dates.' },
+			};
 		case 'NOT_FOUND':
 			return { message: 'Property not found', status: 404 };
 		case 'INVALID_INPUT':

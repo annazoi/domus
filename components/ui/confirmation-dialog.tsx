@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from './button';
 
@@ -26,7 +28,15 @@ export function ConfirmationDialog({
 	onCancel,
 	loading = false,
 }: ConfirmationDialogProps) {
-	return (
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
+	if (!mounted) return null;
+
+	return createPortal(
 		<AnimatePresence>
 			{open ? (
 				<motion.div
@@ -71,6 +81,7 @@ export function ConfirmationDialog({
 					</motion.div>
 				</motion.div>
 			) : null}
-		</AnimatePresence>
+		</AnimatePresence>,
+		document.body,
 	);
 }

@@ -1,4 +1,5 @@
 import type { LoggedInUser } from '@/features/user/interfaces/user.interface';
+import { useEffect, useState } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
@@ -67,3 +68,14 @@ export const useAuthStore = create<UserStore>()(
 );
 
 export const getAuthStoreState = () => useAuthStore.getState();
+
+export const useAuthHydrated = () => {
+	const [hydrated, setHydrated] = useState(() => useAuthStore.persist.hasHydrated());
+
+	useEffect(() => {
+		if (hydrated) return;
+		return useAuthStore.persist.onFinishHydration(() => setHydrated(true));
+	}, [hydrated]);
+
+	return hydrated;
+};

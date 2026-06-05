@@ -1,5 +1,6 @@
 import { PricingUnit } from '@prisma/client';
 import { getHostIdFromRequest } from '@/app/api/_utils/auth';
+import { parsePaginationParams } from '@/lib/pagination';
 import { servicesService } from './services.service';
 import type { ServiceInput } from './interfaces/services.interface';
 
@@ -13,6 +14,16 @@ export async function GET(request: Request) {
 		if (!hostId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
 
 		try {
+			const paginationParams = parsePaginationParams(url.searchParams);
+			if (paginationParams) {
+				const result = await servicesService.listByHostPaginated(
+					hostId,
+					paginationParams.page,
+					paginationParams.pageSize,
+				);
+				return Response.json(result);
+			}
+
 			const services = await servicesService.listByHost(hostId);
 			return Response.json(services);
 		} catch (error) {
@@ -25,8 +36,16 @@ export async function GET(request: Request) {
 	}
 
 	if (propertyId) {
-		const services = await servicesService.listByProperty(propertyId);
-		return Response.json(services);
+		try {
+			const services = await servicesService.listByProperty(propertyId);
+			return Response.json(services);
+		} catch (error) {
+			console.error('GET /api/services?property_id failed', error);
+			return Response.json(
+				{ message: error instanceof Error ? error.message : 'Could not load services.' },
+				{ status: 500 },
+			);
+		}
 	}
 
 	return Response.json({ message: 'property_id or host_id=me is required.' }, { status: 400 });

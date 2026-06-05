@@ -8,6 +8,8 @@ function formatCustomerSpentAmount(amount: number) {
 	}).format(amount);
 }
 
+export { formatCustomerSpentAmount };
+
 type CustomerTotalSpentProps = {
 	amount: number;
 	className?: string;

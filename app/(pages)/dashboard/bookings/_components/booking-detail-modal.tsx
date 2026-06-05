@@ -101,16 +101,16 @@ function MetaRow({ icon, label, value }: { icon: ReactNode; label: string; value
 }
 
 const modalFields = cn(
-	'[&_input.border]:w-full [&_input.border]:border-0 [&_input.border]:bg-transparent [&_input.border]:px-0 [&_input.border]:py-1',
-	'[&_input.border]:text-espresso [&_input.border]:placeholder:text-dashboard-muted/50',
-	'[&_input.border]:focus:ring-0 [&_input.border]:rounded-none',
-	'[&_textarea]:w-full [&_textarea]:border-0 [&_textarea]:bg-transparent [&_textarea]:px-0 [&_textarea]:py-1',
-	'[&_textarea]:text-espresso [&_textarea]:placeholder:text-dashboard-muted/50 [&_textarea]:focus:ring-0',
-	'[&_button[role=combobox]]:w-full [&_button[role=combobox]]:border-0 [&_button[role=combobox]]:bg-transparent',
+	'[&_input:not(.sr-only)]:w-full [&_input:not(.sr-only)]:border-0 [&_input:not(.sr-only)]:!bg-transparent [&_input:not(.sr-only)]:px-0 [&_input:not(.sr-only)]:py-1',
+	'[&_input:not(.sr-only)]:text-espresso [&_input:not(.sr-only)]:placeholder:text-dashboard-muted/50',
+	'[&_input:not(.sr-only)]:shadow-none [&_input:not(.sr-only)]:focus:ring-0 [&_input:not(.sr-only)]:rounded-none',
+	'[&_textarea]:w-full [&_textarea]:border-0 [&_textarea]:!bg-transparent [&_textarea]:px-0 [&_textarea]:py-1',
+	'[&_textarea]:text-espresso [&_textarea]:placeholder:text-dashboard-muted/50 [&_textarea]:shadow-none [&_textarea]:focus:ring-0',
+	'[&_button[role=combobox]]:w-full [&_button[role=combobox]]:border-0 [&_button[role=combobox]]:!bg-transparent',
 	'[&_button[role=combobox]]:px-0 [&_button[role=combobox]]:py-1 [&_button[role=combobox]]:shadow-none',
 	'[&_button[role=combobox]]:focus-visible:ring-0',
 	'[&_.domus-date-picker-field_button]:w-full [&_.domus-date-picker-field_button]:border-0',
-	'[&_.domus-date-picker-field_button]:bg-transparent [&_.domus-date-picker-field_button]:px-0',
+	'[&_.domus-date-picker-field_button]:!bg-transparent [&_.domus-date-picker-field_button]:px-0',
 	'[&_.domus-date-picker-field_button]:py-1 [&_.domus-date-picker-field_button]:text-espresso',
 	'[&_.domus-date-picker-field_button]:shadow-none [&_.domus-date-picker-field_button]:focus-visible:ring-0',
 );

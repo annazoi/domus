@@ -32,4 +32,16 @@ axiosInstance.interceptors.request.use((config) => {
 	return config;
 });
 
+export const postMultipart = <T>(url: string, formData: FormData) =>
+	axiosInstance.post<T>(url, formData, {
+		transformRequest: [
+			(data, headers) => {
+				if (data instanceof FormData) {
+					delete headers['Content-Type'];
+				}
+				return data;
+			},
+		],
+	});
+
 export default axiosInstance;

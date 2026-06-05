@@ -1,6 +1,7 @@
 import axiosInstance from '@/config/api/axios';
 import axios from 'axios';
 import { ApiRoutes } from '@/config/api/routes';
+import type { PaginatedResult } from '@/lib/pagination';
 import type { PropertyBrandingTheme } from '../../../app/(pages)/templates/_constants/property-branding-theme';
 import type { Property, UpsertPropertyInput } from '../interfaces/property.interface';
 
@@ -8,6 +9,13 @@ const inFlightPropertyUpdates = new Map<string, Promise<Property>>();
 
 export const listProperties = async () => {
 	const response = await axiosInstance.get<Property[]>(ApiRoutes.properties.listMine);
+	return response.data;
+};
+
+export const listPropertiesPaginated = async (page: number, pageSize: number) => {
+	const response = await axiosInstance.get<PaginatedResult<Property>>(
+		ApiRoutes.properties.listMinePaginated(page, pageSize),
+	);
 	return response.data;
 };
 

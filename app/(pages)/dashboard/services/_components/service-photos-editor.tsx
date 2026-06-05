@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { ImageIcon, Maximize2, Trash2 } from 'lucide-react';
-import { Button, useToast } from '@/components/ui';
+import { Button, ConfirmationDialog, useToast } from '@/components/ui';
 import {
 	useDeleteServiceImage,
+	useReorderServiceImages,
 	useUploadServiceImages,
 } from '@/features/services/hooks/use-host-services';
 import type { HostService, ServiceImage } from '@/features/services/interfaces/service.interface';
@@ -75,6 +76,7 @@ export function StagedPhotosPicker({
 }) {
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [fileZoneOver, setFileZoneOver] = useState(false);
+	const [removeId, setRemoveId] = useState<string | null>(null);
 
 	return (
 		<div className="space-y-3">
@@ -123,7 +125,7 @@ export function StagedPhotosPicker({
 								type="button"
 								variant="ghostIcon"
 								className="absolute right-1.5 top-1.5 h-8 w-8 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm"
-								onClick={() => onRemove(item.id)}
+								onClick={() => setRemoveId(item.id)}
 								aria-label="Remove from upload queue"
 							>
 								<Trash2 className="h-4 w-4" />
@@ -132,23 +134,57 @@ export function StagedPhotosPicker({
 					))}
 				</div>
 			) : null}
+
+			<ConfirmationDialog
+				open={removeId !== null}
+				title="Remove this photo?"
+				description="This photo will be removed from the upload queue."
+				confirmLabel="Remove"
+				confirmVariant="danger"
+				onCancel={() => setRemoveId(null)}
+				onConfirm={() => {
+					if (removeId) onRemove(removeId);
+					setRemoveId(null);
+				}}
+			/>
 		</div>
 	);
 }
 
-export function ServicePhotosEditor({ service }: { service: HostService }) {
+const sortImages = (images: ServiceImage[]) => [...images].sort((a, b) => a.order - b.order);
+
+export type ServicePhotosEditorHandle = {
+	uploadStagedIfAny: () => Promise<void>;
+};
+
+export const ServicePhotosEditor = forwardRef<ServicePhotosEditorHandle, { service: HostService }>(
+	function ServicePhotosEditor({ service }, ref) {
 	const { staged, addFiles, removeStaged, clear } = useStagedPhotos();
 	const { push } = useToast();
 	const { mutateAsync: uploadImages, isPending: uploading } = useUploadServiceImages();
+	const { mutateAsync: reorderImages, isPending: reordering } = useReorderServiceImages();
 	const { mutateAsync: removeImage, isPending: deleting } = useDeleteServiceImage();
+	const [images, setImages] = useState(() => sortImages(service.images));
+	const [draggingId, setDraggingId] = useState<string | null>(null);
 
-	const images = service.images;
+	useEffect(() => {
+		setImages(sortImages(service.images));
+	}, [service.images]);
+
+	const uploadStaged = useCallback(async () => {
+		if (!staged.length) return;
+		await uploadImages({ serviceId: service.id, files: staged.map((s) => s.file) });
+		clear();
+	}, [clear, service.id, staged, uploadImages]);
+
+	useImperativeHandle(ref, () => ({
+		uploadStagedIfAny: uploadStaged,
+	}), [uploadStaged]);
 
 	const handleUpload = async () => {
 		if (!staged.length) return;
 		try {
-			await uploadImages({ serviceId: service.id, files: staged.map((s) => s.file) });
-			clear();
+			await uploadStaged();
 			push({ title: 'Photos uploaded.', tone: 'success' });
 		} catch (e) {
 			push({ title: e instanceof Error ? e.message : 'Could not upload photos.', tone: 'error' });
@@ -158,9 +194,35 @@ export function ServicePhotosEditor({ service }: { service: HostService }) {
 	const handleDelete = async (imageId: string) => {
 		try {
 			await removeImage({ serviceId: service.id, imageId });
+			setImages((previous) => previous.filter((image) => image.id !== imageId));
 			push({ title: 'Photo removed.', tone: 'success' });
 		} catch (e) {
 			push({ title: e instanceof Error ? e.message : 'Could not remove photo.', tone: 'error' });
+		}
+	};
+
+	const handleDrop = async (targetImageId: string) => {
+		if (!draggingId || draggingId === targetImageId) return;
+		const from = images.findIndex((item) => item.id === draggingId);
+		const to = images.findIndex((item) => item.id === targetImageId);
+		if (from < 0 || to < 0) return;
+
+		const next = [...images];
+		const [moved] = next.splice(from, 1);
+		next.splice(to, 0, moved);
+		const normalized = next.map((item, index) => ({ ...item, order: index }));
+		setImages(normalized);
+		setDraggingId(null);
+
+		try {
+			const reordered = await reorderImages({
+				serviceId: service.id,
+				reorder_ids: normalized.map((image) => image.id),
+			});
+			setImages(sortImages(reordered));
+		} catch (e) {
+			setImages(sortImages(service.images));
+			push({ title: e instanceof Error ? e.message : 'Could not reorder photos.', tone: 'error' });
 		}
 	};
 
@@ -182,60 +244,111 @@ export function ServicePhotosEditor({ service }: { service: HostService }) {
 			) : null}
 
 			{images.length > 0 ? (
-				<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-					{images.map((image) => (
-						<ServicePhotoTile
-							key={image.id}
-							image={image}
-							deleting={deleting}
-							onDelete={() => void handleDelete(image.id)}
-						/>
-					))}
+				<div className="space-y-3">
+					<p className="text-xs text-espresso/55">Drag photos to reorder. The first photo is shown in the service list.</p>
+					<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+						{images.map((image, index) => (
+							<ServicePhotoTile
+								key={image.id}
+								image={image}
+								isPrimary={index === 0}
+								draggingId={draggingId}
+								reordering={reordering}
+								deleting={deleting}
+								onDragStart={setDraggingId}
+								onDrop={() => void handleDrop(image.id)}
+								onConfirmDelete={() => handleDelete(image.id)}
+							/>
+						))}
+					</div>
 				</div>
 			) : (
 				<p className="text-sm text-espresso/55">No photos yet.</p>
 			)}
 		</div>
 	);
-}
+	},
+);
 
 function ServicePhotoTile({
 	image,
+	isPrimary,
+	draggingId,
+	reordering,
 	deleting,
-	onDelete,
+	onDragStart,
+	onDrop,
+	onConfirmDelete,
 }: {
 	image: ServiceImage;
+	isPrimary: boolean;
+	draggingId: string | null;
+	reordering: boolean;
 	deleting: boolean;
-	onDelete: () => void;
+	onDragStart: (id: string) => void;
+	onDrop: () => void;
+	onConfirmDelete: () => Promise<void>;
 }) {
+	const [confirmOpen, setConfirmOpen] = useState(false);
 	const url = image.url ?? '';
+
 	return (
-		<figure className="group relative aspect-[4/3] overflow-hidden rounded-lg bg-black/5 ring-1 ring-black/10">
-			<div
-				className="pointer-events-none absolute inset-0 bg-cover bg-center"
-				style={url ? { backgroundImage: `url(${url})` } : undefined}
+		<>
+			<figure
+				draggable={!reordering && !deleting}
+				onDragStart={() => onDragStart(image.id)}
+				onDragOver={(e) => e.preventDefault()}
+				onDrop={onDrop}
+				className={[
+					'group relative aspect-[4/3] overflow-hidden rounded-lg bg-black/5 ring-1 ring-black/10',
+					draggingId === image.id ? 'opacity-60' : 'opacity-100',
+					!reordering && !deleting ? 'cursor-grab active:cursor-grabbing' : '',
+				].join(' ')}
+			>
+				<div
+					className="pointer-events-none absolute inset-0 bg-cover bg-center"
+					style={url ? { backgroundImage: `url(${url})` } : undefined}
+				/>
+				{isPrimary ? (
+					<span className="absolute bottom-2 left-2 rounded-full bg-dashboard-surface/95 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-espresso">
+						Primary
+					</span>
+				) : null}
+				<div className="absolute right-1.5 top-1.5 z-10 flex gap-1 opacity-0 transition group-hover:opacity-100">
+					<Button
+						type="button"
+						variant="ghostIcon"
+						className="h-8 w-8 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm"
+						onClick={() => url && window.open(url, '_blank', 'noopener,noreferrer')}
+						aria-label="Open full size"
+					>
+						<Maximize2 className="h-4 w-4" />
+					</Button>
+					<Button
+						type="button"
+						variant="ghostIcon"
+						disabled={deleting || reordering}
+						className="h-8 w-8 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm hover:text-red-600"
+						onClick={() => setConfirmOpen(true)}
+						aria-label="Remove photo"
+					>
+						<Trash2 className="h-4 w-4" />
+					</Button>
+				</div>
+			</figure>
+
+			<ConfirmationDialog
+				open={confirmOpen}
+				title="Remove this photo?"
+				description="This photo will be permanently deleted from the service. This cannot be undone."
+				confirmLabel="Remove"
+				confirmVariant="danger"
+				loading={deleting}
+				onCancel={() => setConfirmOpen(false)}
+				onConfirm={() => {
+					void onConfirmDelete().finally(() => setConfirmOpen(false));
+				}}
 			/>
-			<div className="absolute right-1.5 top-1.5 z-10 flex gap-1 opacity-0 transition group-hover:opacity-100">
-				<Button
-					type="button"
-					variant="ghostIcon"
-					className="h-8 w-8 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm"
-					onClick={() => url && window.open(url, '_blank', 'noopener,noreferrer')}
-					aria-label="Open full size"
-				>
-					<Maximize2 className="h-4 w-4" />
-				</Button>
-				<Button
-					type="button"
-					variant="ghostIcon"
-					disabled={deleting}
-					className="h-8 w-8 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm hover:text-red-600"
-					onClick={onDelete}
-					aria-label="Remove photo"
-				>
-					<Trash2 className="h-4 w-4" />
-				</Button>
-			</div>
-		</figure>
+		</>
 	);
 }

@@ -1,6 +1,17 @@
 import { getUserIdFromRequest } from '@/app/api/_utils/auth';
 import { bookingsService } from '../bookings.service';
 
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+	const userId = getUserIdFromRequest(request);
+	if (!userId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
+
+	const { id } = await params;
+	const booking = await bookingsService.getGuestBooking(userId, id);
+	if (!booking) return Response.json({ message: 'Booking not found' }, { status: 404 });
+
+	return Response.json(booking);
+}
+
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
 	const userId = getUserIdFromRequest(request);
 	if (!userId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
