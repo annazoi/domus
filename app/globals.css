@@ -18,18 +18,18 @@
   --color-cream: #faf9f6;
   --color-espresso: #3d3229;
 
-  --color-dashboard-bg: #faf9f6;
+  --color-dashboard-bg: #f7f5f2;
   --color-dashboard-panel: #ffffff;
-  --color-dashboard-inset: #f5f0e8;
+  --color-dashboard-inset: #f0ebe3;
   --color-dashboard-surface: #ffffff;
   --color-dashboard-accent: #b89775;
   --color-dashboard-accent-hover: #8b6b4d;
   --color-dashboard-accent-light: #d2b48c;
   --color-dashboard-accent-deep: #7a6048;
-  --color-dashboard-row-hover: #f0ebe3;
-  --color-dashboard-border: rgb(61 50 41 / 0.1);
-  --color-dashboard-muted: #8a807a;
-  --shadow-dashboard-panel: 0 10px 36px -20px rgb(61 50 41 / 0.08);
+  --color-dashboard-row-hover: rgb(0 0 0 / 0.04);
+  --color-dashboard-border: rgb(0 0 0 / 0.08);
+  --color-dashboard-muted: rgb(26 26 26 / 0.65);
+  --shadow-dashboard-panel: 0 10px 36px -20px rgb(26 26 26 / 0.08);
 
   --color-primary: #b89775;
   --color-primary-hover: #8b6b4d;
@@ -111,21 +111,10 @@
 }
 
 .dashboard-root {
-  --color-cream: var(--color-dashboard-bg);
-  --color-espresso: #3d3229;
-  --color-camel: #b89775;
-  --color-camel-dark: #8b6b4d;
-  --color-camel-light: #d2b48c;
-  --color-camel-deep: #7a6048;
-  --color-primary: #b89775;
-  --color-primary-hover: #8b6b4d;
-  --color-primary-foreground: #faf9f6;
-  --color-accent: #b89775;
-  --scrollbar-track: rgb(250 249 246 / 0.9);
-  --scrollbar-thumb: rgb(184 151 117 / 0.45);
-  --scrollbar-thumb-hover: rgb(139 107 77 / 0.6);
-  color: var(--color-espresso);
-  background-color: var(--color-dashboard-bg);
+  --color-primary: var(--color-camel-light);
+  --color-primary-hover: var(--color-camel);
+  --color-primary-foreground: var(--color-espresso);
+  --color-accent: var(--color-camel);
 }
 
 .dashboard-root ::selection {
