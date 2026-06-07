@@ -70,11 +70,23 @@ export const useAuthStore = create<UserStore>()(
 export const getAuthStoreState = () => useAuthStore.getState();
 
 export const useAuthHydrated = () => {
-	const [hydrated, setHydrated] = useState(() => useAuthStore.persist.hasHydrated());
+	const [hydrated, setHydrated] = useState(() => {
+		if (typeof window === 'undefined') return false;
+		return useAuthStore.persist?.hasHydrated() ?? false;
+	});
 
 	useEffect(() => {
 		if (hydrated) return;
-		return useAuthStore.persist.onFinishHydration(() => setHydrated(true));
+		const persist = useAuthStore.persist;
+		if (!persist) {
+			setHydrated(true);
+			return;
+		}
+		if (persist.hasHydrated()) {
+			setHydrated(true);
+			return;
+		}
+		return persist.onFinishHydration(() => setHydrated(true));
 	}, [hydrated]);
 
 	return hydrated;
