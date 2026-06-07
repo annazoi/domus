@@ -29,6 +29,7 @@ export function DescriptionSection({ initialProperty, propertyId: propertyIdProp
 			description: defaults.description ?? '',
 			short_description: defaults.short_description ?? '',
 			location_access: defaults.location_access ?? '',
+			welcome_message: defaults.welcome_message ?? '',
 		},
 	});
 
@@ -44,6 +45,7 @@ export function DescriptionSection({ initialProperty, propertyId: propertyIdProp
 				description: saved.description ?? '',
 				short_description: saved.short_description ?? '',
 				location_access: saved.location_access ?? '',
+				welcome_message: saved.welcome_message ?? '',
 			});
 			push({ title: 'Saved.', tone: 'success' });
 		} catch (e) {
@@ -53,6 +55,20 @@ export function DescriptionSection({ initialProperty, propertyId: propertyIdProp
 
 	return (
 		<PropertyFormSection id="description" title="Description">
+			<Controller
+				control={control}
+				name="welcome_message"
+				render={({ field }) => (
+					<MinimalRichText
+						id="property-welcome-message"
+						label="Welcome message"
+						value={field.value ?? ''}
+						onChange={field.onChange}
+						placeholder="A warm greeting for guests when they arrive…"
+						editorMinHeight="min-h-[120px]"
+					/>
+				)}
+			/>
 			<Controller
 				control={control}
 				name="description"
@@ -67,6 +83,7 @@ export function DescriptionSection({ initialProperty, propertyId: propertyIdProp
 					/>
 				)}
 			/>
+	
 			<Controller
 				control={control}
 				name="short_description"
@@ -81,6 +98,7 @@ export function DescriptionSection({ initialProperty, propertyId: propertyIdProp
 					/>
 				)}
 			/>
+	
 			<div className="space-y-1.5">
 				<div className="flex items-center gap-1.5">
 					<label htmlFor="property-location-access" className="text-sm font-medium text-espresso">

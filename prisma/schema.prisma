@@ -143,6 +143,7 @@ model Property {
   description   String?
   short_description String?
   location_access   String?
+  welcome_message   String?
   property_type String
   check_in_time DateTime @default(now())
   check_out_time DateTime @default(now())

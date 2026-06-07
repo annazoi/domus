@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { PlacesAutocompleteInput, type PlaceSelection } from '@/components/google-maps';
@@ -22,6 +23,13 @@ const numberOrNull = (value: string) => {
 	return Number.isNaN(numeric) ? null : numeric;
 };
 
+const hasSetCoordinates = (lat: number | null | undefined, lng: number | null | undefined) => {
+	if (lat == null || lng == null) return false;
+	if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+	if (lat === 0 && lng === 0) return false;
+	return true;
+};
+
 function applyPlaceToForm(
 	place: PlaceSelection,
 	onFieldChange: (field: 'country' | 'city' | 'address', value: string) => void,
@@ -43,6 +51,7 @@ export function LocationSection({
 	propertyId: propertyIdProp,
 	placesLibraryReady = false,
 }: LocationSectionProps) {
+	const [showMapPreview, setShowMapPreview] = useState(false);
 	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
 	const { push } = useToast();
 	const { mutateAsync: update, isPending: saving } = useUpdateProperty(propertyId);
@@ -52,6 +61,7 @@ export function LocationSection({
 		control,
 		handleSubmit,
 		setValue,
+		watch,
 		formState: { errors },
 	} = useForm<LocationFormValues>({
 		resolver: zodResolver(locationFormSchema),
@@ -63,6 +73,13 @@ export function LocationSection({
 			lng: defaultValues.lng,
 		},
 	});
+
+	const lat = watch('lat');
+	const lng = watch('lng');
+	const mapEmbedSrc =
+		showMapPreview && hasSetCoordinates(lat, lng)
+			? `https://www.google.com/maps?q=${encodeURIComponent(`${lat},${lng}`)}&z=15&output=embed`
+			: null;
 
 	const handleSave = handleSubmit(async (formValues: LocationFormValues) => {
 		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
@@ -95,13 +112,14 @@ export function LocationSection({
 							placesLibraryReady={placesLibraryReady}
 							value={field.value}
 							onChange={field.onChange}
-							onPlaceSelect={(place) =>
+							onPlaceSelect={(place) => {
 								applyPlaceToForm(
 									place,
 									(name, value) => setValue(name, value, { shouldValidate: true, shouldDirty: true }),
 									(name, value) => setValue(name, value, { shouldValidate: true, shouldDirty: true }),
-								)
-							}
+								);
+								setShowMapPreview(hasSetCoordinates(place.lat, place.lng));
+							}}
 							placeholder="Search or enter address"
 							autoComplete="off"
 						/>
@@ -143,7 +161,11 @@ export function LocationSection({
 							<Input
 								id="property-latitude"
 								value={field.value ?? ''}
-								onChange={(event) => field.onChange(numberOrNull(event.target.value))}
+								onChange={(event) => {
+									const nextLat = numberOrNull(event.target.value);
+									field.onChange(nextLat);
+									setShowMapPreview(hasSetCoordinates(nextLat, watch('lng')));
+								}}
 								placeholder="Enter latitude"
 							/>
 						)}
@@ -161,7 +183,11 @@ export function LocationSection({
 							<Input
 								id="property-longitude"
 								value={field.value ?? ''}
-								onChange={(event) => field.onChange(numberOrNull(event.target.value))}
+								onChange={(event) => {
+									const nextLng = numberOrNull(event.target.value);
+									field.onChange(nextLng);
+									setShowMapPreview(hasSetCoordinates(watch('lat'), nextLng));
+								}}
 								placeholder="Enter longitude"
 							/>
 						)}
@@ -169,6 +195,18 @@ export function LocationSection({
 					{errors.lng?.message ? <p className="text-xs text-red-700">{errors.lng.message}</p> : null}
 				</div>
 			</div>
+			{mapEmbedSrc ? (
+				<div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-black/10">
+					<iframe
+						title="Property location"
+						src={mapEmbedSrc}
+						className="absolute inset-0 h-full w-full border-0"
+						loading="lazy"
+						referrerPolicy="no-referrer-when-downgrade"
+						allowFullScreen
+					/>
+				</div>
+			) : null}
 			<div className="mt-2 flex justify-end border-t border-black/5 pt-5">
 				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
 					{saving ? 'Saving...' : 'Save'}

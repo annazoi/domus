@@ -5,6 +5,34 @@ import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { parseTimeToUtcDate } from '../_utils/time-of-day';
 
+export const PROPERTIES_SEARCH_MIN_LENGTH = 2;
+
+function buildPropertySearchWhere(hostId: string, query?: string): Prisma.PropertyWhereInput {
+	const base: Prisma.PropertyWhereInput = { user_id: hostId };
+	const trimmed = query?.trim();
+	if (!trimmed || trimmed.length < PROPERTIES_SEARCH_MIN_LENGTH) return base;
+
+	const insensitive = { contains: trimmed, mode: 'insensitive' as const };
+
+	return {
+		...base,
+		OR: [
+			{ id: insensitive },
+			{ title: insensitive },
+			{ slug: insensitive },
+			{ description: insensitive },
+			{ short_description: insensitive },
+			{ location_access: insensitive },
+			{ welcome_message: insensitive },
+			{ city: insensitive },
+			{ country: insensitive },
+			{ address: insensitive },
+			{ property_type: insensitive },
+			{ room_type: insensitive },
+		],
+	};
+}
+
 const intOr = (value: unknown, fallback: number) => {
 	const n = Number(value);
 	return Number.isFinite(n) ? Math.trunc(n) : fallback;
@@ -35,6 +63,7 @@ const toPropertyData = ({ body, hostId, slug }: PropertyUpsertInput) => ({
 	description: body.description?.trim() || null,
 	short_description: body.short_description?.trim() || null,
 	location_access: body.location_access?.trim() || null,
+	welcome_message: body.welcome_message?.trim() || null,
 	property_type: (body.property_type ?? '').trim() || 'property',
 	room_type: (body.room_type ?? '').trim() || RoomTypes.ENTIRE_PLACE,
 	check_in_time: parseTimeToUtcDate(body.check_in_time, '15:00'),
@@ -58,6 +87,7 @@ const toPropertyUpdateData = ({ body, slug }: Omit<PropertyUpsertInput, 'hostId'
 	description: body.description?.trim() || null,
 	short_description: body.short_description?.trim() || null,
 	location_access: body.location_access?.trim() || null,
+	welcome_message: body.welcome_message?.trim() || null,
 	property_type: (body.property_type ?? '').trim() || 'property',
 	room_type: (body.room_type ?? '').trim() || RoomTypes.ENTIRE_PLACE,
 	check_in_time: parseTimeToUtcDate(body.check_in_time, '15:00'),
@@ -83,8 +113,8 @@ export const propertyService = {
 		});
 	},
 
-	async listByHostPaginated(hostId: string, page: number, pageSize: number) {
-		const where = { user_id: hostId };
+	async listByHostPaginated(hostId: string, page: number, pageSize: number, search?: string) {
+		const where = buildPropertySearchWhere(hostId, search);
 
 		const [total, rows] = await Promise.all([
 			prisma.property.count({ where }),

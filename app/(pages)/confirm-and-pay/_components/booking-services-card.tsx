@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Minus, Plus } from 'lucide-react';
-import { Checkbox, cn } from '@/components/ui';
+import { Checkbox, cn, Skeleton } from '@/components/ui';
 import type { Service } from '@/features/services/interfaces/service.interface';
 
 type BookingServicesCardProps = {
@@ -124,6 +124,24 @@ function QuantityStepper({
 	);
 }
 
+function ServiceRowSkeleton() {
+	return (
+		<div className="rounded-xl border border-black/8 bg-white/40 p-4">
+			<div className="flex items-start gap-3">
+				<Skeleton className="mt-1 h-4 w-4 shrink-0 rounded" />
+				<Skeleton className="h-16 w-16 shrink-0 rounded-lg" />
+				<div className="min-w-0 flex-1 space-y-2">
+					<div className="flex items-start justify-between gap-3">
+						<Skeleton className="h-4 w-36" />
+						<Skeleton className="h-4 w-12 shrink-0" />
+					</div>
+					<Skeleton className="h-3 w-full max-w-xs" />
+				</div>
+			</div>
+		</div>
+	);
+}
+
 function ServiceRow({
 	service,
 	quantity,
@@ -134,6 +152,7 @@ function ServiceRow({
 	onQuantityChange: (serviceId: string, quantity: number) => void;
 }) {
 	const selected = quantity > 0;
+	const primaryImageUrl = service.images[0]?.url;
 	const setQuantity = (next: number) => {
 		onQuantityChange(service.id, clampServiceQuantity(service, next));
 	};
@@ -162,6 +181,14 @@ function ServiceRow({
 					className="mt-1 accent-camel"
 					aria-label={`Add ${service.name}`}
 				/>
+				{primaryImageUrl ? (
+					<div
+						className="h-16 w-16 shrink-0 rounded-lg bg-cover bg-center ring-1 ring-black/10"
+						style={{ backgroundImage: `url(${primaryImageUrl})` }}
+						role="img"
+						aria-label={service.name}
+					/>
+				) : null}
 				<div className="min-w-0 flex-1">
 					<div className="flex items-start justify-between gap-3">
 						<div>
@@ -256,16 +283,18 @@ export default function BookingServicesCard({
 
 			<AnimatePresence mode="wait" initial={false}>
 				{contentKey === 'loading' ? (
-					<motion.p
+					<motion.div
 						key="loading"
 						initial={{ opacity: 0, y: 6 }}
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: -6 }}
 						transition={{ duration: 0.2, ease: easeOut }}
-						className="mt-5 text-sm text-[#1A1A1A]/55"
+						className="mt-5 space-y-3"
 					>
-						Loading extras…
-					</motion.p>
+						{Array.from({ length: 2 }).map((_, index) => (
+							<ServiceRowSkeleton key={index} />
+						))}
+					</motion.div>
 				) : contentKey === 'error' ? (
 					<motion.p
 						key="error"

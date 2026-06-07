@@ -52,7 +52,7 @@ function MizuBookingPanel({
 
 	return (
 		<div className="rounded-[1.75rem] border border-[#6b9a8f]/25 bg-[#fff9f4] shadow-[0_24px_60px_-28px_rgba(26,46,53,0.35)]">
-			<div className="border-b border-[#6b9a8f]/15 bg-gradient-to-br from-[#6b9a8f]/12 to-transparent px-6 py-5">
+			<div className="border-b border-[#6b9a8f]/15 bg-gradient-to-br from-[#6b9a8f]/12 to-transparent px-6 py-5 rounded-t-[1.75rem]">
 				<div className="flex items-center gap-2 text-[#4d7c6f]">
 					<Droplets className="h-4 w-4" strokeWidth={1.5} aria-hidden />
 					<p className="font-[family-name:var(--preview-mizu-body)] text-[10px] font-semibold uppercase tracking-[0.22em]">

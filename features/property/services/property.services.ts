@@ -12,9 +12,11 @@ export const listProperties = async () => {
 	return response.data;
 };
 
-export const listPropertiesPaginated = async (page: number, pageSize: number) => {
+export const PROPERTIES_SEARCH_MIN_LENGTH = 2;
+
+export const listPropertiesPaginated = async (page: number, pageSize: number, search?: string) => {
 	const response = await axiosInstance.get<PaginatedResult<Property>>(
-		ApiRoutes.properties.listMinePaginated(page, pageSize),
+		ApiRoutes.properties.listMinePaginated(page, pageSize, search),
 	);
 	return response.data;
 };

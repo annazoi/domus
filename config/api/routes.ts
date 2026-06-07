@@ -26,8 +26,8 @@ export const ApiRoutes = {
 			`/properties/${id}/check-availability?${toSearchParams({ check_in, check_out, guests })}`,
 		unavailableDays: (id: string) => `/properties/${id}/unavailable-days`,
 		listMine: '/properties?host_id=me',
-		listMinePaginated: (page: number, limit: number) =>
-			`/properties?host_id=me&page=${page}&limit=${limit}`,
+		listMinePaginated: (page: number, limit: number, q?: string) =>
+			`/properties?host_id=me&${toSearchParams({ page, limit, q })}`,
 	},
 	images: {
 		prefix: '/images',

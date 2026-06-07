@@ -62,10 +62,17 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 	const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 	const monthStart = viewMonth.startOf('month');
 	const monthEndExclusive = viewMonth.endOf('month').startOf('day').plus({ days: 1 });
+	const modalRangeEnd = useMemo(() => today.plus({ months: 24 }), [today]);
 	const { data: availabilityRows = [] } = usePropertyAvailability(
 		propertyId,
 		monthStart.toISODate() ?? undefined,
 		monthEndExclusive.toISODate() ?? undefined,
+	);
+	const { data: savedAvailabilityRows = [] } = usePropertyAvailability(
+		propertyId,
+		today.toISODate() ?? undefined,
+		modalRangeEnd.toISODate() ?? undefined,
+		modalOpen,
 	);
 	const { mutateAsync: upsertAvailability, isPending: applyingAvailability } = useUpsertPropertyAvailability(propertyId);
 	const { mutateAsync: clearAllAvailability, isPending: clearingAvailability } = useClearPropertyAvailability(propertyId);
@@ -87,18 +94,6 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		[ranges],
 	);
 	const hasIncompleteRanges = selectedRanges.some((item) => !item.from || !item.to);
-	const hasRangeConflict = useMemo(() => {
-		for (const rangeItem of selectedRanges) {
-			if (!rangeItem.from || !rangeItem.to) continue;
-			const from = fromPickerDate(rangeItem.from);
-			const checkout = fromPickerDate(rangeItem.to).plus({ days: 1 });
-			for (let cursor = from; cursor < checkout; cursor = cursor.plus({ days: 1 })) {
-				const existing = availabilityMap.get(toApiDate(cursor));
-				if (existing && !existing.is_available) return true;
-			}
-		}
-		return false;
-	}, [selectedRanges, availabilityMap]);
 	const hasSelectedRangeOverlap = useMemo(() => {
 		const completeRanges = selectedRanges
 			.filter((item): item is { id: string; from: Date; to: Date } => Boolean(item.from && item.to))
@@ -112,6 +107,10 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		}
 		return false;
 	}, [selectedRanges]);
+	const hasOverlapWithSavedAvailability = useMemo(
+		() => selectedRangesOverlapSavedDates(selectedRanges, savedAvailabilityRows),
+		[selectedRanges, savedAvailabilityRows],
+	);
 	const rangePriceValue = Number(rangePrice);
 	const invalidRangePrice = Number.isNaN(rangePriceValue) || rangePriceValue < 0;
 	const disableApplyRanges =
@@ -119,8 +118,8 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		!selectedRanges.length ||
 		hasIncompleteRanges ||
 		invalidRangePrice ||
-		hasRangeConflict ||
-		hasSelectedRangeOverlap;
+		hasSelectedRangeOverlap ||
+		hasOverlapWithSavedAvailability;
 
 	const handleSave = handleSubmit(async (formValues) => {
 		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
@@ -171,12 +170,6 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 			label: first.toFormat('LLLL yyyy'),
 		};
 	}, [viewMonth]);
-
-	const disabledDates = useMemo(
-		() =>
-			availabilityRows.filter((row) => row.is_available === false).map((row) => toUtcJsDate(row.date)),
-		[availabilityRows],
-	);
 
 	const handleApplySingleDay = async () => {
 		if (!singleDayDate || !propertyId) return;
@@ -231,12 +224,13 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 			return;
 		}
 
-		if (hasRangeConflict) {
-			push({ title: 'One of the ranges includes unavailable dates.', tone: 'error' });
-			return;
-		}
 		if (hasSelectedRangeOverlap) {
 			push({ title: 'Date ranges cannot overlap each other.', tone: 'error' });
+			return;
+		}
+
+		if (hasOverlapWithSavedAvailability) {
+			push({ title: 'Selected dates overlap existing availability. Choose dates that are not already set.', tone: 'error' });
 			return;
 		}
 
@@ -330,14 +324,18 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		setConfirmClearOpen(true);
 	};
 
+	const selectedDayLabel = singleDayDate
+		? DateTime.fromISO(singleDayDate, { zone: 'utc' }).toFormat('EEEE, MMM d')
+		: null;
+
 	return (
 		<PropertyFormSection id="pricing-availability" title="Pricing & availability">
-			<p className="text-sm text-espresso/65">
-				Nightly rates are set per day on the property calendar.
+			<p className="max-w-2xl text-sm leading-relaxed text-espresso/60">
+				Set nightly rates and availability per day. Select a date on the calendar to edit individually, or apply pricing across a range.
 			</p>
-			<div className="mt-4 grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
-				<div className="dashboard-panel rounded-2xl p-5">
-					<div className="mb-5 flex items-center justify-between gap-3 border-b border-dashboard-border pb-4">
+			<div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_17.5rem] lg:items-start">
+				<div className="overflow-hidden rounded-2xl border border-dashboard-border/70 bg-dashboard-surface shadow-[0_1px_0_rgba(26,26,26,0.04)]">
+					<div className="flex items-center justify-between gap-3 border-b border-dashboard-border/60 px-5 py-4">
 						<Button
 							type="button"
 							variant="iconSquare"
@@ -347,9 +345,12 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 						>
 							<ChevronLeft className="h-5 w-5" />
 						</Button>
-						<p className="min-w-0 flex-1 text-center font-serif text-lg tracking-tight text-espresso">
-							{label}
-						</p>
+						<div className="min-w-0 flex-1 text-center">
+							<p className="font-serif text-xl tracking-tight text-espresso">{label}</p>
+							<p className="mt-0.5 text-xs font-medium uppercase tracking-[0.14em] text-espresso/45">
+								Property calendar
+							</p>
+						</div>
 						<Button
 							type="button"
 							variant="iconSquare"
@@ -360,126 +361,163 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 						</Button>
 					</div>
 
-					<div className="grid grid-cols-7 gap-2 text-center text-xs text-espresso/50">
-						{weekdays.map((w) => (
-							<div key={w} className="py-2">
-								{w}
-							</div>
-						))}
-					</div>
-					<div className="grid grid-cols-7 gap-2">
-						{days.map((day, i) =>
-							day ? (
-								<DayCell
-									key={i}
-									day={day}
-									selected={singleDayDate === toApiDate(day)}
-									availability={availabilityMap.get(toApiDate(day))}
-									isPast={day < today}
-									onClick={() => {
-										const iso = toApiDate(day);
-										const existing = availabilityMap.get(iso);
-										setSingleDayDate(iso);
-										setSingleDayPrice(existing ? String(existing.price) : '');
-										setSingleDayAvailable(existing?.is_available ?? true);
-										setSingleDayReason(existing?.reason ?? '');
-									}}
-								/>
-							) : (
-								<div key={i} className="h-16" aria-hidden />
-							),
-						)}
+					<div className="px-4 pb-5 pt-4 sm:px-5">
+						<div className="mb-2 grid grid-cols-7 gap-1.5">
+							{weekdays.map((w) => (
+								<div
+									key={w}
+									className="py-1.5 text-center text-xs font-semibold uppercase tracking-[0.12em] text-espresso/45"
+								>
+									{w}
+								</div>
+							))}
+						</div>
+						<div className="grid grid-cols-7 gap-1.5">
+							{days.map((day, i) =>
+								day ? (
+									<DayCell
+										key={i}
+										day={day}
+										today={day.hasSame(today, 'day')}
+										selected={singleDayDate === toApiDate(day)}
+										availability={availabilityMap.get(toApiDate(day))}
+										isPast={day < today}
+										onClick={() => {
+											const iso = toApiDate(day);
+											const existing = availabilityMap.get(iso);
+											setSingleDayDate(iso);
+											setSingleDayPrice(existing ? String(existing.price) : '');
+											setSingleDayAvailable(existing?.is_available ?? true);
+											setSingleDayReason(existing?.reason ?? '');
+										}}
+									/>
+								) : (
+									<div key={i} className="h-[4.5rem]" aria-hidden />
+								),
+							)}
+						</div>
+						<CalendarLegend />
 					</div>
 				</div>
 
-				<div className="flex w-full flex-col gap-5 md:max-w-[260px]">
-					<Button
-						type="button"
-						variant="secondary"
-						className="w-full shrink-0"
-						onClick={openModal}
-						disabled={!propertyId}
-					>
-						Set dates &amp; price
-					</Button>
-					<Button
-						type="button"
-						variant="secondary"
-						className="w-full shrink-0 border-red-200 text-red-700 hover:border-red-300 hover:bg-red-50"
-						onClick={requestClearAllAvailability}
-						disabled={!propertyId || clearingAvailability}
-					>
-						{clearingAvailability ? 'Removing...' : 'Remove all availability'}
-					</Button>
-					<div className="dashboard-panel rounded-2xl p-4">
-						<p className="text-sm font-medium text-espresso">Single day edit</p>
-						<p className="mt-1 text-xs text-espresso/60">
-							Click any date on the calendar, then update that day here.
-						</p>
-						<p className="mt-2 text-sm text-espresso/70">
-							{singleDayDate ? DateTime.fromISO(singleDayDate, { zone: 'utc' }).toFormat('MMM d, yyyy') : 'No date selected'}
-						</p>
-						<Input
-							type="number"
-							min={0}
-							step={0.01}
-							placeholder="Nightly price"
-							value={singleDayPrice}
-							onChange={(e) => setSingleDayPrice(e.target.value)}
-							className="mt-2"
-							disabled={!singleDayDate}
-						/>
-						<label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border border-black/8 px-3 py-2">
-							<Checkbox
-								checked={singleDayAvailable}
-								onChange={(e) => setSingleDayAvailable(e.target.checked)}
-								disabled={!singleDayDate}
-							/>
-							<span className="text-sm text-espresso">Available for booking</span>
-						</label>
-						<select
-							value={singleDayReason}
-							onChange={(e) => setSingleDayReason(e.target.value as AvailabilityStatusType | '')}
-							className="mt-2 h-10 w-full rounded-xl border border-black/10 px-3 text-sm"
-							disabled={!singleDayDate || singleDayAvailable}
-						>
-							<option value="">None</option>
-							<option value={AvailabilityStatus.BLOCKED}>Blocked</option>
-							<option value={AvailabilityStatus.MAINTENANCE}>Maintenance</option>
-							<option value={AvailabilityStatus.BOOKED}>Booked</option>
-						</select>
-						{hasExistingDay ? (
-							<div className="mt-3 flex flex-col gap-2">
+				<div className="flex flex-col gap-4 lg:sticky lg:top-24">
+					<div className="overflow-hidden rounded-2xl border border-dashboard-border/70 bg-dashboard-surface shadow-[0_1px_0_rgba(26,26,26,0.04)]">
+						<div className="border-b border-dashboard-border/60 bg-dashboard-inset/50 px-4 py-3">
+							<p className="text-xs font-semibold uppercase tracking-[0.12em] text-espresso/50">Bulk actions</p>
+						</div>
+						<div className="space-y-2 p-4">
+							<Button
+								type="button"
+								variant="secondary"
+								className="w-full"
+								onClick={openModal}
+								disabled={!propertyId}
+							>
+								Set dates &amp; price
+							</Button>
+							<Button
+								type="button"
+								variant="secondary"
+								className="w-full border-red-200 text-red-700 hover:border-red-300 hover:bg-red-50"
+								onClick={requestClearAllAvailability}
+								disabled={!propertyId || clearingAvailability}
+							>
+								{clearingAvailability ? 'Removing…' : 'Clear all availability'}
+							</Button>
+						</div>
+					</div>
+
+					<div className="overflow-hidden rounded-2xl border border-dashboard-border/70 bg-dashboard-surface shadow-[0_1px_0_rgba(26,26,26,0.04)]">
+						<div className="border-b border-dashboard-border/60 bg-dashboard-inset/50 px-4 py-3">
+							<p className="text-xs font-semibold uppercase tracking-[0.12em] text-espresso/50">Day editor</p>
+						</div>
+						<div className="p-4">
+							{selectedDayLabel ? (
+								<div className="rounded-xl border border-camel/25 bg-camel/[0.07] px-3 py-2.5">
+									<p className="text-xs font-medium uppercase tracking-[0.12em] text-camel-deep/75">Selected</p>
+									<p className="mt-1 font-serif text-base leading-snug text-espresso">{selectedDayLabel}</p>
+								</div>
+							) : (
+								<div className="rounded-xl border border-dashed border-dashboard-border/80 bg-dashboard-inset/40 px-3 py-4 text-center">
+									<p className="text-sm text-espresso/45">Select a date on the calendar</p>
+								</div>
+							)}
+
+							<div className="mt-4 space-y-3">
+								<label className="block">
+									<span className="text-xs font-medium uppercase tracking-[0.12em] text-espresso/50">
+										Nightly rate
+									</span>
+									<Input
+										type="number"
+										min={0}
+										step={0.01}
+										placeholder="0.00"
+										value={singleDayPrice}
+										onChange={(e) => setSingleDayPrice(e.target.value)}
+										className="mt-1.5"
+										disabled={!singleDayDate}
+									/>
+								</label>
+								<label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashboard-border/60 bg-dashboard-inset/30 px-3 py-2.5">
+									<Checkbox
+										checked={singleDayAvailable}
+										onChange={(e) => setSingleDayAvailable(e.target.checked)}
+										disabled={!singleDayDate}
+									/>
+									<span className="text-sm text-espresso">Available for booking</span>
+								</label>
+								<label className="block">
+									<span className="text-xs font-medium uppercase tracking-[0.12em] text-espresso/50">
+										Unavailable reason
+									</span>
+									<select
+										value={singleDayReason}
+										onChange={(e) => setSingleDayReason(e.target.value as AvailabilityStatusType | '')}
+										className="mt-1.5 h-10 w-full rounded-xl border border-dashboard-border/60 bg-dashboard-inset/30 px-3 text-sm text-espresso focus:outline-none focus:ring-1 focus:ring-camel/30"
+										disabled={!singleDayDate || singleDayAvailable}
+									>
+										<option value="">None</option>
+										<option value={AvailabilityStatus.BLOCKED}>Blocked</option>
+										<option value={AvailabilityStatus.MAINTENANCE}>Maintenance</option>
+										<option value={AvailabilityStatus.BOOKED}>Booked</option>
+									</select>
+								</label>
+							</div>
+
+							{hasExistingDay ? (
+								<div className="mt-4 flex flex-col gap-2 border-t border-dashboard-border/50 pt-4">
+									<Button
+										type="button"
+										variant="primarySm"
+										className="w-full"
+										disabled={!singleDayDate || applyingAvailability}
+										onClick={() => void handleApplySingleDay()}
+									>
+										{applyingAvailability ? 'Updating…' : 'Update day'}
+									</Button>
+									<Button
+										type="button"
+										variant="secondary"
+										className="w-full border-red-300 text-red-700 hover:bg-red-50"
+										disabled={!singleDayDate || clearingAvailability}
+										onClick={() => void handleDeleteSingleDay()}
+									>
+										{clearingAvailability ? 'Deleting…' : 'Remove day'}
+									</Button>
+								</div>
+							) : (
 								<Button
 									type="button"
 									variant="primarySm"
-									className="w-full"
+									className="mt-4 w-full"
 									disabled={!singleDayDate || applyingAvailability}
 									onClick={() => void handleApplySingleDay()}
 								>
-									{applyingAvailability ? 'Updating...' : 'Update day'}
+									{applyingAvailability ? 'Applying…' : 'Apply day'}
 								</Button>
-								<Button
-									type="button"
-									variant="secondary"
-									className="w-full border-red-300 text-red-700 hover:bg-red-50"
-									disabled={!singleDayDate || clearingAvailability}
-									onClick={() => void handleDeleteSingleDay()}
-								>
-									{clearingAvailability ? 'Deleting...' : 'Delete day'}
-								</Button>
-							</div>
-						) : (
-							<Button
-								type="button"
-								variant="primarySm"
-								className="mt-3 w-full"
-								disabled={!singleDayDate || applyingAvailability}
-								onClick={() => void handleApplySingleDay()}
-							>
-								{applyingAvailability ? 'Applying...' : 'Apply day'}
-							</Button>
-						)}
+							)}
+						</div>
 					</div>
 				</div>
 			</div>
@@ -513,7 +551,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 						<div className="space-y-4">
 							{ranges.map((rangeItem, index) => (
 								<div key={rangeItem.id} className="relative">
-									<label className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">
+									<label className="block text-xs font-medium uppercase tracking-[0.12em] text-dashboard-muted">
 										Date range {index + 1}
 										<Input
 											variant="compact"
@@ -543,13 +581,30 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 									) : null}
 									{activeRangeId === rangeItem.id ? (
 										<div
-											className="absolute left-0 right-0 top-full z-[70] mt-2 w-full rounded-xl bg-dashboard-bg p-3 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.2)] [--rdp-accent-color:var(--color-dashboard-accent-deep)] [--rdp-accent-background-color:rgba(106,98,88,0.12)] [&_.rdp-month]:w-full [&_.rdp-month_grid]:w-full [&_.rdp-day]:transition-[background,background-color] [&_.rdp-day]:duration-200 [&_.rdp-day]:ease-out [&_.rdp-day_button]:transition-[color,background-color,border-color,transform,box-shadow] [&_.rdp-day_button]:duration-200 [&_.rdp-day_button]:ease-out [&_.rdp-day_button]:active:scale-[0.94]"
+											role="dialog"
+											aria-label={`Select date range ${index + 1}`}
+											className="absolute left-0 right-0 top-full z-[70] mt-2 w-full rounded-xl border border-dashboard-border/60 bg-dashboard-bg p-3 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.2)] [--rdp-accent-color:var(--color-camel)] [--rdp-accent-background-color:color-mix(in_srgb,var(--color-camel)_18%,transparent)] [&_.rdp-month]:w-full [&_.rdp-month_grid]:w-full [&_.rdp-day]:transition-[background,background-color] [&_.rdp-day]:duration-200 [&_.rdp-day]:ease-out [&_.rdp-day_button]:transition-[color,background-color,border-color,transform,box-shadow] [&_.rdp-day_button]:duration-200 [&_.rdp-day_button]:ease-out [&_.rdp-day_button]:active:scale-[0.94]"
 										>
+											<div className="mb-2 flex items-center justify-between gap-2 border-b border-dashboard-border/50 pb-2">
+												<p className="text-sm font-medium text-espresso">Select dates</p>
+												<Button
+													type="button"
+													variant="ghostIcon"
+													className="h-8 w-8"
+													onClick={() => setActiveRangeId(null)}
+													aria-label="Close date picker"
+												>
+													<X className="h-4 w-4" />
+												</Button>
+											</div>
 											<DayPicker
 												mode="range"
 												min={1}
 												excludeDisabled
-												disabled={[...disabledDates, { before: today.toJSDate() }]}
+												disabled={[
+													{ before: today.toJSDate() },
+													...getDisabledDatesForRangePicker(ranges, rangeItem.id, savedAvailabilityRows),
+												]}
 												startMonth={today.toJSDate()}
 												selected={rangeItem.value}
 												onSelect={(nextRange) =>
@@ -561,21 +616,36 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 												}
 												className="w-full"
 											/>
-											<div className="mt-3 flex justify-end pt-2">
+											<div className="mt-3 flex items-center justify-between gap-2 border-t border-dashboard-border/50 pt-3">
+												<Button
+													type="button"
+													variant="ghostPill"
+													className="h-8 px-3"
+													disabled={!rangeItem.value?.from && !rangeItem.value?.to}
+													onClick={() =>
+														setRanges((previous) =>
+															previous.map((item) =>
+																item.id === rangeItem.id ? { ...item, value: undefined } : item,
+															),
+														)
+													}
+												>
+													Clear
+												</Button>
 												<Button
 													type="button"
 													variant="primarySm"
 													disabled={!rangeItem.value?.from || !rangeItem.value?.to}
 													onClick={() => setActiveRangeId(null)}
 												>
-													OK
+													Done
 												</Button>
 											</div>
 										</div>
 									) : null}
 								</div>
 							))}
-							<label className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">
+							<label className="block text-xs font-medium uppercase tracking-[0.12em] text-dashboard-muted">
 								Price for this range (per night)
 								<Input
 									type="number"
@@ -591,7 +661,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 								<Checkbox checked={isAvailable} onChange={(e) => setIsAvailable(e.target.checked)} />
 								<span className="text-sm text-espresso">Available for booking</span>
 							</label>
-							<label className="block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">
+							<label className="block text-xs font-medium uppercase tracking-[0.12em] text-dashboard-muted">
 								Reason (when unavailable)
 								<select
 									value={reason}
@@ -646,8 +716,55 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 	);
 }
 
-function toUtcJsDate(date: string) {
-	return DateTime.fromISO(date, { zone: 'utc' }).toJSDate();
+function selectedRangesOverlapSavedDates(
+	selectedRanges: { from?: Date; to?: Date }[],
+	savedRows: AvailabilityDay[],
+) {
+	if (!savedRows.length) return false;
+	const savedDates = new Set(savedRows.map((row) => row.date));
+	for (const rangeItem of selectedRanges) {
+		if (!rangeItem.from || !rangeItem.to) continue;
+		let cursor = fromPickerDate(rangeItem.from);
+		const end = fromPickerDate(rangeItem.to);
+		while (cursor <= end) {
+			if (savedDates.has(toApiDate(cursor))) return true;
+			cursor = cursor.plus({ days: 1 });
+		}
+	}
+	return false;
+}
+
+function getDisabledDatesForRangePicker(
+	allRanges: RangeEntry[],
+	currentRangeId: string,
+	savedRows: AvailabilityDay[],
+) {
+	const seen = new Set<number>();
+	const dates: Date[] = [];
+
+	const addDate = (date: DateTime) => {
+		const jsDate = new Date(date.year, date.month - 1, date.day);
+		const key = jsDate.getTime();
+		if (seen.has(key)) return;
+		seen.add(key);
+		dates.push(jsDate);
+	};
+
+	for (const item of allRanges) {
+		if (item.id === currentRangeId || !item.value?.from || !item.value?.to) continue;
+		let cursor = fromPickerDate(item.value.from);
+		const end = fromPickerDate(item.value.to);
+		while (cursor <= end) {
+			addDate(cursor);
+			cursor = cursor.plus({ days: 1 });
+		}
+	}
+
+	for (const row of savedRows) {
+		addDate(DateTime.fromISO(row.date, { zone: 'utc' }).startOf('day'));
+	}
+
+	return dates;
 }
 
 function formatRangeLabel(range: DateRange | undefined) {
@@ -665,22 +782,48 @@ function fromPickerDate(date: Date) {
 	).startOf('day');
 }
 
+const legendItems = [
+	{ key: 'selected', label: 'Selected', swatch: 'border-camel/50 bg-camel/[0.08] ring-1 ring-camel/20' },
+	{ key: 'priced', label: 'Priced', swatch: 'border-dashboard-border/70 bg-white' },
+	{ key: 'unset', label: 'Unset', swatch: 'border-dashed border-dashboard-border/60 bg-dashboard-inset/50' },
+	{ key: 'blocked', label: 'Blocked', swatch: 'border-red-200 bg-red-50' },
+] as const;
+
+function CalendarLegend() {
+	return (
+		<div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-dashboard-border/50 pt-4">
+			{legendItems.map((item) => (
+				<div key={item.key} className="flex items-center gap-2">
+					<span className={cn('h-3.5 w-3.5 shrink-0 rounded-[4px] border', item.swatch)} aria-hidden />
+					<span className="text-xs text-espresso/55">{item.label}</span>
+				</div>
+			))}
+		</div>
+	);
+}
+
 type DayCellProps = {
 	day: DateTime;
+	today: boolean;
 	selected: boolean;
 	availability: { is_available: boolean; price: number; reason: AvailabilityStatusType | null } | undefined;
 	isPast: boolean;
 	onClick: () => void;
 };
 
-function DayCell({ day, selected, availability, isPast, onClick }: DayCellProps) {
+function DayCell({ day, today, selected, availability, isPast, onClick }: DayCellProps) {
+	const isBlocked = Boolean(availability && !availability.is_available);
+	const isPriced = Boolean(availability?.is_available);
+
 	const stateClass = isPast
-		? 'cursor-not-allowed border-dashboard-border/40 bg-dashboard-bg/80 text-dashboard-muted/50'
-		: !availability
-			? 'border-dashboard-border/50 bg-dashboard-inset text-dashboard-muted hover:border-camel/30'
-			: availability.is_available
-				? 'border-emerald-200 bg-emerald-50 text-emerald-900'
-				: 'border-red-200 bg-red-50 text-red-800';
+		? 'cursor-not-allowed border-transparent bg-dashboard-bg/60 text-espresso/28'
+		: selected
+			? 'border-camel/55 bg-camel/[0.08] text-espresso shadow-[inset_0_0_0_1px_rgba(150,131,112,0.18)]'
+			: isBlocked
+				? 'border-red-200 bg-red-50 text-red-800 hover:border-red-300'
+				: isPriced
+					? 'border-dashboard-border/65 bg-white text-espresso hover:border-camel/30 hover:bg-dashboard-inset/20'
+					: 'border-dashed border-dashboard-border/55 bg-dashboard-inset/35 text-espresso/55 hover:border-camel/25 hover:bg-dashboard-inset/55';
 
 	return (
 		<Button
@@ -689,19 +832,37 @@ function DayCell({ day, selected, availability, isPast, onClick }: DayCellProps)
 			onClick={onClick}
 			disabled={isPast}
 			className={cn(
-				'h-16 rounded-xl border text-sm transition-all duration-200 ease-out active:scale-[0.98]',
+				'relative h-[4.5rem] rounded-lg border px-0.5 py-1.5 transition-[border-color,background-color,box-shadow] duration-150',
 				stateClass,
-				selected && !isPast ? 'ring-2 ring-camel/40' : '',
+				today && !selected && !isPast ? 'ring-1 ring-espresso/12' : '',
 			)}
 		>
-			<div className="flex w-full flex-col items-center gap-1">
-				<span>{day.day}</span>
-				{isPast ? null : availability?.is_available ? (
-					<span className="text-[11px] font-medium">${availability.price.toFixed(0)}</span>
-				) : availability ? (
-					<span className="text-[10px] uppercase tracking-wide">{availability.reason ?? 'UNAVAILABLE'}</span>
-				) : null}
+			<div className="flex h-full w-full flex-col items-center justify-between">
+				<span
+					className={cn(
+						'text-sm font-medium tabular-nums leading-none',
+						today && !isPast ? 'text-camel-deep' : '',
+					)}
+				>
+					{day.day}
+				</span>
+				{isPast ? (
+					<span className="h-3" />
+				) : isPriced ? (
+					<span className="text-xs font-medium tabular-nums text-espresso/55">
+						${availability!.price.toFixed(0)}
+					</span>
+				) : isBlocked ? (
+					<span className="max-w-full truncate px-0.5 text-xs font-medium uppercase tracking-wide text-red-800">
+						{availability!.reason ?? 'Off'}
+					</span>
+				) : (
+					<span className="h-3" />
+				)}
 			</div>
+			{selected ? (
+				<span className="absolute bottom-1 left-1/2 h-0.5 w-3 -translate-x-1/2 rounded-full bg-camel" aria-hidden />
+			) : null}
 		</Button>
 	);
 }

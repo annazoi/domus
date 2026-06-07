@@ -6,11 +6,16 @@ export const propertyAvailabilityQueryKey = {
 	all: (propertyId: string, start?: string, end?: string) => ['property-availability', propertyId, start, end] as const,
 };
 
-export const usePropertyAvailability = (propertyId: string, start?: string, end?: string) => {
+export const usePropertyAvailability = (
+	propertyId: string,
+	start?: string,
+	end?: string,
+	enabled = true,
+) => {
 	return useQuery({
 		queryKey: propertyAvailabilityQueryKey.all(propertyId, start, end),
 		queryFn: () => listAvailability(propertyId, start, end),
-		enabled: Boolean(propertyId),
+		enabled: Boolean(propertyId) && enabled,
 	});
 };
 

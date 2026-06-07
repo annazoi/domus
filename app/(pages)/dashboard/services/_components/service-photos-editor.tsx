@@ -1,8 +1,8 @@
 'use client';
 
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { ImageIcon, Maximize2, Trash2 } from 'lucide-react';
-import { Button, ConfirmationDialog, useToast } from '@/components/ui';
+import { Button, ConfirmationDialog, ImageGalleryLightbox, useToast, type ImageGalleryOriginRect } from '@/components/ui';
 import {
 	useDeleteServiceImage,
 	useReorderServiceImages,
@@ -77,6 +77,18 @@ export function StagedPhotosPicker({
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [fileZoneOver, setFileZoneOver] = useState(false);
 	const [removeId, setRemoveId] = useState<string | null>(null);
+	const [galleryOpen, setGalleryOpen] = useState(false);
+	const [galleryIndex, setGalleryIndex] = useState(0);
+	const [galleryOrigin, setGalleryOrigin] = useState<ImageGalleryOriginRect | null>(null);
+	const galleryUrls = useMemo(() => staged.map((item) => item.previewUrl), [staged]);
+
+	const openGallery = useCallback((id: string, origin: ImageGalleryOriginRect) => {
+		const index = staged.findIndex((item) => item.id === id);
+		if (index < 0) return;
+		setGalleryIndex(index);
+		setGalleryOrigin(origin);
+		setGalleryOpen(true);
+	}, [staged]);
 
 	return (
 		<div className="space-y-3">
@@ -116,24 +128,23 @@ export function StagedPhotosPicker({
 			{staged.length > 0 ? (
 				<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
 					{staged.map((item) => (
-						<div
+						<StagedPhotoTile
 							key={item.id}
-							className="relative aspect-[4/3] overflow-hidden rounded-lg border border-dashboard-border bg-black/5"
-						>
-							<img src={item.previewUrl} alt="" className="h-full w-full object-cover" />
-							<Button
-								type="button"
-								variant="ghostIcon"
-								className="absolute right-1.5 top-1.5 h-8 w-8 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm"
-								onClick={() => setRemoveId(item.id)}
-								aria-label="Remove from upload queue"
-							>
-								<Trash2 className="h-4 w-4" />
-							</Button>
-						</div>
+							item={item}
+							onOpenPreview={(origin) => openGallery(item.id, origin)}
+							onRemove={() => setRemoveId(item.id)}
+						/>
 					))}
 				</div>
 			) : null}
+
+			<ImageGalleryLightbox
+				images={galleryUrls}
+				open={galleryOpen}
+				initialIndex={galleryIndex}
+				originRect={galleryOrigin}
+				onClose={() => setGalleryOpen(false)}
+			/>
 
 			<ConfirmationDialog
 				open={removeId !== null}
@@ -147,6 +158,58 @@ export function StagedPhotosPicker({
 					setRemoveId(null);
 				}}
 			/>
+		</div>
+	);
+}
+
+function StagedPhotoTile({
+	item,
+	onOpenPreview,
+	onRemove,
+}: {
+	item: StagedPhoto;
+	onOpenPreview: (origin: ImageGalleryOriginRect) => void;
+	onRemove: () => void;
+}) {
+	const tileRef = useRef<HTMLDivElement>(null);
+
+	const openPreview = () => {
+		const rect = tileRef.current?.getBoundingClientRect();
+		if (!rect) return;
+		onOpenPreview({
+			top: rect.top,
+			left: rect.left,
+			width: rect.width,
+			height: rect.height,
+		});
+	};
+
+	return (
+		<div
+			ref={tileRef}
+			className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-dashboard-border bg-black/5"
+		>
+			<img src={item.previewUrl} alt="" className="h-full w-full object-cover" />
+			<div className="absolute right-1.5 top-1.5 z-10 flex gap-1 opacity-0 transition group-hover:opacity-100">
+				<Button
+					type="button"
+					variant="ghostIcon"
+					className="h-8 w-8 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm"
+					onClick={openPreview}
+					aria-label="Preview photo"
+				>
+					<Maximize2 className="h-4 w-4" />
+				</Button>
+				<Button
+					type="button"
+					variant="ghostIcon"
+					className="h-8 w-8 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm hover:text-red-600"
+					onClick={onRemove}
+					aria-label="Remove from upload queue"
+				>
+					<Trash2 className="h-4 w-4" />
+				</Button>
+			</div>
 		</div>
 	);
 }
@@ -166,6 +229,21 @@ export const ServicePhotosEditor = forwardRef<ServicePhotosEditorHandle, { servi
 	const { mutateAsync: removeImage, isPending: deleting } = useDeleteServiceImage();
 	const [images, setImages] = useState(() => sortImages(service.images));
 	const [draggingId, setDraggingId] = useState<string | null>(null);
+	const [galleryOpen, setGalleryOpen] = useState(false);
+	const [galleryIndex, setGalleryIndex] = useState(0);
+	const [galleryOrigin, setGalleryOrigin] = useState<ImageGalleryOriginRect | null>(null);
+	const galleryUrls = useMemo(() => images.map((image) => image.url ?? '').filter(Boolean), [images]);
+
+	const openGallery = useCallback(
+		(imageId: string, origin: ImageGalleryOriginRect) => {
+			const index = images.findIndex((image) => image.id === imageId);
+			if (index < 0) return;
+			setGalleryIndex(index);
+			setGalleryOrigin(origin);
+			setGalleryOpen(true);
+		},
+		[images],
+	);
 
 	useEffect(() => {
 		setImages(sortImages(service.images));
@@ -258,6 +336,7 @@ export const ServicePhotosEditor = forwardRef<ServicePhotosEditorHandle, { servi
 								onDragStart={setDraggingId}
 								onDrop={() => void handleDrop(image.id)}
 								onConfirmDelete={() => handleDelete(image.id)}
+								onOpenPreview={(origin) => openGallery(image.id, origin)}
 							/>
 						))}
 					</div>
@@ -265,6 +344,14 @@ export const ServicePhotosEditor = forwardRef<ServicePhotosEditorHandle, { servi
 			) : (
 				<p className="text-sm text-espresso/55">No photos yet.</p>
 			)}
+
+			<ImageGalleryLightbox
+				images={galleryUrls}
+				open={galleryOpen}
+				initialIndex={galleryIndex}
+				originRect={galleryOrigin}
+				onClose={() => setGalleryOpen(false)}
+			/>
 		</div>
 	);
 	},
@@ -279,6 +366,7 @@ function ServicePhotoTile({
 	onDragStart,
 	onDrop,
 	onConfirmDelete,
+	onOpenPreview,
 }: {
 	image: ServiceImage;
 	isPrimary: boolean;
@@ -288,13 +376,28 @@ function ServicePhotoTile({
 	onDragStart: (id: string) => void;
 	onDrop: () => void;
 	onConfirmDelete: () => Promise<void>;
+	onOpenPreview: (origin: ImageGalleryOriginRect) => void;
 }) {
+	const tileRef = useRef<HTMLDivElement>(null);
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const url = image.url ?? '';
+
+	const openPreview = () => {
+		if (!url) return;
+		const rect = tileRef.current?.getBoundingClientRect();
+		if (!rect) return;
+		onOpenPreview({
+			top: rect.top,
+			left: rect.left,
+			width: rect.width,
+			height: rect.height,
+		});
+	};
 
 	return (
 		<>
 			<figure
+				ref={tileRef}
 				draggable={!reordering && !deleting}
 				onDragStart={() => onDragStart(image.id)}
 				onDragOver={(e) => e.preventDefault()}
@@ -319,8 +422,8 @@ function ServicePhotoTile({
 						type="button"
 						variant="ghostIcon"
 						className="h-8 w-8 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm"
-						onClick={() => url && window.open(url, '_blank', 'noopener,noreferrer')}
-						aria-label="Open full size"
+						onClick={openPreview}
+						aria-label="Preview photo"
 					>
 						<Maximize2 className="h-4 w-4" />
 					</Button>

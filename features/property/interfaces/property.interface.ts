@@ -17,6 +17,7 @@ export interface Property {
 	description: string;
 	short_description?: string;
 	location_access?: string;
+	welcome_message?: string;
 	check_in_time: string;
 	check_out_time: string;
 	property_type: string;
@@ -45,6 +46,7 @@ export interface UpsertPropertyInput {
 	description: string;
 	short_description?: string;
 	location_access?: string;
+	welcome_message?: string;
 	check_in_time: string;
 	check_out_time: string;
 	property_type: string;

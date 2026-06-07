@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ImageIcon, Maximize2, Trash2 } from 'lucide-react';
-import { Button, Textarea, useToast } from '@/components/ui';
+import { Button, ImageGalleryLightbox, Textarea, useToast, type ImageGalleryOriginRect } from '@/components/ui';
 import {
 	useDeletePropertyImage,
 	useReorderPropertyImages,
@@ -53,6 +53,24 @@ export function ImagesSection({
 	const saving = uploading || reordering || deleting;
 
 	const ordered = useMemo(() => displayImages(images), [images]);
+	const galleryUrls = useMemo(
+		() => ordered.map((image) => image.document?.url ?? '').filter(Boolean),
+		[ordered],
+	);
+	const [galleryOpen, setGalleryOpen] = useState(false);
+	const [galleryIndex, setGalleryIndex] = useState(0);
+	const [galleryOrigin, setGalleryOrigin] = useState<ImageGalleryOriginRect | null>(null);
+
+	const openGallery = useCallback(
+		(imageId: string, origin: ImageGalleryOriginRect) => {
+			const index = ordered.findIndex((image) => image.id === imageId);
+			if (index < 0) return;
+			setGalleryIndex(index);
+			setGalleryOrigin(origin);
+			setGalleryOpen(true);
+		},
+		[ordered],
+	);
 
 	const revokePreview = useCallback((url: string) => {
 		URL.revokeObjectURL(url);
@@ -299,6 +317,7 @@ export function ImagesSection({
 										onDrop={onDrop}
 										onSetCover={onSetCover}
 										onDelete={onDelete}
+										onOpenPreview={(origin) => openGallery(image.id, origin)}
 									/>
 								</figure>
 							))}
@@ -348,6 +367,13 @@ export function ImagesSection({
 					{saving ? 'Saving...' : 'Save'}
 				</Button>
 			</div>
+			<ImageGalleryLightbox
+				images={galleryUrls}
+				open={galleryOpen}
+				initialIndex={galleryIndex}
+				originRect={galleryOrigin}
+				onClose={() => setGalleryOpen(false)}
+			/>
 		</PropertyFormSection>
 	);
 }
@@ -360,6 +386,7 @@ function ImageTile({
 	onDrop,
 	onSetCover,
 	onDelete,
+	onOpenPreview,
 }: {
 	image: PropertyImage;
 	variant: 'hero' | 'grid';
@@ -368,13 +395,28 @@ function ImageTile({
 	onDrop: (id: string) => void;
 	onSetCover: (id: string) => void;
 	onDelete: (id: string) => void;
+	onOpenPreview: (origin: ImageGalleryOriginRect) => void;
 }) {
+	const tileRef = useRef<HTMLDivElement>(null);
 	const imageUrl = image.document?.url ?? '';
 	const description = image.description?.trim();
+
+	const openPreview = () => {
+		if (!imageUrl) return;
+		const rect = tileRef.current?.getBoundingClientRect();
+		if (!rect) return;
+		onOpenPreview({
+			top: rect.top,
+			left: rect.left,
+			width: rect.width,
+			height: rect.height,
+		});
+	};
 
 	return (
 		<>
 			<div
+				ref={tileRef}
 				draggable
 				onDragStart={() => onDragStart(image.id)}
 				onDragOver={(e) => e.preventDefault()}
@@ -400,8 +442,8 @@ function ImageTile({
 						type="button"
 						variant="ghostIcon"
 						className="h-9 w-9 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm hover:bg-dashboard-surface"
-						onClick={() => imageUrl && window.open(imageUrl, '_blank', 'noopener,noreferrer')}
-						aria-label="Open full size"
+						onClick={openPreview}
+						aria-label="Preview photo"
 					>
 						<Maximize2 className="h-4 w-4" />
 					</Button>

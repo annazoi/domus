@@ -18,10 +18,12 @@ export async function GET(request: Request) {
 
 	const paginationParams = parsePaginationParams(url.searchParams);
 	if (paginationParams) {
+		const search = url.searchParams.get('q')?.trim() || undefined;
 		const result = await propertyService.listByHostPaginated(
 			hostId,
 			paginationParams.page,
 			paginationParams.pageSize,
+			search,
 		);
 		return Response.json({
 			items: result.items.map(mapProperty),

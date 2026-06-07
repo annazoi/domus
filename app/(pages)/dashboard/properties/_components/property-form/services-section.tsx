@@ -79,7 +79,7 @@ export function ServicesSection({ initialProperty, propertyId: propertyIdProp }:
 			) : isLoading ? (
 				<div className="space-y-3">
 					{Array.from({ length: 3 }).map((_, index) => (
-						<Skeleton key={index} className="h-16 w-full rounded-xl bg-black/10" />
+						<Skeleton key={index} className="h-24 w-full rounded-xl bg-black/10" />
 					))}
 				</div>
 			) : hostServices.length === 0 ? (
@@ -95,6 +95,7 @@ export function ServicesSection({ initialProperty, propertyId: propertyIdProp }:
 					<div className="grid gap-3 sm:grid-cols-2">
 						{hostServices.map((service) => {
 							const selected = selectedIds.includes(service.id);
+							const primaryImageUrl = service.images[0]?.url;
 
 							return (
 								<Button
@@ -109,23 +110,31 @@ export function ServicesSection({ initialProperty, propertyId: propertyIdProp }:
 											: 'border-dashboard-border/60 bg-dashboard-inset hover:border-dashboard-border hover:bg-dashboard-row-hover',
 									)}
 								>
-									<div className="flex w-full items-start justify-between gap-3">
-										<div className="min-w-0">
-											<p className="text-sm font-medium text-espresso">{service.name}</p>
-											{service.description ? (
-												<p className="mt-1 text-sm text-espresso/60">{service.description}</p>
-											) : null}
+									<div className="flex w-full items-start gap-3">
+										{primaryImageUrl ? (
+											<div
+												className="h-16 w-16 shrink-0 rounded-lg bg-cover bg-center ring-1 ring-black/10"
+												style={{ backgroundImage: `url(${primaryImageUrl})` }}
+											/>
+										) : null}
+										<div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+											<div className="min-w-0">
+												<p className="text-sm font-medium text-espresso">{service.name}</p>
+												{service.description ? (
+													<p className="mt-1 line-clamp-2 text-sm text-espresso/60">{service.description}</p>
+												) : null}
+												<p className="mt-2 text-sm font-medium text-camel">{formatPrice(service.price)}</p>
+											</div>
+											<span
+												className={cn(
+													'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition',
+													selected ? 'border-camel bg-camel text-white' : 'border-dashboard-border/70 bg-dashboard-surface',
+												)}
+											>
+												{selected ? <Check className="h-3.5 w-3.5" /> : null}
+											</span>
 										</div>
-										<span
-											className={cn(
-												'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition',
-												selected ? 'border-camel bg-camel text-white' : 'border-dashboard-border/70 bg-dashboard-surface',
-											)}
-										>
-											{selected ? <Check className="h-3.5 w-3.5" /> : null}
-										</span>
 									</div>
-									<p className="mt-3 text-sm font-medium text-camel">{formatPrice(service.price)}</p>
 								</Button>
 							);
 						})}

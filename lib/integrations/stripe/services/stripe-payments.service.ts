@@ -17,17 +17,31 @@ function parseSnapshot(value: unknown): PriceSnapshot | null {
 	return snapshot as PriceSnapshot;
 }
 
-function buildLineItems(snapshot: PriceSnapshot, fallbackName: string) {
+function buildLineItems(
+	snapshot: PriceSnapshot,
+	fallbackName: string,
+	serviceImagesById?: Map<string, string>,
+) {
 	const items = snapshot.lines
 		.filter((line) => line.amount > 0)
-		.map((line) => ({
-			quantity: line.quantity > 0 ? line.quantity : 1,
-			price_data: {
-				currency: snapshot.currency || STRIPE_CURRENCY,
-				unit_amount: eurosToCents(line.quantity > 0 ? line.unit_amount : line.amount),
-				product_data: { name: line.label },
-			},
-		}));
+		.map((line) => {
+			const imageUrl =
+				line.type === PriceLineType.EXTRA_SERVICE && line.reference_uuid
+					? serviceImagesById?.get(line.reference_uuid)
+					: undefined;
+
+			return {
+				quantity: line.quantity > 0 ? line.quantity : 1,
+				price_data: {
+					currency: snapshot.currency || STRIPE_CURRENCY,
+					unit_amount: eurosToCents(line.quantity > 0 ? line.unit_amount : line.amount),
+					product_data: {
+						name: line.label,
+						...(imageUrl ? { images: [imageUrl] } : {}),
+					},
+				},
+			};
+		});
 
 	if (items.length === 0) {
 		items.push({
@@ -109,6 +123,25 @@ export async function createCheckoutSession(params: {
 		.filter((line) => line.type === PriceLineType.EXTRA_SERVICE && line.reference_uuid)
 		.map((line) => line.reference_uuid as string);
 
+	const serviceImagesById = new Map<string, string>();
+	if (extraServiceIds.length > 0) {
+		const services = await prisma.service.findMany({
+			where: { id: { in: extraServiceIds } },
+			select: {
+				id: true,
+				images: {
+					orderBy: { order: 'asc' },
+					take: 1,
+					select: { document: { select: { url: true } } },
+				},
+			},
+		});
+		for (const service of services) {
+			const url = service.images[0]?.document?.url;
+			if (url) serviceImagesById.set(service.id, url);
+		}
+	}
+
 	const paymentMetadata: Record<string, string> = {
 		booking_id: booking.id,
 		host_user_id: booking.host_user_id,
@@ -139,7 +172,7 @@ export async function createCheckoutSession(params: {
 		client_reference_id: booking.id,
 		customer_email: params.customerEmail ?? booking.guest.email,
 		metadata: paymentMetadata,
-		line_items: buildLineItems(effectiveSnapshot, booking.property.title),
+		line_items: buildLineItems(effectiveSnapshot, booking.property.title, serviceImagesById),
 		payment_intent_data: {
 			application_fee_amount: platformFeeAmount,
 			transfer_data: {

@@ -2,11 +2,12 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui';
+import { Button, Skeleton } from '@/components/ui';
 import { useBookingQuote } from '@/features/bookings/hooks/use-booking-quote';
 import { startBookingStripeCheckout } from '@/features/bookings/utils/start-booking-stripe-checkout';
 import { useServices } from '@/features/services/hooks/use-services';
 import { formatDisplayDate } from '@/features/property-availability/utils/date';
+import { PriceLineType } from '@/lib/pricing/price-snapshot';
 import BookingServicesCard, {
 	buildSelectedServices,
 } from './_components/booking-services-card';
@@ -47,6 +48,7 @@ export default function ConfirmAndPayContent() {
 
 	const showExtrasSection =
 		!servicesLoading && !servicesError && availableServices.length > 0;
+	const showExtrasCard = servicesLoading || showExtrasSection;
 
 	const handleServiceQuantityChange = useCallback((serviceId: string, quantity: number) => {
 		setServiceQuantities((prev) => {
@@ -85,6 +87,13 @@ export default function ConfirmAndPayContent() {
 	);
 
 	const snapshot = quote?.snapshot ?? null;
+	const serviceImageById = useMemo(
+		() =>
+			new Map(
+				availableServices.map((service) => [service.id, service.images[0]?.url ?? null] as const),
+			),
+		[availableServices],
+	);
 	const grandTotal = snapshot?.total ?? booking.total_price;
 	const canPay = showExtrasSection
 		? Boolean(snapshot) && !quoteLoading && !quoteError
@@ -132,7 +141,7 @@ export default function ConfirmAndPayContent() {
 						Stripe.
 					</p>
 
-					{showExtrasSection ? (
+					{showExtrasCard ? (
 						<BookingServicesCard
 							services={availableServices}
 							isLoading={servicesLoading}
@@ -192,26 +201,60 @@ export default function ConfirmAndPayContent() {
 								</p>
 								{snapshot.lines
 									.filter((line) => line.amount !== 0)
-									.map((line, index) => (
-										<div
-											key={`${line.reference_uuid ?? line.type}-${index}`}
-											className="flex justify-between gap-2 text-sm"
-										>
-											<span className="text-[#1A1A1A]/75">
-												{line.label}
-												{line.quantity > 1 ? ` × ${line.quantity}` : ''}
-											</span>
-											<span className="font-medium text-[#1A1A1A]">€{line.amount.toFixed(2)}</span>
-										</div>
-									))}
+									.map((line, index) => {
+										const imageUrl =
+											line.type === PriceLineType.EXTRA_SERVICE && line.reference_uuid
+												? serviceImageById.get(line.reference_uuid)
+												: null;
+
+										return (
+											<div
+												key={`${line.reference_uuid ?? line.type}-${index}`}
+												className="flex items-center justify-between gap-2 text-sm"
+											>
+												<div className="flex min-w-0 items-center gap-2">
+													{imageUrl ? (
+														<div
+															className="h-10 w-10 shrink-0 rounded-md bg-cover bg-center ring-1 ring-black/10"
+															style={{ backgroundImage: `url(${imageUrl})` }}
+															role="img"
+															aria-label={line.label}
+														/>
+													) : null}
+													<span className="text-[#1A1A1A]/75">
+														{line.label}
+														{line.quantity > 1 ? ` × ${line.quantity}` : ''}
+													</span>
+												</div>
+												<span className="shrink-0 font-medium text-[#1A1A1A]">
+													€{line.amount.toFixed(2)}
+												</span>
+											</div>
+										);
+									})}
 							</div>
 						) : quoteLoading ? (
-							<p className="text-sm text-[#1A1A1A]/55">Calculating price…</p>
+							<div className="space-y-3 border-t border-black/10 pt-3">
+								<Skeleton className="h-3 w-28" />
+								{Array.from({ length: 2 }).map((_, index) => (
+									<div key={index} className="flex items-center justify-between gap-2">
+										<div className="flex items-center gap-2">
+											<Skeleton className="h-10 w-10 shrink-0 rounded-md" />
+											<Skeleton className="h-4 w-36" />
+										</div>
+										<Skeleton className="h-4 w-14 shrink-0" />
+									</div>
+								))}
+							</div>
 						) : null}
 						<div className="mt-3 space-y-2 border-t border-black/10 pt-3">
 							<div className="flex justify-between gap-2">
 								<span>Total</span>
-								<span className="font-semibold text-[#1A1A1A]">€{grandTotal.toFixed(2)}</span>
+								{quoteLoading ? (
+									<Skeleton className="h-5 w-16" />
+								) : (
+									<span className="font-semibold text-[#1A1A1A]">€{grandTotal.toFixed(2)}</span>
+								)}
 							</div>
 						</div>
 					</div>

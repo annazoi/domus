@@ -15,7 +15,8 @@ import {
 
 export const propertyQueryKey = {
 	all: ['properties'] as const,
-	page: (page: number, pageSize: number) => ['properties', page, pageSize] as const,
+	page: (page: number, pageSize: number, search?: string) =>
+		['properties', page, pageSize, search ?? ''] as const,
 	detail: (id: string) => ['properties', id] as const,
 };
 
@@ -26,10 +27,10 @@ export const useProperties = () => {
 	});
 };
 
-export const usePropertiesPage = (page: number, pageSize: number) => {
+export const usePropertiesPage = (page: number, pageSize: number, search?: string) => {
 	return useQuery<PaginatedResult<Property>>({
-		queryKey: propertyQueryKey.page(page, pageSize),
-		queryFn: () => listPropertiesPaginated(page, pageSize),
+		queryKey: propertyQueryKey.page(page, pageSize, search),
+		queryFn: () => listPropertiesPaginated(page, pageSize, search),
 	});
 };
 

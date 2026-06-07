@@ -43,11 +43,12 @@ export function MinimalRichText({
 			attributes: {
 				...(id ? { id } : {}),
 				class: cn(
-					'minimal-rich-text-editor max-w-none bg-dashboard-surface px-4 py-3 text-sm leading-relaxed text-espresso focus:outline-none',
+					'minimal-rich-text-editor max-w-none bg-white px-4 py-3 text-sm leading-relaxed text-espresso caret-camel focus:outline-none',
 					editorMinHeight,
 					'[&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5',
 					'[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5',
 					'[&_p]:my-1.5 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0',
+					'[&_strong]:font-semibold [&_em]:italic',
 				),
 			},
 		},
@@ -73,10 +74,10 @@ export function MinimalRichText({
 			) : null}
 			<div
 				data-rich-text-root
-				className="dashboard-field overflow-hidden rounded-xl"
+				className="overflow-hidden rounded-xl border border-black/10 bg-white shadow-[0_1px_2px_rgb(0_0_0/0.03)] transition focus-within:border-camel/40 focus-within:ring-2 focus-within:ring-camel/12"
 			>
 				{editor ? (
-					<div className="flex flex-wrap items-center gap-0.5 bg-dashboard-inset px-2 py-1.5">
+					<div className="flex flex-wrap items-center gap-0.5 border-b border-black/8 bg-white px-2 py-1.5">
 						<Button
 							type="button"
 							variant="custom"
@@ -137,7 +138,10 @@ export function MinimalRichText({
 						</Button>
 					</div>
 				) : null}
-				<EditorContent editor={editor} className="[&_.ProseMirror]:min-h-[inherit]" />
+				<EditorContent
+					editor={editor}
+					className="bg-white [&_.ProseMirror]:min-h-[inherit]"
+				/>
 			</div>
 		</div>
 	);

@@ -59,7 +59,7 @@
 .login-aside {
   display: none;
   position: relative;
-  height: 100svh;
+  height: 100%;
   overflow: hidden;
 }
 

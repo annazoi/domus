@@ -1,18 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useDeferredValue, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button, buttonClassName, cn, ConfirmationDialog, Skeleton } from '@/components/ui';
 import { DashboardPagination } from '@/app/(pages)/dashboard/_components/dashboard-pagination';
 import { useDeleteProperty, usePropertiesPage } from '@/features/property/hooks/use-property';
+import { PROPERTIES_SEARCH_MIN_LENGTH } from '@/features/property/services/property.services';
 import { DEFAULT_PAGE_SIZE } from '@/lib/pagination';
+import { hasActivePropertiesSearch, PropertiesSearch } from './_components/properties-search';
 
 const PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
 export default function PropertiesPage() {
 	const [page, setPage] = useState(1);
+	const [searchQuery, setSearchQuery] = useState('');
 	const [deleteId, setDeleteId] = useState<string | null>(null);
-	const { data, isLoading, isFetching } = usePropertiesPage(page, PAGE_SIZE);
+	const deferredSearch = useDeferredValue(searchQuery.trim());
+	const searchParam =
+		deferredSearch.length >= PROPERTIES_SEARCH_MIN_LENGTH ? deferredSearch : undefined;
+	const { data, isLoading, isFetching } = usePropertiesPage(page, PAGE_SIZE, searchParam);
 	const { mutateAsync: removeProperty, isPending: deleting } = useDeleteProperty();
 
 	const properties = data?.items ?? [];
@@ -20,6 +26,12 @@ export default function PropertiesPage() {
 	const total = pagination?.total ?? 0;
 	const toDelete = properties.find((property) => property.id === deleteId);
 	const loading = isLoading;
+	const searchActive = hasActivePropertiesSearch(searchQuery);
+	const searchPending = searchQuery.trim() !== deferredSearch;
+
+	useEffect(() => {
+		setPage(1);
+	}, [searchParam]);
 
 	useEffect(() => {
 		if (!pagination || page <= pagination.totalPages) return;
@@ -37,6 +49,8 @@ export default function PropertiesPage() {
 					Add Property
 				</Link>
 			</div>
+
+			<PropertiesSearch value={searchQuery} onChange={setSearchQuery} />
 
 			{loading ? (
 				<div className="space-y-4">
@@ -58,14 +72,35 @@ export default function PropertiesPage() {
 			) : null}
 			{!loading && total === 0 ? (
 				<div className="dashboard-panel rounded-2xl p-8 text-center">
-					<p className="font-serif text-2xl">No properties yet</p>
-					<p className="mt-2 text-sm text-dashboard-muted">Create your first listing to start receiving bookings.</p>
+					<p className="font-serif text-2xl">
+						{searchActive ? 'No matching properties' : 'No properties yet'}
+					</p>
+					<p className="mt-2 text-sm text-dashboard-muted">
+						{searchActive
+							? 'Try a different search term.'
+							: 'Create your first listing to start receiving bookings.'}
+					</p>
+					{searchActive ? (
+						<Button
+							type="button"
+							variant="ghostPill"
+							onClick={() => setSearchQuery('')}
+							className="mt-4 text-sm text-camel"
+						>
+							Clear search
+						</Button>
+					) : null}
 				</div>
 			) : null}
 
 			{!loading && total > 0 ? (
 				<div className="dashboard-panel overflow-hidden rounded-2xl">
-					<div className={cn('space-y-4 p-4 transition-opacity md:p-0', isFetching && 'pointer-events-none opacity-50')}>
+					<div
+						className={cn(
+							'space-y-4 p-4 transition-opacity md:p-0',
+							(isFetching || searchPending) && 'pointer-events-none opacity-50',
+						)}
+					>
 						{properties.map((property) => {
 							const cover = property.images.find((image) => image.is_cover) ?? property.images[0];
 							const coverUrl = cover?.document?.url;
