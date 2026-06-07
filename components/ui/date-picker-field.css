@@ -48,7 +48,7 @@
 .domus-react-datepicker .react-datepicker__current-month {
 	font-size: 1.05rem;
 	font-weight: 500;
-	color: var(--color-espresso, #1a1a1a);
+	color: var(--color-espresso, #3d3229);
 	margin-bottom: 0.65rem;
 	padding: 0 0.5rem;
 }
@@ -84,7 +84,7 @@
 
 .domus-react-datepicker .react-datepicker__day {
 	border-radius: 0.625rem;
-	color: var(--color-espresso, #1a1a1a);
+	color: var(--color-espresso, #3d3229);
 	font-size: 0.875rem;
 	line-height: 2.25rem;
 	margin: 0.1rem;

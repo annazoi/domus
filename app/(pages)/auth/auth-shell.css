@@ -3,15 +3,15 @@
 }
 
 .login-page {
-  --clay: #968370;
-  --clay-hover: #826f5c;
-  --clay-ring: rgb(150 131 112 / 0.2);
-  --auth-ink: #1a1a1a;
-  --auth-muted: rgb(26 26 26 / 0.65);
-  --auth-on-accent: #ffffff;
+  --clay: #b89775;
+  --clay-hover: #8b6b4d;
+  --clay-ring: rgb(184 151 117 / 0.2);
+  --auth-ink: #3d3229;
+  --auth-muted: rgb(61 50 41 / 0.65);
+  --auth-on-accent: #faf9f6;
   --auth-surface: #ffffff;
-  --auth-border: rgb(0 0 0 / 0.1);
-  --auth-bg: #f9f8f6;
+  --auth-border: rgb(61 50 41 / 0.1);
+  --auth-bg: #faf9f6;
   accent-color: var(--clay);
   min-height: 100svh;
   background: var(--auth-bg);
@@ -22,7 +22,7 @@
 }
 
 .login-page ::selection {
-  background: rgb(150 131 112 / 0.22);
+  background: rgb(184 151 117 / 0.22);
   color: var(--auth-ink);
 }
 
@@ -204,7 +204,7 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 400;
-  color: rgb(26 26 26 / 0.7);
+  color: rgb(61 50 41 / 0.7);
 }
 
 .login-page .field input {
@@ -226,14 +226,14 @@
 }
 
 .login-page .field input:hover {
-  border-color: rgb(150 131 112 / 0.35);
+  border-color: rgb(184 151 117 / 0.35);
 }
 
 .login-page .field input:focus,
 .login-page .field input:focus-visible,
 .login-page .field input:active {
   outline: none;
-  border-color: rgb(150 131 112 / 0.45);
+  border-color: rgb(184 151 117 / 0.45);
   box-shadow: 0 0 0 2px var(--clay-ring);
 }
 

@@ -2,38 +2,38 @@
 @import "react-day-picker/style.css";
 
 @theme {
-  --color-stone-50: #f8fafc;
-  --color-stone-100: #f1f5f9;
-  --color-stone-200: #e2e8f0;
-  --color-stone-300: #cbd5e1;
-  --color-stone-400: #94a3b8;
-  --color-stone-500: #64748b;
-  --color-stone-800: #334155;
-  --color-stone-900: #1e293b;
+  --color-stone-50: #fafaf9;
+  --color-stone-100: #f5f5f4;
+  --color-stone-200: #e7e5e4;
+  --color-stone-300: #d6d3d1;
+  --color-stone-400: #a8a29e;
+  --color-stone-500: #78716c;
+  --color-stone-800: #292524;
+  --color-stone-900: #1c1917;
 
-  --color-camel: #968370;
-  --color-camel-dark: #826f5c;
-  --color-camel-light: #b8a594;
-  --color-camel-deep: #5f5042;
-  --color-cream: #f9f8f6;
-  --color-espresso: #1a1a1a;
+  --color-camel: #b89775;
+  --color-camel-dark: #8b6b4d;
+  --color-camel-light: #d2b48c;
+  --color-camel-deep: #7a6048;
+  --color-cream: #faf9f6;
+  --color-espresso: #3d3229;
 
-  --color-dashboard-bg: #f9f8f6;
+  --color-dashboard-bg: #faf9f6;
   --color-dashboard-panel: #ffffff;
-  --color-dashboard-inset: #f5f3ef;
+  --color-dashboard-inset: #f5f0e8;
   --color-dashboard-surface: #ffffff;
-  --color-dashboard-accent: #968370;
-  --color-dashboard-accent-hover: #826f5c;
-  --color-dashboard-accent-light: #b8a594;
-  --color-dashboard-accent-deep: #5f5042;
-  --color-dashboard-row-hover: #f0ebe6;
-  --color-dashboard-border: rgb(0 0 0 / 0.1);
-  --color-dashboard-muted: #6b6560;
-  --shadow-dashboard-panel: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --color-dashboard-accent: #b89775;
+  --color-dashboard-accent-hover: #8b6b4d;
+  --color-dashboard-accent-light: #d2b48c;
+  --color-dashboard-accent-deep: #7a6048;
+  --color-dashboard-row-hover: #f0ebe3;
+  --color-dashboard-border: rgb(61 50 41 / 0.1);
+  --color-dashboard-muted: #8a807a;
+  --shadow-dashboard-panel: 0 10px 36px -20px rgb(61 50 41 / 0.08);
 
-  --color-primary: #968370;
-  --color-primary-hover: #826f5c;
-  --color-primary-foreground: #ffffff;
+  --color-primary: #b89775;
+  --color-primary-hover: #8b6b4d;
+  --color-primary-foreground: #faf9f6;
 
   --color-landing-bg: #3d3229;
   --color-landing-ivory: #faf9f6;
@@ -56,9 +56,9 @@
 
 :root {
   --scrollbar-size: 5px;
-  --scrollbar-track: rgb(30 41 59 / 0.08);
-  --scrollbar-thumb: rgb(100 116 139 / 0.45);
-  --scrollbar-thumb-hover: rgb(71 85 105 / 0.65);
+  --scrollbar-track: rgb(61 50 41 / 0.1);
+  --scrollbar-thumb: rgb(47 38 32 / 0.5);
+  --scrollbar-thumb-hover: rgb(34 28 23 / 0.72);
 }
 
 @layer base {
@@ -112,24 +112,24 @@
 
 .dashboard-root {
   --color-cream: var(--color-dashboard-bg);
-  --color-espresso: #1a1a1a;
-  --color-camel: #968370;
-  --color-camel-dark: #826f5c;
-  --color-camel-light: #b8a594;
-  --color-camel-deep: #5f5042;
-  --color-primary: #968370;
-  --color-primary-hover: #826f5c;
-  --color-primary-foreground: #ffffff;
-  --color-accent: #968370;
-  --scrollbar-track: rgb(249 248 246 / 0.9);
-  --scrollbar-thumb: rgb(150 131 112 / 0.4);
-  --scrollbar-thumb-hover: rgb(130 111 92 / 0.55);
+  --color-espresso: #3d3229;
+  --color-camel: #b89775;
+  --color-camel-dark: #8b6b4d;
+  --color-camel-light: #d2b48c;
+  --color-camel-deep: #7a6048;
+  --color-primary: #b89775;
+  --color-primary-hover: #8b6b4d;
+  --color-primary-foreground: #faf9f6;
+  --color-accent: #b89775;
+  --scrollbar-track: rgb(250 249 246 / 0.9);
+  --scrollbar-thumb: rgb(184 151 117 / 0.45);
+  --scrollbar-thumb-hover: rgb(139 107 77 / 0.6);
   color: var(--color-espresso);
   background-color: var(--color-dashboard-bg);
 }
 
 .dashboard-root ::selection {
-  background-color: rgb(150 131 112 / 0.22);
+  background-color: rgb(184 151 117 / 0.22);
   color: var(--color-espresso);
 }
 
@@ -173,7 +173,7 @@
 /* TipTap placeholder (minimal rich text) */
 .minimal-rich-text-editor p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  color: rgb(26 26 26 / 0.35);
+  color: rgb(61 50 41 / 0.35);
   float: left;
   height: 0;
   pointer-events: none;
@@ -189,10 +189,10 @@
 /* Google Places dropdown polish (Property > Location) */
 .pac-container {
   margin-top: 8px;
-  border: 1px solid rgb(26 26 26 / 0.1);
+  border: 1px solid rgb(61 50 41 / 0.1);
   border-radius: 14px;
   background: rgb(255 255 255 / 0.96);
-  box-shadow: 0 16px 36px rgb(26 26 26 / 0.14);
+  box-shadow: 0 16px 36px rgb(61 50 41 / 0.14);
   backdrop-filter: blur(4px);
   overflow: hidden;
   font-family: var(--font-domus), Georgia, serif;
@@ -201,18 +201,18 @@
 .pac-item {
   border-top: 0;
   padding: 10px 14px;
-  color: rgb(26 26 26 / 0.9);
+  color: rgb(61 50 41 / 0.9);
   font-size: 0.92rem;
   transition: background-color 140ms ease, color 140ms ease;
 }
 
 .pac-item:hover,
 .pac-item-selected {
-  background: rgb(154 133 112 / 0.16);
-  color: rgb(30 41 59);
+  background: rgb(184 151 117 / 0.14);
+  color: rgb(61 50 41);
 }
 
 .pac-item-query {
-  color: rgb(26 26 26);
+  color: rgb(61 50 41);
   font-weight: 600;
 }

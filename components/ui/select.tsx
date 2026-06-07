@@ -36,8 +36,8 @@ const variantTrigger: Record<SelectVariant, string> = {
 	),
 	settings: cn(surface, 'py-3 pl-4 pr-10 text-sm', 'focus-visible:ring-camel/12', 'disabled:opacity-55'),
 	auth: cn(
-		'flex w-full cursor-pointer items-center rounded-sm border border-stone-200/95 bg-white py-3 pl-4 pr-10 text-left font-light text-stone-900 outline-none transition duration-150 ease-out',
-		'hover:border-stone-300 focus-visible:border-stone-400 focus-visible:ring-1 focus-visible:ring-stone-400/25',
+		'flex w-full cursor-pointer items-center rounded-sm border border-black/10 bg-white py-3 pl-4 pr-10 text-left font-light text-espresso outline-none transition duration-150 ease-out',
+		'hover:border-camel/35 focus-visible:border-camel/45 focus-visible:ring-1 focus-visible:ring-camel/20',
 		'disabled:opacity-60',
 	),
 	compact: cn(surface, 'py-2.5 pl-3 pr-10 text-sm', 'disabled:opacity-55'),
@@ -47,7 +47,7 @@ const chevronTone: Record<SelectVariant, string> = {
 	default: 'text-camel/40',
 	dashboard: 'text-espresso/40',
 	settings: 'text-camel/46',
-	auth: 'text-stone-400',
+	auth: 'text-camel/50',
 	compact: 'text-espresso/30',
 };
 
