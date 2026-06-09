@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import type { UploadedCloudinaryFile } from '@/app/api/utils/cloudinary/cloudinary.service';
 import { prisma } from '@/lib/prisma';
+import type { VideoUrlSource } from '@/lib/media/video-url';
 
 export const propertyImagesService = {
 	findHostProperty(hostId: string, propertyId: string) {
@@ -65,6 +66,44 @@ export const propertyImagesService = {
 					data: buildImageDocumentCreateInput(hostId, file, nextOrder),
 				});
 				const description = descriptions[index]?.trim() || null;
+				const image = await tx.propertyImage.create({
+					data: {
+						property_id: propertyId,
+						user_id: hostId,
+						document_id: document.id,
+						order: nextOrder,
+						is_cover: existingCount === 0 && index === 0,
+						description,
+					},
+					include: { document: true },
+				});
+				inserted.push(image);
+			}
+			return inserted;
+		});
+	},
+
+	createManyFromUrls(input: {
+		hostId: string;
+		propertyId: string;
+		existingCount: number;
+		urlEntries: { url: string; description: string; source?: VideoUrlSource }[];
+		buildUrlVideoDocumentCreateInput: (
+			hostId: string,
+			url: string,
+			order: number,
+			source?: VideoUrlSource,
+		) => Prisma.DocumentCreateInput;
+	}) {
+		const { hostId, propertyId, existingCount, urlEntries, buildUrlVideoDocumentCreateInput } = input;
+		return prisma.$transaction(async (tx) => {
+			const inserted = [];
+			for (const [index, entry] of urlEntries.entries()) {
+				const nextOrder = existingCount + index;
+				const document = await tx.document.create({
+					data: buildUrlVideoDocumentCreateInput(hostId, entry.url, nextOrder, entry.source),
+				});
+				const description = entry.description?.trim() || null;
 				const image = await tx.propertyImage.create({
 					data: {
 						property_id: propertyId,

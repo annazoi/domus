@@ -2,7 +2,9 @@ import { RoomTypes } from '@/config/constants/dropdowns/room-type.options';
 import type { UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { buildPaginationMeta, type PaginatedResult } from '@/lib/pagination';
 import { prisma } from '@/lib/prisma';
+import { normalizeRichTextForDb } from '@/lib/rich-text/normalize-rich-text-for-db';
 import { Prisma } from '@prisma/client';
+import { propertyDetailInclude } from '../_utils/property-include';
 import { parseTimeToUtcDate } from '../_utils/time-of-day';
 
 export const PROPERTIES_SEARCH_MIN_LENGTH = 2;
@@ -24,6 +26,9 @@ function buildPropertySearchWhere(hostId: string, query?: string): Prisma.Proper
 			{ short_description: insensitive },
 			{ location_access: insensitive },
 			{ welcome_message: insensitive },
+			{ door_code: insensitive },
+			{ safe_box_code: insensitive },
+			{ house_rules_instructions: insensitive },
 			{ city: insensitive },
 			{ country: insensitive },
 			{ address: insensitive },
@@ -38,18 +43,7 @@ const intOr = (value: unknown, fallback: number) => {
 	return Number.isFinite(n) ? Math.trunc(n) : fallback;
 };
 
-const propertyInclude = {
-	images: { orderBy: { order: 'asc' }, include: { document: true } },
-	amenities: {
-		select: {
-			value: true,
-			description: true,
-			selected: true,
-			quantity: true,
-			documents: { orderBy: { created_at: 'desc' }, take: 1 },
-		},
-	},
-} satisfies Prisma.PropertyInclude;
+const propertyInclude = propertyDetailInclude;
 
 type PropertyUpsertInput = {
 	body: UpsertPropertyInput;
@@ -60,14 +54,17 @@ type PropertyUpsertInput = {
 const toPropertyData = ({ body, hostId, slug }: PropertyUpsertInput) => ({
 	title: body.title.trim(),
 	slug,
-	description: body.description?.trim() || null,
-	short_description: body.short_description?.trim() || null,
-	location_access: body.location_access?.trim() || null,
-	welcome_message: body.welcome_message?.trim() || null,
+	description: normalizeRichTextForDb(body.description),
+	short_description: normalizeRichTextForDb(body.short_description),
+	location_access: normalizeRichTextForDb(body.location_access),
+	welcome_message: normalizeRichTextForDb(body.welcome_message),
 	property_type: (body.property_type ?? '').trim() || 'property',
 	room_type: (body.room_type ?? '').trim() || RoomTypes.ENTIRE_PLACE,
 	check_in_time: parseTimeToUtcDate(body.check_in_time, '15:00'),
 	check_out_time: parseTimeToUtcDate(body.check_out_time, '11:00'),
+	door_code: body.door_code?.trim() || null,
+	safe_box_code: body.safe_box_code?.trim() || null,
+	house_rules_instructions: normalizeRichTextForDb(body.house_rules_instructions),
 	max_guests: Math.max(1, intOr(body.max_guests, 1)),
 	bedrooms: Math.max(0, intOr(body.bedrooms, 1)),
 	beds: Math.max(0, intOr(body.beds, 1)),
@@ -84,14 +81,17 @@ const toPropertyData = ({ body, hostId, slug }: PropertyUpsertInput) => ({
 const toPropertyUpdateData = ({ body, slug }: Omit<PropertyUpsertInput, 'hostId'>) => ({
 	title: body.title.trim(),
 	slug,
-	description: body.description?.trim() || null,
-	short_description: body.short_description?.trim() || null,
-	location_access: body.location_access?.trim() || null,
-	welcome_message: body.welcome_message?.trim() || null,
+	description: normalizeRichTextForDb(body.description),
+	short_description: normalizeRichTextForDb(body.short_description),
+	location_access: normalizeRichTextForDb(body.location_access),
+	welcome_message: normalizeRichTextForDb(body.welcome_message),
 	property_type: (body.property_type ?? '').trim() || 'property',
 	room_type: (body.room_type ?? '').trim() || RoomTypes.ENTIRE_PLACE,
 	check_in_time: parseTimeToUtcDate(body.check_in_time, '15:00'),
 	check_out_time: parseTimeToUtcDate(body.check_out_time, '11:00'),
+	door_code: body.door_code?.trim() || null,
+	safe_box_code: body.safe_box_code?.trim() || null,
+	house_rules_instructions: normalizeRichTextForDb(body.house_rules_instructions),
 	max_guests: Math.max(1, intOr(body.max_guests, 1)),
 	bedrooms: Math.max(0, intOr(body.bedrooms, 1)),
 	beds: Math.max(0, intOr(body.beds, 1)),

@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Clock3 } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
-import { Button, Select, useToast } from '@/components/ui';
+import { Button, Input, MinimalRichText, Select, useToast } from '@/components/ui';
 import { useUpdateProperty } from '@/features/property/hooks/use-property';
 import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
@@ -50,7 +50,13 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 
 	const { control, handleSubmit, reset } = useForm<HouseRulesFormValues>({
 		resolver: zodResolver(houseRulesFormSchema),
-		defaultValues: { check_in_time: checkIn, check_out_time: checkOut },
+		defaultValues: {
+			check_in_time: checkIn,
+			check_out_time: checkOut,
+			door_code: defaults.door_code ?? '',
+			safe_box_code: defaults.safe_box_code ?? '',
+			house_rules_instructions: defaults.house_rules_instructions ?? '',
+		},
 	});
 
 	const handleSave = handleSubmit(async (formValues) => {
@@ -64,6 +70,9 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 			reset({
 				check_in_time: normalizeTimeValue(saved.check_in_time, PROPERTY_FORM_DEFAULT_VALUES.check_in_time),
 				check_out_time: normalizeTimeValue(saved.check_out_time, PROPERTY_FORM_DEFAULT_VALUES.check_out_time),
+				door_code: saved.door_code ?? '',
+				safe_box_code: saved.safe_box_code ?? '',
+				house_rules_instructions: saved.house_rules_instructions ?? '',
 			});
 			push({ title: 'Saved.', tone: 'success' });
 		} catch (e) {
@@ -129,6 +138,58 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 					/>
 				</div>
 			</div>
+			<div className="grid gap-4 md:grid-cols-2">
+				<div className="space-y-1.5">
+					<label htmlFor="property-door-code" className="text-sm font-medium text-espresso">
+						Door code
+					</label>
+					<Controller
+						control={control}
+						name="door_code"
+						render={({ field }) => (
+							<Input
+								id="property-door-code"
+								value={field.value ?? ''}
+								onChange={field.onChange}
+								placeholder="Enter door code"
+								autoComplete="off"
+							/>
+						)}
+					/>
+				</div>
+				<div className="space-y-1.5">
+					<label htmlFor="property-safe-box-code" className="text-sm font-medium text-espresso">
+						Safe box code
+					</label>
+					<Controller
+						control={control}
+						name="safe_box_code"
+						render={({ field }) => (
+							<Input
+								id="property-safe-box-code"
+								value={field.value ?? ''}
+								onChange={field.onChange}
+								placeholder="Enter safe box code"
+								autoComplete="off"
+							/>
+						)}
+					/>
+				</div>
+			</div>
+			<Controller
+				control={control}
+				name="house_rules_instructions"
+				render={({ field }) => (
+					<MinimalRichText
+						id="property-house-rules-instructions"
+						label="Instructions"
+						value={field.value ?? ''}
+						onChange={field.onChange}
+						placeholder="Entry steps, lock details, or other notes for guests…"
+						editorMinHeight="min-h-[160px]"
+					/>
+				)}
+			/>
 			<div className="mt-2 flex justify-end border-t border-black/5 pt-5">
 				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
 					{saving ? 'Saving...' : 'Save'}

@@ -14,3 +14,8 @@ export {
 	type ImageGalleryLightboxProps,
 	type ImageGalleryOriginRect,
 } from './image-gallery-lightbox';
+export {
+	VideoGalleryLightbox,
+	type VideoGalleryItem,
+	type VideoGalleryLightboxProps,
+} from './video-gallery-lightbox';

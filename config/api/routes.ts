@@ -22,6 +22,7 @@ export const ApiRoutes = {
 		prefix: '/properties',
 		property: (id: string) => `/properties/${id}`,
 		branding: (id: string) => `/properties/${id}/branding`,
+		brandingLogo: (id: string) => `/properties/${id}/branding/logo`,
 		checkAvailability: (id: string, check_in: string, check_out: string, guests: number) =>
 			`/properties/${id}/check-availability?${toSearchParams({ check_in, check_out, guests })}`,
 		unavailableDays: (id: string) => `/properties/${id}/unavailable-days`,

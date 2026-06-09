@@ -20,6 +20,9 @@ export interface Property {
 	welcome_message?: string;
 	check_in_time: string;
 	check_out_time: string;
+	door_code?: string;
+	safe_box_code?: string;
+	house_rules_instructions?: string;
 	property_type: string;
 	room_type: string;
 	max_guests: number;
@@ -33,6 +36,8 @@ export interface Property {
 	lng: number | null;
 	isVisible: boolean;
 	branding_theme: PropertyBrandingTheme;
+	logo_url?: string | null;
+	logo_alt?: string | null;
 	amenity_ids: string[];
 	amenities: PropertyAmenityEntry[];
 	created_at: string;
@@ -49,6 +54,9 @@ export interface UpsertPropertyInput {
 	welcome_message?: string;
 	check_in_time: string;
 	check_out_time: string;
+	door_code?: string;
+	safe_box_code?: string;
+	house_rules_instructions?: string;
 	property_type: string;
 	room_type: string;
 	max_guests: number;

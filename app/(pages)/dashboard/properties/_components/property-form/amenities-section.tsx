@@ -1,8 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import {  ImageIcon, Pencil, Search, Wifi, X, NotepadText   } from 'lucide-react';
-import { Button, cn, Input, Textarea, useToast } from '@/components/ui';
+import { ImageIcon, Maximize2, NotepadText, Pencil, Search, Trash2, Wifi } from 'lucide-react';
+import {
+	Button,
+	cn,
+	ConfirmationDialog,
+	ImageGalleryLightbox,
+	Input,
+	Textarea,
+	useToast,
+	type ImageGalleryOriginRect,
+} from '@/components/ui';
 import {
 	amenityOptionByValue,
 	PROPERTY_FORM_AMENITY_CATEGORIES,
@@ -33,6 +42,10 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 	const [draftImageFile, setDraftImageFile] = useState<File | null>(null);
 	const [draftImagePreviewUrl, setDraftImagePreviewUrl] = useState('');
 	const [removeDraftImage, setRemoveDraftImage] = useState(false);
+	const [confirmRemoveImageOpen, setConfirmRemoveImageOpen] = useState(false);
+	const [galleryOpen, setGalleryOpen] = useState(false);
+	const [galleryOrigin, setGalleryOrigin] = useState<ImageGalleryOriginRect | null>(null);
+	const amenityPhotoRef = useRef<HTMLDivElement>(null);
 
 	const { mutateAsync: saveAmenities, isPending: saving } = useSavePropertyAmenities(propertyId);
 	const { handleSubmit, watch, setValue } = useForm<{ amenity_ids: string[] }>({
@@ -168,6 +181,28 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 	const editingImageUrl = editingValue ? (imageUrlByValue[editingValue] ?? '') : '';
 	const editingImagePreview = removeDraftImage ? '' : (draftImagePreviewUrl || editingImageUrl);
 	const isImageDirty = Boolean(removeDraftImage || draftImageFile);
+
+	const removeDraftAmenityImage = useCallback(() => {
+		setRemoveDraftImage(true);
+		if (draftImagePreviewUrl) {
+			URL.revokeObjectURL(draftImagePreviewUrl);
+			setDraftImagePreviewUrl('');
+		}
+		setDraftImageFile(null);
+	}, [draftImagePreviewUrl]);
+
+	const openAmenityPhotoPreview = useCallback(() => {
+		if (!editingImagePreview) return;
+		const rect = amenityPhotoRef.current?.getBoundingClientRect();
+		if (!rect) return;
+		setGalleryOrigin({
+			top: rect.top,
+			left: rect.left,
+			width: rect.width,
+			height: rect.height,
+		});
+		setGalleryOpen(true);
+	}, [editingImagePreview]);
 
 	return (
 		<PropertyFormSection id="amenities" title="Amenities">
@@ -328,23 +363,28 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 								<span className="text-xs text-dashboard-muted">{isImageDirty ? 'Photo changed' : 'Saved photo'}</span>
 							</div>
 							{editingImagePreview ? (
-								<div className="relative overflow-hidden rounded-lg bg-dashboard-bg">
+								<div ref={amenityPhotoRef} className="group relative overflow-hidden rounded-lg bg-dashboard-bg">
 									<img src={editingImagePreview} alt="" className="h-32 w-full object-cover" />
-									<button
-										type="button"
-										onClick={() => {
-											setRemoveDraftImage(true);
-											if (draftImagePreviewUrl) {
-												URL.revokeObjectURL(draftImagePreviewUrl);
-												setDraftImagePreviewUrl('');
-											}
-											setDraftImageFile(null);
-										}}
-										className="absolute right-2 top-2 rounded-full bg-espresso/80 p-1 text-dashboard-surface"
-										aria-label="Remove amenity photo"
-									>
-										<X className="h-3.5 w-3.5" />
-									</button>
+									<div className="absolute right-2 top-2 z-10 flex gap-1 opacity-0 transition group-hover:opacity-100">
+										<Button
+											type="button"
+											variant="ghostIcon"
+											className="h-8 w-8 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm"
+											onClick={openAmenityPhotoPreview}
+											aria-label="Preview amenity photo"
+										>
+											<Maximize2 className="h-4 w-4" />
+										</Button>
+										<Button
+											type="button"
+											variant="ghostIcon"
+											className="h-8 w-8 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm hover:text-red-600"
+											onClick={() => setConfirmRemoveImageOpen(true)}
+											aria-label="Remove amenity photo"
+										>
+											<Trash2 className="h-4 w-4" />
+										</Button>
+									</div>
 								</div>
 							) : null}
 							<Input
@@ -378,6 +418,25 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 							</Button>
 						</div>
 					</div>
+					<ConfirmationDialog
+						open={confirmRemoveImageOpen}
+						title="Remove amenity photo?"
+						description="This photo will be removed from the amenity. Save amenities to apply the change."
+						confirmLabel="Remove"
+						confirmVariant="danger"
+						onCancel={() => setConfirmRemoveImageOpen(false)}
+						onConfirm={() => {
+							removeDraftAmenityImage();
+							setConfirmRemoveImageOpen(false);
+						}}
+					/>
+					<ImageGalleryLightbox
+						images={editingImagePreview ? [editingImagePreview] : []}
+						open={galleryOpen}
+						initialIndex={0}
+						originRect={galleryOrigin}
+						onClose={() => setGalleryOpen(false)}
+					/>
 				</div>
 			) : null}
 		</PropertyFormSection>

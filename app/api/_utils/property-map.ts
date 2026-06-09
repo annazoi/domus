@@ -57,8 +57,13 @@ export type PropertyWithImages = {
 	longitude: number;
 	check_in_time: Date;
 	check_out_time: Date;
+	door_code: string | null;
+	safe_box_code: string | null;
+	house_rules_instructions: string | null;
 	isPublished: boolean;
 	branding_theme: PropertyBrandingTheme;
+	logo?: PropertyImageDocument | null;
+	logo_alt?: string | null;
 	created_at: Date;
 	updated_at: Date;
 	user_id: string;
@@ -89,6 +94,9 @@ export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 	welcome_message: property.welcome_message ?? '',
 	check_in_time: formatUtcTimeOfDay(property.check_in_time),
 	check_out_time: formatUtcTimeOfDay(property.check_out_time),
+	door_code: property.door_code ?? '',
+	safe_box_code: property.safe_box_code ?? '',
+	house_rules_instructions: property.house_rules_instructions ?? '',
 	property_type: property.property_type,
 	room_type: '',
 	max_guests: property.max_guests,
@@ -102,6 +110,8 @@ export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 	lng: property.longitude,
 	isVisible: property.isPublished,
 	branding_theme: property.branding_theme,
+	logo_url: property.logo?.url ?? null,
+	logo_alt: property.logo_alt?.trim() || null,
 	amenities: (property.amenities ?? []).map((a) => ({
 		value: a.value,
 		description: a.description ?? null,

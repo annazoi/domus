@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PropertyBrandingTheme } from '../../../app/(pages)/templates/_constants/property-branding-theme';
+import type { PatchPropertyBrandingInput } from '../services/property.services';
 import type { UpsertPropertyInput } from '../interfaces/property.interface';
 import type { PaginatedResult } from '@/lib/pagination';
 import type { Property } from '../interfaces/property.interface';
@@ -9,8 +10,10 @@ import {
 	getPropertyById,
 	listProperties,
 	listPropertiesPaginated,
+	deletePropertyLogo,
 	patchPropertyBranding,
 	updateProperty,
+	uploadPropertyLogo,
 } from '../services/property.services';
 
 export const propertyQueryKey = {
@@ -78,7 +81,33 @@ export const useDeleteProperty = () => {
 export const usePatchPropertyBranding = (id: string) => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (branding_theme: PropertyBrandingTheme) => patchPropertyBranding(id, branding_theme),
+		mutationFn: (input: PatchPropertyBrandingInput) => patchPropertyBranding(id, input),
+		onSuccess: () => {
+			void Promise.all([
+				queryClient.invalidateQueries({ queryKey: propertyQueryKey.all }),
+				queryClient.invalidateQueries({ queryKey: propertyQueryKey.detail(id) }),
+			]);
+		},
+	});
+};
+
+export const useUploadPropertyLogo = (id: string) => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (input: { file: File; alt?: string }) => uploadPropertyLogo(id, input.file, input.alt),
+		onSuccess: () => {
+			void Promise.all([
+				queryClient.invalidateQueries({ queryKey: propertyQueryKey.all }),
+				queryClient.invalidateQueries({ queryKey: propertyQueryKey.detail(id) }),
+			]);
+		},
+	});
+};
+
+export const useDeletePropertyLogo = (id: string) => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: () => deletePropertyLogo(id),
 		onSuccess: () => {
 			void Promise.all([
 				queryClient.invalidateQueries({ queryKey: propertyQueryKey.all }),

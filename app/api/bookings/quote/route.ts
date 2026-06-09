@@ -1,3 +1,4 @@
+import { getUserIdFromRequest } from '@/app/api/_utils/auth';
 import { mergeServiceLines } from '@/app/api/booking/create-booking.service';
 import { toUtcDay } from '@/features/property-availability/utils/date';
 import { calculateBookingPrice, type BookingPriceError } from '@/lib/pricing/booking-pricing.service';
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
 		check_out: checkOutDay.toJSDate(),
 		guests,
 		extras,
+		hostId: getUserIdFromRequest(request),
 	});
 
 	if (result.kind === 'error') {

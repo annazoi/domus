@@ -8,7 +8,7 @@ import { DayPicker } from 'react-day-picker';
 import { BrandingPreviewMap } from '@/components/google-maps';
 import { cn, Input } from '@/components/ui';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
-import { AmenityGlyph, FillImg } from './branding-preview-shared';
+import { AmenityGlyph, BrandingWordmark, FillImg } from './branding-preview-shared';
 import { PhotoGalleryLightbox } from './photo-gallery-carousel';
 import { formatStay, useBrandingStayBooking } from './use-branding-stay-booking';
 
@@ -112,13 +112,14 @@ function KazeBookingPanel({
 							<DayPicker
 								mode="range"
 								min={1}
+								excludeDisabled
 								defaultMonth={calendarMonth}
 								selected={booking.stayRange}
 								onSelect={(range) => {
 									booking.setStayRange(range);
 									if (range?.from && range?.to) void booking.checkAvailabilityForDates(range.from, range.to);
 								}}
-								disabled={propertyRef ? booking.dayDisabled : undefined}
+								disabled={booking.dayDisabled}
 								numberOfMonths={1}
 								className={cn(
 									'w-full font-[family-name:var(--preview-kaze-body)]',
@@ -231,7 +232,10 @@ export function ArchitecturaPreview({
 	);
 	const [galleryOpen, setGalleryOpen] = useState(false);
 	const [galleryIndex, setGalleryIndex] = useState(0);
-	const propertyRef = useMemo(() => data.footer.tagline.replace(/^\//, '').trim(), [data.footer.tagline]);
+	const propertyRef = useMemo(
+		() => (listingPreview ? (data.propertyRef ?? '').trim() : ''),
+		[listingPreview, data.propertyRef],
+	);
 	const guestCap = useMemo(() => {
 		const m = data.booking.guests.match(/^(\d+)/);
 		const n = m ? parseInt(m[1], 10) : data.booking.maxGuests;
@@ -270,9 +274,12 @@ export function ArchitecturaPreview({
 
 			<header className="relative z-30">
 				<div className="mx-auto flex max-w-[1360px] items-center justify-between px-5 py-6 sm:px-10">
-					<span className="font-[family-name:var(--preview-kaze-headline)] text-lg tracking-wide text-[#1c2430] sm:text-xl">
-						{data.wordmark}
-					</span>
+					<BrandingWordmark
+						wordmark={data.wordmark}
+						logoSrc={data.logoSrc}
+						logoAlt={data.logoAlt}
+						className="font-[family-name:var(--preview-kaze-headline)] text-lg tracking-wide text-[#1c2430] sm:text-xl"
+					/>
 					{data.nav.length > 0 ? (
 						<nav className="hidden items-center gap-8 md:flex">
 							{data.nav.map((item) => (

@@ -1,3 +1,4 @@
+import { getHostIdFromRequest } from '@/app/api/_utils/auth';
 import { toUtcDay } from '@/features/property-availability/utils/date';
 import { checkAvailabilityInternal } from '@/app/api/booking/check-availability.service';
 
@@ -21,6 +22,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 		check_in: checkIn.toJSDate(),
 		check_out: checkOut.toJSDate(),
 		guests,
+		hostId: getHostIdFromRequest(request),
 	});
 
 	if (result.kind === 'invalid_input') {

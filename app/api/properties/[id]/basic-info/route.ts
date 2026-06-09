@@ -3,6 +3,7 @@ import { findHostProperty } from '@/app/api/_utils/property-host';
 import { mapProperty } from '@/app/api/_utils/property-map';
 import { hasPropertySlugConflict, slugifyPropertySlug } from '@/app/api/_utils/property-slug';
 import { parseTimeToUtcDate } from '@/app/api/_utils/time-of-day';
+import { normalizeRichTextForDb } from '@/lib/rich-text/normalize-rich-text-for-db';
 import { prisma } from '@/lib/prisma';
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -42,8 +43,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 		data: {
 			title: body.title.trim(),
 			slug,
-			description: body.description?.trim() || null,
-			short_description: body.short_description?.trim() || null,
+			description: normalizeRichTextForDb(body.description),
+			short_description: normalizeRichTextForDb(body.short_description),
 			property_type: body.property_type?.trim() || existing.property_type,
 			isPublished: body.isVisible ?? existing.isPublished,
 			check_in_time: parseTimeToUtcDate(body.check_in_time, '15:00'),

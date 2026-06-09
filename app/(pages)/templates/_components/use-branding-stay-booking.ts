@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { DateRange } from 'react-day-picker';
 import { ApiRoutes } from '@/config/api/routes';
 import { useCheckAvailability } from '@/features/bookings/hooks/use-check-availability';
+import { getAuthStoreState } from '@/store/auth';
 
 export function startOfToday() {
 	const d = new Date();
@@ -69,7 +70,10 @@ export function useBrandingStayBooking({
 		void (async () => {
 			try {
 				const qs = new URLSearchParams({ start: toDateParam(todayStart) });
-				const res = await fetch(`/api${ApiRoutes.properties.unavailableDays(propertyRef)}?${qs}`);
+				const headers: HeadersInit = {};
+				const userId = getAuthStoreState().user_uuid;
+				if (userId) headers['x-user-id'] = userId;
+				const res = await fetch(`/api${ApiRoutes.properties.unavailableDays(propertyRef)}?${qs}`, { headers });
 				if (!res.ok || cancelled) return;
 				const json = (await res.json()) as { available_dates?: string[]; unavailable_dates?: string[] };
 				if (cancelled) return;
@@ -91,6 +95,7 @@ export function useBrandingStayBooking({
 		return (day: Date) => {
 			const d = dayStart(day);
 			if (d.getTime() < todayStart.getTime()) return true;
+			if (!propertyRef) return false;
 			const from = stayRange?.from ? dayStart(stayRange.from) : null;
 			const to = stayRange?.to ? dayStart(stayRange.to) : null;
 			const key = toDateParam(day);
@@ -108,7 +113,7 @@ export function useBrandingStayBooking({
 			}
 			return !nightsPriced(from, d, allowedDateKeys);
 		};
-	}, [allowedDateKeys, todayStart, stayRange?.from, stayRange?.to]);
+	}, [allowedDateKeys, propertyRef, todayStart, stayRange?.from, stayRange?.to]);
 
 	useEffect(() => {
 		if (!stayPickerOpen) return;

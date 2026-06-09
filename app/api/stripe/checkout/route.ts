@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 		}
 
 		const authenticatedUserId = getUserIdFromRequest(request);
-		const reusable = await findReusablePendingBooking(parsed.input);
+		const reusable = await findReusablePendingBooking(parsed.input, { authenticatedUserId });
 		if (reusable) {
 			bookingId = reusable.id;
 			if (authenticatedUserId) {

@@ -63,9 +63,43 @@ export const deleteProperty = async (id: string) => {
 	await axiosInstance.delete(ApiRoutes.properties.property(id));
 };
 
-export const patchPropertyBranding = async (id: string, branding_theme: PropertyBrandingTheme) => {
+export type PatchPropertyBrandingInput = {
+	branding_theme: PropertyBrandingTheme;
+	logo_alt?: string | null;
+};
+
+export const patchPropertyBranding = async (id: string, input: PatchPropertyBrandingInput) => {
 	try {
-		const response = await axiosInstance.patch<Property>(ApiRoutes.properties.branding(id), { branding_theme });
+		const response = await axiosInstance.patch<Property>(ApiRoutes.properties.branding(id), input);
+		return response.data;
+	} catch (error) {
+		if (axios.isAxiosError(error)) {
+			throw new Error((error.response?.data as { message?: string } | undefined)?.message ?? error.message);
+		}
+		throw error;
+	}
+};
+
+export const uploadPropertyLogo = async (id: string, file: File, alt?: string) => {
+	const formData = new FormData();
+	formData.append('file', file);
+	if (alt?.trim()) formData.append('alt', alt.trim());
+	try {
+		const response = await axiosInstance.post<Property>(ApiRoutes.properties.brandingLogo(id), formData, {
+			headers: { 'Content-Type': 'multipart/form-data' },
+		});
+		return response.data;
+	} catch (error) {
+		if (axios.isAxiosError(error)) {
+			throw new Error((error.response?.data as { message?: string } | undefined)?.message ?? error.message);
+		}
+		throw error;
+	}
+};
+
+export const deletePropertyLogo = async (id: string) => {
+	try {
+		const response = await axiosInstance.delete<Property>(ApiRoutes.properties.brandingLogo(id));
 		return response.data;
 	} catch (error) {
 		if (axios.isAxiosError(error)) {

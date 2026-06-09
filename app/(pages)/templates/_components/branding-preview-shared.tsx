@@ -16,6 +16,38 @@ export function AmenityGlyph({
 	return <Icon strokeWidth={1.25} className={cn('h-8 w-8', className)} />;
 }
 
+export function BrandingWordmark({
+	wordmark,
+	logoSrc,
+	logoAlt,
+	className,
+	logoClassName,
+}: {
+	wordmark: string;
+	logoSrc?: string;
+	logoAlt?: string;
+	className?: string;
+	logoClassName?: string;
+}) {
+	const src = logoSrc?.trim();
+	const alt = logoAlt?.trim() || wordmark;
+	if (src) {
+		return (
+			<span className={cn('relative inline-flex max-h-10 max-w-[180px] items-center', className)}>
+				<Image
+					src={src}
+					alt={alt}
+					width={180}
+					height={40}
+					className={cn('h-auto max-h-10 w-auto max-w-[180px] object-contain object-left', logoClassName)}
+					unoptimized
+				/>
+			</span>
+		);
+	}
+	return <span className={className}>{wordmark}</span>;
+}
+
 export function FillImg({
 	src,
 	className,

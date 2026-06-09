@@ -1,20 +1,24 @@
 import { BookingStatus } from '@prisma/client';
 import { DateTime } from 'luxon';
+import { getHostIdFromRequest } from '@/app/api/_utils/auth';
 import { eachDayInRange, toApiDate, toUtcDay } from '@/features/property-availability/utils/date';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
 	const { id } = await params;
+	const hostId = getHostIdFromRequest(request);
 
 	const property = await prisma.property.findFirst({
 		where: {
 			OR: [{ id }, { slug: id }],
-			isPublished: true,
 		},
-		select: { id: true },
+		select: { id: true, user_id: true, isPublished: true },
 	});
 
 	if (!property) return Response.json({ message: 'Property not found' }, { status: 404 });
+	if (!property.isPublished && property.user_id !== hostId) {
+		return Response.json({ message: 'Property not found' }, { status: 404 });
+	}
 
 	const url = new URL(request.url);
 	const startRaw = url.searchParams.get('start');

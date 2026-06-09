@@ -2,14 +2,37 @@ import { getHostIdFromRequest } from '@/app/api/_utils/auth';
 import { uploadFiles } from '@/app/api/utils/cloudinary/cloudinary.service';
 import {
 	buildImageDocumentCreateInput,
+	buildUrlVideoDocumentCreateInput,
 	removeDocumentWithCloudinaryAsset,
 } from '@/app/api/utils/documents/documents.service';
+import { isVideoUrlSource, type VideoUrlSource } from '@/lib/media/video-url';
 import { propertyImagesService } from './images.service';
 
 interface ImagePayload {
 	reorder_ids?: string[];
 	cover_image_id?: string;
 }
+
+type UrlEntry = { url: string; description: string; source?: VideoUrlSource };
+
+const parseJsonArray = <T>(raw: FormDataEntryValue | null, fallback: T[]): T[] => {
+	if (typeof raw !== 'string' || !raw.trim()) return fallback;
+	try {
+		const parsed = JSON.parse(raw) as unknown;
+		return Array.isArray(parsed) ? (parsed as T[]) : fallback;
+	} catch {
+		return fallback;
+	}
+};
+
+const isValidHttpUrl = (value: string) => {
+	try {
+		const parsed = new URL(value);
+		return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+	} catch {
+		return false;
+	}
+};
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
 	const hostId = getHostIdFromRequest(request);
@@ -33,33 +56,48 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
 	const formData = await request.formData();
 	const files = formData.getAll('files').filter((entry): entry is File => entry instanceof File);
-	if (!files.length) {
-		return Response.json({ message: 'At least one image is required' }, { status: 400 });
+	const descriptions = parseJsonArray<string>(formData.get('descriptions'), []).map((d) =>
+		typeof d === 'string' ? d : '',
+	);
+	const urlEntries = parseJsonArray<UrlEntry>(formData.get('url_entries'), [])
+		.filter((entry) => entry && typeof entry.url === 'string' && isValidHttpUrl(entry.url.trim()))
+		.map((entry) => ({
+			url: entry.url.trim(),
+			description: typeof entry.description === 'string' ? entry.description : '',
+			source: isVideoUrlSource(entry.source ?? '') ? entry.source : undefined,
+		}));
+
+	if (!files.length && !urlEntries.length) {
+		return Response.json({ message: 'At least one image or video is required' }, { status: 400 });
 	}
 
-	const descriptionsRaw = formData.get('descriptions');
-	let descriptions: string[] = [];
-	if (typeof descriptionsRaw === 'string' && descriptionsRaw.trim()) {
-		try {
-			const parsed = JSON.parse(descriptionsRaw) as unknown;
-			if (Array.isArray(parsed)) {
-				descriptions = parsed.map((d) => (typeof d === 'string' ? d : ''));
-			}
-		} catch {
-			// ignore invalid JSON
-		}
-	}
-
-	const uploadedFiles = await uploadFiles(files);
 	const existingCount = await propertyImagesService.countByProperty(id);
-	const created = await propertyImagesService.createMany({
-		hostId,
-		propertyId: id,
-		existingCount,
-		uploadedFiles,
-		descriptions,
-		buildImageDocumentCreateInput,
-	});
+	const created = [];
+
+	if (files.length) {
+		const uploadedFiles = await uploadFiles(files);
+		const fromFiles = await propertyImagesService.createMany({
+			hostId,
+			propertyId: id,
+			existingCount,
+			uploadedFiles,
+			descriptions,
+			buildImageDocumentCreateInput,
+		});
+		created.push(...fromFiles);
+	}
+
+	if (urlEntries.length) {
+		const fromUrls = await propertyImagesService.createManyFromUrls({
+			hostId,
+			propertyId: id,
+			existingCount: existingCount + files.length,
+			urlEntries,
+			buildUrlVideoDocumentCreateInput,
+		});
+		created.push(...fromUrls);
+	}
+
 	return Response.json(created, { status: 201 });
 }
 

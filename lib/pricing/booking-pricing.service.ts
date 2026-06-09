@@ -23,6 +23,7 @@ export type BookingPricingInput = {
 	check_out: Date;
 	guests: number;
 	extras?: BookingExtraInput[];
+	hostId?: string | null;
 };
 
 export type BookingPriceError =
@@ -79,6 +80,7 @@ export async function calculateBookingPrice(
 			check_in: input.check_in,
 			check_out: input.check_out,
 			guests: input.guests,
+			hostId: input.hostId,
 		},
 		db,
 	);

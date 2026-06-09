@@ -1,12 +1,23 @@
 import axiosInstance from '@/config/api/axios';
 import { ApiRoutes } from '@/config/api/routes';
+import type { VideoUrlSource } from '@/lib/media/video-url';
 import type { PropertyImage } from '../interfaces/property-image.interfaces';
 
-export const uploadPropertyImages = async (id: string, files: File[], descriptions?: string[]) => {
+export const uploadPropertyImages = async (
+	id: string,
+	input: {
+		files: File[];
+		descriptions?: string[];
+		urlEntries?: { url: string; description: string; source?: VideoUrlSource }[];
+	},
+) => {
 	const formData = new FormData();
-	files.forEach((file) => formData.append('files', file));
-	if (descriptions?.length) {
-		formData.append('descriptions', JSON.stringify(descriptions));
+	input.files.forEach((file) => formData.append('files', file));
+	if (input.descriptions?.length) {
+		formData.append('descriptions', JSON.stringify(input.descriptions));
+	}
+	if (input.urlEntries?.length) {
+		formData.append('url_entries', JSON.stringify(input.urlEntries));
 	}
 
 	const response = await axiosInstance.post<PropertyImage[]>(ApiRoutes.property_images.byProperty(id), formData, {

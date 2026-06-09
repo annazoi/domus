@@ -32,6 +32,8 @@ const buildSignature = async (paramsToSign: string, apiSecret: string) => {
 		.join('');
 };
 
+const cloudinaryResourceType = (file: File) => (file.type.startsWith('video/') ? 'video' : 'image');
+
 export const uploadFiles = async (files: File[]) => {
 	if (!files.length) {
 		throw new Error('No files provided.');
@@ -41,6 +43,7 @@ export const uploadFiles = async (files: File[]) => {
 	const uploadedFiles: UploadedCloudinaryFile[] = [];
 
 	for (const file of files) {
+		const resourceType = cloudinaryResourceType(file);
 		const timestamp = Math.floor(Date.now() / 1000);
 		const signature = await buildSignature(`timestamp=${timestamp}`, apiSecret);
 
@@ -50,7 +53,7 @@ export const uploadFiles = async (files: File[]) => {
 		payload.append('timestamp', `${timestamp}`);
 		payload.append('signature', signature);
 
-		const uploadResponse = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+		const uploadResponse = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, {
 			method: 'POST',
 			body: payload,
 		});
@@ -63,7 +66,7 @@ export const uploadFiles = async (files: File[]) => {
 			typeof data.bytes !== 'number' ||
 			!data.format
 		) {
-			throw new Error(data.error?.message ?? 'Could not upload image to Cloudinary.');
+			throw new Error(data.error?.message ?? 'Could not upload media to Cloudinary.');
 		}
 
 		uploadedFiles.push({
@@ -71,7 +74,7 @@ export const uploadFiles = async (files: File[]) => {
 			public_id: data.public_id,
 			size: data.bytes,
 			format: data.format,
-			resource_type: data.resource_type ?? 'image',
+			resource_type: data.resource_type ?? resourceType,
 			original_filename: data.original_filename ?? data.public_id,
 		});
 	}
@@ -79,7 +82,7 @@ export const uploadFiles = async (files: File[]) => {
 	return uploadedFiles;
 };
 
-export const deleteFile = async (publicId: string) => {
+export const deleteFile = async (publicId: string, resourceType: 'image' | 'video' = 'image') => {
 	if (!publicId.trim()) {
 		throw new Error('Missing cloudinary public id.');
 	}
@@ -93,13 +96,13 @@ export const deleteFile = async (publicId: string) => {
 	payload.append('timestamp', `${timestamp}`);
 	payload.append('signature', signature);
 
-	const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, {
+	const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/destroy`, {
 		method: 'POST',
 		body: payload,
 	});
 
 	const data = (await response.json()) as { result?: string; error?: { message?: string } };
 	if (!response.ok || (data.result !== 'ok' && data.result !== 'not found')) {
-		throw new Error(data.error?.message ?? 'Could not remove image from Cloudinary.');
+		throw new Error(data.error?.message ?? 'Could not remove media from Cloudinary.');
 	}
 };

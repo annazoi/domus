@@ -8,7 +8,7 @@ import { DayPicker } from 'react-day-picker';
 import { BrandingPreviewMap } from '@/components/google-maps';
 import { cn, Input } from '@/components/ui';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
-import { AmenityGlyph, FillImg } from './branding-preview-shared';
+import { AmenityGlyph, BrandingWordmark, FillImg } from './branding-preview-shared';
 import { PhotoGalleryLightbox } from './photo-gallery-carousel';
 import { formatStay, useBrandingStayBooking } from './use-branding-stay-booking';
 
@@ -100,12 +100,13 @@ function HikariBookingPanel({
 						<DayPicker
 							mode="range"
 							min={1}
+							excludeDisabled
 							selected={booking.stayRange}
 							onSelect={(range) => {
 								booking.setStayRange(range);
 								if (range?.from && range?.to) void booking.checkAvailabilityForDates(range.from, range.to);
 							}}
-							disabled={propertyRef ? booking.dayDisabled : undefined}
+							disabled={booking.dayDisabled}
 							numberOfMonths={1}
 						/>
 						<div className="mt-2 flex gap-2 border-t border-[#0a0a0a]/10 pt-2">
@@ -184,7 +185,10 @@ export function CanvasPreview({
 	);
 	const [galleryOpen, setGalleryOpen] = useState(false);
 	const [galleryIndex, setGalleryIndex] = useState(0);
-	const propertyRef = useMemo(() => data.footer.tagline.replace(/^\//, '').trim(), [data.footer.tagline]);
+	const propertyRef = useMemo(
+		() => (listingPreview ? (data.propertyRef ?? '').trim() : ''),
+		[listingPreview, data.propertyRef],
+	);
 	const guestCap = useMemo(() => {
 		const m = data.booking.guests.match(/^(\d+)/);
 		const n = m ? parseInt(m[1], 10) : data.booking.maxGuests;
@@ -212,9 +216,12 @@ export function CanvasPreview({
 
 			<header className="relative z-20 border-b border-[#0a0a0a]/8">
 				<div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-5 sm:px-10">
-					<span className="font-[family-name:var(--preview-hikari-display)] text-sm font-bold uppercase tracking-[0.35em]">
-						{data.wordmark}
-					</span>
+					<BrandingWordmark
+						wordmark={data.wordmark}
+						logoSrc={data.logoSrc}
+						logoAlt={data.logoAlt}
+						className="font-[family-name:var(--preview-hikari-display)] text-sm font-bold uppercase tracking-[0.35em]"
+					/>
 					{data.nav.length > 0 ? (
 						<nav className="hidden items-center gap-10 sm:flex">
 							{data.nav.map((item) => (

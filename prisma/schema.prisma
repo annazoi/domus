@@ -147,6 +147,9 @@ model Property {
   property_type String
   check_in_time DateTime @default(now())
   check_out_time DateTime @default(now())
+  door_code String?
+  safe_box_code String?
+  house_rules_instructions String?
   max_guests    Int
   bedrooms      Int
   beds          Int
@@ -158,11 +161,14 @@ model Property {
   longitude     Float
   isPublished   Boolean  @default(false)
   branding_theme PropertyBrandingTheme @default(CANVAS)
+  logo_id       String?  @unique
+  logo_alt      String?
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
   room_type     String
 
   user         User                   @relation(fields: [user_id], references: [id])
+  logo         Document?              @relation("PropertyLogo", fields: [logo_id], references: [id])
   amenities    PropertyAmenity[]
   availability PropertyAvailability[]
   images       PropertyImage[]
@@ -427,6 +433,7 @@ model Document {
   property_amenity PropertyAmenity? @relation(fields: [property_amenity_id], references: [id])
   user_avatar   User?            @relation("UserAvatar")
   user_banner   User?            @relation("UserBanner")
+  property_logo Property?        @relation("PropertyLogo")
 
   @@index([user_id])
   @@map("documents")

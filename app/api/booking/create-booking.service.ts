@@ -67,6 +67,7 @@ export async function createBookingRecord(
 		check_out: input.check_out,
 		guests: input.guests,
 		extras,
+		hostId: options.authenticatedUserId,
 	});
 
 	if (preTx.kind === 'error') {
@@ -83,6 +84,7 @@ export async function createBookingRecord(
 						check_out: input.check_out,
 						guests: input.guests,
 						extras,
+						hostId: options.authenticatedUserId,
 					},
 					tx,
 				);
@@ -167,15 +169,18 @@ export async function createBookingRecord(
 	}
 }
 
-export async function findReusablePendingBooking(input: CreateBookingInput) {
+export async function findReusablePendingBooking(
+	input: CreateBookingInput,
+	options: { authenticatedUserId?: string | null } = {},
+) {
 	const property = await prisma.property.findFirst({
 		where: {
 			OR: [{ id: input.property_id }, { slug: input.property_id }],
-			isPublished: true,
 		},
-		select: { id: true },
+		select: { id: true, user_id: true, isPublished: true },
 	});
 	if (!property) return null;
+	if (!property.isPublished && property.user_id !== options.authenticatedUserId) return null;
 
 	const serviceLines = input.services ?? [];
 	if (serviceLines.length > 0) return null;

@@ -8,7 +8,10 @@ import {
 } from '@/app/(pages)/templates/_constants/property-branding-theme';
 
 export type BrandingPreviewDemo = {
+	propertyRef?: string;
 	wordmark: string;
+	logoSrc?: string;
+	logoAlt?: string;
 	nav: { label: string; current?: boolean }[];
 	hero: { series: string; title: string; location: string; imageSrc: string };
 	concept: { eyebrow: string; title: string; paragraphs: [string, string] };
@@ -204,7 +207,10 @@ export function propertyToBrandingPreview(property: Property): BrandingPreviewDe
 	const pullDesc = imgs[4]?.description?.trim() ?? '';
 
 	return {
+		propertyRef: property.id,
 		wordmark: property.title,
+		logoSrc: property.logo_url?.trim() ?? '',
+		logoAlt: property.logo_alt?.trim() ?? '',
 		nav: [],
 		hero: {
 			series: [property.property_type.replace(/_/g, ' '), property.city].filter(Boolean).join(' · '),

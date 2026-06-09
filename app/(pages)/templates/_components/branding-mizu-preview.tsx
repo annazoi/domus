@@ -8,7 +8,7 @@ import { DayPicker } from 'react-day-picker';
 import { BrandingPreviewMap } from '@/components/google-maps';
 import { cn, Input } from '@/components/ui';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
-import { AmenityGlyph, FillImg } from './branding-preview-shared';
+import { AmenityGlyph, BrandingWordmark, FillImg } from './branding-preview-shared';
 import { PhotoGalleryLightbox } from './photo-gallery-carousel';
 import { formatStay, useBrandingStayBooking } from './use-branding-stay-booking';
 
@@ -116,13 +116,14 @@ function MizuBookingPanel({
 							<DayPicker
 								mode="range"
 								min={1}
+								excludeDisabled
 								defaultMonth={calendarMonth}
 								selected={booking.stayRange}
 								onSelect={(range) => {
 									booking.setStayRange(range);
 									if (range?.from && range?.to) void booking.checkAvailabilityForDates(range.from, range.to);
 								}}
-								disabled={propertyRef ? booking.dayDisabled : undefined}
+								disabled={booking.dayDisabled}
 								numberOfMonths={1}
 								className={cn(
 									'w-full font-[family-name:var(--preview-mizu-body)]',
@@ -233,7 +234,10 @@ export function MizuPreview({
 	);
 	const [galleryOpen, setGalleryOpen] = useState(false);
 	const [galleryIndex, setGalleryIndex] = useState(0);
-	const propertyRef = useMemo(() => data.footer.tagline.replace(/^\//, '').trim(), [data.footer.tagline]);
+	const propertyRef = useMemo(
+		() => (listingPreview ? (data.propertyRef ?? '').trim() : ''),
+		[listingPreview, data.propertyRef],
+	);
 	const guestCap = useMemo(() => {
 		const m = data.booking.guests.match(/^(\d+)/);
 		const n = m ? parseInt(m[1], 10) : data.booking.maxGuests;
@@ -274,9 +278,12 @@ export function MizuPreview({
 				/>
 
 				<header className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5 py-6 sm:px-10">
-					<span className="font-[family-name:var(--preview-mizu-headline)] text-xl tracking-wide text-[#fff9f4] sm:text-2xl">
-						{data.wordmark}
-					</span>
+					<BrandingWordmark
+						wordmark={data.wordmark}
+						logoSrc={data.logoSrc}
+						logoAlt={data.logoAlt}
+						className="font-[family-name:var(--preview-mizu-headline)] text-xl tracking-wide text-[#fff9f4] sm:text-2xl"
+					/>
 					{data.nav.length > 0 ? (
 						<nav className="hidden items-center gap-8 sm:flex">
 							{data.nav.map((item) => (
@@ -334,7 +341,7 @@ export function MizuPreview({
 								type="button"
 								onClick={() => openGallery(src)}
 								className={cn(
-									'relative h-[220px] w-[min(72vw,320px)] shrink-0 snap-center overflow-hidden rounded-[1.5rem] bg-[#2a4549]/20 sm:h-[260px]',
+									'cursor-pointer relative h-[220px] w-[min(72vw,320px)] shrink-0 snap-center overflow-hidden rounded-[1.5rem] bg-[#2a4549]/20 sm:h-[260px]',
 									i === 0 && 'ring-2 ring-[#c4785a]/60 ring-offset-2 ring-offset-[#f3ebe3]',
 								)}
 							>

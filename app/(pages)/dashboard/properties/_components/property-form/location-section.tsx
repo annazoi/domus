@@ -46,16 +46,19 @@ function applyPlaceToForm(
 	}
 }
 
+const hasSavedLocation = (values: Pick<UpsertPropertyInput, 'address' | 'lat' | 'lng'>) =>
+	Boolean(values.address?.trim()) && hasSetCoordinates(values.lat, values.lng);
+
 export function LocationSection({
 	initialProperty,
 	propertyId: propertyIdProp,
 	placesLibraryReady = false,
 }: LocationSectionProps) {
-	const [showMapPreview, setShowMapPreview] = useState(false);
 	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
 	const { push } = useToast();
 	const { mutateAsync: update, isPending: saving } = useUpdateProperty(propertyId);
 	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
+	const [areaSelected, setAreaSelected] = useState(() => hasSavedLocation(defaultValues));
 	const {
 		register,
 		control,
@@ -74,12 +77,16 @@ export function LocationSection({
 		},
 	});
 
+	const address = watch('address');
 	const lat = watch('lat');
 	const lng = watch('lng');
-	const mapEmbedSrc =
-		showMapPreview && hasSetCoordinates(lat, lng)
+	const mapEmbedSrc = areaSelected
+		? hasSetCoordinates(lat, lng)
 			? `https://www.google.com/maps?q=${encodeURIComponent(`${lat},${lng}`)}&z=15&output=embed`
-			: null;
+			: address.trim()
+				? `https://www.google.com/maps?q=${encodeURIComponent(address.trim())}&z=15&output=embed`
+				: null
+		: null;
 
 	const handleSave = handleSubmit(async (formValues: LocationFormValues) => {
 		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
@@ -118,7 +125,7 @@ export function LocationSection({
 									(name, value) => setValue(name, value, { shouldValidate: true, shouldDirty: true }),
 									(name, value) => setValue(name, value, { shouldValidate: true, shouldDirty: true }),
 								);
-								setShowMapPreview(hasSetCoordinates(place.lat, place.lng));
+								setAreaSelected(true);
 							}}
 							placeholder="Search or enter address"
 							autoComplete="off"
@@ -162,9 +169,7 @@ export function LocationSection({
 								id="property-latitude"
 								value={field.value ?? ''}
 								onChange={(event) => {
-									const nextLat = numberOrNull(event.target.value);
-									field.onChange(nextLat);
-									setShowMapPreview(hasSetCoordinates(nextLat, watch('lng')));
+									field.onChange(numberOrNull(event.target.value));
 								}}
 								placeholder="Enter latitude"
 							/>
@@ -184,9 +189,7 @@ export function LocationSection({
 								id="property-longitude"
 								value={field.value ?? ''}
 								onChange={(event) => {
-									const nextLng = numberOrNull(event.target.value);
-									field.onChange(nextLng);
-									setShowMapPreview(hasSetCoordinates(watch('lat'), nextLng));
+									field.onChange(numberOrNull(event.target.value));
 								}}
 								placeholder="Enter longitude"
 							/>

@@ -9,6 +9,7 @@ export type CheckAvailabilityInternalParams = {
 	check_in: Date;
 	check_out: Date;
 	guests: number;
+	hostId?: string | null;
 };
 
 export type CheckAvailabilityInternalResult = {
@@ -50,12 +51,14 @@ export async function checkAvailabilityInternal(
 	const property = await db.property.findFirst({
 		where: {
 			OR: [{ id: params.property_id }, { slug: params.property_id }],
-			isPublished: true,
 		},
-		select: { id: true, max_guests: true, user_id: true },
+		select: { id: true, max_guests: true, user_id: true, isPublished: true },
 	});
 
 	if (!property) {
+		return { kind: 'not_found', isAvailable: false, totalPrice: null };
+	}
+	if (!property.isPublished && property.user_id !== params.hostId) {
 		return { kind: 'not_found', isAvailable: false, totalPrice: null };
 	}
 
