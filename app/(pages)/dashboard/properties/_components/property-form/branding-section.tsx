@@ -202,21 +202,9 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 							/>
 
 							<div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-								<button
-									type="button"
-									onClick={() => logoInputRef.current?.click()}
-									onDragOver={(e) => {
-										e.preventDefault();
-										setLogoZoneOver(true);
-									}}
-									onDragLeave={() => setLogoZoneOver(false)}
-									onDrop={(e) => {
-										e.preventDefault();
-										setLogoZoneOver(false);
-										addLogoFile(e.dataTransfer.files[0] ?? null);
-									}}
+								<div
 									className={cn(
-										'group relative flex min-h-[196px] cursor-pointer flex-col overflow-hidden rounded-2xl border-2 border-dashed text-left transition duration-300',
+										'group relative flex min-h-[196px] flex-col overflow-hidden rounded-2xl border-2 border-dashed transition duration-300',
 										logoZoneOver
 											? 'border-camel/50 bg-camel/[0.04]'
 											: 'border-black/10 bg-white',
@@ -228,47 +216,42 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 									/>
 									<div className="absolute inset-0 bg-gradient-to-br from-white/90 via-[#faf8f5]/80 to-dashboard-inset/60" aria-hidden />
 
-									<div className="relative flex flex-1 items-center justify-center px-8 py-10">
+									<div
+										role="button"
+										tabIndex={0}
+										aria-label={displayLogoUrl ? 'Replace logo file' : 'Upload logo file'}
+										className="absolute inset-0 z-0 cursor-pointer"
+										onClick={() => logoInputRef.current?.click()}
+										onKeyDown={(e) => {
+											if (e.key === 'Enter' || e.key === ' ') {
+												e.preventDefault();
+												logoInputRef.current?.click();
+											}
+										}}
+										onDragOver={(e) => {
+											e.preventDefault();
+											setLogoZoneOver(true);
+										}}
+										onDragLeave={() => setLogoZoneOver(false)}
+										onDrop={(e) => {
+											e.preventDefault();
+											setLogoZoneOver(false);
+											addLogoFile(e.dataTransfer.files[0] ?? null);
+										}}
+									/>
+
+									<div className="pointer-events-none relative z-[1] flex flex-1 items-center justify-center px-8 py-10">
 										{displayLogoUrl ? (
-											<>
-												<div ref={logoTileRef} className="flex items-center justify-center">
-													<Image
-														src={displayLogoUrl}
-														alt={logoAlt.trim() || initialProperty?.title || 'Property logo'}
-														width={200}
-														height={72}
-														className="max-h-[72px] w-auto max-w-[min(100%,200px)] object-contain drop-shadow-sm transition duration-300 group-hover:scale-[1.02]"
-														unoptimized
-													/>
-												</div>
-												<div className="absolute right-3 top-3 z-10 flex gap-1 opacity-0 transition group-hover:opacity-100">
-													<Button
-														type="button"
-														variant="ghostIcon"
-														className="h-9 w-9 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm hover:bg-dashboard-surface"
-														onClick={(e) => {
-															e.stopPropagation();
-															openLogoPreview();
-														}}
-														aria-label="View logo"
-													>
-														<Maximize2 className="h-4 w-4" />
-													</Button>
-													<Button
-														type="button"
-														variant="ghostIcon"
-														disabled={deletingLogo}
-														className="h-9 w-9 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm hover:bg-dashboard-surface hover:text-red-600"
-														onClick={(e) => {
-															e.stopPropagation();
-															requestLogoDelete();
-														}}
-														aria-label="Delete logo"
-													>
-														<Trash2 className="h-4 w-4" />
-													</Button>
-												</div>
-											</>
+											<div ref={logoTileRef} className="flex items-center justify-center">
+												<Image
+													src={displayLogoUrl}
+													alt={logoAlt.trim() || initialProperty?.title || 'Property logo'}
+													width={200}
+													height={72}
+													className="max-h-[72px] w-auto max-w-[min(100%,200px)] object-contain drop-shadow-sm transition duration-300 group-hover:scale-[1.02]"
+													unoptimized
+												/>
+											</div>
 										) : (
 											<div className="flex flex-col items-center gap-3 text-center">
 												<div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-black/8 bg-white/90 shadow-sm">
@@ -282,9 +265,33 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 										)}
 									</div>
 
+									{displayLogoUrl ? (
+										<div className="absolute right-3 top-3 z-10 flex gap-1 opacity-0 transition group-hover:opacity-100">
+											<Button
+												type="button"
+												variant="ghostIcon"
+												className="h-9 w-9 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm hover:bg-dashboard-surface"
+												onClick={openLogoPreview}
+												aria-label="View logo"
+											>
+												<Maximize2 className="h-4 w-4" />
+											</Button>
+											<Button
+												type="button"
+												variant="ghostIcon"
+												disabled={deletingLogo}
+												className="h-9 w-9 rounded-full bg-dashboard-surface/95 text-espresso shadow-sm hover:bg-dashboard-surface hover:text-red-600"
+												onClick={requestLogoDelete}
+												aria-label="Delete logo"
+											>
+												<Trash2 className="h-4 w-4" />
+											</Button>
+										</div>
+									) : null}
+
 									<div
 										className={cn(
-											'pointer-events-none absolute inset-0 flex items-center justify-center bg-camel/15 transition-opacity duration-200',
+											'pointer-events-none absolute inset-0 z-[2] flex items-center justify-center bg-camel/15 transition-opacity duration-200',
 											logoZoneOver ? 'opacity-100' : 'opacity-0',
 										)}
 									>
@@ -292,9 +299,7 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 											Release to upload
 										</span>
 									</div>
-
-								
-								</button>
+								</div>
 
 								<div className="flex flex-col justify-between gap-4 rounded-2xl border border-black/[0.06] bg-[#faf8f5]/80 p-4 sm:p-5">
 									<div className="space-y-3">
