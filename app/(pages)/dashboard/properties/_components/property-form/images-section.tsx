@@ -26,6 +26,13 @@ type ImagesSectionProps = {
 	propertyId?: string;
 };
 
+const cloudinaryDisplayUrl = (url: string) => {
+	if (!url.includes('res.cloudinary.com/')) return url;
+	return url
+		.replace('/upload/', '/upload/f_auto,q_auto/')
+		.replace(/\.(avif|webp|jpe?g|png)$/i, '');
+};
+
 /** Cover first, then remaining by `order` - every image appears exactly once. */
 function displayImages(images: PropertyImage[]) {
 	if (!images.length) return [];
@@ -54,7 +61,13 @@ export function ImagesSection({
 
 	const ordered = useMemo(() => displayImages(images), [images]);
 	const galleryUrls = useMemo(
-		() => ordered.map((image) => image.document?.url ?? '').filter(Boolean),
+		() =>
+			ordered
+				.map((image) => {
+					const url = image.document?.url ?? '';
+					return url ? cloudinaryDisplayUrl(url) : '';
+				})
+				.filter(Boolean),
 		[ordered],
 	);
 	const [galleryOpen, setGalleryOpen] = useState(false);
@@ -398,7 +411,7 @@ function ImageTile({
 	onOpenPreview: (origin: ImageGalleryOriginRect) => void;
 }) {
 	const tileRef = useRef<HTMLDivElement>(null);
-	const imageUrl = image.document?.url ?? '';
+	const imageUrl = image.document?.url ? cloudinaryDisplayUrl(image.document.url) : '';
 	const description = image.description?.trim();
 
 	const openPreview = () => {
@@ -427,10 +440,13 @@ function ImageTile({
 					variant === 'hero' ? 'aspect-[21/9] min-h-[220px]' : 'aspect-[4/3]',
 				].join(' ')}
 			>
-				<div
-					className="pointer-events-none absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-[1.02]"
-					style={imageUrl ? { backgroundImage: `url(${imageUrl})` } : undefined}
-				/>
+				{imageUrl ? (
+					<img
+						src={imageUrl}
+						alt=""
+						className="pointer-events-none absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+					/>
+				) : null}
 				<div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 opacity-80" />
 				{image.is_cover ? (
 					<span className="absolute bottom-4 left-4 rounded-full bg-dashboard-surface/95 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-espresso">

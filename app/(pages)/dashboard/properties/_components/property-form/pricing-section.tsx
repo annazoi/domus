@@ -570,7 +570,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 										<Button
 											type="button"
 											variant="ghostPill"
-											className="mt-2 h-8 px-3"
+											className="mt-2 h-8 !px-2 flex items-center gap-1/2"
 											onClick={() =>
 												setRanges((previous) => [...previous, { id: `range-${previous.length + 1}` }])
 											}
