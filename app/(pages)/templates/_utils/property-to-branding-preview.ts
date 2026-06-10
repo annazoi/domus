@@ -1,11 +1,20 @@
 import { amenityOptionByValue, Amenities, type AmenityId } from '@/config/constants/dropdowns/amenities.options';
+import { ApartmentOptionsLabels } from '@/config/constants/dropdowns/apartment.options';
+import { RoomTypeOptionsLabels } from '@/config/constants/dropdowns/room-type.options';
 import type { PropertyDocument } from '@/features/documents/interfaces/document.interface';
 import type { PropertyImage } from '@/features/property-images/interfaces/property-image.interfaces';
 import type { Property } from '@/features/property/interfaces/property.interface';
+import type { Service } from '@/features/services/interfaces/service.interface';
+import { PRICING_UNIT_LABELS, type PricingUnit } from '@/features/services/interfaces/pricing-unit';
+import {
+	readVideoUrlSourceFromDocumentPath,
+	type VideoUrlSource,
+} from '@/lib/media/video-url';
 import {
 	type PropertyBrandingTheme,
 	PropertyBrandingTheme as Theme,
 } from '@/app/(pages)/templates/_constants/property-branding-theme';
+import { formatPropertyTimeLabel } from './format-property-time';
 
 export type BrandingPreviewDemo = {
 	propertyRef?: string;
@@ -18,9 +27,23 @@ export type BrandingPreviewDemo = {
 	gallery: {
 		large: { src: string; caption: string };
 		stack: [{ src: string }, { src: string }];
-		full: { src: string; pullQuote: { title: string; text: string } };
+		full: { src: string; caption: string };
 	};
-	amenities: { id: AmenityId; label: string }[];
+	amenities: { id: AmenityId; label: string; description: string; quantity?: number; imageSrc: string }[];
+	videos: { src: string; source?: VideoUrlSource; description: string }[];
+	welcome: { html: string };
+	stay: {
+		propertyType: string;
+		roomType: string;
+		maxGuests: number;
+		bedrooms: number;
+		beds: number;
+		bathrooms: number;
+		checkIn: string;
+		checkOut: string;
+	};
+	houseRules: { html: string };
+	guestExtras: { id: string; name: string; description: string; price: string; imageSrc: string }[];
 	location: {
 		eyebrow: string;
 		coords: string;
@@ -51,6 +74,36 @@ export type BrandingPreviewDemo = {
 
 function stripHtml(html: string): string {
 	return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+const isVideoDocument = (document: PropertyDocument | null | undefined) =>
+	document?.type === 'VIDEO' || (document?.mimetype?.startsWith('video/') ?? false);
+
+function propertyTypeLabel(value: string): string {
+	const key = value as keyof typeof ApartmentOptionsLabels;
+	return ApartmentOptionsLabels[key] ?? value.replace(/_/g, ' ');
+}
+
+function roomTypeLabel(value: string): string {
+	const key = value as keyof typeof RoomTypeOptionsLabels;
+	return RoomTypeOptionsLabels[key] ?? value.replace(/_/g, ' ');
+}
+
+function formatGuestExtraPrice(price: number, unit: PricingUnit): string {
+	return `$${price.toFixed(2)} · ${PRICING_UNIT_LABELS[unit].toLowerCase()}`;
+}
+
+function mapGuestExtras(services: Service[] | undefined) {
+	if (!services?.length) return [];
+	return services
+		.filter((service) => service.active)
+		.map((service) => ({
+			id: service.id,
+			name: service.name,
+			description: service.description?.trim() ?? '',
+			price: formatGuestExtraPrice(service.price, service.pricing_unit),
+			imageSrc: service.images[0]?.url?.trim() ?? '',
+		}));
 }
 
 /** True when long copy adds no words beyond the teaser (avoids noisy duplicate snippets). */
@@ -96,9 +149,27 @@ function demoDocument(url: string, order: number): PropertyDocument {
 	};
 }
 
+function demoVideoDocument(url: string, order: number): PropertyDocument {
+	const t = new Date('2026-05-01T12:00:00.000Z').toISOString();
+	return {
+		id: `${DEMO_IDS.user}-doc-${order}`,
+		user_id: DEMO_IDS.user,
+		filename: `demo-walkthrough.mp4`,
+		mimetype: 'video/mp4',
+		size: 1,
+		url,
+		path: 'video-source:YOUTUBE',
+		type: 'VIDEO',
+		order,
+		created_at: t,
+		updated_at: t,
+		property_amenity_id: null,
+	};
+}
+
 function demoImages(): PropertyImage[] {
-	const cap = ['', 'Living — oak & glass', 'Terrace entrance', 'Primary suite', 'Sun deck & fire ring'];
-	return DEMO_IMG_URLS.map((url, order) => ({
+	const cap = ['', '', '', '', ''];
+	const photos = DEMO_IMG_URLS.map((url, order) => ({
 		id: `${DEMO_IDS.property}-img-${order}`,
 		user_id: DEMO_IDS.user,
 		property_id: DEMO_IDS.property,
@@ -109,6 +180,21 @@ function demoImages(): PropertyImage[] {
 		is_cover: order === 0,
 		order,
 	}));
+	const videoUrl = 'https://www.youtube.com/watch?v=EngW7tLk6R8';
+	return [
+		...photos,
+		{
+			id: `${DEMO_IDS.property}-vid-0`,
+			user_id: DEMO_IDS.user,
+			property_id: DEMO_IDS.property,
+			document_id: `${DEMO_IDS.user}-doc-5`,
+			description: 'House walkthrough',
+			created_at: new Date('2026-05-01T12:00:00.000Z').toISOString(),
+			document: demoVideoDocument(videoUrl, 5),
+			is_cover: false,
+			order: 5,
+		},
+	];
 }
 
 /** Synthetic listing matching `Property` — drives `/templates` previews via {@link propertyToBrandingPreview}. */
@@ -121,11 +207,15 @@ export const DEMO_PROPERTY_FOR_BRANDING: Property = {
 		'<p>Floor-to-ceiling glass pulls the horizon into the living space. Warm plaster walls and wide-plank oak keep the palette grounded.</p><p>Mornings begin with coastal fog; afternoons open onto terraces cut into the hillside. Every room is oriented toward the view.</p>',
 	short_description:
 		'Quiet luxury framed by coastal redwoods and the Pacific - a whole-home stay with soaking tub, plunge pool, and chef’s kitchen.',
+	welcome_message:
+		'<p>Welcome to the cliffs. Unpack slowly, open the terrace doors, and let the ocean set the pace for your stay.</p>',
 	location_access:
 		'Private gated drive off Highway 1 - keypad code shared 24h before arrival. Self check-in via smart lock; coastal trail entrance from the lower terrace.',
 	check_in_time: '16:00',
 	check_out_time: '11:00',
-	property_type: 'single_family_home',
+	house_rules_instructions:
+		'<p>Quiet hours after 10 PM. No shoes on the oak floors. Please rinse off in the outdoor shower before using the plunge pool.</p>',
+	property_type: 'house',
 	room_type: 'entire_place',
 	max_guests: 4,
 	bedrooms: 2,
@@ -160,17 +250,36 @@ export const DEMO_PROPERTY_FOR_BRANDING: Property = {
 };
 
 /** Listing preview: fields from `Property` only (no fictional rates). */
-export function propertyToBrandingPreview(property: Property): BrandingPreviewDemo {
-	const imgs = [...property.images].sort((a, b) => a.order - b.order);
-	const urls = imgs.map((i) => i.document?.url).filter(Boolean) as string[];
+export function propertyToBrandingPreview(
+	property: Property,
+	options?: { guestExtras?: Service[] },
+): BrandingPreviewDemo {
+	const ordered = [...property.images].sort((a, b) => a.order - b.order);
+	const photos = ordered.filter((item) => !isVideoDocument(item.document));
+	const videos = ordered
+		.filter((item) => isVideoDocument(item.document))
+		.map((item) => ({
+			src: item.document?.url ?? '',
+			source: readVideoUrlSourceFromDocumentPath(item.document?.path) ?? undefined,
+			description: item.description?.trim() ?? '',
+		}))
+		.filter((item) => item.src);
+	const urls = photos.map((i) => i.document?.url).filter(Boolean) as string[];
 	const img = (i: number) => urls[i] ?? '';
 
 	const amenities = property.amenity_ids.map((value) => {
 		const amenityId = value as AmenityId;
 		const opt = amenityOptionByValue[amenityId];
+		const entry = property.amenities.find((amenity) => amenity.value === value);
 		return {
 			id: amenityId,
 			label: opt?.label ?? value.replace(/_/g, ' '),
+			description: entry?.description?.trim() ?? '',
+			quantity:
+				typeof entry?.quantity === 'number' && Number.isFinite(entry.quantity) && entry.quantity > 0
+					? entry.quantity
+					: undefined,
+			imageSrc: entry?.image_url?.trim() ?? '',
 		};
 	});
 
@@ -202,9 +311,10 @@ export function propertyToBrandingPreview(property: Property): BrandingPreviewDe
 	const conceptTitle = oneLineShort.slice(0, 160) || (!hasConceptBody ? property.title : '');
 
 	const addressLine = [property.address, property.city, property.country].filter(Boolean).join(', ');
-	const roomLbl = property.room_type ? property.room_type.replace(/_/g, ' ') : '';
-
-	const pullDesc = imgs[4]?.description?.trim() ?? '';
+	const roomLbl = property.room_type ? roomTypeLabel(property.room_type) : '';
+	const checkInLabel = formatPropertyTimeLabel(property.check_in_time);
+	const checkOutLabel = formatPropertyTimeLabel(property.check_out_time);
+	const propertyType = propertyTypeLabel(property.property_type);
 
 	return {
 		propertyRef: property.id,
@@ -213,7 +323,7 @@ export function propertyToBrandingPreview(property: Property): BrandingPreviewDe
 		logoAlt: property.logo_alt?.trim() ?? '',
 		nav: [],
 		hero: {
-			series: [property.property_type.replace(/_/g, ' '), property.city].filter(Boolean).join(' · '),
+			series: [propertyType, property.city].filter(Boolean).join(' · '),
 			title: property.title,
 			location: [property.city, property.country].filter(Boolean).join(', ') || property.country || property.city || '',
 			imageSrc: img(0),
@@ -224,17 +334,28 @@ export function propertyToBrandingPreview(property: Property): BrandingPreviewDe
 			paragraphs: [descOneLine, ''],
 		},
 		gallery: {
-			large: { src: img(1), caption: imgs[1]?.description?.trim() ?? '' },
+			large: { src: img(1), caption: photos[1]?.description?.trim() ?? '' },
 			stack: [{ src: img(2) }, { src: img(3) }],
 			full: {
 				src: img(4),
-				pullQuote: {
-					title: pullDesc.slice(0, 80),
-					text: pullDesc,
-				},
+				caption: photos[4]?.description?.trim() ?? '',
 			},
 		},
 		amenities,
+		videos,
+		welcome: { html: property.welcome_message?.trim() ?? '' },
+		stay: {
+			propertyType,
+			roomType: roomLbl,
+			maxGuests: property.max_guests,
+			bedrooms: property.bedrooms,
+			beds: property.beds,
+			bathrooms: property.bathrooms,
+			checkIn: checkInLabel,
+			checkOut: checkOutLabel,
+		},
+		houseRules: { html: property.house_rules_instructions?.trim() ?? '' },
+		guestExtras: mapGuestExtras(options?.guestExtras),
 		location: {
 			eyebrow: 'Location',
 			coords,
@@ -251,8 +372,8 @@ export function propertyToBrandingPreview(property: Property): BrandingPreviewDe
 			price: '',
 			per: '',
 			rating: '',
-			arrival: property.check_in_time,
-			departure: property.check_out_time,
+			arrival: checkInLabel,
+			departure: checkOutLabel,
 			guests: `${property.max_guests} guests · ${property.bedrooms} bd · ${property.beds} beds · ${property.bathrooms} bath${roomLbl ? ` · ${roomLbl}` : ''}`,
 			maxGuests: Math.max(1, property.max_guests),
 			lines: [
@@ -299,29 +420,6 @@ function decorateFullTemplateDemo(theme: PropertyBrandingTheme, d: BrandingPrevi
 			...d.concept,
 			eyebrow: mizu ? 'The stay' : arch ? 'Editorial' : hikari ? 'Essence' : '— Overview',
 		},
-		gallery:
-			mizu || arch || hikari
-				? {
-						...d.gallery,
-						full: {
-							...d.gallery.full,
-							pullQuote: mizu
-								? {
-										title: 'Light moves across cedar and still water.',
-										text: 'Evenings settle into copper and teal — the house is built for unhurried arrivals.',
-									}
-								: arch
-									? {
-											title: 'Air moves through the pavilion before you arrive.',
-											text: 'An editorial stay shaped by altitude, timber, and long shadows across the ridge.',
-										}
-									: {
-											title: 'Clarity is the luxury.',
-											text: 'White walls, golden light, and nothing between you and the horizon.',
-										},
-						},
-					}
-				: d.gallery,
 		location: {
 			...d.location,
 			eyebrow: arch ? '— Altitude & access' : mizu ? '— Waterside' : hikari ? '— Setting' : '— Area',
@@ -332,69 +430,11 @@ function decorateFullTemplateDemo(theme: PropertyBrandingTheme, d: BrandingPrevi
 					: hikari
 						? 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1600&q=80'
 						: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80',
-			columns: mizu
-				? [
-						{ title: 'Arrival', text: 'Private lane from the coastal road; parking beside the cedar deck.' },
-						{ title: 'Rhythm', text: 'Morning mist on the inlet, golden hour on the terrace — quiet by design.' },
-					]
-				: arch
-					? [
-							{ title: 'Approach', text: 'Switchback road through pine; valet at the pavilion threshold.' },
-							{ title: 'Climate', text: 'Cool evenings, crisp mornings — pack layers for the terrace.' },
-						]
-					: hikari
-						? [
-								{ title: 'Access', text: 'Twenty minutes from the coast; a single private drive to the gate.' },
-								{ title: 'Light', text: 'East-facing glass catches first sun; afternoons stay soft in the courtyard.' },
-							]
-						: [
-								{ title: 'Access', text: '45 minutes from Monterey Regional (MRY); scenic coastal route.' },
-								{ title: 'Terrain', text: 'Elevated site above the marine layer with private trailhead access.' },
-							],
 		},
 		booking: {
 			...d.booking,
 			eyebrow: arch ? 'Request residency' : mizu ? 'Plan your stay' : hikari ? 'Reserve' : 'Book this stay',
-			arrival: arch ? 'May 12, 2026' : mizu ? 'Jul 8, 2026' : hikari ? 'Aug 2, 2026' : 'Jun 4, 2026',
-			departure: arch ? 'May 19, 2026' : mizu ? 'Jul 15, 2026' : hikari ? 'Aug 9, 2026' : 'Jun 11, 2026',
-			guests: arch ? '2 guests · 1 suite' : mizu ? '4 guests · Whole home' : hikari ? '6 guests · Whole home' : `${DEMO_PROPERTY_FOR_BRANDING.max_guests} guests · Whole home`,
-
-			per: arch ? '/ NIGHT' : '/ night',
-			rating: arch ? '4.98' : mizu ? '4.96' : hikari ? '4.94' : '4.92',
-			price: mizu ? '$420' : hikari ? '$385' : arch ? '€2,450' : d.booking.price,
-			lines: arch
-				? [
-						{ label: 'Accommodation (7 nights)', value: '€17,150' },
-						{ label: 'Curated concierge fee', value: '€450' },
-					]
-				: [
-						{ label: 'Stay (7 nights)', value: '$6,230' },
-						{ label: 'Cleaning & service', value: '$185' },
-					],
-			totalLabel: arch ? 'Total contribution' : 'Total',
-			total: arch ? '€17,600' : '$6,415',
 			cta: arch ? 'Request residency' : mizu ? 'Reserve dates' : hikari ? 'Check availability' : 'Check availability',
-			disclaimer: arch ? "You won't be charged yet" : 'Taxes and fees calculated at checkout',
-		},
-		host: {
-			label: arch ? 'Curated by' : mizu ? 'Your host' : hikari ? 'Host' : 'Hosted by',
-			name: arch ? 'Kaze Pavilion' : mizu ? 'Mizu House' : hikari ? 'Hikari Stays' : 'Domus Collective',
-			imageSrc: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
-			rating: arch
-				? '4.98 (124 reviews)'
-				: mizu
-					? '4.96 (89 reviews)'
-					: hikari
-						? '4.94 (156 reviews)'
-						: '4.92 (208 reviews)',
-			bio: mizu
-				? 'A calm, design-led retreat with onsen-inspired baths, cedar decks, and views that turn copper at dusk.'
-				: arch
-					? 'Mountain hospitality with editorial pacing — slow breakfasts, fireside evenings, and a concierge who knows the ridge.'
-					: hikari
-						? 'Minimal hosting for guests who value light, silence, and spaces that breathe. We respond within the hour.'
-						: 'We are a local hosting team sharing calm, detail-focused homes and responsive guest support.',
-			inquire: mizu ? 'Send a note' : arch ? 'Inquire' : hikari ? 'Message' : 'Message',
 		},
 		footer: {
 			...d.footer,

@@ -9,6 +9,10 @@ import { BrandingPreviewMap } from '@/components/google-maps';
 import { cn, Input } from '@/components/ui';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
 import { AmenityGlyph, BrandingWordmark, FillImg } from './branding-preview-shared';
+import { BrandingGuestExtrasSection } from './branding-guest-extras-section';
+import { BrandingRichTextBlock } from './branding-rich-text-block';
+import { BrandingStayDetailsSection } from './branding-stay-details-section';
+import { BrandingVideoSection } from './branding-video-section';
 import { PhotoGalleryLightbox } from './photo-gallery-carousel';
 import { formatStay, useBrandingStayBooking } from './use-branding-stay-booking';
 
@@ -46,6 +50,9 @@ function KazeBookingPanel({
 				? `${data.booking.price} ${data.booking.per}`
 				: 'Select your dates';
 	const calendarMonth = booking.stayRange?.from ?? booking.stayRange?.to ?? new Date();
+	const datesSelected = Boolean(booking.stayRange?.from && booking.stayRange?.to);
+	const reserveDisabled =
+		listingPreview && (!propertyRef || !datesSelected || booking.checkingAvailability);
 
 	return (
 		<div className="rounded-2xl border border-[#1c2430]/8 bg-white/80 shadow-[0_24px_64px_-32px_rgba(28,36,48,0.35)] backdrop-blur-md">
@@ -75,6 +82,9 @@ function KazeBookingPanel({
 
 			<div className="overflow-visible px-6 py-5">
 				<p className="font-[family-name:var(--preview-kaze-body)] text-sm text-[#1c2430]/55">{priceHint}</p>
+				{data.booking.guests.trim() ? (
+					<p className="mt-2 font-[family-name:var(--preview-kaze-body)] text-xs text-[#1c2430]/45">{data.booking.guests}</p>
+				) : null}
 
 				<div ref={booking.stayPickerRef} className="relative z-20 mt-5">
 					<div className="grid grid-cols-2 gap-3">
@@ -194,8 +204,11 @@ function KazeBookingPanel({
 				<button
 					type="button"
 					onClick={() => void booking.handleReserveClick()}
-					disabled={listingPreview && (!propertyRef || !booking.stayRange?.from || !booking.stayRange?.to || booking.checkingAvailability)}
-					className="cursor-pointer group mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1c2430] py-4 font-[family-name:var(--preview-kaze-body)] text-sm font-semibold tracking-wide text-[#fafbfc] transition hover:bg-[#6b8f9e] disabled:opacity-50"
+					disabled={reserveDisabled}
+					className={cn(
+						'group mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1c2430] py-4 font-[family-name:var(--preview-kaze-body)] text-sm font-semibold tracking-wide text-[#fafbfc] transition hover:bg-[#6b8f9e] disabled:opacity-50',
+						datesSelected && !booking.checkingAvailability ? 'cursor-pointer' : 'cursor-default',
+					)}
 				>
 					<span>{booking.checkingAvailability ? 'Checking…' : data.booking.cta}</span>
 					<ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden />
@@ -241,9 +254,6 @@ export function ArchitecturaPreview({
 		const n = m ? parseInt(m[1], 10) : data.booking.maxGuests;
 		return Math.min(Math.max(1, data.booking.maxGuests), Math.max(1, n));
 	}, [data.booking.guests, data.booking.maxGuests]);
-	const hostBio =
-		data.host.bio.trim() ||
-		'Editorial hospitality with mountain air, slow mornings, and a concierge eye for the exceptional.';
 
 	const openGallery = (src: string) => {
 		const index = galleryImages.findIndex((img) => img === src);
@@ -369,6 +379,17 @@ export function ArchitecturaPreview({
 							</div>
 						) : null}
 
+						{data.welcome.html ? (
+							<div className="max-w-2xl rounded-2xl border border-[#1c2430]/8 bg-white/60 p-8 backdrop-blur-sm">
+								<p className="font-[family-name:var(--preview-kaze-body)] text-[10px] font-medium uppercase tracking-[0.35em] text-[#6b8f9e]">
+									Welcome
+								</p>
+								<div className="mt-4">
+									<BrandingRichTextBlock html={data.welcome.html} variant="architectura" />
+								</div>
+							</div>
+						) : null}
+
 						<div className="grid gap-4 sm:grid-cols-12">
 							{data.gallery.large.src.trim() ? (
 								<button
@@ -421,21 +442,7 @@ export function ArchitecturaPreview({
 							</div>
 						</div>
 
-						{data.gallery.full.pullQuote.title.trim() || data.gallery.full.pullQuote.text.trim() ? (
-							<div className="relative overflow-hidden rounded-2xl bg-[#1c2430] px-8 py-10 text-[#fafbfc] sm:px-12 sm:py-14">
-								<div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#6b8f9e]/20 blur-2xl" aria-hidden />
-								{data.gallery.full.pullQuote.title.trim() ? (
-									<p className="relative font-[family-name:var(--preview-kaze-headline)] text-2xl leading-snug sm:text-3xl">
-										{data.gallery.full.pullQuote.title}
-									</p>
-								) : null}
-								{data.gallery.full.pullQuote.text.trim() ? (
-									<p className="relative mt-4 max-w-lg font-[family-name:var(--preview-kaze-body)] text-sm leading-relaxed text-[#fafbfc]/60">
-										{data.gallery.full.pullQuote.text}
-									</p>
-								) : null}
-							</div>
-						) : null}
+						<BrandingStayDetailsSection stay={data.stay} variant="architectura" />
 
 						{data.amenities.length > 0 ? (
 							<div>
@@ -446,17 +453,42 @@ export function ArchitecturaPreview({
 									{data.amenities.map((a) => (
 										<li
 											key={`${a.id}-${a.label}`}
-											className="flex items-center gap-4 rounded-xl border border-[#1c2430]/8 bg-white/60 px-5 py-4 backdrop-blur-sm"
+											className="rounded-xl border border-[#1c2430]/8 bg-white/60 px-5 py-4 backdrop-blur-sm"
 										>
-											<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#eef1f4]">
-												<AmenityGlyph id={a.id} className="h-5 w-5 text-[#6b8f9e]" />
-											</span>
-											<span className="font-[family-name:var(--preview-kaze-body)] text-sm font-medium text-[#1c2430]/80">
-												{a.label}
-											</span>
+											<div className="flex items-center gap-4">
+												<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#eef1f4]">
+													<AmenityGlyph id={a.id} className="h-5 w-5 text-[#6b8f9e]" />
+												</span>
+												<span className="font-[family-name:var(--preview-kaze-body)] text-sm font-medium text-[#1c2430]/80">
+													{a.label}
+													{a.quantity ? ` · ${a.quantity}` : ''}
+												</span>
+											</div>
+											{a.description ? (
+												<p className="mt-3 pl-14 font-[family-name:var(--preview-kaze-body)] text-sm leading-relaxed text-[#1c2430]/55">
+													{a.description}
+												</p>
+											) : null}
 										</li>
 									))}
 								</ul>
+							</div>
+						) : null}
+
+						{data.videos.length > 0 ? (
+							<BrandingVideoSection videos={data.videos} variant="architectura" eyebrow="Video tour" />
+						) : null}
+
+						<BrandingGuestExtrasSection guestExtras={data.guestExtras} variant="architectura" />
+
+						{data.houseRules.html ? (
+							<div className="max-w-2xl rounded-2xl border border-[#1c2430]/8 bg-white/60 p-8 backdrop-blur-sm">
+								<p className="font-[family-name:var(--preview-kaze-body)] text-[10px] font-medium uppercase tracking-[0.35em] text-[#6b8f9e]">
+									House rules
+								</p>
+								<div className="mt-4">
+									<BrandingRichTextBlock html={data.houseRules.html} variant="architectura" />
+								</div>
 							</div>
 						) : null}
 
@@ -502,10 +534,16 @@ export function ArchitecturaPreview({
 										</p>
 									) : null}
 									<p className="mt-2 font-[family-name:var(--preview-kaze-headline)] text-2xl text-[#1c2430]">{data.host.name}</p>
-									<p className="mt-1 font-[family-name:var(--preview-kaze-body)] text-xs text-[#c9b8a8]">{data.host.rating}</p>
-									<p className="mt-4 max-w-lg font-[family-name:var(--preview-kaze-body)] text-sm leading-relaxed text-[#1c2430]/65">
-										{hostBio}
-									</p>
+									{data.host.rating.trim() ? (
+										<p className="mt-1 font-[family-name:var(--preview-kaze-body)] text-xs text-[#c9b8a8]">
+											{data.host.rating}
+										</p>
+									) : null}
+									{data.host.bio.trim() ? (
+										<p className="mt-4 max-w-lg font-[family-name:var(--preview-kaze-body)] text-sm leading-relaxed text-[#1c2430]/65">
+											{data.host.bio}
+										</p>
+									) : null}
 									{data.host.inquire ? (
 										<button
 											type="button"
@@ -544,6 +582,11 @@ export function ArchitecturaPreview({
 							sizes="100vw"
 							imgClassName="transition duration-1000 group-hover:scale-[1.02]"
 						/>
+						{data.gallery.full.caption ? (
+							<p className="absolute bottom-5 left-6 font-[family-name:var(--preview-kaze-body)] text-[10px] uppercase tracking-[0.28em] text-white/85">
+								{data.gallery.full.caption}
+							</p>
+						) : null}
 						<div className="absolute inset-0 bg-[#1c2430]/15 transition group-hover:bg-[#1c2430]/5" aria-hidden />
 					</button>
 				</section>

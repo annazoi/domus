@@ -4,6 +4,7 @@ import { notFound, useParams } from 'next/navigation';
 import { BrandingThemeFullPreview } from '@/app/(pages)/templates/_components/branding-theme-full-preview';
 import { propertyToBrandingPreview } from '@/app/(pages)/templates/_utils/property-to-branding-preview';
 import { Skeleton } from '@/components/ui';
+import { usePropertyServices } from '@/features/services/hooks/use-property-services';
 import { useProperty } from '@/features/property/hooks/use-property';
 
 /** Single-segment app routes — avoid treating these as property slugs. */
@@ -15,6 +16,7 @@ export default function PropertyListingBySlugPage() {
 	if (RESERVED.has(key.toLowerCase())) notFound();
 
 	const { data: property, isLoading } = useProperty(key);
+	const { data: guestExtras = [] } = usePropertyServices(property?.id ?? '');
 
 	if (isLoading) {
 		return (
@@ -34,7 +36,7 @@ export default function PropertyListingBySlugPage() {
 	}
 	if (!property) return <p className="p-6 text-sm text-red-700">Property not found.</p>;
 
-	const data = propertyToBrandingPreview(property);
+	const data = propertyToBrandingPreview(property, { guestExtras });
 
 	return <BrandingThemeFullPreview theme={property.branding_theme} data={data} listingPreview />;
 }

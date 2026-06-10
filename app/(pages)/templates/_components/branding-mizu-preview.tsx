@@ -9,6 +9,10 @@ import { BrandingPreviewMap } from '@/components/google-maps';
 import { cn, Input } from '@/components/ui';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
 import { AmenityGlyph, BrandingWordmark, FillImg } from './branding-preview-shared';
+import { BrandingGuestExtrasSection } from './branding-guest-extras-section';
+import { BrandingRichTextBlock } from './branding-rich-text-block';
+import { BrandingStayDetailsSection } from './branding-stay-details-section';
+import { BrandingVideoSection } from './branding-video-section';
 import { PhotoGalleryLightbox } from './photo-gallery-carousel';
 import { formatStay, useBrandingStayBooking } from './use-branding-stay-booking';
 
@@ -31,13 +35,11 @@ function MizuBookingPanel({
 	listingPreview,
 	propertyRef,
 	guestCap,
-	hostRating,
 }: {
 	data: BrandingPreviewDemo;
 	listingPreview?: boolean;
 	propertyRef: string;
 	guestCap: number;
-	hostRating: string;
 }) {
 	const booking = useBrandingStayBooking({ listingPreview, propertyRef, guestCap });
 
@@ -49,6 +51,9 @@ function MizuBookingPanel({
 				? `${data.booking.price} ${data.booking.per}`
 				: 'Choose dates to see your total';
 	const calendarMonth = booking.stayRange?.from ?? booking.stayRange?.to ?? new Date();
+	const datesSelected = Boolean(booking.stayRange?.from && booking.stayRange?.to);
+	const reserveDisabled =
+		listingPreview && (!propertyRef || !datesSelected || booking.checkingAvailability);
 
 	return (
 		<div className="rounded-[1.75rem] border border-[#6b9a8f]/25 bg-[#fff9f4] shadow-[0_24px_60px_-28px_rgba(26,46,53,0.35)]">
@@ -72,13 +77,16 @@ function MizuBookingPanel({
 				{data.booking.rating.trim() ? (
 					<p className="mt-2 flex items-center gap-1.5 font-[family-name:var(--preview-mizu-body)] text-sm text-[#1a2e35]/65">
 						<Star className="h-4 w-4 fill-[#c4785a] text-[#c4785a]" aria-hidden />
-						{data.booking.rating} · {hostRating}
+						{data.booking.rating}
 					</p>
 				) : null}
 			</div>
 
 			<div className="overflow-visible p-6">
 				<p className="font-[family-name:var(--preview-mizu-body)] text-sm leading-snug text-[#1a2e35]/70">{priceLine}</p>
+				{data.booking.guests.trim() ? (
+					<p className="mt-2 font-[family-name:var(--preview-mizu-body)] text-xs text-[#1a2e35]/50">{data.booking.guests}</p>
+				) : null}
 
 				<div ref={booking.stayPickerRef} className="relative z-20 mt-5">
 					<div className="grid grid-cols-2 gap-3">
@@ -195,8 +203,11 @@ function MizuBookingPanel({
 				<button
 					type="button"
 					onClick={() => void booking.handleReserveClick()}
-					disabled={listingPreview && (!propertyRef || !booking.stayRange?.from || !booking.stayRange?.to || booking.checkingAvailability)}
-					className="cursor-pointer mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#4d7c6f] py-4 font-[family-name:var(--preview-mizu-body)] text-sm font-semibold tracking-wide text-white transition hover:bg-[#3d665b] disabled:cursor-not-allowed disabled:opacity-55"
+					disabled={reserveDisabled}
+					className={cn(
+						'mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#4d7c6f] py-4 font-[family-name:var(--preview-mizu-body)] text-sm font-semibold tracking-wide text-white transition hover:bg-[#3d665b] disabled:opacity-55',
+						datesSelected && !booking.checkingAvailability ? 'cursor-pointer' : 'cursor-default',
+					)}
 				>
 					{booking.checkingAvailability ? 'Checking…' : data.booking.cta}
 					<ChevronDown className="h-4 w-4 -rotate-90" aria-hidden />
@@ -243,10 +254,6 @@ export function MizuPreview({
 		const n = m ? parseInt(m[1], 10) : data.booking.maxGuests;
 		return Math.min(Math.max(1, data.booking.maxGuests), Math.max(1, n));
 	}, [data.booking.guests, data.booking.maxGuests]);
-	const hostRating = data.host.rating.trim() || `${data.booking.rating} guest favourite`;
-	const hostBio =
-		data.host.bio.trim() ||
-		'A calm, design-led retreat with onsen-inspired baths, cedar decks, and views that turn copper at dusk.';
 
 	const openGallery = (src: string) => {
 		const index = galleryImages.findIndex((img) => img === src);
@@ -321,14 +328,6 @@ export function MizuPreview({
 							{data.hero.location}
 						</p>
 					) : null}
-					{data.booking.rating.trim() ? (
-						<div className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#fff9f4]/20 bg-[#fff9f4]/10 px-4 py-2 backdrop-blur-sm">
-							<Star className="h-4 w-4 fill-[#c4785a] text-[#c4785a]" aria-hidden />
-							<span className="font-[family-name:var(--preview-mizu-body)] text-sm text-[#fff9f4]">
-								{data.booking.rating} · Guest favourite
-							</span>
-						</div>
-					) : null}
 				</div>
 			</section>
 
@@ -379,20 +378,18 @@ export function MizuPreview({
 							</section>
 						)}
 
-						{data.gallery.full.pullQuote.title.trim() || data.gallery.full.pullQuote.text.trim() ? (
-							<blockquote className="border-l-2 border-[#c4785a]/50 py-2 pl-6">
-								{data.gallery.full.pullQuote.title.trim() ? (
-									<p className="font-[family-name:var(--preview-mizu-headline)] text-2xl italic text-[#1a2e35] sm:text-3xl">
-										&ldquo;{data.gallery.full.pullQuote.title}&rdquo;
-									</p>
-								) : null}
-								{data.gallery.full.pullQuote.text.trim() ? (
-									<p className="mt-3 max-w-xl font-[family-name:var(--preview-mizu-body)] text-sm leading-relaxed text-[#1a2e35]/60">
-										{data.gallery.full.pullQuote.text}
-									</p>
-								) : null}
-							</blockquote>
+						{data.welcome.html ? (
+							<section className="rounded-[1.75rem] border border-[#6b9a8f]/15 bg-[#fff9f4] p-8 sm:p-10">
+								<p className="font-[family-name:var(--preview-mizu-body)] text-[10px] font-semibold uppercase tracking-[0.28em] text-[#4d7c6f]">
+									Welcome
+								</p>
+								<div className="mt-4">
+									<BrandingRichTextBlock html={data.welcome.html} variant="mizu" />
+								</div>
+							</section>
 						) : null}
+
+						<BrandingStayDetailsSection stay={data.stay} variant="mizu" />
 
 						{data.amenities.length > 0 ? (
 							<section>
@@ -403,14 +400,39 @@ export function MizuPreview({
 									{data.amenities.map((a) => (
 										<span
 											key={`${a.id}-${a.label}`}
-											className="inline-flex items-center gap-2 rounded-full border border-[#6b9a8f]/20 bg-[#fff9f4] px-4 py-2.5"
+											className="inline-flex max-w-full flex-col gap-1 rounded-full border border-[#6b9a8f]/20 bg-[#fff9f4] px-4 py-2.5"
 										>
-											<AmenityGlyph id={a.id} className="h-5 w-5 text-[#4d7c6f]" />
-											<span className="font-[family-name:var(--preview-mizu-body)] text-xs font-medium text-[#1a2e35]">
-												{a.label}
+											<span className="inline-flex items-center gap-2">
+												<AmenityGlyph id={a.id} className="h-5 w-5 text-[#4d7c6f]" />
+												<span className="font-[family-name:var(--preview-mizu-body)] text-xs font-medium text-[#1a2e35]">
+													{a.label}
+													{a.quantity ? ` · ${a.quantity}` : ''}
+												</span>
 											</span>
+											{a.description ? (
+												<span className="pl-7 font-[family-name:var(--preview-mizu-body)] text-[11px] leading-snug text-[#1a2e35]/60">
+													{a.description}
+												</span>
+											) : null}
 										</span>
 									))}
+								</div>
+							</section>
+						) : null}
+
+						{data.videos.length > 0 ? (
+							<BrandingVideoSection videos={data.videos} variant="mizu" eyebrow="Video tour" />
+						) : null}
+
+						<BrandingGuestExtrasSection guestExtras={data.guestExtras} variant="mizu" />
+
+						{data.houseRules.html ? (
+							<section className="rounded-[1.75rem] border border-[#6b9a8f]/15 bg-[#fff9f4] p-8 sm:p-10">
+								<p className="font-[family-name:var(--preview-mizu-body)] text-[10px] font-semibold uppercase tracking-[0.28em] text-[#4d7c6f]">
+									House rules
+								</p>
+								<div className="mt-4">
+									<BrandingRichTextBlock html={data.houseRules.html} variant="mizu" />
 								</div>
 							</section>
 						) : null}
@@ -469,12 +491,16 @@ export function MizuPreview({
 										</p>
 									) : null}
 									<p className="mt-2 font-[family-name:var(--preview-mizu-headline)] text-3xl">{data.host.name}</p>
-									<p className="mt-2 font-[family-name:var(--preview-mizu-body)] text-sm text-[#fff9f4]/65">
-										{hostRating}
-									</p>
-									<p className="mt-4 font-[family-name:var(--preview-mizu-body)] text-sm leading-relaxed text-[#fff9f4]/80">
-										{hostBio}
-									</p>
+									{data.host.rating.trim() ? (
+										<p className="mt-2 font-[family-name:var(--preview-mizu-body)] text-sm text-[#fff9f4]/65">
+											{data.host.rating}
+										</p>
+									) : null}
+									{data.host.bio.trim() ? (
+										<p className="mt-4 font-[family-name:var(--preview-mizu-body)] text-sm leading-relaxed text-[#fff9f4]/80">
+											{data.host.bio}
+										</p>
+									) : null}
 									{data.host.inquire ? (
 										<button
 											type="button"
@@ -494,7 +520,6 @@ export function MizuPreview({
 							listingPreview={listingPreview}
 							propertyRef={propertyRef}
 							guestCap={guestCap}
-							hostRating={hostRating}
 						/>
 					</aside>
 				</div>

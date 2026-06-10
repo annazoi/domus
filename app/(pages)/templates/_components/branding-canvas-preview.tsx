@@ -9,6 +9,10 @@ import { BrandingPreviewMap } from '@/components/google-maps';
 import { cn, Input } from '@/components/ui';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
 import { AmenityGlyph, BrandingWordmark, FillImg } from './branding-preview-shared';
+import { BrandingGuestExtrasSection } from './branding-guest-extras-section';
+import { BrandingRichTextBlock } from './branding-rich-text-block';
+import { BrandingStayDetailsSection } from './branding-stay-details-section';
+import { BrandingVideoSection } from './branding-video-section';
 import { PhotoGalleryLightbox } from './photo-gallery-carousel';
 import { formatStay, useBrandingStayBooking } from './use-branding-stay-booking';
 
@@ -43,6 +47,9 @@ function HikariBookingPanel({
 		: booking.stayRange?.from && booking.stayRange?.to && booking.availabilityMsg
 			? booking.availabilityMsg
 			: 'Select dates';
+	const datesSelected = Boolean(booking.stayRange?.from && booking.stayRange?.to);
+	const reserveDisabled =
+		listingPreview && (!propertyRef || !datesSelected || booking.checkingAvailability);
 
 	return (
 		<div className="border border-[#0a0a0a] bg-[#fcfcfa] p-6 sm:p-8">
@@ -67,6 +74,11 @@ function HikariBookingPanel({
 			</div>
 
 			<p className="mt-4 font-[family-name:var(--preview-hikari-body)] text-sm text-[#0a0a0a]/55">{priceHint}</p>
+			{data.booking.guests.trim() ? (
+				<p className="mt-2 font-[family-name:var(--preview-hikari-body)] text-xs uppercase tracking-[0.18em] text-[#0a0a0a]/45">
+					{data.booking.guests}
+				</p>
+			) : null}
 
 			<div ref={booking.stayPickerRef} className="relative mt-6 [--rdp-accent-color:#0a0a0a] [--rdp-accent-background-color:rgba(10,10,10,0.08)]">
 				<div className="grid grid-cols-2 gap-px bg-[#0a0a0a]/10">
@@ -152,8 +164,11 @@ function HikariBookingPanel({
 			<button
 				type="button"
 				onClick={() => void booking.handleReserveClick()}
-				disabled={listingPreview && (!propertyRef || !booking.stayRange?.from || !booking.stayRange?.to || booking.checkingAvailability)}
-				className="cursor-pointer group mt-8 flex w-full items-center justify-between bg-[#0a0a0a] px-5 py-4 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold uppercase tracking-[0.2em] text-[#fcfcfa] transition hover:bg-[#d4a853] hover:text-[#0a0a0a] disabled:opacity-50"
+				disabled={reserveDisabled}
+				className={cn(
+					'group mt-8 flex w-full items-center justify-between bg-[#0a0a0a] px-5 py-4 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold uppercase tracking-[0.2em] text-[#fcfcfa] transition hover:bg-[#d4a853] hover:text-[#0a0a0a] disabled:opacity-50',
+					datesSelected && !booking.checkingAvailability ? 'cursor-pointer' : 'cursor-default',
+				)}
 			>
 				<span>{booking.checkingAvailability ? 'Checking…' : data.booking.cta}</span>
 				<ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden />
@@ -194,7 +209,6 @@ export function CanvasPreview({
 		const n = m ? parseInt(m[1], 10) : data.booking.maxGuests;
 		return Math.min(Math.max(1, data.booking.maxGuests), Math.max(1, n));
 	}, [data.booking.guests, data.booking.maxGuests]);
-	const hostBio = data.host.bio.trim() || 'Thoughtful hosting with an eye for light, space, and the quiet details.';
 
 	const openGallery = (src: string) => {
 		const index = galleryImages.findIndex((img) => img === src);
@@ -315,18 +329,18 @@ export function CanvasPreview({
 								</div>
 							) : null}
 
-							{data.gallery.full.pullQuote.title.trim() ? (
-								<blockquote className="max-w-xl">
-									<p className="font-[family-name:var(--preview-hikari-display)] text-2xl font-semibold leading-snug tracking-tight sm:text-3xl">
-										{data.gallery.full.pullQuote.title}
+							{data.welcome.html ? (
+								<div>
+									<p className="font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.35em] text-[#0a0a0a]/40">
+										Welcome
 									</p>
-									{data.gallery.full.pullQuote.text.trim() ? (
-										<p className="mt-4 font-[family-name:var(--preview-hikari-body)] text-sm text-[#0a0a0a]/50">
-											{data.gallery.full.pullQuote.text}
-										</p>
-									) : null}
-								</blockquote>
+									<div className="mt-4 max-w-2xl">
+										<BrandingRichTextBlock html={data.welcome.html} variant="canvas" />
+									</div>
+								</div>
 							) : null}
+
+							<BrandingStayDetailsSection stay={data.stay} variant="canvas" />
 
 							{data.amenities.length > 0 ? (
 								<div>
@@ -335,15 +349,42 @@ export function CanvasPreview({
 									</p>
 									<ul className="divide-y divide-[#0a0a0a]/8">
 										{data.amenities.map((a) => (
-											<li key={`${a.id}-${a.label}`} className="flex items-center gap-5 py-5">
-												<AmenityGlyph id={a.id} className="h-6 w-6 shrink-0 text-[#0a0a0a]/70" />
-												<span className="font-[family-name:var(--preview-hikari-display)] text-sm font-semibold uppercase tracking-wider">
-													{a.label}
-												</span>
-												<Plus className="ml-auto h-4 w-4 text-[#d4a853]/80" aria-hidden />
+											<li key={`${a.id}-${a.label}`} className="flex items-start gap-5 py-5">
+												<AmenityGlyph id={a.id} className="mt-0.5 h-6 w-6 shrink-0 text-[#0a0a0a]/70" />
+												<div className="min-w-0 flex-1">
+													<div className="flex items-center gap-3">
+														<span className="font-[family-name:var(--preview-hikari-display)] text-sm font-semibold uppercase tracking-wider">
+															{a.label}
+															{a.quantity ? ` · ${a.quantity}` : ''}
+														</span>
+														<Plus className="ml-auto h-4 w-4 text-[#d4a853]/80" aria-hidden />
+													</div>
+													{a.description ? (
+														<p className="mt-1 font-[family-name:var(--preview-hikari-body)] text-sm text-[#0a0a0a]/55">
+															{a.description}
+														</p>
+													) : null}
+												</div>
 											</li>
 										))}
 									</ul>
+								</div>
+							) : null}
+
+							{data.videos.length > 0 ? (
+								<BrandingVideoSection videos={data.videos} variant="canvas" eyebrow="Video tour" />
+							) : null}
+
+							<BrandingGuestExtrasSection guestExtras={data.guestExtras} variant="canvas" />
+
+							{data.houseRules.html ? (
+								<div>
+									<p className="mb-4 font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.35em] text-[#0a0a0a]/40">
+										House rules
+									</p>
+									<div className="max-w-2xl border border-[#0a0a0a]/10 bg-white p-6">
+										<BrandingRichTextBlock html={data.houseRules.html} variant="canvas" />
+									</div>
 								</div>
 							) : null}
 
@@ -391,10 +432,16 @@ export function CanvasPreview({
 											</p>
 										) : null}
 										<p className="mt-2 font-[family-name:var(--preview-hikari-display)] text-2xl font-bold">{data.host.name}</p>
-										<p className="mt-1 font-[family-name:var(--preview-hikari-body)] text-xs text-[#d4a853]">{data.host.rating}</p>
-										<p className="mt-3 max-w-lg font-[family-name:var(--preview-hikari-body)] text-sm leading-relaxed text-[#0a0a0a]/65">
-											{hostBio}
-										</p>
+										{data.host.rating.trim() ? (
+											<p className="mt-1 font-[family-name:var(--preview-hikari-body)] text-xs text-[#d4a853]">
+												{data.host.rating}
+											</p>
+										) : null}
+										{data.host.bio.trim() ? (
+											<p className="mt-3 max-w-lg font-[family-name:var(--preview-hikari-body)] text-sm leading-relaxed text-[#0a0a0a]/65">
+												{data.host.bio}
+											</p>
+										) : null}
 									</div>
 								</div>
 							) : null}
