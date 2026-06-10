@@ -14,6 +14,7 @@ export const PROPERTY_FORM_DEFAULT_VALUES: UpsertPropertyInput = {
 	door_code: '',
 	safe_box_code: '',
 	house_rules_instructions: '',
+	privacy_policy: '',
 	property_type: ApartmentOptions[0].value,
 	room_type: RoomTypeOptions[0].value,
 	max_guests: 1,

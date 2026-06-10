@@ -60,6 +60,7 @@ export type PropertyWithImages = {
 	door_code: string | null;
 	safe_box_code: string | null;
 	house_rules_instructions: string | null;
+	privacy_policy: string | null;
 	isPublished: boolean;
 	branding_theme: PropertyBrandingTheme;
 	logo?: PropertyImageDocument | null;
@@ -97,6 +98,7 @@ export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 	door_code: property.door_code ?? '',
 	safe_box_code: property.safe_box_code ?? '',
 	house_rules_instructions: property.house_rules_instructions ?? '',
+	privacy_policy: property.privacy_policy ?? '',
 	property_type: property.property_type,
 	room_type: '',
 	max_guests: property.max_guests,

@@ -25,6 +25,7 @@ export const houseRulesFormSchema = z.object({
 	door_code: z.string().optional(),
 	safe_box_code: z.string().optional(),
 	house_rules_instructions: z.string().optional(),
+	privacy_policy: z.string().optional(),
 });
 
 export const capacityFormSchema = z.object({

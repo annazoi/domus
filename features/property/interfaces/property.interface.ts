@@ -23,6 +23,7 @@ export interface Property {
 	door_code?: string;
 	safe_box_code?: string;
 	house_rules_instructions?: string;
+	privacy_policy?: string;
 	property_type: string;
 	room_type: string;
 	max_guests: number;
@@ -57,6 +58,7 @@ export interface UpsertPropertyInput {
 	door_code?: string;
 	safe_box_code?: string;
 	house_rules_instructions?: string;
+	privacy_policy?: string;
 	property_type: string;
 	room_type: string;
 	max_guests: number;

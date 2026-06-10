@@ -388,6 +388,17 @@ export function CanvasPreview({
 								</div>
 							) : null}
 
+							{data.privacyPolicy.html ? (
+								<div>
+									<p className="mb-4 font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.35em] text-[#0a0a0a]/40">
+										Privacy policy
+									</p>
+									<div className="max-w-2xl border border-[#0a0a0a]/10 bg-white p-6">
+										<BrandingRichTextBlock html={data.privacyPolicy.html} variant="canvas" />
+									</div>
+								</div>
+							) : null}
+
 							<div>
 								<p className="mb-6 font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.35em] text-[#0a0a0a]/40">
 									{data.location.eyebrow || 'Location'}

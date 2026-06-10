@@ -43,6 +43,7 @@ export type BrandingPreviewDemo = {
 		checkOut: string;
 	};
 	houseRules: { html: string };
+	privacyPolicy: { html: string };
 	guestExtras: { id: string; name: string; description: string; price: string; imageSrc: string }[];
 	location: {
 		eyebrow: string;
@@ -215,6 +216,8 @@ export const DEMO_PROPERTY_FOR_BRANDING: Property = {
 	check_out_time: '11:00',
 	house_rules_instructions:
 		'<p>Quiet hours after 10 PM. No shoes on the oak floors. Please rinse off in the outdoor shower before using the plunge pool.</p>',
+	privacy_policy:
+		'<p>We do not use interior cameras. Contact details are used only for your stay and are not shared with third parties.</p>',
 	property_type: 'house',
 	room_type: 'entire_place',
 	max_guests: 4,
@@ -355,6 +358,7 @@ export function propertyToBrandingPreview(
 			checkOut: checkOutLabel,
 		},
 		houseRules: { html: property.house_rules_instructions?.trim() ?? '' },
+		privacyPolicy: { html: property.privacy_policy?.trim() ?? '' },
 		guestExtras: mapGuestExtras(options?.guestExtras),
 		location: {
 			eyebrow: 'Location',

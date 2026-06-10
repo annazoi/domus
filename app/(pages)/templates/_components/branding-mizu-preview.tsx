@@ -437,6 +437,17 @@ export function MizuPreview({
 							</section>
 						) : null}
 
+						{data.privacyPolicy.html ? (
+							<section className="rounded-[1.75rem] border border-[#6b9a8f]/15 bg-[#fff9f4] p-8 sm:p-10">
+								<p className="font-[family-name:var(--preview-mizu-body)] text-[10px] font-semibold uppercase tracking-[0.28em] text-[#4d7c6f]">
+									Privacy policy
+								</p>
+								<div className="mt-4">
+									<BrandingRichTextBlock html={data.privacyPolicy.html} variant="mizu" />
+								</div>
+							</section>
+						) : null}
+
 						<section>
 							<p className="font-[family-name:var(--preview-mizu-body)] text-[10px] font-semibold uppercase tracking-[0.28em] text-[#4d7c6f]">
 								{data.location.eyebrow || 'Location'}

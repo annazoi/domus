@@ -492,6 +492,17 @@ export function ArchitecturaPreview({
 							</div>
 						) : null}
 
+						{data.privacyPolicy.html ? (
+							<div className="max-w-2xl rounded-2xl border border-[#1c2430]/8 bg-white/60 p-8 backdrop-blur-sm">
+								<p className="font-[family-name:var(--preview-kaze-body)] text-[10px] font-medium uppercase tracking-[0.35em] text-[#6b8f9e]">
+									Privacy policy
+								</p>
+								<div className="mt-4">
+									<BrandingRichTextBlock html={data.privacyPolicy.html} variant="architectura" />
+								</div>
+							</div>
+						) : null}
+
 						<div>
 							<p className="font-[family-name:var(--preview-kaze-body)] text-[10px] font-medium uppercase tracking-[0.35em] text-[#6b8f9e]">
 								{data.location.eyebrow}

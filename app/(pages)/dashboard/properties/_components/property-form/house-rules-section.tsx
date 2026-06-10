@@ -56,6 +56,7 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 			door_code: defaults.door_code ?? '',
 			safe_box_code: defaults.safe_box_code ?? '',
 			house_rules_instructions: defaults.house_rules_instructions ?? '',
+			privacy_policy: defaults.privacy_policy ?? '',
 		},
 	});
 
@@ -73,6 +74,7 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 				door_code: saved.door_code ?? '',
 				safe_box_code: saved.safe_box_code ?? '',
 				house_rules_instructions: saved.house_rules_instructions ?? '',
+				privacy_policy: saved.privacy_policy ?? '',
 			});
 			push({ title: 'Saved.', tone: 'success' });
 		} catch (e) {
@@ -186,6 +188,20 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 						value={field.value ?? ''}
 						onChange={field.onChange}
 						placeholder="Entry steps, lock details, or other notes for guests…"
+						editorMinHeight="min-h-[160px]"
+					/>
+				)}
+			/>
+			<Controller
+				control={control}
+				name="privacy_policy"
+				render={({ field }) => (
+					<MinimalRichText
+						id="property-privacy-policy"
+						label="Privacy policy"
+						value={field.value ?? ''}
+						onChange={field.onChange}
+						placeholder="How guest data is handled, camera policies, or other privacy notes…"
 						editorMinHeight="min-h-[160px]"
 					/>
 				)}
