@@ -1,12 +1,15 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
+import type { Editor } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { Bold, Italic, List, ListOrdered, Redo2, Undo2 } from 'lucide-react';
+import { Bold, Italic, Link2, List, ListOrdered, Redo2, Undo2 } from 'lucide-react';
 import { cn } from './cn';
 import { Button } from './button';
+import { normalizeRichTextLinkUrl, RichTextLinkDialog } from './rich-text-link-dialog';
 
 type MinimalRichTextProps = {
 	id?: string;
@@ -20,6 +23,12 @@ type MinimalRichTextProps = {
 const toolbarBtn =
 	'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-dashboard-muted/90 transition hover:bg-dashboard-row-hover hover:text-espresso disabled:opacity-30';
 
+function getSelectionPreview(editor: Editor) {
+	const { from, to } = editor.state.selection;
+	if (from === to) return '';
+	return editor.state.doc.textBetween(from, to, ' ').trim();
+}
+
 export function MinimalRichText({
 	id,
 	label,
@@ -28,12 +37,26 @@ export function MinimalRichText({
 	placeholder = 'Write…',
 	editorMinHeight = 'min-h-[140px]',
 }: MinimalRichTextProps) {
+	const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+	const [linkDialogUrl, setLinkDialogUrl] = useState('');
+	const [linkDialogHasExisting, setLinkDialogHasExisting] = useState(false);
+	const [linkSelectionPreview, setLinkSelectionPreview] = useState('');
+
 	const editor = useEditor({
 		extensions: [
 			StarterKit.configure({
 				heading: false,
 				blockquote: false,
 				codeBlock: false,
+			}),
+			Link.configure({
+				openOnClick: false,
+				autolink: true,
+				defaultProtocol: 'https',
+				HTMLAttributes: {
+					rel: 'noopener noreferrer',
+					target: '_blank',
+				},
 			}),
 			Placeholder.configure({ placeholder }),
 		],
@@ -49,6 +72,7 @@ export function MinimalRichText({
 					'[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5',
 					'[&_p]:my-1.5 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0',
 					'[&_strong]:font-semibold [&_em]:italic',
+					'[&_a]:text-camel [&_a]:underline [&_a]:underline-offset-2',
 				),
 			},
 		},
@@ -64,6 +88,37 @@ export function MinimalRichText({
 		if (incoming === cur) return;
 		editor.commands.setContent(incoming, { emitUpdate: false });
 	}, [value, editor]);
+
+	const openLinkDialog = () => {
+		if (!editor) return;
+		const previousUrl = (editor.getAttributes('link').href as string | undefined) ?? '';
+		setLinkDialogUrl(previousUrl);
+		setLinkDialogHasExisting(editor.isActive('link'));
+		setLinkSelectionPreview(getSelectionPreview(editor));
+		setLinkDialogOpen(true);
+	};
+
+	const closeLinkDialog = () => {
+		setLinkDialogOpen(false);
+		editor?.commands.focus();
+	};
+
+	const applyLink = (rawUrl: string) => {
+		if (!editor) return;
+		const normalized = normalizeRichTextLinkUrl(rawUrl);
+		if (!normalized) {
+			editor.chain().focus().extendMarkRange('link').unsetLink().run();
+		} else {
+			editor.chain().focus().extendMarkRange('link').setLink({ href: normalized }).run();
+		}
+		closeLinkDialog();
+	};
+
+	const removeLink = () => {
+		if (!editor) return;
+		editor.chain().focus().extendMarkRange('link').unsetLink().run();
+		closeLinkDialog();
+	};
 
 	return (
 		<div className="space-y-1.5">
@@ -95,6 +150,15 @@ export function MinimalRichText({
 							aria-label="Italic"
 						>
 							<Italic className="h-4 w-4" strokeWidth={2} />
+						</Button>
+						<Button
+							type="button"
+							variant="custom"
+							className={cn(toolbarBtn, editor.isActive('link') && 'bg-camel/12 text-espresso')}
+							onClick={openLinkDialog}
+							aria-label="Link"
+						>
+							<Link2 className="h-4 w-4" strokeWidth={2} />
 						</Button>
 						<span className="mx-1 h-4 w-px bg-black/8" aria-hidden />
 						<Button
@@ -143,6 +207,15 @@ export function MinimalRichText({
 					className="bg-white [&_.ProseMirror]:min-h-[inherit]"
 				/>
 			</div>
+			<RichTextLinkDialog
+				open={linkDialogOpen}
+				initialUrl={linkDialogUrl}
+				selectionPreview={linkSelectionPreview}
+				hasExistingLink={linkDialogHasExisting}
+				onApply={applyLink}
+				onRemove={removeLink}
+				onCancel={closeLinkDialog}
+			/>
 		</div>
 	);
 }
