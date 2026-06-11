@@ -9,6 +9,14 @@ export interface PropertyAmenityEntry {
 	image_url?: string | null;
 }
 
+export interface PropertyApplianceEntry {
+	id: string;
+	title: string;
+	description: string | null;
+	order: number;
+	image_url?: string | null;
+}
+
 export interface Property {
 	id: string;
 	host_id: string;
@@ -41,6 +49,7 @@ export interface Property {
 	logo_alt?: string | null;
 	amenity_ids: string[];
 	amenities: PropertyAmenityEntry[];
+	appliances: PropertyApplianceEntry[];
 	created_at: string;
 	updated_at: string;
 	images: PropertyImage[];

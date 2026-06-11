@@ -15,6 +15,7 @@ export type PropertyImageDocument = {
 	created_at: Date;
 	updated_at: Date;
 	property_amenity_id: string | null;
+	property_appliance_id: string | null;
 };
 
 export type PropertyImageWithDocument = {
@@ -34,6 +35,14 @@ export type PropertyAmenityRow = {
 	description: string | null;
 	selected: boolean;
 	quantity: number | null;
+	documents?: PropertyImageDocument[];
+};
+
+export type PropertyApplianceRow = {
+	id: string;
+	title: string;
+	description: string | null;
+	order: number;
 	documents?: PropertyImageDocument[];
 };
 
@@ -70,6 +79,7 @@ export type PropertyWithImages = {
 	user_id: string;
 	images: PropertyImageWithDocument[];
 	amenities?: PropertyAmenityRow[];
+	appliances?: PropertyApplianceRow[];
 };
 
 const mapPropertyImage = (image: PropertyImageWithDocument) => ({
@@ -122,6 +132,13 @@ export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 		image_url: a.documents?.[0]?.url ?? null,
 	})),
 	amenity_ids: (property.amenities ?? []).filter((a) => a.selected).map((a) => a.value),
+	appliances: (property.appliances ?? []).map((appliance) => ({
+		id: appliance.id,
+		title: appliance.title,
+		description: appliance.description ?? null,
+		order: appliance.order,
+		image_url: appliance.documents?.[0]?.url ?? null,
+	})),
 	created_at: property.created_at.toISOString(),
 	updated_at: property.updated_at.toISOString(),
 	images: property.images.map(mapPropertyImage),

@@ -19,6 +19,7 @@ import {
 } from '@/config/constants/dropdowns/amenities.options';
 import { useSavePropertyAmenities } from '@/features/property-amenities/hooks/use-property-amenities';
 import type { Property } from '@/features/property/interfaces/property.interface';
+import { EquipmentGuidesSection } from './equipment-guides-section';
 import { PropertyFormSection, dashboardFormFields } from './property-form-section';
 import { amenitiesFormSchema } from './schemas';
 
@@ -299,6 +300,8 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 					{saving ? 'Saving...' : 'Save'}
 				</Button>
 			</div>
+
+			<EquipmentGuidesSection initialProperty={initialProperty} propertyId={propertyId} />
 
 			{editingValue ? (
 				<div

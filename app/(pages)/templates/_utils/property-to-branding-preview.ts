@@ -247,6 +247,7 @@ export const DEMO_PROPERTY_FOR_BRANDING: Property = {
 		Amenities.BATHTUB,
 		Amenities.BBQ_GRILL,
 	].map((value) => ({ value, description: null, selected: true })),
+	appliances: [],
 	created_at: new Date('2026-05-01T12:00:00.000Z').toISOString(),
 	updated_at: new Date('2026-05-03T12:00:00.000Z').toISOString(),
 	images: demoImages(),

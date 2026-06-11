@@ -120,4 +120,7 @@ export const ApiRoutes = {
 		property_amenities: (query: PropertyAmenityQuery) => `/property-amenities?${toSearchParams(query)}`,
 		byProperty: (id: string) => `/properties/${id}/amenities`,
 	},
+	property_appliances: {
+		byProperty: (id: string) => `/properties/${id}/appliances`,
+	},
 };

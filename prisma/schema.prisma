@@ -171,6 +171,7 @@ model Property {
   user         User                   @relation(fields: [user_id], references: [id])
   logo         Document?              @relation("PropertyLogo", fields: [logo_id], references: [id])
   amenities    PropertyAmenity[]
+  appliances   PropertyAppliance[]
   availability PropertyAvailability[]
   images       PropertyImage[]
   bookings          Booking[]
@@ -396,6 +397,22 @@ model PropertyAmenity {
   @@map("property_amenities")
 }
 
+model PropertyAppliance {
+  id          String   @id @default(uuid())
+  property_id String
+  title       String
+  description String?
+  order       Int      @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  documents   Document[]
+
+  property Property @relation(fields: [property_id], references: [id], onDelete: Cascade)
+
+  @@index([property_id, order])
+  @@map("property_appliances")
+}
+
 model PropertyImage {
   id           String   @id @default(uuid())
   user_id      String
@@ -426,12 +443,14 @@ model Document {
   order               Int            @default(0)
   created_at          DateTime       @default(now())
   updated_at          DateTime       @updatedAt
-  property_amenity_id String?
+  property_amenity_id    String?
+  property_appliance_id  String?
 
-  user             User             @relation("UserDocuments", fields: [user_id], references: [id])
-  property_image   PropertyImage?
-  service_image    ServiceImage?
-  property_amenity PropertyAmenity? @relation(fields: [property_amenity_id], references: [id])
+  user              User              @relation("UserDocuments", fields: [user_id], references: [id])
+  property_image    PropertyImage?
+  service_image     ServiceImage?
+  property_amenity  PropertyAmenity?  @relation(fields: [property_amenity_id], references: [id])
+  property_appliance PropertyAppliance? @relation(fields: [property_appliance_id], references: [id])
   user_avatar   User?            @relation("UserAvatar")
   user_banner   User?            @relation("UserBanner")
   property_logo Property?        @relation("PropertyLogo")

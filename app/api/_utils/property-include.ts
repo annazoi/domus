@@ -12,4 +12,14 @@ export const propertyDetailInclude = {
 			documents: { orderBy: { created_at: 'desc' }, take: 1 },
 		},
 	},
+	appliances: {
+		orderBy: { order: 'asc' },
+		select: {
+			id: true,
+			title: true,
+			description: true,
+			order: true,
+			documents: { orderBy: { created_at: 'desc' }, take: 1 },
+		},
+	},
 } satisfies Prisma.PropertyInclude;
