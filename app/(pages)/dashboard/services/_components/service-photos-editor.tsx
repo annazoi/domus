@@ -118,7 +118,7 @@ export function StagedPhotosPicker({
 				}}
 				className={[
 					'flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 transition',
-					fileZoneOver ? 'border-camel/60 bg-camel/[0.04]' : 'border-dashboard-border bg-white',
+					fileZoneOver ? 'border-camel/60 bg-camel/[0.04]' : 'border-dashboard-border bg-dashboard-surface',
 				].join(' ')}
 			>
 				<ImageIcon className="h-8 w-8 text-espresso/25" strokeWidth={1.25} />

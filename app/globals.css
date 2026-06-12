@@ -115,11 +115,81 @@
   --color-primary-hover: var(--color-camel);
   --color-primary-foreground: var(--color-espresso);
   --color-accent: var(--color-camel);
+  --color-dashboard-nav-active: rgb(0 0 0 / 0.05);
+  --color-dashboard-overlay: rgb(26 26 26 / 0.25);
+  --color-dashboard-header: rgb(247 245 242 / 0.95);
+  --color-dashboard-header-border: rgb(0 0 0 / 0.05);
+  --color-dashboard-header-shadow: 0 10px 32px -22px rgb(26 26 26 / 0.35);
+  --earnings-chart-border: rgb(0 0 0 / 0.04);
+  --earnings-chart-grid: rgb(26 26 26 / 0.06);
+  --earnings-chart-tick: rgb(26 26 26 / 0.45);
+  --earnings-chart-tick-muted: rgb(26 26 26 / 0.4);
+  --earnings-chart-dot-fill: #fafaf8;
+  --earnings-chart-bar-opacity: 0.14;
+  --earnings-chart-bar-active-opacity: 0.28;
+  --earnings-chart-area-top-opacity: 0.34;
+  --earnings-chart-bg-from: var(--color-dashboard-bg);
+  --earnings-chart-bg-via: rgb(255 255 255 / 0.9);
+  --earnings-chart-bg-to: color-mix(in srgb, var(--color-camel) 6%, transparent);
+  --earnings-chart-glow-a: color-mix(in srgb, var(--color-camel) 18%, transparent);
+  --earnings-chart-glow-b: color-mix(in srgb, var(--color-espresso) 6%, transparent);
+}
+
+.dashboard-root[data-theme='dark'],
+html[data-dashboard-theme='dark'] {
+  color-scheme: dark;
+  --color-dashboard-bg: #12100e;
+  --color-dashboard-panel: #1a1714;
+  --color-dashboard-inset: #211d19;
+  --color-dashboard-surface: #1d1916;
+  --color-dashboard-accent: #c9a978;
+  --color-dashboard-accent-hover: #ddc39a;
+  --color-dashboard-accent-light: #e8d4b0;
+  --color-dashboard-accent-deep: #a8845d;
+  --color-dashboard-row-hover: rgb(255 255 255 / 0.04);
+  --color-dashboard-border: rgb(255 255 255 / 0.08);
+  --color-dashboard-muted: rgb(240 235 227 / 0.58);
+  --shadow-dashboard-panel: 0 18px 48px -28px rgb(0 0 0 / 0.72);
+  --color-espresso: #f0ebe3;
+  --color-cream: #12100e;
+  --color-camel: #c9a978;
+  --color-camel-dark: #a8845d;
+  --color-camel-light: #e8d4b0;
+  --color-camel-deep: #8f7048;
+  --color-primary: var(--color-camel-light);
+  --color-primary-hover: var(--color-camel);
+  --color-primary-foreground: #171411;
+  --color-dashboard-nav-active: rgb(255 255 255 / 0.06);
+  --color-dashboard-overlay: rgb(0 0 0 / 0.52);
+  --color-dashboard-header: rgb(18 16 14 / 0.94);
+  --color-dashboard-header-border: rgb(255 255 255 / 0.07);
+  --color-dashboard-header-shadow: 0 14px 40px -24px rgb(0 0 0 / 0.85);
+  --scrollbar-track: rgb(255 255 255 / 0.05);
+  --scrollbar-thumb: rgb(255 255 255 / 0.16);
+  --scrollbar-thumb-hover: rgb(201 169 120 / 0.42);
+  --earnings-chart-border: rgb(255 255 255 / 0.08);
+  --earnings-chart-grid: rgb(255 255 255 / 0.08);
+  --earnings-chart-tick: rgb(240 235 227 / 0.52);
+  --earnings-chart-tick-muted: rgb(240 235 227 / 0.38);
+  --earnings-chart-dot-fill: #1d1916;
+  --earnings-chart-bar-opacity: 0.24;
+  --earnings-chart-bar-active-opacity: 0.42;
+  --earnings-chart-area-top-opacity: 0.42;
+  --earnings-chart-bg-from: var(--color-dashboard-inset);
+  --earnings-chart-bg-via: var(--color-dashboard-surface);
+  --earnings-chart-bg-to: color-mix(in srgb, var(--color-camel) 12%, transparent);
+  --earnings-chart-glow-a: color-mix(in srgb, var(--color-camel) 24%, transparent);
+  --earnings-chart-glow-b: color-mix(in srgb, var(--color-camel) 8%, transparent);
 }
 
 .dashboard-root ::selection {
   background-color: rgb(184 151 117 / 0.22);
   color: var(--color-espresso);
+}
+
+.dashboard-root[data-theme='dark'] ::selection {
+  background-color: rgb(201 169 120 / 0.28);
+  color: #faf9f6;
 }
 
 .dashboard-root .pac-container {
@@ -162,7 +232,7 @@
 /* TipTap placeholder (minimal rich text) */
 .minimal-rich-text-editor p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  color: rgb(61 50 41 / 0.35);
+  color: color-mix(in srgb, var(--color-dashboard-muted) 72%, transparent);
   float: left;
   height: 0;
   pointer-events: none;

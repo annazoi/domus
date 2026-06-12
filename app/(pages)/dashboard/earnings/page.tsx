@@ -48,7 +48,7 @@ export default function EarningsPage() {
 
 				<div className="relative flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
 					<div>
-						<p className="text-sm text-espresso/55">Monthly earnings summary</p>
+						<p className="text-sm text-dashboard-muted">Monthly earnings summary</p>
 						{statsLoading ? (
 							<Skeleton className="mt-2 h-4 w-28 bg-black/10" />
 						) : (
@@ -71,7 +71,7 @@ export default function EarningsPage() {
 				{!loadingTransactions && total === 0 ? (
 					<div className="dashboard-panel rounded-2xl p-8 text-center">
 						<p className="font-serif text-2xl">No transactions yet</p>
-						<p className="mt-2 text-sm text-espresso/60">Earnings appear when guests complete bookings.</p>
+						<p className="mt-2 text-sm text-dashboard-muted">Earnings appear when guests complete bookings.</p>
 					</div>
 				) : null}
 				{!loadingTransactions && total > 0 ? (

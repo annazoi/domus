@@ -163,11 +163,11 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 				without touching code.
 			</p>
 
-			<div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-[#faf8f5] to-[#efe9e1] p-1 shadow-[0_18px_50px_-28px_rgba(26,26,26,0.35)] ring-1 ring-black/[0.06]">
+			<div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-dashboard-surface via-dashboard-inset to-dashboard-bg p-1 shadow-[var(--shadow-dashboard-panel)] ring-1 ring-dashboard-border">
 				<div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-camel/10 blur-3xl" aria-hidden />
 				<div className="pointer-events-none absolute -bottom-20 left-1/3 h-40 w-40 rounded-full bg-espresso/[0.04] blur-3xl" aria-hidden />
 
-				<div className="relative rounded-[1.35rem] bg-white/75 p-5 backdrop-blur-sm sm:p-6">
+				<div className="relative rounded-[1.35rem] bg-dashboard-panel/90 p-5 backdrop-blur-sm sm:p-6">
 					<div className="flex flex-wrap items-start justify-between gap-4">
 						<div className="min-w-0">
 							<div className="flex items-center gap-2">
@@ -207,14 +207,11 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 										'group relative flex min-h-[196px] flex-col overflow-hidden rounded-2xl border-2 border-dashed transition duration-300',
 										logoZoneOver
 											? 'border-camel/50 bg-camel/[0.04]'
-											: 'border-black/10 bg-white',
+											: 'border-dashboard-border bg-dashboard-surface logo-canvas',
 									)}
 								>
-									<div
-										className="absolute inset-0 bg-[repeating-conic-gradient(#e8e4df_0%_25%,#f6f3ef_0%_50%)] bg-[length:14px_14px] opacity-80"
-										aria-hidden
-									/>
-									<div className="absolute inset-0 bg-gradient-to-br from-white/90 via-[#faf8f5]/80 to-dashboard-inset/60" aria-hidden />
+									<div className="logo-canvas-checker absolute inset-0 opacity-80" aria-hidden />
+									<div className="absolute inset-0 bg-gradient-to-br from-dashboard-surface/90 via-dashboard-inset/80 to-dashboard-bg/60" aria-hidden />
 
 									<div
 										role="button"
@@ -254,7 +251,7 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 											</div>
 										) : (
 											<div className="flex flex-col items-center gap-3 text-center">
-												<div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-black/8 bg-white/90 shadow-sm">
+												<div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-dashboard-border bg-dashboard-inset shadow-sm">
 													<ImageIcon className="h-6 w-6 text-espresso/30" strokeWidth={1.5} />
 												</div>
 												<div>
@@ -295,24 +292,24 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 											logoZoneOver ? 'opacity-100' : 'opacity-0',
 										)}
 									>
-										<span className="rounded-full border border-black/8 bg-white px-4 py-2 text-xs font-medium tracking-wide text-espresso shadow-sm">
+										<span className="rounded-full border border-dashboard-border bg-dashboard-surface px-4 py-2 text-xs font-medium tracking-wide text-espresso shadow-sm">
 											Release to upload
 										</span>
 									</div>
 								</div>
 
-								<div className="flex flex-col justify-between gap-4 rounded-2xl border border-black/[0.06] bg-[#faf8f5]/80 p-4 sm:p-5">
+								<div className="flex flex-col justify-between gap-4 rounded-2xl border border-dashboard-border bg-dashboard-inset/80 p-4 sm:p-5">
 									<div className="space-y-3">
 										<p className="text-[10px] font-medium uppercase tracking-[0.22em] text-espresso/40">File</p>
 										{displayLogoUrl ? (
-											<div className="rounded-xl border border-black/[0.06] bg-white px-3.5 py-3">
+											<div className="rounded-xl border border-dashboard-border bg-dashboard-surface px-3.5 py-3">
 												<p className="truncate text-sm font-medium text-espresso">
 													{stagedLogoFile?.name ?? 'Current logo'}
 												</p>
 												<p className="mt-0.5 text-xs text-espresso/45">Shown in listing header navigation</p>
 											</div>
 										) : (
-											<div className="rounded-xl border border-dashed border-black/10 bg-white/70 px-3.5 py-3 text-sm text-espresso/45">
+											<div className="rounded-xl border border-dashed border-dashboard-border bg-dashboard-surface/70 px-3.5 py-3 text-sm text-dashboard-muted">
 												No file selected yet
 											</div>
 										)}
@@ -334,7 +331,7 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 													value={logoAlt}
 													onChange={(e) => setLogoAlt(e.target.value)}
 													placeholder={initialProperty?.title ?? 'Describe the logo for screen readers'}
-													className="border-black/8 bg-white text-sm"
+													className="text-sm"
 												/>
 												<p className="text-xs text-espresso/45">Used as the image alt on your listing site header.</p>
 											</div>
@@ -390,7 +387,7 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 							key={option.id}
 							className={cn(
 								'flex flex-col overflow-hidden rounded-2xl border border-dashboard-border/60 bg-dashboard-inset transition',
-								active ? 'border-camel ring-2 ring-camel/25' : 'border-black/[0.06] hover:border-black/15',
+								active ? 'border-camel ring-2 ring-camel/25' : 'border-dashboard-border hover:border-camel/30',
 							)}
 						>
 							<div className="relative aspect-[4/5] w-full overflow-hidden bg-espresso/5">
@@ -454,7 +451,7 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 				})}
 			</div>
 
-			<div className="mt-2 flex flex-wrap justify-end gap-3 border-t border-black/5 pt-5">
+			<div className="mt-2 flex flex-wrap justify-end gap-3 border-t border-dashboard-border pt-5">
 				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
 					{saving ? 'Saving...' : 'Save'}
 				</Button>

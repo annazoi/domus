@@ -129,3 +129,51 @@
 .domus-react-datepicker-popper .react-datepicker__triangle {
 	display: none;
 }
+
+html[data-dashboard-theme='dark'] .domus-react-datepicker {
+	background: var(--color-dashboard-panel);
+	border-color: var(--color-dashboard-border);
+	box-shadow: var(--shadow-dashboard-panel);
+}
+
+html[data-dashboard-theme='dark'] .domus-react-datepicker .react-datepicker__header {
+	background: linear-gradient(
+		to bottom right,
+		color-mix(in srgb, var(--color-camel) 14%, var(--color-dashboard-inset)),
+		var(--color-dashboard-surface)
+	);
+	border-bottom-color: var(--color-dashboard-border);
+}
+
+html[data-dashboard-theme='dark'] .domus-react-datepicker .react-datepicker__day-name {
+	color: var(--color-dashboard-muted);
+}
+
+html[data-dashboard-theme='dark'] .domus-react-datepicker .react-datepicker__day {
+	color: var(--color-espresso);
+}
+
+html[data-dashboard-theme='dark'] .domus-react-datepicker .react-datepicker__day:hover {
+	background: color-mix(in srgb, var(--color-camel) 16%, transparent);
+}
+
+html[data-dashboard-theme='dark'] .domus-react-datepicker .react-datepicker__day--selected,
+html[data-dashboard-theme='dark'] .domus-react-datepicker .react-datepicker__day--keyboard-selected {
+	background: color-mix(in srgb, var(--color-camel) 28%, transparent) !important;
+	color: var(--color-camel-light) !important;
+}
+
+html[data-dashboard-theme='dark'] .domus-react-datepicker .react-datepicker__day--today {
+	outline-color: color-mix(in srgb, var(--color-camel) 45%, transparent);
+}
+
+html[data-dashboard-theme='dark'] .domus-react-datepicker .react-datepicker__day--disabled,
+html[data-dashboard-theme='dark'] .domus-react-datepicker .react-datepicker__day--outside-month {
+	color: color-mix(in srgb, var(--color-dashboard-muted) 55%, transparent);
+}
+
+html[data-dashboard-theme='dark'] .domus-react-datepicker .react-datepicker__today-button {
+	background: var(--color-dashboard-inset);
+	border-top-color: var(--color-dashboard-border);
+	color: var(--color-camel);
+}

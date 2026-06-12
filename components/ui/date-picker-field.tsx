@@ -38,16 +38,16 @@ const DatePickerTrigger = forwardRef<HTMLButtonElement, TriggerProps>(function D
 			disabled={disabled}
 			onClick={onClick}
 			className={cn(
-				'flex w-full items-center gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-left outline-none transition',
+				'flex w-full items-center gap-3 rounded-xl border border-dashboard-border bg-dashboard-surface px-4 py-3 text-left outline-none transition',
 				'hover:border-camel/25 focus-visible:border-camel/40 focus-visible:ring-2 focus-visible:ring-camel/12',
 				disabled && 'cursor-not-allowed opacity-55',
-				!value && 'text-[#1A1A1A]/45',
-				value && 'text-[#1A1A1A]',
+				!value && 'text-dashboard-muted',
+				value && 'text-espresso',
 			)}
 		>
 			<CalendarDays className="h-4 w-4 shrink-0 text-camel/70" aria-hidden />
 			<span className="min-w-0 flex-1 truncate text-sm">{value || placeholder}</span>
-			<ChevronDown className="h-4 w-4 shrink-0 text-[#1A1A1A]/30" aria-hidden />
+			<ChevronDown className="h-4 w-4 shrink-0 text-dashboard-muted" aria-hidden />
 		</button>
 	);
 });

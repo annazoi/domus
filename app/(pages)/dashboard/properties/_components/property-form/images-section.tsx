@@ -433,7 +433,7 @@ export function ImagesSection({
 							}}
 							className={[
 								'cursor-pointer flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-16 transition',
-								fileZoneOver ? 'border-[#C45C26]/60 bg-[#C45C26]/[0.04]' : 'border-black/10 bg-white',
+								fileZoneOver ? 'border-[#C45C26]/60 bg-[#C45C26]/[0.04]' : 'border-dashboard-border bg-dashboard-surface',
 							].join(' ')}
 						>
 							<div className="flex items-center gap-3">
@@ -448,7 +448,7 @@ export function ImagesSection({
 							</div>
 						</button>
 
-						<div className="rounded-xl border border-black/10 p-5 bg-dashboard-inset">
+						<div className="rounded-xl border border-dashboard-border p-5 bg-dashboard-inset">
 							<div className="flex flex-col gap-4">
 								<div className="space-y-2">
 									<div className="flex items-center gap-2">
@@ -502,7 +502,7 @@ export function ImagesSection({
 											placeholder={getVideoUrlSourcePlaceholder(
 												videoUrlSourceDraft || detectVideoUrlSource(videoUrlDraft),
 											)}
-											className="border-black/8 bg-white/90 font-mono text-sm placeholder:font-sans placeholder:text-espresso/35"
+											className="font-mono text-sm placeholder:font-sans placeholder:text-dashboard-muted"
 										/>
 									</div>
 									<Button

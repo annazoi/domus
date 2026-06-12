@@ -1,0 +1,178 @@
+.availability-day-picker {
+  --picker-band-height: 2.25rem;
+  --picker-range-band: color-mix(in srgb, var(--color-camel) 16%, var(--color-dashboard-bg));
+  --picker-range-endpoint: var(--color-camel);
+  --picker-range-endpoint-text: #2a231d;
+  --picker-range-middle-text: var(--color-espresso);
+}
+
+html[data-dashboard-theme='dark'] .availability-day-picker {
+  --picker-range-band: color-mix(in srgb, var(--color-camel) 24%, var(--color-dashboard-panel));
+  --picker-range-endpoint: var(--color-camel);
+  --picker-range-endpoint-text: #171411;
+  --picker-range-middle-text: var(--color-espresso);
+}
+
+html[data-dashboard-theme='dark'] .availability-day-picker .rdp-root {
+  --rdp-today-color: var(--color-camel-light);
+}
+
+.availability-day-picker .rdp-root {
+  --rdp-day-height: 2.5rem;
+  --rdp-day-width: 2.5rem;
+  --rdp-day_button-height: var(--picker-band-height);
+  --rdp-day_button-width: var(--picker-band-height);
+  --rdp-day_button-border-radius: 9999px;
+  --rdp-accent-color: var(--picker-range-endpoint);
+  --rdp-selected-border: 2px solid transparent;
+  --rdp-today-color: var(--color-camel-deep);
+  --rdp-outside-opacity: 0.38;
+  --rdp-disabled-opacity: 0.32;
+  width: 100%;
+}
+
+.availability-day-picker .rdp-month_caption {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.availability-day-picker .rdp-weekday {
+  color: var(--color-dashboard-muted);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  opacity: 1;
+  text-transform: uppercase;
+}
+
+.availability-day-picker .rdp-caption_label {
+  color: var(--color-espresso);
+}
+
+.availability-day-picker .rdp-button_previous,
+.availability-day-picker .rdp-button_next {
+  border: 1px solid var(--color-dashboard-border);
+  border-radius: 0.5rem;
+  color: var(--color-espresso);
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.availability-day-picker .rdp-button_previous:hover:not(:disabled),
+.availability-day-picker .rdp-button_next:hover:not(:disabled) {
+  background-color: var(--color-dashboard-row-hover);
+  border-color: color-mix(in srgb, var(--color-camel) 30%, var(--color-dashboard-border));
+}
+
+.availability-day-picker .rdp-day {
+  position: relative;
+  isolation: isolate;
+}
+
+.availability-day-picker .rdp-range_start,
+.availability-day-picker .rdp-range_middle,
+.availability-day-picker .rdp-range_end {
+  background: transparent;
+}
+
+.availability-day-picker .rdp-range_middle::after,
+.availability-day-picker .rdp-range_start::after,
+.availability-day-picker .rdp-range_end::after {
+  background: var(--picker-range-band);
+  content: '';
+  height: var(--picker-band-height);
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+.availability-day-picker .rdp-range_middle::after {
+  left: 0;
+  right: 0;
+}
+
+.availability-day-picker .rdp-range_start::after {
+  left: 50%;
+  right: 0;
+}
+
+.availability-day-picker .rdp-range_end::after {
+  left: 0;
+  right: 50%;
+}
+
+.availability-day-picker .rdp-range_start.rdp-range_end::after {
+  display: none;
+}
+
+.availability-day-picker .rdp-day_button {
+  color: var(--color-espresso);
+  font-size: 0.875rem;
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 120ms ease;
+}
+
+.availability-day-picker .rdp-day_button:hover:not(:disabled) {
+  background-color: var(--color-dashboard-row-hover);
+}
+
+.availability-day-picker .rdp-today:not(.rdp-outside) .rdp-day_button {
+  color: var(--color-camel-deep);
+  font-weight: 600;
+}
+
+.availability-day-picker .rdp-selected {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.availability-day-picker .rdp-range_middle .rdp-day_button {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--picker-range-middle-text);
+  font-weight: 500;
+}
+
+.availability-day-picker .rdp-range_middle .rdp-day_button:hover:not(:disabled) {
+  background: transparent;
+  color: var(--picker-range-middle-text);
+}
+
+.availability-day-picker .rdp-selected:not(.rdp-range_middle) .rdp-day_button {
+  background-color: var(--picker-range-endpoint);
+  border-color: transparent;
+  box-shadow: 0 1px 3px rgb(42 35 29 / 0.12);
+  color: var(--picker-range-endpoint-text);
+  font-weight: 600;
+}
+
+.availability-day-picker .rdp-selected:not(.rdp-range_middle) .rdp-day_button:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--picker-range-endpoint) 88%, #000);
+}
+
+html[data-dashboard-theme='dark'] .availability-day-picker .rdp-selected:not(.rdp-range_middle) .rdp-day_button {
+  box-shadow: 0 1px 5px rgb(0 0 0 / 0.32);
+}
+
+html[data-dashboard-theme='dark'] .availability-day-picker .rdp-selected:not(.rdp-range_middle) .rdp-day_button:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--picker-range-endpoint) 90%, #fff);
+}
+
+.availability-day-picker .rdp-disabled:not(.rdp-selected) .rdp-day_button {
+  color: color-mix(in srgb, var(--color-dashboard-muted) 55%, transparent);
+}
+
+.availability-day-picker .rdp-outside .rdp-day_button {
+  color: color-mix(in srgb, var(--color-dashboard-muted) 70%, transparent);
+}

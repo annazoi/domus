@@ -66,7 +66,7 @@ export function MinimalRichText({
 			attributes: {
 				...(id ? { id } : {}),
 				class: cn(
-					'minimal-rich-text-editor max-w-none bg-white px-4 py-3 text-sm leading-relaxed text-espresso caret-camel focus:outline-none',
+					'minimal-rich-text-editor max-w-none bg-dashboard-surface px-4 py-3 text-sm leading-relaxed text-espresso caret-camel focus:outline-none',
 					editorMinHeight,
 					'[&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5',
 					'[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5',
@@ -129,10 +129,10 @@ export function MinimalRichText({
 			) : null}
 			<div
 				data-rich-text-root
-				className="overflow-hidden rounded-xl border border-black/10 bg-white shadow-[0_1px_2px_rgb(0_0_0/0.03)] transition focus-within:border-camel/40 focus-within:ring-2 focus-within:ring-camel/12"
+				className="overflow-hidden rounded-xl border border-dashboard-border bg-dashboard-surface shadow-[var(--shadow-dashboard-panel)] transition focus-within:border-camel/40 focus-within:ring-2 focus-within:ring-camel/12"
 			>
 				{editor ? (
-					<div className="flex flex-wrap items-center gap-0.5 border-b border-black/8 bg-white px-2 py-1.5">
+					<div className="flex flex-wrap items-center gap-0.5 border-b border-dashboard-border bg-dashboard-inset px-2 py-1.5">
 						<Button
 							type="button"
 							variant="custom"
@@ -160,7 +160,7 @@ export function MinimalRichText({
 						>
 							<Link2 className="h-4 w-4" strokeWidth={2} />
 						</Button>
-						<span className="mx-1 h-4 w-px bg-black/8" aria-hidden />
+						<span className="mx-1 h-4 w-px bg-dashboard-border" aria-hidden />
 						<Button
 							type="button"
 							variant="custom"
@@ -179,7 +179,7 @@ export function MinimalRichText({
 						>
 							<ListOrdered className="h-4 w-4" strokeWidth={2} />
 						</Button>
-						<span className="mx-1 h-4 w-px bg-black/8" aria-hidden />
+						<span className="mx-1 h-4 w-px bg-dashboard-border" aria-hidden />
 						<Button
 							type="button"
 							variant="custom"
@@ -204,7 +204,7 @@ export function MinimalRichText({
 				) : null}
 				<EditorContent
 					editor={editor}
-					className="bg-white [&_.ProseMirror]:min-h-[inherit]"
+					className="bg-dashboard-surface [&_.ProseMirror]:min-h-[inherit]"
 				/>
 			</div>
 			<RichTextLinkDialog

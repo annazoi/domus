@@ -9,17 +9,17 @@ type PropertyFormSectionProps = {
 };
 
 const fieldSurface = cn(
-	'[&_.places-address-field]:rounded-lg [&_.places-address-field]:border [&_.places-address-field]:border-black/10 [&_.places-address-field]:bg-white',
+	'[&_.places-address-field]:rounded-lg [&_.places-address-field]:border [&_.places-address-field]:border-dashboard-border [&_.places-address-field]:bg-dashboard-surface',
 	'[&_.places-address-field]:shadow-none [&_.places-address-field]:focus-within:border-0 [&_.places-address-field]:focus-within:ring-0',
 	'[&_.places-address-field_input]:py-2 [&_.places-address-field_input]:pr-3 [&_.places-address-field_input]:shadow-none',
-	'[&_input.border]:w-full [&_input.border]:rounded-lg [&_input.border]:border [&_input.border]:border-black/10 [&_input.border]:bg-white',
+	'[&_input.border]:w-full [&_input.border]:rounded-lg [&_input.border]:border [&_input.border]:border-dashboard-border [&_input.border]:bg-dashboard-surface',
 	'[&_input.border]:px-3 [&_input.border]:py-2 [&_input.border]:text-espresso [&_input.border]:shadow-none',
 	'[&_input.border]:placeholder:text-dashboard-muted/55',
 	'[&_input.border]:focus:outline-none [&_input.border]:focus:ring-0',
-	'[&_textarea]:w-full [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-black/10 [&_textarea]:bg-white',
+	'[&_textarea]:w-full [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-dashboard-border [&_textarea]:bg-dashboard-surface',
 	'[&_textarea]:px-3 [&_textarea]:py-2 [&_textarea]:text-espresso [&_textarea]:placeholder:text-dashboard-muted/55',
 	'[&_textarea]:focus:outline-none [&_textarea]:focus:ring-0',
-	'[&_button[role=combobox]]:w-full [&_button[role=combobox]]:rounded-lg [&_button[role=combobox]]:border [&_button[role=combobox]]:border-black/10 [&_button[role=combobox]]:bg-white [&_button[role=combobox]]:px-3 [&_button[role=combobox]]:py-2',
+	'[&_button[role=combobox]]:w-full [&_button[role=combobox]]:rounded-lg [&_button[role=combobox]]:border [&_button[role=combobox]]:border-dashboard-border [&_button[role=combobox]]:bg-dashboard-surface [&_button[role=combobox]]:px-3 [&_button[role=combobox]]:py-2',
 	'[&_button[role=combobox]]:text-espresso [&_button[role=combobox]]:shadow-none',
 );
 

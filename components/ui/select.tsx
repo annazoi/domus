@@ -20,9 +20,9 @@ import { cn } from './cn';
 export type SelectVariant = 'default' | 'dashboard' | 'settings' | 'auth' | 'compact';
 
 const surface = cn(
-	'flex w-full cursor-pointer items-center rounded-xl border border-black/[0.07] bg-white text-left text-espresso outline-none',
+	'flex w-full cursor-pointer items-center rounded-xl border border-dashboard-border bg-dashboard-surface text-left text-espresso outline-none',
 	'transition-[border-color,box-shadow,background-color] duration-150 ease-out',
-	'hover:border-black/11',
+	'hover:border-camel/28',
 	'focus-visible:border-camel/38 focus-visible:ring-1 focus-visible:ring-camel/10',
 	'disabled:cursor-not-allowed',
 );
@@ -36,7 +36,7 @@ const variantTrigger: Record<SelectVariant, string> = {
 	),
 	settings: cn(surface, 'py-3 pl-4 pr-10 text-sm', 'focus-visible:ring-camel/12', 'disabled:opacity-55'),
 	auth: cn(
-		'flex w-full cursor-pointer items-center rounded-sm border border-black/10 bg-white py-3 pl-4 pr-10 text-left font-light text-espresso outline-none transition duration-150 ease-out',
+		'flex w-full cursor-pointer items-center rounded-sm border border-dashboard-border bg-dashboard-surface py-3 pl-4 pr-10 text-left font-light text-espresso outline-none transition duration-150 ease-out',
 		'hover:border-camel/35 focus-visible:border-camel/45 focus-visible:ring-1 focus-visible:ring-camel/20',
 		'disabled:opacity-60',
 	),
@@ -44,11 +44,11 @@ const variantTrigger: Record<SelectVariant, string> = {
 };
 
 const chevronTone: Record<SelectVariant, string> = {
-	default: 'text-camel/40',
-	dashboard: 'text-espresso/40',
-	settings: 'text-camel/46',
-	auth: 'text-camel/50',
-	compact: 'text-espresso/30',
+	default: 'text-dashboard-muted',
+	dashboard: 'text-dashboard-muted',
+	settings: 'text-dashboard-muted',
+	auth: 'text-dashboard-muted',
+	compact: 'text-dashboard-muted',
 };
 
 type Opt = { value: string; label: string; disabled?: boolean };
@@ -71,14 +71,13 @@ function readOptions(children: ReactNode): Opt[] {
 }
 
 const menuClassName = cn(
-	'max-h-[min(16rem,50vh)] overflow-auto rounded-xl bg-dashboard-panel py-1 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.18)]',
+	'dashboard-select-menu max-h-[min(16rem,50vh)] overflow-auto rounded-xl border border-dashboard-border bg-dashboard-panel py-1 shadow-[var(--shadow-dashboard-panel)]',
 );
 
 const row = cn(
 	'flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm text-espresso transition-colors',
-	'hover:bg-dashboard-row-hover focus:bg-dashboard-row-hover focus:outline-none',
+	'hover:bg-dashboard-row-hover focus:outline-none',
 	'data-disabled:pointer-events-none data-disabled:opacity-40',
-	'data-active:bg-dashboard-accent/10',
 );
 
 type MenuPosition = {
@@ -264,7 +263,12 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
 										data-disabled={o.disabled ? '' : undefined}
 										disabled={o.disabled}
 										id={`${uid}-opt-${i}`}
-										className={row}
+										className={cn(
+											row,
+											sel && 'bg-camel/12 font-medium text-camel',
+											active && !sel && 'bg-dashboard-row-hover',
+											active && sel && 'bg-camel/18',
+										)}
 										onMouseEnter={() => !o.disabled && setHi(i)}
 										onClick={() => selectAt(i)}
 									>

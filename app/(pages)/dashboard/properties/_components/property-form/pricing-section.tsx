@@ -26,6 +26,7 @@ import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
 import { PropertyFormSection, dashboardFormFields } from './property-form-section';
 import { pricingFormSchema, type PricingFormValues } from './schemas';
 import { mergeAvailabilityRowsInCache } from './utils/availability-cache';
+import './availability-day-picker.css';
 
 type PricingSectionProps = {
 	mode: 'create' | 'edit';
@@ -418,7 +419,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 							<Button
 								type="button"
 								variant="secondary"
-								className="w-full border-red-200 text-red-700 hover:border-red-300 hover:bg-red-50"
+								className="w-full border-red-300/40 text-red-300 hover:border-red-300/60 hover:bg-red-950/20"
 								onClick={requestClearAllAvailability}
 								disabled={!propertyId || clearingAvailability}
 							>
@@ -499,7 +500,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 									<Button
 										type="button"
 										variant="secondary"
-										className="w-full border-red-300 text-red-700 hover:bg-red-50"
+										className="w-full border-red-300/40 text-red-300 hover:bg-red-950/20"
 										disabled={!singleDayDate || clearingAvailability}
 										onClick={() => void handleDeleteSingleDay()}
 									>
@@ -583,7 +584,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 										<div
 											role="dialog"
 											aria-label={`Select date range ${index + 1}`}
-											className="absolute left-0 right-0 top-full z-[70] mt-2 w-full rounded-xl border border-dashboard-border/60 bg-dashboard-bg p-3 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.2)] [--rdp-accent-color:var(--color-camel)] [--rdp-accent-background-color:color-mix(in_srgb,var(--color-camel)_18%,transparent)] [&_.rdp-month]:w-full [&_.rdp-month_grid]:w-full [&_.rdp-day]:transition-[background,background-color] [&_.rdp-day]:duration-200 [&_.rdp-day]:ease-out [&_.rdp-day_button]:transition-[color,background-color,border-color,transform,box-shadow] [&_.rdp-day_button]:duration-200 [&_.rdp-day_button]:ease-out [&_.rdp-day_button]:active:scale-[0.94]"
+											className="availability-day-picker absolute left-0 right-0 top-full z-[70] mt-2 w-full rounded-xl border border-dashboard-border/60 bg-dashboard-bg p-3 shadow-[var(--shadow-dashboard-panel)] [&_.rdp-month]:w-full [&_.rdp-month_grid]:w-full [&_.rdp-day]:transition-[background,background-color] [&_.rdp-day]:duration-200 [&_.rdp-day]:ease-out [&_.rdp-day_button]:transition-[color,background-color,border-color,transform,box-shadow] [&_.rdp-day_button]:duration-200 [&_.rdp-day_button]:ease-out [&_.rdp-day_button]:active:scale-[0.94]"
 										>
 											<div className="mb-2 flex items-center justify-between gap-2 border-b border-dashboard-border/50 pb-2">
 												<p className="text-sm font-medium text-espresso">Select dates</p>
@@ -784,9 +785,10 @@ function fromPickerDate(date: Date) {
 
 const legendItems = [
 	{ key: 'selected', label: 'Selected', swatch: 'border-camel/50 bg-camel/[0.08] ring-1 ring-camel/20' },
-	{ key: 'priced', label: 'Priced', swatch: 'border-dashboard-border/70 bg-white' },
+	{ key: 'priced', label: 'Priced', swatch: 'border-dashboard-border/70 bg-dashboard-surface' },
 	{ key: 'unset', label: 'Unset', swatch: 'border-dashed border-dashboard-border/60 bg-dashboard-inset/50' },
-	{ key: 'blocked', label: 'Blocked', swatch: 'border-red-200 bg-red-50' },
+	{ key: 'booked', label: 'Booked', swatch: 'border-dashboard-border bg-dashboard-inset ring-1 ring-espresso/15' },
+	{ key: 'blocked', label: 'Blocked', swatch: 'border-red-300/40 bg-red-950/30' },
 ] as const;
 
 function CalendarLegend() {
@@ -813,17 +815,20 @@ type DayCellProps = {
 
 function DayCell({ day, today, selected, availability, isPast, onClick }: DayCellProps) {
 	const isBlocked = Boolean(availability && !availability.is_available);
+	const isBooked = availability?.reason === AvailabilityStatus.BOOKED;
 	const isPriced = Boolean(availability?.is_available);
 
 	const stateClass = isPast
 		? 'cursor-not-allowed border-transparent bg-dashboard-bg/60 text-espresso/28'
 		: selected
 			? 'border-camel/55 bg-camel/[0.08] text-espresso shadow-[inset_0_0_0_1px_rgba(150,131,112,0.18)]'
-			: isBlocked
-				? 'border-red-200 bg-red-50 text-red-800 hover:border-red-300'
-				: isPriced
-					? 'border-dashboard-border/65 bg-white text-espresso hover:border-camel/30 hover:bg-dashboard-inset/20'
-					: 'border-dashed border-dashboard-border/55 bg-dashboard-inset/35 text-espresso/55 hover:border-camel/25 hover:bg-dashboard-inset/55';
+			: isBlocked && isBooked
+				? 'border-dashboard-border/70 bg-dashboard-inset text-espresso/75 hover:border-espresso/20 hover:bg-dashboard-surface'
+				: isBlocked
+					? 'border-red-300/35 bg-red-950/25 text-red-300 hover:border-red-300/50'
+					: isPriced
+						? 'border-dashboard-border/65 bg-dashboard-surface text-espresso hover:border-camel/30 hover:bg-dashboard-inset/20'
+						: 'border-dashed border-dashboard-border/55 bg-dashboard-inset/35 text-espresso/55 hover:border-camel/25 hover:bg-dashboard-inset/55';
 
 	return (
 		<Button
@@ -853,7 +858,12 @@ function DayCell({ day, today, selected, availability, isPast, onClick }: DayCel
 						${availability!.price.toFixed(0)}
 					</span>
 				) : isBlocked ? (
-					<span className="max-w-full truncate px-0.5 text-xs font-medium uppercase tracking-wide text-red-800">
+					<span
+						className={cn(
+							'max-w-full truncate px-0.5 text-xs font-medium uppercase tracking-wide',
+							isBooked ? 'text-espresso/55' : 'text-red-300',
+						)}
+					>
 						{availability!.reason ?? 'Off'}
 					</span>
 				) : (

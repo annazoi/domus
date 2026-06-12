@@ -33,6 +33,8 @@ import { Button } from '@/components/ui';
 import Image from 'next/image';
 import logo from '@/public/images/logo.png';
 import { useAuthStore } from '@/store/auth';
+import { DashboardTheme, useDashboardThemeStore } from '@/store/dashboard-theme';
+import { ThemeToggle } from './theme-toggle';
 
 type NavItem = {
 	label: string;
@@ -82,6 +84,7 @@ export function useSetDashboardPageIntro() {
 export function DashboardShell({ children }: { children: ReactNode }) {
 	const pathname = usePathname();
 	const logout = useAuthStore((state) => state.logout);
+	const theme = useDashboardThemeStore((state) => state.theme);
 	const [isCollapsed, setIsCollapsed] = useState(false);
 	const [isMobileOpen, setIsMobileOpen] = useState(false);
 	const [pageIntro, setPageIntro] = useState<ReactNode | null>(null);
@@ -104,14 +107,24 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 		};
 	}, [isMobileOpen]);
 
+	useEffect(() => {
+		document.documentElement.dataset.dashboardTheme = theme;
+		return () => {
+			delete document.documentElement.dataset.dashboardTheme;
+		};
+	}, [theme]);
+
 	const openMobileNav = () => setIsMobileOpen(true);
 
 	return (
-		<div className="dashboard-root min-h-screen bg-[#F7F5F2] text-[#1A1A1A]">
+		<div
+			className="dashboard-root min-h-screen bg-dashboard-bg text-espresso transition-colors duration-300"
+			data-theme={theme}
+		>
 			{isMobileOpen ? (
 				<button
 					type="button"
-					className="fixed inset-0 z-30 bg-[#1A1A1A]/25 backdrop-blur-[2px] md:hidden"
+					className="fixed inset-0 z-30 bg-[color:var(--color-dashboard-overlay)] backdrop-blur-[2px] md:hidden"
 					onClick={() => setIsMobileOpen(false)}
 					aria-label="Close sidebar"
 				/>
@@ -120,7 +133,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 			<div className="flex w-full">
 				<aside
 					className={[
-						'fixed inset-y-0 left-0 z-40 border-r border-black/5 bg-[#F7F5F2] px-3 py-6 transition-all duration-200',
+						'fixed inset-y-0 left-0 z-40 flex flex-col border-r border-dashboard-border bg-dashboard-bg px-3 py-6 transition-all duration-300',
 						isCollapsed ? 'w-[84px]' : 'w-[250px]',
 						isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
 					].join(' ')}
@@ -149,7 +162,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 						</Button>
 					</div>
 
-					<nav className="mt-8 space-y-1">
+					<nav className="mt-8 flex-1 space-y-1 overflow-y-auto pb-24">
 						{navItems.map((item) => {
 							const active = isItemActive(pathname, item.href);
 
@@ -160,14 +173,14 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 									onClick={() => setIsMobileOpen(false)}
 									className={[
 										'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors duration-200',
-										active ? 'text-[#1A1A1A]' : 'text-[#1A1A1A]/65 hover:text-[#1A1A1A]',
+										active ? 'text-espresso' : 'text-dashboard-muted hover:text-espresso',
 										isCollapsed ? 'justify-center' : '',
 									].join(' ')}
 								>
 									{active ? (
 										<motion.span
 											layoutId="dashboard-nav-active"
-											className="absolute inset-0 rounded-xl bg-black/5"
+											className="absolute inset-0 rounded-xl bg-[color:var(--color-dashboard-nav-active)]"
 											transition={navSpring}
 										/>
 									) : null}
@@ -177,13 +190,30 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 											isCollapsed ? 'justify-center' : '',
 										].join(' ')}
 									>
-										<span className={active ? 'text-camel' : 'text-[#1A1A1A]/45'}>{item.icon}</span>
+										<span className={active ? 'text-camel' : 'text-dashboard-muted'}>{item.icon}</span>
 										<span className={isCollapsed ? 'hidden' : 'inline'}>{item.label}</span>
 									</span>
 								</Link>
 							);
 						})}
 					</nav>
+
+					<div
+						className={[
+							'mt-auto flex items-center border-t border-dashboard-border pt-5',
+							isCollapsed ? 'justify-center' : 'justify-between gap-3',
+						].join(' ')}
+					>
+						{!isCollapsed ? (
+							<div className="min-w-0">
+								<p className="text-[10px] font-medium uppercase tracking-[0.18em] text-dashboard-muted">Appearance</p>
+								<p className="mt-0.5 truncate text-xs text-espresso/70">
+									{theme === DashboardTheme.DARK ? 'Nocturne' : 'Daylight'}
+								</p>
+							</div>
+						) : null}
+						<ThemeToggle compact={isCollapsed} />
+					</div>
 				</aside>
 
 				<DashboardPageIntroContext.Provider value={setPageIntro}>
@@ -209,19 +239,22 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 								>
 									<Menu className="h-4 w-4" />
 								</Button>
-								<Button
-									type="button"
-									variant="ghostIcon"
-									onClick={() => logout()}
-									className="inline-flex shrink-0"
-									aria-label="Log out"
-								>
-									<LogOut className="h-4 w-4" />
-								</Button>
+								<div className="flex items-center gap-2">
+									<ThemeToggle compact />
+									<Button
+										type="button"
+										variant="ghostIcon"
+										onClick={() => logout()}
+										className="inline-flex shrink-0"
+										aria-label="Log out"
+									>
+										<LogOut className="h-4 w-4" />
+									</Button>
+								</div>
 							</div>
 
 							{scrolled ? (
-								<header className="fixed inset-x-0 top-0 z-40 flex min-h-16 items-center justify-between gap-3 border-b border-black/[0.07] bg-[#F7F5F2]/94 px-5 py-2 shadow-[0_10px_32px_-22px_rgba(26,26,26,0.35)] backdrop-blur-md md:hidden">
+								<header className="fixed inset-x-0 top-0 z-40 flex min-h-16 items-center justify-between gap-3 border-b border-[color:var(--color-dashboard-header-border)] bg-[color:var(--color-dashboard-header)] px-5 py-2 shadow-[var(--color-dashboard-header-shadow)] backdrop-blur-md md:hidden">
 									<div className="flex min-w-0 flex-1 items-center gap-3">
 										<Button
 											type="button"
@@ -234,24 +267,28 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 										</Button>
 										<p className="min-w-0 truncate font-serif text-lg tracking-tight">{mobileTitle}</p>
 									</div>
-									<Button
-										type="button"
-										variant="ghostIcon"
-										onClick={() => logout()}
-										className="inline-flex shrink-0"
-										aria-label="Log out"
-									>
-										<LogOut className="h-4 w-4" />
-									</Button>
+									<div className="flex items-center gap-2">
+										<ThemeToggle compact />
+										<Button
+											type="button"
+											variant="ghostIcon"
+											onClick={() => logout()}
+											className="inline-flex shrink-0"
+											aria-label="Log out"
+										>
+											<LogOut className="h-4 w-4" />
+										</Button>
+									</div>
 								</header>
 							) : null}
 
-							<header className="sticky top-0 z-30 hidden min-h-16 items-center justify-between gap-6 border-b border-black/5 bg-[#F7F5F2]/95 px-10 py-2 backdrop-blur-md md:flex">
+							<header className="sticky top-0 z-30 hidden min-h-16 items-center justify-between gap-6 border-b border-dashboard-border bg-[color:var(--color-dashboard-header)] px-10 py-2 backdrop-blur-md md:flex">
 								<div className="flex min-w-0 flex-1 items-center gap-5">
 									{pageIntro ? <div className="min-w-0 flex-1">{pageIntro}</div> : null}
 								</div>
 
 								<div className="flex shrink-0 items-center gap-3">
+									<ThemeToggle />
 									<span className="hidden rounded-full bg-camel/15 px-3 py-1 text-xs font-medium text-camel sm:inline-flex">
 										Portfolio Plan
 									</span>
