@@ -24,7 +24,7 @@ import type { Property, UpsertPropertyInput } from '@/features/property/interfac
 import { toApiDate } from '@/features/property-availability/utils/date';
 import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
 import { PropertyFormSection, dashboardFormFields } from './property-form-section';
-import { pricingFormSchema, type PricingFormValues } from './schemas';
+import { pricingFormSchema, type PricingFormInput, type PricingFormValues } from './schemas';
 import { mergeAvailabilityRowsInCache } from './utils/availability-cache';
 import './availability-day-picker.css';
 
@@ -48,7 +48,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		handleSubmit,
 		reset,
 		formState: { errors },
-	} = useForm<PricingFormValues>({
+	} = useForm<PricingFormInput, unknown, PricingFormValues>({
 		resolver: zodResolver(pricingFormSchema),
 		defaultValues: {
 			minimum_advance_reservation_hours: defaultValues.minimum_advance_reservation_hours,

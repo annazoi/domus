@@ -43,20 +43,20 @@ export const locationFormSchema = z.object({
 	lng: z.number().nullable().optional(),
 });
 
+const nullableIntField = (min: number) =>
+	z
+		.union([z.string(), z.number(), z.null(), z.undefined()])
+		.transform((value) => {
+			if (value === '' || value === null || value === undefined) return null;
+			return typeof value === 'number' ? value : Number(value);
+		})
+		.pipe(z.number().int().min(min).nullable());
+
 export const pricingFormSchema = z
 	.object({
-		minimum_advance_reservation_hours: z.preprocess(
-			(value) => (value === '' || value === null || value === undefined ? null : Number(value)),
-			z.number().int().min(0).nullable(),
-		),
-		minimum_rental_period_nights: z.preprocess(
-			(value) => (value === '' || value === null || value === undefined ? null : Number(value)),
-			z.number().int().min(1).nullable(),
-		),
-		maximum_rental_period_nights: z.preprocess(
-			(value) => (value === '' || value === null || value === undefined ? null : Number(value)),
-			z.number().int().min(1).nullable(),
-		),
+		minimum_advance_reservation_hours: nullableIntField(0),
+		minimum_rental_period_nights: nullableIntField(1),
+		maximum_rental_period_nights: nullableIntField(1),
 	})
 	.refine(
 		(data) =>
@@ -82,6 +82,7 @@ export type DescriptionFormValues = z.infer<typeof descriptionFormSchema>;
 export type HouseRulesFormValues = z.infer<typeof houseRulesFormSchema>;
 export type CapacityFormValues = z.infer<typeof capacityFormSchema>;
 export type LocationFormValues = z.infer<typeof locationFormSchema>;
-export type PricingFormValues = z.infer<typeof pricingFormSchema>;
+export type PricingFormInput = z.input<typeof pricingFormSchema>;
+export type PricingFormValues = z.output<typeof pricingFormSchema>;
 export type AmenitiesFormValues = z.infer<typeof amenitiesFormSchema>;
 export type ImagesFormValues = z.infer<typeof imagesFormSchema>;
