@@ -52,7 +52,15 @@ export async function checkAvailabilityInternal(
 		where: {
 			OR: [{ id: params.property_id }, { slug: params.property_id }],
 		},
-		select: { id: true, max_guests: true, user_id: true, isPublished: true },
+		select: {
+			id: true,
+			max_guests: true,
+			user_id: true,
+			isPublished: true,
+			minimum_advance_reservation_hours: true,
+			minimum_rental_period_nights: true,
+			maximum_rental_period_nights: true,
+		},
 	});
 
 	if (!property) {
@@ -68,6 +76,23 @@ export async function checkAvailabilityInternal(
 			isAvailable: false,
 			totalPrice: null,
 		};
+	}
+
+	const nights = Math.trunc(checkOut.diff(checkIn, 'days').days);
+
+	if (property.minimum_rental_period_nights !== null && nights < property.minimum_rental_period_nights) {
+		return { kind: 'invalid_input', isAvailable: false, totalPrice: null };
+	}
+
+	if (property.maximum_rental_period_nights !== null && nights > property.maximum_rental_period_nights) {
+		return { kind: 'invalid_input', isAvailable: false, totalPrice: null };
+	}
+
+	if (property.minimum_advance_reservation_hours !== null) {
+		const hoursUntilCheckIn = checkIn.diff(DateTime.utc(), 'hours').hours;
+		if (hoursUntilCheckIn < property.minimum_advance_reservation_hours) {
+			return { kind: 'invalid_input', isAvailable: false, totalPrice: null };
+		}
 	}
 
 	const overlappingBooking = await db.booking.findFirst({
@@ -89,7 +114,6 @@ export async function checkAvailabilityInternal(
 		};
 	}
 
-	const nights = Math.trunc(checkOut.diff(checkIn, 'days').days);
 	const days = eachDayInRange(checkIn, checkOut);
 	const rows = await db.propertyAvailability.findMany({
 		where: {

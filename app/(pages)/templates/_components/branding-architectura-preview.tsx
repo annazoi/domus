@@ -8,8 +8,9 @@ import { DayPicker } from 'react-day-picker';
 import { BrandingPreviewMap } from '@/components/google-maps';
 import { cn, Input } from '@/components/ui';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
-import { AmenityGlyph, BrandingWordmark, FillImg } from './branding-preview-shared';
+import { AmenityGlyph, BrandingHeroMedia, BrandingWordmark, FillImg } from './branding-preview-shared';
 import { BrandingGuestExtrasSection } from './branding-guest-extras-section';
+import { BrandingPrivacyAccess } from './branding-privacy-access';
 import { BrandingRichTextBlock } from './branding-rich-text-block';
 import { BrandingStayDetailsSection } from './branding-stay-details-section';
 import { BrandingVideoSection } from './branding-video-section';
@@ -232,16 +233,18 @@ export function ArchitecturaPreview({
 }) {
 	const aboutLong = [data.concept.paragraphs[0], data.concept.paragraphs[1]].filter(Boolean).join(' ').trim();
 	const aboutShort = data.concept.title.trim();
+	const heroVideo = data.hero.videoSrc?.trim() ?? '';
+	const heroImageSrc = data.hero.imageSrc.trim();
 	const galleryImages = useMemo(
 		() =>
 			[
-				data.hero.imageSrc.trim(),
+				heroImageSrc,
 				data.gallery.large.src.trim(),
 				data.gallery.stack[0].src.trim(),
 				data.gallery.stack[1].src.trim(),
 				data.gallery.full.src.trim(),
 			].filter(Boolean),
-		[data.hero.imageSrc, data.gallery],
+		[heroImageSrc, data.gallery],
 	);
 	const [galleryOpen, setGalleryOpen] = useState(false);
 	const [galleryIndex, setGalleryIndex] = useState(0);
@@ -312,26 +315,22 @@ export function ArchitecturaPreview({
 			<section className="relative z-10 px-5 sm:px-10">
 				<div className="relative mx-auto max-w-[1360px] overflow-hidden rounded-[2rem] sm:rounded-[2.5rem]">
 					<div className="relative min-h-[62vh] sm:min-h-[72vh]">
-						{data.hero.imageSrc.trim() ? (
-							<button
-								type="button"
-								onClick={() => openGallery(data.hero.imageSrc.trim())}
-								className="relative block h-full min-h-[62vh] w-full sm:min-h-[72vh]"
-							>
-								<Image
-									src={data.hero.imageSrc}
-									alt=""
-									fill
-									className="object-cover"
+						{heroVideo || heroImageSrc ? (
+							<>
+								<BrandingHeroMedia
+									videoSrc={heroVideo}
+									videoSource={data.hero.videoSource}
+									imageSrc={heroImageSrc}
+									className="h-full min-h-[62vh] w-full sm:min-h-[72vh]"
 									sizes="100vw"
 									priority
-									unoptimized
+									onImageClick={heroVideo ? undefined : () => openGallery(heroImageSrc)}
 								/>
 								<div
-									className="absolute inset-0 bg-gradient-to-t from-[#1c2430]/85 via-[#1c2430]/25 to-[#1c2430]/10"
+									className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1c2430]/85 via-[#1c2430]/25 to-[#1c2430]/10"
 									aria-hidden
 								/>
-							</button>
+							</>
 						) : (
 							<div className="min-h-[62vh] bg-[#d5dce3] sm:min-h-[72vh]" aria-hidden />
 						)}
@@ -356,6 +355,9 @@ export function ArchitecturaPreview({
 									<p className="max-w-md font-[family-name:var(--preview-kaze-body)] text-sm leading-relaxed text-[#fafbfc]/65">
 										{aboutShort}
 									</p>
+								) : null}
+								{data.privacyPolicy.html ? (
+									<BrandingPrivacyAccess html={data.privacyPolicy.html} variant="architectura" />
 								) : null}
 							</div>
 						</div>
@@ -488,17 +490,6 @@ export function ArchitecturaPreview({
 								</p>
 								<div className="mt-4">
 									<BrandingRichTextBlock html={data.houseRules.html} variant="architectura" />
-								</div>
-							</div>
-						) : null}
-
-						{data.privacyPolicy.html ? (
-							<div className="max-w-2xl rounded-2xl border border-[#1c2430]/8 bg-white/60 p-8 backdrop-blur-sm">
-								<p className="font-[family-name:var(--preview-kaze-body)] text-[10px] font-medium uppercase tracking-[0.35em] text-[#6b8f9e]">
-									Privacy policy
-								</p>
-								<div className="mt-4">
-									<BrandingRichTextBlock html={data.privacyPolicy.html} variant="architectura" />
 								</div>
 							</div>
 						) : null}

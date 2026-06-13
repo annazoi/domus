@@ -36,31 +36,28 @@ export function ThemeToggle({ compact = false, className }: ThemeToggleProps) {
 				layout
 				transition={spring}
 				className={cn(
-					'absolute top-1 bottom-1 rounded-full',
+					'absolute top-1 bottom-1 w-[calc((100%-0.5rem)/2)] rounded-full',
 					isDark
-						? 'left-[calc(100%-2rem-0.25rem)] bg-gradient-to-br from-[#3d342c] via-[#2a231d] to-[#171411] shadow-[0_0_18px_-4px_rgb(201_169_120/0.55),inset_0_1px_0_rgb(255_255_255/0.08)]'
+						? 'left-1/2 bg-gradient-to-br from-[#3d342c] via-[#2a231d] to-[#171411] shadow-[0_0_18px_-4px_rgb(201_169_120/0.55),inset_0_1px_0_rgb(255_255_255/0.08)]'
 						: 'left-1 bg-gradient-to-br from-white via-[#fffdf9] to-[#f3ece2] shadow-[0_8px_18px_-10px_rgb(61_50_41/0.55),inset_0_1px_0_rgb(255_255_255/0.9)]',
-					compact ? 'w-7' : 'w-8',
 				)}
 			/>
-			<span className={cn('relative z-10 flex w-full items-center', compact ? 'px-1.5' : 'px-2')}>
+			<span className="absolute inset-1 z-10 grid grid-cols-2">
 				<span
 					className={cn(
-						'flex flex-1 items-center justify-center transition-colors duration-200',
+						'flex items-center justify-center transition-colors duration-200 cursor-pointer',
 						!isDark ? 'text-camel' : 'text-[#6f6458]',
-						compact ? 'h-7' : 'h-8',
 					)}
 				>
-					<SunMedium className={cn(compact ? 'h-3.5 w-3.5' : 'h-4 w-4')} strokeWidth={1.75} aria-hidden />
+					<SunMedium className={cn('shrink-0', compact ? 'h-3.5 w-3.5' : 'h-4 w-4')} strokeWidth={1.75} aria-hidden />
 				</span>
 				<span
 					className={cn(
-						'flex flex-1 items-center justify-center transition-colors duration-200',
+						'flex items-center justify-center transition-colors duration-200 cursor-pointer',
 						isDark ? 'text-[#d9bc94]' : 'text-[#9a8a78]',
-						compact ? 'h-7' : 'h-8',
 					)}
 				>
-					<MoonStar className={cn(compact ? 'h-3.5 w-3.5' : 'h-4 w-4')} strokeWidth={1.75} aria-hidden />
+					<MoonStar className={cn('shrink-0', compact ? 'h-3.5 w-3.5' : 'h-4 w-4')} strokeWidth={1.75} aria-hidden />
 				</span>
 			</span>
 			{!compact ? (

@@ -44,6 +44,12 @@ const intOr = (value: unknown, fallback: number) => {
 	return Number.isFinite(n) ? Math.trunc(n) : fallback;
 };
 
+const nullableIntOr = (value: unknown) => {
+	if (value === null || value === undefined || value === '') return null;
+	const n = Number(value);
+	return Number.isFinite(n) ? Math.trunc(n) : null;
+};
+
 const propertyInclude = propertyDetailInclude;
 
 type PropertyUpsertInput = {
@@ -77,6 +83,9 @@ const toPropertyData = ({ body, hostId, slug }: PropertyUpsertInput) => ({
 	latitude: body.lat ?? 0,
 	longitude: body.lng ?? 0,
 	isPublished: body.isVisible ?? false,
+	minimum_advance_reservation_hours: nullableIntOr(body.minimum_advance_reservation_hours),
+	minimum_rental_period_nights: nullableIntOr(body.minimum_rental_period_nights),
+	maximum_rental_period_nights: nullableIntOr(body.maximum_rental_period_nights),
 	user_id: hostId,
 });
 
@@ -105,6 +114,9 @@ const toPropertyUpdateData = ({ body, slug }: Omit<PropertyUpsertInput, 'hostId'
 	latitude: body.lat ?? 0,
 	longitude: body.lng ?? 0,
 	isPublished: body.isVisible ?? false,
+	minimum_advance_reservation_hours: nullableIntOr(body.minimum_advance_reservation_hours),
+	minimum_rental_period_nights: nullableIntOr(body.minimum_rental_period_nights),
+	maximum_rental_period_nights: nullableIntOr(body.maximum_rental_period_nights),
 });
 
 export const propertyService = {

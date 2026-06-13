@@ -27,4 +27,7 @@ export const PROPERTY_FORM_DEFAULT_VALUES: UpsertPropertyInput = {
 	lat: null,
 	lng: null,
 	isVisible: false,
+	minimum_advance_reservation_hours: null,
+	minimum_rental_period_nights: null,
+	maximum_rental_period_nights: null,
 };

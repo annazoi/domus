@@ -9,6 +9,9 @@ export interface User {
 	email: string;
 	phone?: string;
 	vat_number: string | null;
+	bio?: string;
+	avatar_url?: string | null;
+	banner_url?: string | null;
 	// accounts: Account[];
 	role?: RoleType;
 	created_at: string;
@@ -26,8 +29,9 @@ export interface UpdateUserDto {
 	first_name?: string;
 	last_name?: string;
 	email?: string;
-	phone?: string;
+	phone?: string | null;
 	vat_number?: string | null;
+	bio?: string | null;
 }
 
 export interface UsersResponse {

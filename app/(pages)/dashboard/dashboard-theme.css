@@ -101,3 +101,60 @@ html[data-dashboard-theme='dark'] select option {
   color: var(--color-espresso);
 }
 
+.profile-banner-empty {
+  background-color: var(--color-dashboard-inset);
+}
+
+.profile-banner-stripes {
+  background-image: repeating-linear-gradient(
+    -12deg,
+    transparent,
+    transparent 18px,
+    color-mix(in srgb, var(--color-camel) 12%, transparent) 18px,
+    color-mix(in srgb, var(--color-camel) 12%, transparent) 19px
+  );
+}
+
+.profile-canvas-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+
+.profile-viewer-shell {
+  background: linear-gradient(
+    180deg,
+    var(--color-dashboard-panel) 0%,
+    color-mix(in srgb, var(--color-dashboard-bg) 88%, transparent) 100%
+  );
+}
+
+.profile-viewer-about {
+  position: relative;
+}
+
+.profile-viewer-about::before {
+  content: '\201C';
+  position: absolute;
+  top: 0.35rem;
+  left: 1.1rem;
+  font-family: var(--font-serif);
+  font-size: 4.5rem;
+  line-height: 1;
+  color: color-mix(in srgb, var(--color-camel) 22%, transparent);
+  pointer-events: none;
+}
+
+.profile-viewer-bio {
+  position: relative;
+  z-index: 1;
+}
+
+.profile-viewer-detail {
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.profile-viewer-detail:hover {
+  border-color: color-mix(in srgb, var(--color-camel) 30%, var(--color-dashboard-border));
+  transform: translateY(-1px);
+}
+

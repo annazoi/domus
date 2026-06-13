@@ -8,8 +8,9 @@ import { DayPicker } from 'react-day-picker';
 import { BrandingPreviewMap } from '@/components/google-maps';
 import { cn, Input } from '@/components/ui';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
-import { AmenityGlyph, BrandingWordmark, FillImg } from './branding-preview-shared';
+import { AmenityGlyph, BrandingHeroMedia, BrandingWordmark, FillImg } from './branding-preview-shared';
 import { BrandingGuestExtrasSection } from './branding-guest-extras-section';
+import { BrandingPrivacyAccess } from './branding-privacy-access';
 import { BrandingRichTextBlock } from './branding-rich-text-block';
 import { BrandingStayDetailsSection } from './branding-stay-details-section';
 import { BrandingVideoSection } from './branding-video-section';
@@ -186,17 +187,18 @@ export function CanvasPreview({
 }) {
 	const aboutLong = [data.concept.paragraphs[0], data.concept.paragraphs[1]].filter(Boolean).join(' ').trim();
 	const aboutShort = data.concept.title.trim();
-	const heroSrc = data.hero.imageSrc.trim() || data.gallery.large.src.trim();
+	const heroVideo = data.hero.videoSrc?.trim() ?? '';
+	const heroImageSrc = data.hero.imageSrc.trim() || data.gallery.large.src.trim();
 	const galleryImages = useMemo(
 		() =>
 			[
-				heroSrc,
+				heroImageSrc,
 				data.gallery.large.src.trim(),
 				data.gallery.stack[0].src.trim(),
 				data.gallery.stack[1].src.trim(),
 				data.gallery.full.src.trim(),
 			].filter(Boolean),
-		[heroSrc, data.gallery],
+		[heroImageSrc, data.gallery],
 	);
 	const [galleryOpen, setGalleryOpen] = useState(false);
 	const [galleryIndex, setGalleryIndex] = useState(0);
@@ -294,11 +296,24 @@ export function CanvasPreview({
 					</div>
 
 					<div className="relative min-h-[50vh] lg:min-h-0">
-						{heroSrc ? (
-							<button type="button" onClick={() => openGallery(heroSrc)} className="relative block h-full min-h-[50vh] w-full lg:min-h-full">
-								<Image src={heroSrc} alt="" fill className="object-cover" sizes="(max-width:1024px) 100vw, 58vw" priority unoptimized />
-								<div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-[#fcfcfa]/20 lg:to-[#fcfcfa]/40" aria-hidden />
-							</button>
+						{data.privacyPolicy.html ? (
+							<div className="absolute bottom-6 left-5 z-10 sm:left-6">
+								<BrandingPrivacyAccess html={data.privacyPolicy.html} variant="canvas" />
+							</div>
+						) : null}
+						{heroVideo || heroImageSrc ? (
+							<BrandingHeroMedia
+								videoSrc={heroVideo}
+								videoSource={data.hero.videoSource}
+								imageSrc={heroImageSrc}
+								className="h-full min-h-[50vh] w-full lg:min-h-full"
+								sizes="(max-width:1024px) 100vw, 58vw"
+								priority
+								onImageClick={heroVideo ? undefined : () => openGallery(heroImageSrc)}
+							/>
+						) : null}
+						{heroVideo || heroImageSrc ? (
+							<div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-[#fcfcfa]/20 lg:to-[#fcfcfa]/40" aria-hidden />
 						) : null}
 						{galleryImages.length > 2 ? (
 							<div className="absolute bottom-6 right-6 hidden gap-2 lg:flex">
@@ -384,17 +399,6 @@ export function CanvasPreview({
 									</p>
 									<div className="max-w-2xl border border-[#0a0a0a]/10 bg-white p-6">
 										<BrandingRichTextBlock html={data.houseRules.html} variant="canvas" />
-									</div>
-								</div>
-							) : null}
-
-							{data.privacyPolicy.html ? (
-								<div>
-									<p className="mb-4 font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.35em] text-[#0a0a0a]/40">
-										Privacy policy
-									</p>
-									<div className="max-w-2xl border border-[#0a0a0a]/10 bg-white p-6">
-										<BrandingRichTextBlock html={data.privacyPolicy.html} variant="canvas" />
 									</div>
 								</div>
 							) : null}

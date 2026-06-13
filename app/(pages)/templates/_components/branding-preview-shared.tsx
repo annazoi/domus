@@ -3,6 +3,12 @@
 import Image from 'next/image';
 import { cn } from '@/components/ui';
 import { amenityOptionByValue, type AmenityId } from '@/config/constants/dropdowns/amenities.options';
+import {
+	getVideoHeroEmbedUrl,
+	getVideoPreviewPlayback,
+	resolveVideoUrlSource,
+	type VideoUrlSource,
+} from '@/lib/media/video-url';
 
 export function AmenityGlyph({
 	id,
@@ -46,6 +52,78 @@ export function BrandingWordmark({
 		);
 	}
 	return <span className={className}>{wordmark}</span>;
+}
+
+export function BrandingHeroMedia({
+	imageSrc = '',
+	videoSrc = '',
+	videoSource,
+	className,
+	sizes = '100vw',
+	priority,
+	onImageClick,
+}: {
+	imageSrc?: string;
+	videoSrc?: string;
+	videoSource?: VideoUrlSource;
+	className?: string;
+	sizes?: string;
+	priority?: boolean;
+	onImageClick?: () => void;
+}) {
+	const video = videoSrc.trim();
+	if (video) {
+		const source = resolveVideoUrlSource(video, videoSource);
+		const embedUrl = getVideoHeroEmbedUrl(video, source);
+
+		if (embedUrl) {
+			return (
+				<div className={cn('relative overflow-hidden', className)}>
+					<iframe
+						src={embedUrl}
+						title=""
+						className="pointer-events-none absolute left-1/2 top-1/2 h-[300%] w-[300%] max-w-none -translate-x-1/2 -translate-y-1/2"
+						allow="autoplay; fullscreen; picture-in-picture"
+						tabIndex={-1}
+					/>
+				</div>
+			);
+		}
+
+		const playback = getVideoPreviewPlayback(video, source);
+		if (playback.kind === 'file') {
+			return (
+				<div className={cn('relative overflow-hidden', className)}>
+					<video
+						src={playback.src}
+						className="absolute inset-0 h-full w-full object-cover"
+						autoPlay
+						muted
+						loop
+						playsInline
+						preload="metadata"
+					/>
+				</div>
+			);
+		}
+	}
+
+	const img = imageSrc.trim();
+	if (!img) return null;
+
+	const image = (
+		<Image src={img} alt="" fill className="object-cover" sizes={sizes} priority={priority} unoptimized />
+	);
+
+	if (onImageClick) {
+		return (
+			<button type="button" onClick={onImageClick} className={cn('relative block', className)}>
+				{image}
+			</button>
+		);
+	}
+
+	return <div className={cn('relative', className)}>{image}</div>;
 }
 
 export function FillImg({

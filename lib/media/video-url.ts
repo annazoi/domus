@@ -134,6 +134,27 @@ export type VideoPreviewPlayback =
 	| { kind: 'embed'; embedUrl: string }
 	| { kind: 'file'; src: string };
 
+export const getVideoHeroEmbedUrl = (url: string, source?: VideoUrlSource | null): string | null => {
+	const trimmed = url.trim();
+	const resolvedSource = resolveVideoUrlSource(trimmed, source);
+
+	if (resolvedSource === VideoUrlSource.YOUTUBE) {
+		const id = extractYouTubeId(trimmed);
+		if (id) {
+			return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}&playsinline=1&rel=0&modestbranding=1`;
+		}
+	}
+
+	if (resolvedSource === VideoUrlSource.VIMEO) {
+		const id = extractVimeoId(trimmed);
+		if (id) {
+			return `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&background=1&loop=1`;
+		}
+	}
+
+	return null;
+};
+
 export const getVideoPreviewPlayback = (url: string, source?: VideoUrlSource | null): VideoPreviewPlayback => {
 	const trimmed = url.trim();
 	const resolvedSource = resolveVideoUrlSource(trimmed, source);

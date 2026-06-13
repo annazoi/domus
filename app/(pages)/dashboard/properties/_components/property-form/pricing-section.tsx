@@ -44,10 +44,17 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 	const { mutateAsync: update, isPending: saving } = useUpdateProperty(propertyId);
 	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
 	const {
+		register,
 		handleSubmit,
+		reset,
+		formState: { errors },
 	} = useForm<PricingFormValues>({
 		resolver: zodResolver(pricingFormSchema),
-		defaultValues: {},
+		defaultValues: {
+			minimum_advance_reservation_hours: defaultValues.minimum_advance_reservation_hours,
+			minimum_rental_period_nights: defaultValues.minimum_rental_period_nights,
+			maximum_rental_period_nights: defaultValues.maximum_rental_period_nights,
+		},
 	});
 	const today = useMemo(() => DateTime.utc().startOf('day'), []);
 	const currentMonthStart = useMemo(() => today.startOf('month'), [today]);
@@ -130,7 +137,12 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 			return;
 		}
 		try {
-			await update(payload);
+			const saved = await update(payload);
+			reset({
+				minimum_advance_reservation_hours: saved.minimum_advance_reservation_hours,
+				minimum_rental_period_nights: saved.minimum_rental_period_nights,
+				maximum_rental_period_nights: saved.maximum_rental_period_nights,
+			});
 			push({ title: 'Saved.', tone: 'success' });
 		} catch (submitError) {
 			push({ title: submitError instanceof Error ? submitError.message : 'Could not save.', tone: 'error' });
@@ -332,8 +344,86 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 	return (
 		<PropertyFormSection id="pricing-availability" title="Pricing & availability">
 			<p className="max-w-2xl text-sm leading-relaxed text-espresso/60">
-				Set nightly rates and availability per day. Select a date on the calendar to edit individually, or apply pricing across a range.
+				Set booking rules, nightly rates, and availability per day. Select a date on the calendar to edit individually, or apply pricing across a range.
 			</p>
+
+			<div className="overflow-hidden rounded-2xl border border-dashboard-border/70 bg-dashboard-surface shadow-[0_1px_0_rgba(26,26,26,0.04)]">
+				<div className="border-b border-dashboard-border/60 bg-dashboard-inset/50 px-5 py-3">
+					<p className="text-xs font-semibold uppercase tracking-[0.12em] text-espresso/50">Booking rules</p>
+				</div>
+				<div className="grid gap-5 p-5 md:grid-cols-3">
+					<div className="space-y-1.5">
+						<label htmlFor="minimum-advance-reservation-hours" className="text-sm font-medium text-espresso">
+							Minimum advance reservation
+						</label>
+						<div className="relative">
+							<Input
+								id="minimum-advance-reservation-hours"
+								type="number"
+								min={0}
+								step={1}
+								placeholder="No minimum"
+								className="pr-14"
+								{...register('minimum_advance_reservation_hours')}
+							/>
+							<span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium uppercase tracking-[0.1em] text-espresso/40">
+								hours
+							</span>
+						</div>
+						<p className="text-xs leading-relaxed text-espresso/45">How far ahead guests must book before check-in.</p>
+						{errors.minimum_advance_reservation_hours?.message ? (
+							<p className="text-xs text-red-700">{errors.minimum_advance_reservation_hours.message}</p>
+						) : null}
+					</div>
+					<div className="space-y-1.5">
+						<label htmlFor="minimum-rental-period-nights" className="text-sm font-medium text-espresso">
+							Minimum rental period
+						</label>
+						<div className="relative">
+							<Input
+								id="minimum-rental-period-nights"
+								type="number"
+								min={1}
+								step={1}
+								placeholder="No minimum"
+								className="pr-14"
+								{...register('minimum_rental_period_nights')}
+							/>
+							<span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium uppercase tracking-[0.1em] text-espresso/40">
+								nights
+							</span>
+						</div>
+						<p className="text-xs leading-relaxed text-espresso/45">Shortest stay guests can book.</p>
+						{errors.minimum_rental_period_nights?.message ? (
+							<p className="text-xs text-red-700">{errors.minimum_rental_period_nights.message}</p>
+						) : null}
+					</div>
+					<div className="space-y-1.5">
+						<label htmlFor="maximum-rental-period-nights" className="text-sm font-medium text-espresso">
+							Maximum rental period
+						</label>
+						<div className="relative">
+							<Input
+								id="maximum-rental-period-nights"
+								type="number"
+								min={1}
+								step={1}
+								placeholder="No maximum"
+								className="pr-14"
+								{...register('maximum_rental_period_nights')}
+							/>
+							<span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium uppercase tracking-[0.1em] text-espresso/40">
+								nights
+							</span>
+						</div>
+						<p className="text-xs leading-relaxed text-espresso/45">Longest stay guests can book.</p>
+						{errors.maximum_rental_period_nights?.message ? (
+							<p className="text-xs text-red-700">{errors.maximum_rental_period_nights.message}</p>
+						) : null}
+					</div>
+				</div>
+			</div>
+
 			<div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_17.5rem] lg:items-start">
 				<div className="overflow-hidden rounded-2xl border border-dashboard-border/70 bg-dashboard-surface shadow-[0_1px_0_rgba(26,26,26,0.04)]">
 					<div className="flex items-center justify-between gap-3 border-b border-dashboard-border/60 px-5 py-4">

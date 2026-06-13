@@ -16,6 +16,8 @@ export const ApiRoutes = {
 		prefix: '/users',
 		user: (id: string) => `/users/${id}`,
 		me: '/users/me',
+		meAvatar: '/users/me/avatar',
+		meBanner: '/users/me/banner',
 		search: (q: string) => `/users/search?${toSearchParams({ q })}`,
 	},
 	properties: {

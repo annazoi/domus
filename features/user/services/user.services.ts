@@ -1,4 +1,5 @@
-import axiosInstance from '@/config/api/axios';
+import axios from 'axios';
+import axiosInstance, { postMultipart } from '@/config/api/axios';
 import { ApiRoutes } from '@/config/api/routes';
 import type { CreateUserDto, UpdateUserDto, User, UsersResponse } from '../interfaces/user.interface';
 // import type { AccountQuery } from '@/features/account/interfaces/account.interfaces';
@@ -38,6 +39,40 @@ export const updateUser = async (uuid: string, user: UpdateUserDto): Promise<Use
 		throw new Error('Failed to update user. Please try again.');
 	}
 };
+
+const uploadProfileImage = async (route: string, file: File): Promise<User> => {
+	const formData = new FormData();
+	formData.append('file', file);
+	try {
+		const response = await postMultipart<User>(route, formData);
+		return response.data;
+	} catch (error) {
+		if (axios.isAxiosError(error)) {
+			throw new Error((error.response?.data as { message?: string } | undefined)?.message ?? error.message);
+		}
+		throw error;
+	}
+};
+
+const deleteProfileImage = async (route: string): Promise<User> => {
+	try {
+		const response = await axiosInstance.delete<User>(route);
+		return response.data;
+	} catch (error) {
+		if (axios.isAxiosError(error)) {
+			throw new Error((error.response?.data as { message?: string } | undefined)?.message ?? error.message);
+		}
+		throw error;
+	}
+};
+
+export const uploadUserAvatar = (file: File) => uploadProfileImage(ApiRoutes.users.meAvatar, file);
+
+export const deleteUserAvatar = () => deleteProfileImage(ApiRoutes.users.meAvatar);
+
+export const uploadUserBanner = (file: File) => uploadProfileImage(ApiRoutes.users.meBanner, file);
+
+export const deleteUserBanner = () => deleteProfileImage(ApiRoutes.users.meBanner);
 
 // export const getUsers = async (query: AccountQuery): Promise<UsersResponse> => {
 // 	try {

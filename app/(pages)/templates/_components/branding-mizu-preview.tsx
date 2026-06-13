@@ -8,8 +8,9 @@ import { DayPicker } from 'react-day-picker';
 import { BrandingPreviewMap } from '@/components/google-maps';
 import { cn, Input } from '@/components/ui';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
-import { AmenityGlyph, BrandingWordmark, FillImg } from './branding-preview-shared';
+import { AmenityGlyph, BrandingHeroMedia, BrandingWordmark, FillImg } from './branding-preview-shared';
 import { BrandingGuestExtrasSection } from './branding-guest-extras-section';
+import { BrandingPrivacyAccess } from './branding-privacy-access';
 import { BrandingRichTextBlock } from './branding-rich-text-block';
 import { BrandingStayDetailsSection } from './branding-stay-details-section';
 import { BrandingVideoSection } from './branding-video-section';
@@ -231,17 +232,18 @@ export function MizuPreview({
 }) {
 	const aboutLong = [data.concept.paragraphs[0], data.concept.paragraphs[1]].filter(Boolean).join(' ').trim();
 	const aboutShort = data.concept.title.trim();
-	const heroSrc = data.hero.imageSrc.trim() || data.gallery.large.src.trim();
+	const heroVideo = data.hero.videoSrc?.trim() ?? '';
+	const heroImageSrc = data.hero.imageSrc.trim() || data.gallery.large.src.trim();
 	const galleryImages = useMemo(
 		() =>
 			[
-				heroSrc,
+				heroImageSrc,
 				data.gallery.large.src.trim(),
 				data.gallery.stack[0].src.trim(),
 				data.gallery.stack[1].src.trim(),
 				data.gallery.full.src.trim(),
 			].filter(Boolean),
-		[heroSrc, data.gallery],
+		[heroImageSrc, data.gallery],
 	);
 	const [galleryOpen, setGalleryOpen] = useState(false);
 	const [galleryIndex, setGalleryIndex] = useState(0);
@@ -270,8 +272,15 @@ export function MizuPreview({
 			)}
 		>
 			<section className="relative min-h-[min(88vh,920px)] w-full overflow-hidden">
-				{heroSrc ? (
-					<Image src={heroSrc} alt="" fill className="object-cover" sizes="100vw" priority unoptimized />
+				{heroVideo || heroImageSrc ? (
+					<BrandingHeroMedia
+						videoSrc={heroVideo}
+						videoSource={data.hero.videoSource}
+						imageSrc={heroImageSrc}
+						className="absolute inset-0"
+						sizes="100vw"
+						priority
+					/>
 				) : (
 					<div className="absolute inset-0 bg-[#2a4549]" aria-hidden />
 				)}
@@ -291,26 +300,28 @@ export function MizuPreview({
 						logoAlt={data.logoAlt}
 						className="font-[family-name:var(--preview-mizu-headline)] text-xl tracking-wide text-[#fff9f4] sm:text-2xl"
 					/>
-					{data.nav.length > 0 ? (
-						<nav className="hidden items-center gap-8 sm:flex">
-							{data.nav.map((item) => (
-								<span
-									key={item.label}
-									className={cn(
-										'font-[family-name:var(--preview-mizu-body)] text-[11px] uppercase tracking-[0.2em]',
-										item.current ? 'font-semibold text-[#f5d4c8]' : 'text-[#fff9f4]/70',
-									)}
-								>
-									{item.label}
-								</span>
-							))}
-						</nav>
-					) : null}
-					{listingPreview ? (
-						<span className="w-5 sm:hidden" aria-hidden />
-					) : (
-						<Menu className="h-5 w-5 text-[#fff9f4]/80 sm:hidden" strokeWidth={1.5} />
-					)}
+					<div className="flex items-center gap-5 sm:gap-8">
+						{data.nav.length > 0 ? (
+							<nav className="hidden items-center gap-8 sm:flex">
+								{data.nav.map((item) => (
+									<span
+										key={item.label}
+										className={cn(
+											'font-[family-name:var(--preview-mizu-body)] text-[11px] uppercase tracking-[0.2em]',
+											item.current ? 'font-semibold text-[#f5d4c8]' : 'text-[#fff9f4]/70',
+										)}
+									>
+										{item.label}
+									</span>
+								))}
+							</nav>
+						) : null}
+						{listingPreview ? (
+							<span className="w-5 sm:hidden" aria-hidden />
+						) : (
+							<Menu className="h-5 w-5 text-[#fff9f4]/80 sm:hidden" strokeWidth={1.5} />
+						)}
+					</div>
 				</header>
 
 				<div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-10 sm:px-10 sm:pb-14">
@@ -327,6 +338,11 @@ export function MizuPreview({
 							<MapPin className="h-4 w-4 shrink-0 text-[#c4785a]" strokeWidth={1.5} />
 							{data.hero.location}
 						</p>
+					) : null}
+					{data.privacyPolicy.html ? (
+						<div className="mt-6">
+							<BrandingPrivacyAccess html={data.privacyPolicy.html} variant="mizu" />
+						</div>
 					) : null}
 				</div>
 			</section>
@@ -433,17 +449,6 @@ export function MizuPreview({
 								</p>
 								<div className="mt-4">
 									<BrandingRichTextBlock html={data.houseRules.html} variant="mizu" />
-								</div>
-							</section>
-						) : null}
-
-						{data.privacyPolicy.html ? (
-							<section className="rounded-[1.75rem] border border-[#6b9a8f]/15 bg-[#fff9f4] p-8 sm:p-10">
-								<p className="font-[family-name:var(--preview-mizu-body)] text-[10px] font-semibold uppercase tracking-[0.28em] text-[#4d7c6f]">
-									Privacy policy
-								</p>
-								<div className="mt-4">
-									<BrandingRichTextBlock html={data.privacyPolicy.html} variant="mizu" />
 								</div>
 							</section>
 						) : null}

@@ -64,6 +64,9 @@ export type PropertyWithImages = {
 	address: string;
 	latitude: number;
 	longitude: number;
+	minimum_advance_reservation_hours: number | null;
+	minimum_rental_period_nights: number | null;
+	maximum_rental_period_nights: number | null;
 	check_in_time: Date;
 	check_out_time: Date;
 	door_code: string | null;
@@ -121,6 +124,9 @@ export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 	lat: property.latitude,
 	lng: property.longitude,
 	isVisible: property.isPublished,
+	minimum_advance_reservation_hours: property.minimum_advance_reservation_hours,
+	minimum_rental_period_nights: property.minimum_rental_period_nights,
+	maximum_rental_period_nights: property.maximum_rental_period_nights,
 	branding_theme: property.branding_theme,
 	logo_url: property.logo?.url ?? null,
 	logo_alt: property.logo_alt?.trim() || null,

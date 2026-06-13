@@ -22,7 +22,14 @@ export type BrandingPreviewDemo = {
 	logoSrc?: string;
 	logoAlt?: string;
 	nav: { label: string; current?: boolean }[];
-	hero: { series: string; title: string; location: string; imageSrc: string };
+	hero: {
+		series: string;
+		title: string;
+		location: string;
+		imageSrc: string;
+		videoSrc?: string;
+		videoSource?: VideoUrlSource;
+	};
 	concept: { eyebrow: string; title: string; paragraphs: [string, string] };
 	gallery: {
 		large: { src: string; caption: string };
@@ -248,6 +255,9 @@ export const DEMO_PROPERTY_FOR_BRANDING: Property = {
 		Amenities.BBQ_GRILL,
 	].map((value) => ({ value, description: null, selected: true })),
 	appliances: [],
+	minimum_advance_reservation_hours: null,
+	minimum_rental_period_nights: null,
+	maximum_rental_period_nights: null,
 	created_at: new Date('2026-05-01T12:00:00.000Z').toISOString(),
 	updated_at: new Date('2026-05-03T12:00:00.000Z').toISOString(),
 	images: demoImages(),
@@ -286,6 +296,9 @@ export function propertyToBrandingPreview(
 			imageSrc: entry?.image_url?.trim() ?? '',
 		};
 	});
+
+	const heroVideo = videos[0] ?? null;
+	const listingVideos = heroVideo ? videos.slice(1) : videos;
 
 	const coords =
 		property.lat != null && property.lng != null
@@ -331,6 +344,8 @@ export function propertyToBrandingPreview(
 			title: property.title,
 			location: [property.city, property.country].filter(Boolean).join(', ') || property.country || property.city || '',
 			imageSrc: img(0),
+			videoSrc: heroVideo?.src ?? '',
+			videoSource: heroVideo?.source,
 		},
 		concept: {
 			eyebrow: 'About',
@@ -346,7 +361,7 @@ export function propertyToBrandingPreview(
 			},
 		},
 		amenities,
-		videos,
+		videos: listingVideos,
 		welcome: { html: property.welcome_message?.trim() ?? '' },
 		stay: {
 			propertyType,

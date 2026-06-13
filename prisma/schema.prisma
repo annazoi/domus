@@ -167,6 +167,9 @@ model Property {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
   room_type     String
+  minimum_advance_reservation_hours Int?
+  minimum_rental_period_nights      Int?
+  maximum_rental_period_nights      Int?
 
   user         User                   @relation(fields: [user_id], references: [id])
   logo         Document?              @relation("PropertyLogo", fields: [logo_id], references: [id])

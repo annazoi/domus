@@ -44,6 +44,9 @@ export interface Property {
 	lat: number | null;
 	lng: number | null;
 	isVisible: boolean;
+	minimum_advance_reservation_hours: number | null;
+	minimum_rental_period_nights: number | null;
+	maximum_rental_period_nights: number | null;
 	branding_theme: PropertyBrandingTheme;
 	logo_url?: string | null;
 	logo_alt?: string | null;
@@ -80,4 +83,7 @@ export interface UpsertPropertyInput {
 	lat?: number | null;
 	lng?: number | null;
 	isVisible: boolean;
+	minimum_advance_reservation_hours?: number | null;
+	minimum_rental_period_nights?: number | null;
+	maximum_rental_period_nights?: number | null;
 }

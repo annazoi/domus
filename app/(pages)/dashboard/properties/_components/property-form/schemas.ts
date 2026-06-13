@@ -43,7 +43,31 @@ export const locationFormSchema = z.object({
 	lng: z.number().nullable().optional(),
 });
 
-export const pricingFormSchema = z.object({});
+export const pricingFormSchema = z
+	.object({
+		minimum_advance_reservation_hours: z.preprocess(
+			(value) => (value === '' || value === null || value === undefined ? null : Number(value)),
+			z.number().int().min(0).nullable(),
+		),
+		minimum_rental_period_nights: z.preprocess(
+			(value) => (value === '' || value === null || value === undefined ? null : Number(value)),
+			z.number().int().min(1).nullable(),
+		),
+		maximum_rental_period_nights: z.preprocess(
+			(value) => (value === '' || value === null || value === undefined ? null : Number(value)),
+			z.number().int().min(1).nullable(),
+		),
+	})
+	.refine(
+		(data) =>
+			data.minimum_rental_period_nights === null ||
+			data.maximum_rental_period_nights === null ||
+			data.maximum_rental_period_nights >= data.minimum_rental_period_nights,
+		{
+			message: 'Maximum rental period must be at least the minimum.',
+			path: ['maximum_rental_period_nights'],
+		},
+	);
 
 export const amenitiesFormSchema = z.object({
 	amenity_ids: z.array(z.string()),
