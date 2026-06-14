@@ -1,8 +1,15 @@
 import { BookingStatus } from '@prisma/client';
 import type { PrismaClient } from '@prisma/client';
 import { DateTime } from 'luxon';
+import { combineUtcDayWithTimeOfDay } from '@/app/api/_utils/time-of-day';
 import { eachDayInRange } from '@/features/property-availability/utils/date';
 import { prisma } from '@/lib/prisma';
+
+export type CheckAvailabilityInvalidReason =
+	| 'invalid_dates'
+	| 'stay_too_short'
+	| 'stay_too_long'
+	| 'too_soon';
 
 export type CheckAvailabilityInternalParams = {
 	property_id: string;
@@ -18,7 +25,7 @@ export type CheckAvailabilityInternalResult = {
 };
 
 export type CheckAvailabilityInternalResponse =
-	| ({ kind: 'invalid_input' } & CheckAvailabilityInternalResult)
+	| ({ kind: 'invalid_input'; reason: CheckAvailabilityInvalidReason } & CheckAvailabilityInternalResult)
 	| ({ kind: 'not_found' } & CheckAvailabilityInternalResult)
 	| ({ kind: 'guests_exceed_capacity' } & CheckAvailabilityInternalResult)
 	| ({
@@ -42,10 +49,10 @@ export async function checkAvailabilityInternal(
 	const guests = params.guests;
 
 	if (!checkIn.isValid || !checkOut.isValid || !Number.isInteger(guests) || guests <= 0) {
-		return { kind: 'invalid_input', isAvailable: false, totalPrice: null };
+		return { kind: 'invalid_input', reason: 'invalid_dates', isAvailable: false, totalPrice: null };
 	}
 	if (checkIn >= checkOut) {
-		return { kind: 'invalid_input', isAvailable: false, totalPrice: null };
+		return { kind: 'invalid_input', reason: 'invalid_dates', isAvailable: false, totalPrice: null };
 	}
 
 	const property = await db.property.findFirst({
@@ -57,6 +64,7 @@ export async function checkAvailabilityInternal(
 			max_guests: true,
 			user_id: true,
 			isPublished: true,
+			check_in_time: true,
 			minimum_advance_reservation_hours: true,
 			minimum_rental_period_nights: true,
 			maximum_rental_period_nights: true,
@@ -81,17 +89,18 @@ export async function checkAvailabilityInternal(
 	const nights = Math.trunc(checkOut.diff(checkIn, 'days').days);
 
 	if (property.minimum_rental_period_nights !== null && nights < property.minimum_rental_period_nights) {
-		return { kind: 'invalid_input', isAvailable: false, totalPrice: null };
+		return { kind: 'invalid_input', reason: 'stay_too_short', isAvailable: false, totalPrice: null };
 	}
 
 	if (property.maximum_rental_period_nights !== null && nights > property.maximum_rental_period_nights) {
-		return { kind: 'invalid_input', isAvailable: false, totalPrice: null };
+		return { kind: 'invalid_input', reason: 'stay_too_long', isAvailable: false, totalPrice: null };
 	}
 
 	if (property.minimum_advance_reservation_hours !== null) {
-		const hoursUntilCheckIn = checkIn.diff(DateTime.utc(), 'hours').hours;
+		const checkInAt = combineUtcDayWithTimeOfDay(checkIn, property.check_in_time);
+		const hoursUntilCheckIn = checkInAt.diff(DateTime.utc(), 'hours').hours;
 		if (hoursUntilCheckIn < property.minimum_advance_reservation_hours) {
-			return { kind: 'invalid_input', isAvailable: false, totalPrice: null };
+			return { kind: 'invalid_input', reason: 'too_soon', isAvailable: false, totalPrice: null };
 		}
 	}
 

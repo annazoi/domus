@@ -1,5 +1,6 @@
 'use client';
 
+import axios from 'axios';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { DateRange } from 'react-day-picker';
@@ -128,6 +129,7 @@ export function useBrandingStayBooking({
 	const checkAvailabilityForDates = useCallback(
 		async (from: Date, to: Date) => {
 			if (!propertyRef) return;
+			if (dayStart(to).getTime() <= dayStart(from).getTime()) return;
 			setCheckingAvailability(true);
 			setAvailabilityMsg(null);
 			try {
@@ -147,10 +149,14 @@ export function useBrandingStayBooking({
 						: 'Not available for these dates.',
 				);
 				return { available, total };
-			} catch {
+			} catch (error) {
 				setAvailableForCheckout(false);
 				setTotalPrice(null);
-				setAvailabilityMsg('Could not check availability.');
+				const message =
+					axios.isAxiosError(error) && typeof error.response?.data?.message === 'string'
+						? error.response.data.message
+						: 'Could not check availability.';
+				setAvailabilityMsg(message);
 			} finally {
 				setCheckingAvailability(false);
 			}

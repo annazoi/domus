@@ -18,3 +18,8 @@ export function parseTimeToUtcDate(raw: string | undefined, fallback: string): D
 export function formatUtcTimeOfDay(d: Date): string {
 	return DateTime.fromJSDate(d, { zone: 'utc' }).toFormat('HH:mm');
 }
+
+export function combineUtcDayWithTimeOfDay(day: DateTime, timeOfDay: Date): DateTime {
+	const time = DateTime.fromJSDate(timeOfDay, { zone: 'utc' });
+	return day.set({ hour: time.hour, minute: time.minute, second: 0, millisecond: 0 });
+}

@@ -24,9 +24,9 @@ const variantStyles = {
 	mizu: {
 		eyebrow:
 			'font-[family-name:var(--preview-mizu-body)] text-[10px] font-semibold uppercase tracking-[0.28em] text-[#4d7c6f]',
-		grid: 'grid gap-4 sm:grid-cols-2',
-		card: 'flex gap-4 rounded-[1.25rem] border border-[#6b9a8f]/15 bg-[#fff9f4] p-4',
-		image: 'relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#2a4549]/10',
+		grid: 'grid gap-6 sm:grid-cols-2',
+		card: 'flex gap-4 border-b border-[#6b9a8f]/15 pb-6 last:border-b-0 last:pb-0',
+		image: 'relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-[#f3ebe3]',
 		name: 'font-[family-name:var(--preview-mizu-headline)] text-lg text-[#1a2e35]',
 		description: 'mt-1 font-[family-name:var(--preview-mizu-body)] text-sm leading-relaxed text-[#1a2e35]/65',
 		price: 'mt-2 font-[family-name:var(--preview-mizu-body)] text-sm font-medium text-[#c4785a]',

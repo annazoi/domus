@@ -72,17 +72,23 @@ export function BrandingHeroMedia({
 	onImageClick?: () => void;
 }) {
 	const video = videoSrc.trim();
+	const poster = imageSrc.trim();
+
 	if (video) {
 		const source = resolveVideoUrlSource(video, videoSource);
-		const embedUrl = getVideoHeroEmbedUrl(video, source);
+		const playback = getVideoPreviewPlayback(video, source);
+		const embedUrl = getVideoHeroEmbedUrl(video, source) ?? (playback.kind === 'embed' ? playback.embedUrl : null);
 
 		if (embedUrl) {
 			return (
-				<div className={cn('relative overflow-hidden', className)}>
+				<div className={cn('relative size-full min-h-full overflow-hidden', className)}>
+					{poster ? (
+						<Image src={poster} alt="" fill className="object-cover" sizes={sizes} priority={priority} unoptimized />
+					) : null}
 					<iframe
 						src={embedUrl}
 						title=""
-						className="pointer-events-none absolute left-1/2 top-1/2 h-[300%] w-[300%] max-w-none -translate-x-1/2 -translate-y-1/2"
+						className="pointer-events-none absolute left-1/2 top-1/2 z-[1] h-[300%] w-[300%] max-w-none -translate-x-1/2 -translate-y-1/2 border-0"
 						allow="autoplay; fullscreen; picture-in-picture"
 						tabIndex={-1}
 					/>
@@ -90,13 +96,15 @@ export function BrandingHeroMedia({
 			);
 		}
 
-		const playback = getVideoPreviewPlayback(video, source);
 		if (playback.kind === 'file') {
 			return (
-				<div className={cn('relative overflow-hidden', className)}>
+				<div className={cn('relative size-full min-h-full overflow-hidden', className)}>
+					{poster ? (
+						<Image src={poster} alt="" fill className="object-cover" sizes={sizes} priority={priority} unoptimized />
+					) : null}
 					<video
 						src={playback.src}
-						className="absolute inset-0 h-full w-full object-cover"
+						className="absolute inset-0 z-[1] size-full object-cover"
 						autoPlay
 						muted
 						loop
@@ -108,7 +116,7 @@ export function BrandingHeroMedia({
 		}
 	}
 
-	const img = imageSrc.trim();
+	const img = poster;
 	if (!img) return null;
 
 	const image = (

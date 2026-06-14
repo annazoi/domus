@@ -43,6 +43,64 @@ function pluralize(count: number, singular: string, plural: string) {
 	return `${count} ${count === 1 ? singular : plural}`;
 }
 
+function MizuCapacityBoard({ stay }: { stay: BrandingPreviewDemo['stay'] }) {
+	const metrics = [
+		stay.maxGuests > 0
+			? { icon: Users, label: pluralize(stay.maxGuests, 'guest', 'guests'), value: String(stay.maxGuests) }
+			: null,
+		stay.bedrooms > 0
+			? { icon: BedDouble, label: pluralize(stay.bedrooms, 'bedroom', 'bedrooms'), value: String(stay.bedrooms) }
+			: null,
+		stay.beds > 0
+			? { icon: BedDouble, label: pluralize(stay.beds, 'bed', 'beds'), value: String(stay.beds) }
+			: null,
+		stay.bathrooms > 0
+			? { icon: Bath, label: pluralize(stay.bathrooms, 'bathroom', 'bathrooms'), value: String(stay.bathrooms) }
+			: null,
+	].filter(Boolean) as Array<{ icon: typeof Users; label: string; value: string }>;
+
+	const meta = [stay.propertyType, stay.roomType].filter(Boolean);
+
+	if (metrics.length === 0 && meta.length === 0) return null;
+
+	return (
+		<div className="border-y border-[#6b9a8f]/15 py-5">
+			{metrics.length > 0 ? (
+				<div className="flex flex-wrap gap-x-8 gap-y-4">
+					{metrics.map((metric) => {
+						const Icon = metric.icon;
+						return (
+							<div key={metric.label} className="flex items-center gap-3">
+								<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f3ebe3] text-[#4d7c6f]">
+									<Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+								</div>
+								<div>
+									<p className="font-[family-name:var(--preview-mizu-headline)] text-xl leading-none text-[#1a2e35]">
+										{metric.value}
+									</p>
+									<p className="mt-1 font-[family-name:var(--preview-mizu-body)] text-xs text-[#1a2e35]/55">
+										{metric.label}
+									</p>
+								</div>
+							</div>
+						);
+					})}
+				</div>
+			) : null}
+			{meta.length > 0 ? (
+				<p
+					className={cn(
+						'font-[family-name:var(--preview-mizu-body)] text-sm text-[#1a2e35]/65',
+						metrics.length > 0 && 'mt-4',
+					)}
+				>
+					{meta.join(' · ')}
+				</p>
+			) : null}
+		</div>
+	);
+}
+
 function ArchitecturaCapacityBoard({ stay }: { stay: BrandingPreviewDemo['stay'] }) {
 	const metrics = [
 		stay.maxGuests > 0
@@ -108,6 +166,10 @@ export function BrandingStayDetailsSection({
 }: BrandingStayDetailsSectionProps) {
 	if (variant === 'architectura') {
 		return <ArchitecturaCapacityBoard stay={stay} />;
+	}
+
+	if (variant === 'mizu') {
+		return <MizuCapacityBoard stay={stay} />;
 	}
 
 	const styles = variantStyles[variant];
