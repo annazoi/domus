@@ -10,6 +10,9 @@ import {
 	type VideoUrlSource,
 } from '@/lib/media/video-url';
 
+export const brandingPreviewInteractiveClass =
+	'[&_button:not(:disabled)]:cursor-pointer [&_a]:cursor-pointer';
+
 export function AmenityGlyph({
 	id,
 	className,
@@ -125,7 +128,7 @@ export function BrandingHeroMedia({
 
 	if (onImageClick) {
 		return (
-			<button type="button" onClick={onImageClick} className={cn('relative block', className)}>
+			<button type="button" onClick={onImageClick} className={cn('relative block cursor-pointer', className)}>
 				{image}
 			</button>
 		);

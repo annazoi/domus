@@ -129,7 +129,7 @@ function KazeBookingPanel({
 						<button
 							type="button"
 							onClick={() => booking.setStayPickerOpen(true)}
-							className="px-4 py-3 text-left transition hover:bg-[#FAFAF8]"
+							className="cursor-pointer px-4 py-3 text-left transition hover:bg-[#FAFAF8]"
 						>
 							<span className="font-[family-name:var(--preview-kaze-body)] text-[11px] font-medium uppercase tracking-[0.12em] text-[#5F665F]">
 								Check in
@@ -146,7 +146,7 @@ function KazeBookingPanel({
 						<button
 							type="button"
 							onClick={() => booking.setStayPickerOpen(true)}
-							className="px-4 py-3 text-left transition hover:bg-[#FAFAF8]"
+							className="cursor-pointer px-4 py-3 text-left transition hover:bg-[#FAFAF8]"
 						>
 							<span className="font-[family-name:var(--preview-kaze-body)] text-[11px] font-medium uppercase tracking-[0.12em] text-[#5F665F]">
 								Check out
@@ -230,8 +230,7 @@ function KazeBookingPanel({
 				onClick={() => void booking.handleReserveClick()}
 				disabled={reserveDisabled}
 				className={cn(
-					'mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#2F5D44] py-3.5 font-[family-name:var(--preview-kaze-body)] text-sm font-semibold text-white transition hover:bg-[#244A36] disabled:opacity-50',
-					datesSelected && !booking.checkingAvailability ? 'cursor-pointer' : 'cursor-default',
+					'mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#2F5D44] py-3.5 font-[family-name:var(--preview-kaze-body)] text-sm font-semibold text-white transition hover:bg-[#244A36] disabled:cursor-not-allowed disabled:opacity-50',
 				)}
 			>
 				<span>{booking.checkingAvailability ? 'Checking…' : data.booking.cta}</span>
@@ -418,7 +417,7 @@ export function ArchitecturaPreview({
 									<button
 										type="button"
 										onClick={() => openGallery(data.gallery.large.src.trim())}
-										className="group overflow-hidden rounded-xl sm:col-span-7"
+										className="group cursor-pointer overflow-hidden rounded-xl sm:col-span-7"
 									>
 										<FillImg
 											src={data.gallery.large.src}
@@ -433,7 +432,7 @@ export function ArchitecturaPreview({
 										<button
 											type="button"
 											onClick={() => openGallery(data.gallery.stack[0].src.trim())}
-											className="group overflow-hidden rounded-xl"
+											className="group cursor-pointer overflow-hidden rounded-xl"
 										>
 											<FillImg
 												src={data.gallery.stack[0].src}
@@ -447,7 +446,7 @@ export function ArchitecturaPreview({
 										<button
 											type="button"
 											onClick={() => openGallery(data.gallery.stack[1].src.trim())}
-											className="group overflow-hidden rounded-xl"
+											className="group cursor-pointer overflow-hidden rounded-xl"
 										>
 											<FillImg
 												src={data.gallery.stack[1].src}
@@ -559,7 +558,7 @@ export function ArchitecturaPreview({
 										{data.host.inquire ? (
 											<button
 												type="button"
-												className="mt-4 inline-flex items-center gap-1.5 font-[family-name:var(--preview-kaze-body)] text-sm font-semibold text-[#2F5D44] hover:text-[#244A36]"
+												className="mt-4 inline-flex cursor-pointer items-center gap-1.5 font-[family-name:var(--preview-kaze-body)] text-sm font-semibold text-[#2F5D44] hover:text-[#244A36]"
 											>
 												{data.host.inquire}
 												<ArrowRight className="h-4 w-4" aria-hidden />
@@ -589,7 +588,7 @@ export function ArchitecturaPreview({
 					<button
 						type="button"
 						onClick={() => openGallery(data.gallery.full.src.trim())}
-						className="group relative block w-full"
+						className="group relative block w-full cursor-pointer"
 					>
 						<FillImg
 							src={data.gallery.full.src}

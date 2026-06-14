@@ -17,9 +17,17 @@ export interface PropertyApplianceEntry {
 	image_url?: string | null;
 }
 
+export interface PropertyHostProfile {
+	first_name: string;
+	last_name: string;
+	bio?: string | null;
+	avatar_url?: string | null;
+}
+
 export interface Property {
 	id: string;
 	host_id: string;
+	host?: PropertyHostProfile | null;
 	title: string;
 	slug: string;
 	description: string;

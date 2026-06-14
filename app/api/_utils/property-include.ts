@@ -1,6 +1,15 @@
 import { Prisma } from '@prisma/client';
 
 export const propertyDetailInclude = {
+	user: {
+		select: {
+			id: true,
+			first_name: true,
+			last_name: true,
+			bio: true,
+			avatar: { select: { url: true } },
+		},
+	},
 	images: { orderBy: { order: 'asc' }, include: { document: true } },
 	logo: true,
 	amenities: {

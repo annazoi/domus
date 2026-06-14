@@ -46,6 +46,14 @@ export type PropertyApplianceRow = {
 	documents?: PropertyImageDocument[];
 };
 
+export type PropertyHostRow = {
+	id: string;
+	first_name: string;
+	last_name: string;
+	bio: string | null;
+	avatar: { url: string } | null;
+};
+
 export type PropertyWithImages = {
 	id: string;
 	title: string;
@@ -80,6 +88,7 @@ export type PropertyWithImages = {
 	created_at: Date;
 	updated_at: Date;
 	user_id: string;
+	user?: PropertyHostRow;
 	images: PropertyImageWithDocument[];
 	amenities?: PropertyAmenityRow[];
 	appliances?: PropertyApplianceRow[];
@@ -100,6 +109,14 @@ const mapPropertyImage = (image: PropertyImageWithDocument) => ({
 export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 	id: property.id,
 	host_id: property.user_id,
+	host: property.user
+		? {
+				first_name: property.user.first_name,
+				last_name: property.user.last_name,
+				bio: property.user.bio,
+				avatar_url: property.user.avatar?.url ?? null,
+			}
+		: null,
 	title: property.title,
 	slug: property.slug,
 	description: property.description ?? '',

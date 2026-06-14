@@ -7,6 +7,7 @@ import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
 import { getBrandingPreviewDemo } from '../_utils/branding-preview-demo';
 import { ArchitecturaPreview } from './branding-architectura-preview';
 import { CanvasPreview } from './branding-canvas-preview';
+import { brandingPreviewInteractiveClass } from './branding-preview-shared';
 import { MizuPreview } from './branding-mizu-preview';
 
 export type BrandingThemeFullPreviewProps = {
@@ -25,7 +26,7 @@ export function BrandingThemeFullPreview({
 	const data = dataProp ?? getBrandingPreviewDemo(theme);
 
 	return (
-		<div className={cn('min-h-0', className)}>
+		<div className={cn('min-h-0', brandingPreviewInteractiveClass, className)}>
 			{theme === Theme.ARCHITECTURA ? (
 				<ArchitecturaPreview data={data} listingPreview={listingPreview} />
 			) : theme === Theme.MIZU ? (

@@ -86,20 +86,20 @@ function HikariBookingPanel({
 					<button
 						type="button"
 						onClick={() => booking.setStayPickerOpen(true)}
-						className="bg-[#fcfcfa] p-4 text-left"
+						className="cursor-pointer bg-[#fcfcfa] p-4 text-left"
 					>
 						<p className="font-[family-name:var(--preview-hikari-body)] text-[9px] uppercase tracking-[0.2em] text-[#0a0a0a]/40">In</p>
-						<p className="cursor-pointer mt-1 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold">
+						<p className="mt-1 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold">
 							{booking.stayRange?.from ? formatStay(booking.stayRange.from) : data.booking.arrival || '—'}
 						</p>
 					</button>
 					<button
 						type="button"
 						onClick={() => booking.setStayPickerOpen(true)}
-						className="bg-[#fcfcfa] p-4 text-left"
+						className="cursor-pointer bg-[#fcfcfa] p-4 text-left"
 					>
 						<p className="font-[family-name:var(--preview-hikari-body)] text-[9px] uppercase tracking-[0.2em] text-[#0a0a0a]/40">Out</p>
-						<p className="cursor-pointer mt-1 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold">
+						<p className="mt-1 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold">
 							{booking.stayRange?.to ? formatStay(booking.stayRange.to) : data.booking.departure || '—'}
 						</p>
 					</button>
@@ -167,8 +167,7 @@ function HikariBookingPanel({
 				onClick={() => void booking.handleReserveClick()}
 				disabled={reserveDisabled}
 				className={cn(
-					'group mt-8 flex w-full items-center justify-between bg-[#0a0a0a] px-5 py-4 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold uppercase tracking-[0.2em] text-[#fcfcfa] transition hover:bg-[#d4a853] hover:text-[#0a0a0a] disabled:opacity-50',
-					datesSelected && !booking.checkingAvailability ? 'cursor-pointer' : 'cursor-default',
+					'group mt-8 flex w-full cursor-pointer items-center justify-between bg-[#0a0a0a] px-5 py-4 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold uppercase tracking-[0.2em] text-[#fcfcfa] transition hover:bg-[#d4a853] hover:text-[#0a0a0a] disabled:cursor-not-allowed disabled:opacity-50',
 				)}
 			>
 				<span>{booking.checkingAvailability ? 'Checking…' : data.booking.cta}</span>
@@ -322,7 +321,7 @@ export function CanvasPreview({
 										key={`${src}-${i}`}
 										type="button"
 										onClick={() => openGallery(src)}
-										className="relative h-20 w-16 overflow-hidden border-2 border-[#fcfcfa] shadow-lg"
+										className="relative h-20 w-16 cursor-pointer overflow-hidden border-2 border-[#fcfcfa] shadow-lg"
 									>
 										<Image src={src} alt="" fill className="object-cover" sizes="64px" unoptimized />
 									</button>
@@ -478,7 +477,7 @@ export function CanvasPreview({
 						<button
 							type="button"
 							onClick={() => openGallery(data.gallery.large.src.trim())}
-							className="group relative block w-full"
+							className="group relative block w-full cursor-pointer"
 						>
 							<FillImg
 								src={data.gallery.large.src}

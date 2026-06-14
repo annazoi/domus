@@ -29,11 +29,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 		const message =
 			result.reason === 'too_soon'
 				? 'Check-in is too soon for this property.'
-				: result.reason === 'stay_too_short'
-					? 'Stay is shorter than the minimum rental period.'
-					: result.reason === 'stay_too_long'
-						? 'Stay is longer than the maximum rental period.'
-						: 'Invalid query params.';
+				: result.reason === 'stay_too_short' && result.minimumNights != null
+					? `Minimum stay is ${result.minimumNights} night${result.minimumNights === 1 ? '' : 's'}.`
+					: result.reason === 'stay_too_long' && result.maximumNights != null
+						? `Maximum stay is ${result.maximumNights} night${result.maximumNights === 1 ? '' : 's'}.`
+						: result.reason === 'stay_too_short'
+							? 'Stay is shorter than the minimum rental period.'
+							: result.reason === 'stay_too_long'
+								? 'Stay is longer than the maximum rental period.'
+								: 'Invalid query params.';
 		return Response.json({ message }, { status: 400 });
 	}
 	if (result.kind === 'not_found') {

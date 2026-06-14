@@ -25,7 +25,12 @@ export type CheckAvailabilityInternalResult = {
 };
 
 export type CheckAvailabilityInternalResponse =
-	| ({ kind: 'invalid_input'; reason: CheckAvailabilityInvalidReason } & CheckAvailabilityInternalResult)
+	| ({
+			kind: 'invalid_input';
+			reason: CheckAvailabilityInvalidReason;
+			minimumNights?: number;
+			maximumNights?: number;
+	  } & CheckAvailabilityInternalResult)
 	| ({ kind: 'not_found' } & CheckAvailabilityInternalResult)
 	| ({ kind: 'guests_exceed_capacity' } & CheckAvailabilityInternalResult)
 	| ({
@@ -89,11 +94,23 @@ export async function checkAvailabilityInternal(
 	const nights = Math.trunc(checkOut.diff(checkIn, 'days').days);
 
 	if (property.minimum_rental_period_nights !== null && nights < property.minimum_rental_period_nights) {
-		return { kind: 'invalid_input', reason: 'stay_too_short', isAvailable: false, totalPrice: null };
+		return {
+			kind: 'invalid_input',
+			reason: 'stay_too_short',
+			minimumNights: property.minimum_rental_period_nights,
+			isAvailable: false,
+			totalPrice: null,
+		};
 	}
 
 	if (property.maximum_rental_period_nights !== null && nights > property.maximum_rental_period_nights) {
-		return { kind: 'invalid_input', reason: 'stay_too_long', isAvailable: false, totalPrice: null };
+		return {
+			kind: 'invalid_input',
+			reason: 'stay_too_long',
+			maximumNights: property.maximum_rental_period_nights,
+			isAvailable: false,
+			totalPrice: null,
+		};
 	}
 
 	if (property.minimum_advance_reservation_hours !== null) {

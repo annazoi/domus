@@ -133,7 +133,7 @@ function MizuBookingPanel({
 						<button
 							type="button"
 							onClick={() => booking.setStayPickerOpen(true)}
-							className="px-4 py-3 text-left transition hover:bg-[#f3ebe3]/60"
+							className="cursor-pointer px-4 py-3 text-left transition hover:bg-[#f3ebe3]/60"
 						>
 							<span className="font-[family-name:var(--preview-mizu-body)] text-[10px] font-semibold uppercase tracking-[0.12em] text-[#1a2e35]/45">
 								Check in
@@ -150,7 +150,7 @@ function MizuBookingPanel({
 						<button
 							type="button"
 							onClick={() => booking.setStayPickerOpen(true)}
-							className="px-4 py-3 text-left transition hover:bg-[#f3ebe3]/60"
+							className="cursor-pointer px-4 py-3 text-left transition hover:bg-[#f3ebe3]/60"
 						>
 							<span className="font-[family-name:var(--preview-mizu-body)] text-[10px] font-semibold uppercase tracking-[0.12em] text-[#1a2e35]/45">
 								Check out
@@ -234,8 +234,7 @@ function MizuBookingPanel({
 				onClick={() => void booking.handleReserveClick()}
 				disabled={reserveDisabled}
 				className={cn(
-					'mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#4d7c6f] py-3.5 font-[family-name:var(--preview-mizu-body)] text-sm font-semibold text-white transition hover:bg-[#3d665b] disabled:opacity-50',
-					datesSelected && !booking.checkingAvailability ? 'cursor-pointer' : 'cursor-default',
+					'mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#4d7c6f] py-3.5 font-[family-name:var(--preview-mizu-body)] text-sm font-semibold text-white transition hover:bg-[#3d665b] disabled:cursor-not-allowed disabled:opacity-50',
 				)}
 			>
 				<span>{booking.checkingAvailability ? 'Checking…' : data.booking.cta}</span>
@@ -442,7 +441,7 @@ export function MizuPreview({
 										<button
 											type="button"
 											onClick={() => openGallery(data.gallery.large.src.trim())}
-											className="group overflow-hidden rounded-xl sm:col-span-7"
+											className="group cursor-pointer overflow-hidden rounded-xl sm:col-span-7"
 										>
 											<FillImg
 												src={data.gallery.large.src}
@@ -457,7 +456,7 @@ export function MizuPreview({
 											<button
 												type="button"
 												onClick={() => openGallery(data.gallery.stack[0].src.trim())}
-												className="group overflow-hidden rounded-xl"
+												className="group cursor-pointer overflow-hidden rounded-xl"
 											>
 												<FillImg
 													src={data.gallery.stack[0].src}
@@ -471,7 +470,7 @@ export function MizuPreview({
 											<button
 												type="button"
 												onClick={() => openGallery(data.gallery.stack[1].src.trim())}
-												className="group overflow-hidden rounded-xl"
+												className="group cursor-pointer overflow-hidden rounded-xl"
 											>
 												<FillImg
 													src={data.gallery.stack[1].src}
@@ -487,7 +486,7 @@ export function MizuPreview({
 									<button
 										type="button"
 										onClick={() => openGallery(data.gallery.full.src.trim())}
-										className="group mt-3 block w-full overflow-hidden rounded-xl"
+										className="group mt-3 block w-full cursor-pointer overflow-hidden rounded-xl"
 									>
 										<FillImg
 											src={data.gallery.full.src}
@@ -604,7 +603,7 @@ export function MizuPreview({
 											{data.host.inquire ? (
 												<button
 													type="button"
-													className="mt-4 inline-flex items-center gap-1.5 font-[family-name:var(--preview-mizu-body)] text-sm font-semibold text-[#c4785a] transition hover:text-[#a86145]"
+													className="mt-4 inline-flex cursor-pointer items-center gap-1.5 font-[family-name:var(--preview-mizu-body)] text-sm font-semibold text-[#c4785a] transition hover:text-[#a86145]"
 												>
 													{data.host.inquire}
 													<ArrowRight className="h-4 w-4" aria-hidden />

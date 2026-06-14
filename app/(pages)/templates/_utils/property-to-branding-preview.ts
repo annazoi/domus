@@ -3,7 +3,7 @@ import { ApartmentOptionsLabels } from '@/config/constants/dropdowns/apartment.o
 import { RoomTypeOptionsLabels } from '@/config/constants/dropdowns/room-type.options';
 import type { PropertyDocument } from '@/features/documents/interfaces/document.interface';
 import type { PropertyImage } from '@/features/property-images/interfaces/property-image.interfaces';
-import type { Property } from '@/features/property/interfaces/property.interface';
+import type { Property, PropertyHostProfile } from '@/features/property/interfaces/property.interface';
 import type { Service } from '@/features/services/interfaces/service.interface';
 import { PRICING_UNIT_LABELS, type PricingUnit } from '@/features/services/interfaces/pricing-unit';
 import {
@@ -114,6 +114,37 @@ function mapGuestExtras(services: Service[] | undefined) {
 		}));
 }
 
+function hostDisplayName(host: PropertyHostProfile): string {
+	return [host.first_name, host.last_name].filter(Boolean).join(' ').trim();
+}
+
+function mapPropertyHostToBranding(host: PropertyHostProfile | null | undefined): BrandingPreviewDemo['host'] {
+	if (!host) {
+		return { label: '', name: '', imageSrc: '', inquire: '', rating: '', bio: '' };
+	}
+
+	const name = hostDisplayName(host);
+	if (!name) {
+		return { label: '', name: '', imageSrc: '', inquire: '', rating: '', bio: '' };
+	}
+
+	return {
+		label: 'Hosted by',
+		name,
+		imageSrc: host.avatar_url?.trim() ?? '',
+		inquire: '',
+		rating: '',
+		bio: host.bio?.trim() ?? '',
+	};
+}
+
+const DEMO_HOST: PropertyHostProfile = {
+	first_name: 'Morgan',
+	last_name: 'Vale',
+	bio: 'Local host with a decade on the coast — quick replies, thoughtful recommendations, and a light touch when you need privacy.',
+	avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
+};
+
 /** True when long copy adds no words beyond the teaser (avoids noisy duplicate snippets). */
 function bodyOnlyEchoesShortTeaser(teaser: string, p1: string, p2: string): boolean {
 	const t = teaser.toLowerCase().replace(/\s+/g, ' ').trim();
@@ -209,6 +240,7 @@ function demoImages(): PropertyImage[] {
 export const DEMO_PROPERTY_FOR_BRANDING: Property = {
 	id: DEMO_IDS.property,
 	host_id: DEMO_IDS.host,
+	host: DEMO_HOST,
 	title: 'Cliffside retreat with ocean light',
 	slug: 'demo-cliffs',
 	description:
@@ -405,7 +437,7 @@ export function propertyToBrandingPreview(
 			cta: 'Check availability',
 			disclaimer: '',
 		},
-		host: { label: '', name: '', imageSrc: '', inquire: '', rating: '', bio: '' },
+		host: mapPropertyHostToBranding(property.host),
 		footer: {
 			wordmark: property.title,
 			tagline: property.slug ? `/${property.slug}` : '',
@@ -455,6 +487,10 @@ function decorateFullTemplateDemo(theme: PropertyBrandingTheme, d: BrandingPrevi
 			...d.booking,
 			eyebrow: arch ? 'Book this rental' : mizu ? 'Plan your stay' : hikari ? 'Reserve' : 'Book this stay',
 			cta: arch ? 'Check availability' : mizu ? 'Reserve dates' : hikari ? 'Check availability' : 'Check availability',
+		},
+		host: {
+			...d.host,
+			inquire: arch || mizu ? 'Message host' : '',
 		},
 		footer: {
 			...d.footer,
