@@ -14,7 +14,7 @@ const buttonStyles: Record<BrandingPrivacyVariant, string> = {
 		'cursor-pointer rounded-full border border-[#fcfcfa]/30 bg-[#0a0a0a]/40 px-4 py-2 font-[family-name:var(--preview-hikari-body)] text-[10px] font-medium uppercase tracking-[0.22em] text-[#fcfcfa] backdrop-blur-md transition hover:border-[#d4a853]/50 hover:bg-[#0a0a0a]/60',
 	mizu: 'cursor-pointer rounded-full border border-[#fff9f4]/25 bg-[#1a2e35]/45 px-4 py-2 font-[family-name:var(--preview-mizu-body)] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#fff9f4] backdrop-blur-md transition hover:border-[#f5d4c8]/40 hover:bg-[#1a2e35]/65',
 	architectura:
-		'cursor-pointer rounded-full border border-[#fafbfc]/25 bg-[#1c2430]/45 px-4 py-2 font-[family-name:var(--preview-kaze-body)] text-[10px] font-medium uppercase tracking-[0.24em] text-[#fafbfc] backdrop-blur-md transition hover:border-[#c9b8a8]/45 hover:bg-[#1c2430]/65',
+		'cursor-pointer font-[family-name:var(--preview-kaze-body)] text-sm font-medium text-[#2F5D44] underline decoration-[#2F5D44]/30 underline-offset-4 transition hover:text-[#244A36] hover:decoration-[#244A36]/40',
 };
 
 const modalStyles: Record<
@@ -38,12 +38,12 @@ const modalStyles: Record<
 			'flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#6b9a8f]/25 text-[#1a2e35]/50 transition hover:border-[#6b9a8f]/45 hover:text-[#1a2e35]',
 	},
 	architectura: {
-		overlay: 'bg-[#1c2430]/55',
-		panel: 'max-w-lg rounded-2xl border border-[#1c2430]/10 bg-[#eef1f4] shadow-[0_32px_80px_-24px_rgba(28,36,48,0.4)]',
+		overlay: 'bg-[#1C211C]/45',
+		panel: 'max-w-lg rounded-2xl border border-[#E5E8E5] bg-white shadow-[0_32px_80px_-24px_rgba(28,33,28,0.2)]',
 		title:
-			'font-[family-name:var(--preview-kaze-headline)] text-2xl tracking-tight text-[#1c2430]',
+			'font-[family-name:var(--preview-kaze-headline)] text-2xl font-semibold tracking-[-0.02em] text-[#1C211C]',
 		close:
-			'flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#1c2430]/15 text-[#1c2430]/50 transition hover:border-[#6b8f9e]/45 hover:text-[#1c2430]',
+			'flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#E5E8E5] text-[#5F665F] transition hover:border-[#2F5D44]/30 hover:text-[#1C211C]',
 	},
 };
 

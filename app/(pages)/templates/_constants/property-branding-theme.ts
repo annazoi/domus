@@ -35,8 +35,8 @@ export const PROPERTY_BRANDING_THEME_OPTIONS: ReadonlyArray<BrandingThemeOption>
 	{
 		id: PropertyBrandingTheme.ARCHITECTURA,
 		label: 'Kaze Pavilion',
-		description: 'Airy pavilion layout with mist tones, soft geometry, and gallery-forward photography.',
-		tags: ['Hospitality', 'Gallery'],
+		description: 'Clean rental listing with clear hierarchy, sticky booking, and polished trust signals.',
+		tags: ['Rental', 'Modern'],
 		image: templateKazeImage,
 		imageAlt: 'Contemporary villa overlooking mountains',
 	},

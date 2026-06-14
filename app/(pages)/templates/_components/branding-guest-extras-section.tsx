@@ -8,6 +8,7 @@ type BrandingGuestExtrasSectionProps = {
 	guestExtras: BrandingPreviewDemo['guestExtras'];
 	variant: 'canvas' | 'mizu' | 'architectura';
 	eyebrow?: string;
+	embedded?: boolean;
 };
 
 const variantStyles = {
@@ -32,13 +33,13 @@ const variantStyles = {
 	},
 	architectura: {
 		eyebrow:
-			'font-[family-name:var(--preview-kaze-body)] text-[10px] font-medium uppercase tracking-[0.35em] text-[#6b8f9e]',
+			'font-[family-name:var(--preview-kaze-body)] text-xs font-medium uppercase tracking-[0.14em] text-[#2F5D44]',
 		grid: 'grid gap-4 sm:grid-cols-2',
-		card: 'flex gap-4 rounded-xl border border-[#1c2430]/8 bg-white/60 p-4 backdrop-blur-sm',
-		image: 'relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-[#1c2430]/5',
-		name: 'font-[family-name:var(--preview-kaze-headline)] text-lg text-[#1c2430]',
-		description: 'mt-1 font-[family-name:var(--preview-kaze-body)] text-sm leading-relaxed text-[#1c2430]/60',
-		price: 'mt-2 font-[family-name:var(--preview-kaze-body)] text-sm font-medium text-[#6b8f9e]',
+		card: 'flex gap-4 rounded-xl border border-[#E5E8E5] bg-white p-4',
+		image: 'relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-[#EEF1EE]',
+		name: 'font-[family-name:var(--preview-kaze-headline)] text-base font-semibold text-[#1C211C]',
+		description: 'mt-1 font-[family-name:var(--preview-kaze-body)] text-sm leading-relaxed text-[#5F665F]',
+		price: 'mt-2 font-[family-name:var(--preview-kaze-body)] text-sm font-semibold text-[#2F5D44]',
 	},
 } as const;
 
@@ -46,14 +47,13 @@ export function BrandingGuestExtrasSection({
 	guestExtras,
 	variant,
 	eyebrow = 'Guest extras',
+	embedded = false,
 }: BrandingGuestExtrasSectionProps) {
 	const styles = variantStyles[variant];
 	if (guestExtras.length === 0) return null;
 
-	return (
-		<section>
-			<p className={styles.eyebrow}>{eyebrow}</p>
-			<div className={cn('mt-5', styles.grid)}>
+	const content = (
+		<div className={cn(!embedded && 'mt-4', styles.grid)}>
 				{guestExtras.map((extra) => (
 					<div key={extra.id} className={styles.card}>
 						{extra.imageSrc ? (
@@ -68,7 +68,15 @@ export function BrandingGuestExtrasSection({
 						</div>
 					</div>
 				))}
-			</div>
+		</div>
+	);
+
+	if (embedded) return content;
+
+	return (
+		<section>
+			<p className={styles.eyebrow}>{eyebrow}</p>
+			{content}
 		</section>
 	);
 }

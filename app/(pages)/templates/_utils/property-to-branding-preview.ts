@@ -423,7 +423,7 @@ function decorateFullTemplateDemo(theme: PropertyBrandingTheme, d: BrandingPrevi
 	return {
 		...d,
 		nav: arch
-			? [{ label: 'Pavilion' }, { label: 'Residences', current: true }, { label: 'Inquire' }]
+			? [{ label: 'Overview' }, { label: 'Gallery', current: true }, { label: 'Book' }]
 			: mizu
 				? [{ label: 'House' }, { label: 'Gallery', current: true }, { label: 'Book' }]
 				: hikari
@@ -432,17 +432,17 @@ function decorateFullTemplateDemo(theme: PropertyBrandingTheme, d: BrandingPrevi
 		hero: mizu
 			? { ...d.hero, series: 'Mizu House · 水' }
 			: arch
-				? { ...d.hero, series: 'Kaze Pavilion · Vol. II' }
+				? { ...d.hero, series: 'Kaze Pavilion · Rental' }
 				: hikari
 					? { ...d.hero, series: 'Hikari · 光' }
 					: d.hero,
 		concept: {
 			...d.concept,
-			eyebrow: mizu ? 'The stay' : arch ? 'Editorial' : hikari ? 'Essence' : '— Overview',
+			eyebrow: mizu ? 'The stay' : arch ? 'Overview' : hikari ? 'Essence' : '— Overview',
 		},
 		location: {
 			...d.location,
-			eyebrow: arch ? '— Altitude & access' : mizu ? '— Waterside' : hikari ? '— Setting' : '— Area',
+			eyebrow: arch ? 'Neighborhood' : mizu ? '— Waterside' : hikari ? '— Setting' : '— Area',
 			mapImage: mizu
 				? 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80'
 				: arch
@@ -453,22 +453,22 @@ function decorateFullTemplateDemo(theme: PropertyBrandingTheme, d: BrandingPrevi
 		},
 		booking: {
 			...d.booking,
-			eyebrow: arch ? 'Request residency' : mizu ? 'Plan your stay' : hikari ? 'Reserve' : 'Book this stay',
-			cta: arch ? 'Request residency' : mizu ? 'Reserve dates' : hikari ? 'Check availability' : 'Check availability',
+			eyebrow: arch ? 'Book this rental' : mizu ? 'Plan your stay' : hikari ? 'Reserve' : 'Book this stay',
+			cta: arch ? 'Check availability' : mizu ? 'Reserve dates' : hikari ? 'Check availability' : 'Check availability',
 		},
 		footer: {
 			...d.footer,
 			tagline: mizu
 				? 'Still water. Warm light.'
 				: arch
-					? 'Where the wind meets the ridge.'
+					? 'Thoughtful stays with clear pricing, honest details, and effortless booking.'
 					: hikari
 						? 'Light, space, horizon.'
 						: 'Curated stays.',
 			links: mizu
 				? [{ label: 'Soak' }, { label: 'Gallery' }, { label: 'Book' }]
 				: arch
-					? [{ label: 'Journal' }, { label: 'Suites' }, { label: 'Contact' }]
+					? [{ label: 'Gallery' }, { label: 'Amenities' }, { label: 'Contact' }]
 					: hikari
 						? [{ label: 'Stay' }, { label: 'Guide' }, { label: 'Book' }]
 						: [{ label: 'Terms' }, { label: 'Privacy' }, { label: 'Support' }],

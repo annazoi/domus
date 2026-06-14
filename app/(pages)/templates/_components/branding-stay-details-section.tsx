@@ -30,12 +30,12 @@ const variantStyles = {
 	},
 	architectura: {
 		eyebrow:
-			'font-[family-name:var(--preview-kaze-body)] text-[10px] font-medium uppercase tracking-[0.35em] text-[#6b8f9e]',
+			'font-[family-name:var(--preview-kaze-body)] text-xs font-medium uppercase tracking-[0.14em] text-[#2F5D44]',
 		grid: 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3',
-		card: 'rounded-xl border border-[#1c2430]/8 bg-white/60 px-4 py-4 backdrop-blur-sm',
-		label: 'font-[family-name:var(--preview-kaze-body)] text-[9px] font-medium uppercase tracking-[0.22em] text-[#1c2430]/40',
-		value: 'mt-1 font-[family-name:var(--preview-kaze-body)] text-sm font-medium text-[#1c2430]',
-		icon: 'h-4 w-4 text-[#6b8f9e]',
+		card: 'rounded-xl border border-[#E5E8E5] bg-white px-4 py-4',
+		label: 'font-[family-name:var(--preview-kaze-body)] text-[10px] font-medium uppercase tracking-[0.12em] text-[#5F665F]',
+		value: 'mt-1 font-[family-name:var(--preview-kaze-headline)] text-sm font-semibold text-[#1C211C]',
+		icon: 'h-4 w-4 text-[#2F5D44]',
 	},
 } as const;
 
@@ -43,11 +43,73 @@ function pluralize(count: number, singular: string, plural: string) {
 	return `${count} ${count === 1 ? singular : plural}`;
 }
 
+function ArchitecturaCapacityBoard({ stay }: { stay: BrandingPreviewDemo['stay'] }) {
+	const metrics = [
+		stay.maxGuests > 0
+			? { icon: Users, label: pluralize(stay.maxGuests, 'guest', 'guests'), value: String(stay.maxGuests) }
+			: null,
+		stay.bedrooms > 0
+			? { icon: BedDouble, label: pluralize(stay.bedrooms, 'bedroom', 'bedrooms'), value: String(stay.bedrooms) }
+			: null,
+		stay.beds > 0
+			? { icon: BedDouble, label: pluralize(stay.beds, 'bed', 'beds'), value: String(stay.beds) }
+			: null,
+		stay.bathrooms > 0
+			? { icon: Bath, label: pluralize(stay.bathrooms, 'bathroom', 'bathrooms'), value: String(stay.bathrooms) }
+			: null,
+	].filter(Boolean) as Array<{ icon: typeof Users; label: string; value: string }>;
+
+	const meta = [stay.propertyType, stay.roomType].filter(Boolean);
+
+	if (metrics.length === 0 && meta.length === 0) return null;
+
+	return (
+		<div className="rounded-xl border border-[#E5E8E5] bg-white px-5 py-4">
+			{metrics.length > 0 ? (
+				<div className="flex flex-wrap gap-x-6 gap-y-4">
+					{metrics.map((metric) => {
+						const Icon = metric.icon;
+						return (
+							<div key={metric.label} className="flex items-center gap-3">
+								<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#F3F6F3] text-[#2F5D44]">
+									<Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+								</div>
+								<div>
+									<p className="font-[family-name:var(--preview-kaze-headline)] text-lg font-semibold leading-none text-[#1C211C]">
+										{metric.value}
+									</p>
+									<p className="mt-1 font-[family-name:var(--preview-kaze-body)] text-xs text-[#5F665F]">
+										{metric.label}
+									</p>
+								</div>
+							</div>
+						);
+					})}
+				</div>
+			) : null}
+			{meta.length > 0 ? (
+				<p
+					className={cn(
+						'font-[family-name:var(--preview-kaze-body)] text-sm text-[#5F665F]',
+						metrics.length > 0 && 'mt-4 border-t border-[#E5E8E5] pt-4',
+					)}
+				>
+					{meta.join(' · ')}
+				</p>
+			) : null}
+		</div>
+	);
+}
+
 export function BrandingStayDetailsSection({
 	stay,
 	variant,
 	eyebrow = 'The stay',
 }: BrandingStayDetailsSectionProps) {
+	if (variant === 'architectura') {
+		return <ArchitecturaCapacityBoard stay={stay} />;
+	}
+
 	const styles = variantStyles[variant];
 	const items = [
 		stay.propertyType ? { icon: Home, label: 'Property type', value: stay.propertyType } : null,

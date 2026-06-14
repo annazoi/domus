@@ -14,6 +14,7 @@ type BrandingVideoSectionProps = {
 	videos: BrandingPreviewDemo['videos'];
 	variant: 'canvas' | 'mizu' | 'architectura';
 	eyebrow?: string;
+	embedded?: boolean;
 };
 
 const variantStyles = {
@@ -40,14 +41,14 @@ const variantStyles = {
 	},
 	architectura: {
 		eyebrow:
-			'font-[family-name:var(--preview-kaze-body)] text-[10px] font-medium uppercase tracking-[0.35em] text-[#6b8f9e]',
-		grid: 'grid gap-4 sm:grid-cols-2',
-		card: 'group relative aspect-[16/10] overflow-hidden rounded-2xl bg-[#1c2430]/5 ring-1 ring-[#1c2430]/8',
+			'font-[family-name:var(--preview-kaze-body)] text-xs font-medium uppercase tracking-[0.14em] text-[#2F5D44]',
+		grid: 'grid gap-3 sm:grid-cols-2',
+		card: 'group relative aspect-[16/10] overflow-hidden rounded-xl bg-[#EEF1EE]',
 		caption:
-			'absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1c2430]/80 to-transparent px-4 py-4 font-[family-name:var(--preview-kaze-body)] text-xs text-[#fafbfc]/90',
-		play: 'flex h-14 w-14 items-center justify-center rounded-full bg-[#fafbfc]/15 text-[#fafbfc] ring-1 ring-[#fafbfc]/25 backdrop-blur-sm transition group-hover:scale-105 group-hover:bg-[#6b8f9e]',
+			'absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1C211C]/75 to-transparent px-4 py-4 font-[family-name:var(--preview-kaze-body)] text-xs text-white/90',
+		play: 'flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-[#1C211C] shadow-sm transition group-hover:scale-105 group-hover:bg-[#2F5D44] group-hover:text-white',
 		label:
-			'absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 font-[family-name:var(--preview-kaze-body)] text-[9px] font-medium uppercase tracking-[0.18em] text-[#1c2430]',
+			'absolute left-3 top-3 rounded-md bg-[#1C211C]/55 px-2 py-1 font-[family-name:var(--preview-kaze-body)] text-[9px] font-medium uppercase tracking-[0.12em] text-white/90 backdrop-blur-sm',
 	},
 } as const;
 
@@ -105,7 +106,12 @@ function VideoTile({
 	);
 }
 
-export function BrandingVideoSection({ videos, variant, eyebrow = 'Video tour' }: BrandingVideoSectionProps) {
+export function BrandingVideoSection({
+	videos,
+	variant,
+	eyebrow = 'Video tour',
+	embedded = false,
+}: BrandingVideoSectionProps) {
 	const styles = variantStyles[variant];
 	const [galleryOpen, setGalleryOpen] = useState(false);
 	const [galleryIndex, setGalleryIndex] = useState(0);
@@ -123,10 +129,9 @@ export function BrandingVideoSection({ videos, variant, eyebrow = 'Video tour' }
 
 	if (videos.length === 0) return null;
 
-	return (
-		<section>
-			<p className={styles.eyebrow}>{eyebrow}</p>
-			<div className={cn('mt-5', styles.grid, videos.length === 1 && 'sm:grid-cols-1')}>
+	const content = (
+		<>
+			<div className={cn(!embedded && 'mt-5', styles.grid, videos.length === 1 && 'sm:grid-cols-1')}>
 				{videos.map((video, index) => (
 					<VideoTile key={`${video.src}-${index}`} video={video} index={index} styles={styles} onOpen={openGallery} />
 				))}
@@ -138,6 +143,15 @@ export function BrandingVideoSection({ videos, variant, eyebrow = 'Video tour' }
 				originRect={galleryOrigin}
 				onClose={() => setGalleryOpen(false)}
 			/>
+		</>
+	);
+
+	if (embedded) return content;
+
+	return (
+		<section>
+			<p className={styles.eyebrow}>{eyebrow}</p>
+			{content}
 		</section>
 	);
 }

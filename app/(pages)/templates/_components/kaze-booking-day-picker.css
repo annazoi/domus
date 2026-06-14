@@ -1,0 +1,159 @@
+.kaze-booking-day-picker {
+	--kaze-picker-accent: #2f5d44;
+	--kaze-picker-accent-soft: #f3f6f3;
+	--kaze-picker-ink: #1c211c;
+	--kaze-picker-muted: #5f665f;
+	--kaze-picker-border: #e5e8e5;
+	--kaze-picker-band-height: 2.25rem;
+}
+
+.kaze-booking-day-picker .rdp-root {
+	--rdp-day-height: 2.5rem;
+	--rdp-day-width: 2.5rem;
+	--rdp-day_button-height: var(--kaze-picker-band-height);
+	--rdp-day_button-width: var(--kaze-picker-band-height);
+	--rdp-day_button-border-radius: 0.5rem;
+	--rdp-accent-color: var(--kaze-picker-accent);
+	--rdp-accent-background-color: var(--kaze-picker-accent-soft);
+	--rdp-selected-border: 2px solid transparent;
+	--rdp-today-color: var(--kaze-picker-accent);
+	--rdp-outside-opacity: 0.35;
+	--rdp-disabled-opacity: 0.32;
+	width: 100%;
+}
+
+.kaze-booking-day-picker .rdp-month_caption {
+	margin-bottom: 0.5rem;
+}
+
+.kaze-booking-day-picker .rdp-caption_label {
+	color: var(--kaze-picker-ink);
+	font-size: 0.875rem;
+	font-weight: 600;
+}
+
+.kaze-booking-day-picker .rdp-weekday {
+	color: var(--kaze-picker-muted);
+	font-size: 0.625rem;
+	font-weight: 500;
+	letter-spacing: 0.1em;
+	opacity: 1;
+	text-transform: uppercase;
+}
+
+.kaze-booking-day-picker .rdp-button_previous,
+.kaze-booking-day-picker .rdp-button_next {
+	border: 1px solid var(--kaze-picker-border);
+	border-radius: 0.5rem;
+	color: var(--kaze-picker-ink);
+	transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.kaze-booking-day-picker .rdp-button_previous:hover:not(:disabled),
+.kaze-booking-day-picker .rdp-button_next:hover:not(:disabled) {
+	background-color: var(--kaze-picker-accent-soft);
+	border-color: color-mix(in srgb, var(--kaze-picker-accent) 25%, var(--kaze-picker-border));
+}
+
+.kaze-booking-day-picker .rdp-day {
+	position: relative;
+	isolation: isolate;
+}
+
+.kaze-booking-day-picker .rdp-range_start,
+.kaze-booking-day-picker .rdp-range_middle,
+.kaze-booking-day-picker .rdp-range_end {
+	background: transparent;
+}
+
+.kaze-booking-day-picker .rdp-range_middle::after,
+.kaze-booking-day-picker .rdp-range_start::after,
+.kaze-booking-day-picker .rdp-range_end::after {
+	background: var(--kaze-picker-accent-soft);
+	content: '';
+	height: var(--kaze-picker-band-height);
+	pointer-events: none;
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 0;
+}
+
+.kaze-booking-day-picker .rdp-range_middle::after {
+	left: 0;
+	right: 0;
+}
+
+.kaze-booking-day-picker .rdp-range_start::after {
+	left: 50%;
+	right: 0;
+}
+
+.kaze-booking-day-picker .rdp-range_end::after {
+	left: 0;
+	right: 50%;
+}
+
+.kaze-booking-day-picker .rdp-range_start.rdp-range_end::after {
+	display: none;
+}
+
+.kaze-booking-day-picker .rdp-day_button {
+	color: var(--kaze-picker-ink);
+	font-size: 0.875rem;
+	font-weight: 500;
+	position: relative;
+	z-index: 1;
+	transition:
+		background-color 160ms ease,
+		color 160ms ease,
+		box-shadow 160ms ease;
+}
+
+.kaze-booking-day-picker .rdp-day_button:hover:not(:disabled) {
+	background-color: var(--kaze-picker-accent-soft);
+}
+
+.kaze-booking-day-picker .rdp-today:not(.rdp-outside) .rdp-day_button {
+	color: var(--kaze-picker-accent);
+	font-weight: 600;
+}
+
+.kaze-booking-day-picker .rdp-selected {
+	font-size: inherit;
+	font-weight: inherit;
+}
+
+.kaze-booking-day-picker .rdp-range_middle .rdp-day_button {
+	background: transparent;
+	border: none;
+	border-radius: 0;
+	box-shadow: none;
+	color: var(--kaze-picker-ink);
+	font-weight: 500;
+}
+
+.kaze-booking-day-picker .rdp-range_middle .rdp-day_button:hover:not(:disabled) {
+	background: transparent;
+	color: var(--kaze-picker-ink);
+}
+
+.kaze-booking-day-picker .rdp-selected:not(.rdp-range_middle) .rdp-day_button {
+	background-color: var(--kaze-picker-accent);
+	border-color: transparent;
+	box-shadow: 0 1px 3px rgb(28 33 28 / 0.12);
+	color: #fff;
+	font-weight: 600;
+}
+
+.kaze-booking-day-picker .rdp-selected:not(.rdp-range_middle) .rdp-day_button:hover:not(:disabled) {
+	background-color: color-mix(in srgb, var(--kaze-picker-accent) 88%, #000);
+}
+
+.kaze-booking-day-picker .rdp-disabled:not(.rdp-selected) .rdp-day_button {
+	color: color-mix(in srgb, var(--kaze-picker-muted) 55%, transparent);
+}
+
+.kaze-booking-day-picker .rdp-outside .rdp-day_button {
+	color: color-mix(in srgb, var(--kaze-picker-muted) 70%, transparent);
+}
