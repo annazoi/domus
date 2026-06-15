@@ -130,13 +130,14 @@ export function BookingsFiltersBar({ filters, onChange }: BookingsFiltersBarProp
 						/>
 					</div>
 				</div>
+				
 
 				{hasActiveBookingsFilters(filters) ? (
 					<Button
 						type="button"
 						variant="ghostPill"
 						onClick={clearFilters}
-						className="shrink-0 text-sm text-espresso/65"
+						className="shrink-0 text-sm text-espresso/65 flex items-center gap-2 bg-dashboard-row-hover"
 					>
 						<X className="h-3.5 w-3.5 shrink-0" aria-hidden />
 						Clear filters

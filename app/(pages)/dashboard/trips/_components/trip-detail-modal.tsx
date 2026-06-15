@@ -3,7 +3,8 @@
 import { useEffect, type ReactNode } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUpRight, CalendarDays, ChevronRight, Home, Mail, MapPin, Phone, Users, X } from 'lucide-react';
+import { ArrowUpRight, BookOpen, CalendarDays, ChevronRight, Home, Mail, MapPin, Phone, Users, X } from 'lucide-react';
+import { homeGuidePathFromHost } from '@/lib/bookings/home-guide-path';
 import { Button, Skeleton, cn } from '@/components/ui';
 import { useGuestTrip } from '@/features/bookings/hooks/use-bookings';
 import { BookingStatus } from '@/features/bookings/interfaces/booking-status';
@@ -134,16 +135,30 @@ function TripDetailContent({ trip }: { trip: GuestTripDetail }) {
 							</span>
 						</div>
 
-						<Link
-							href={`/${encodeURIComponent(trip.property.slug)}`}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="group mt-8 inline-flex items-center gap-2 text-sm font-medium text-camel-dark transition hover:text-camel"
-						>
-							<Home className="h-4 w-4" aria-hidden />
-							View property
-							<ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden />
-						</Link>
+						<div className="mt-8 flex flex-col gap-3">
+							{trip.status !== BookingStatus.CANCELLED ? (
+								<Link
+									href={homeGuidePathFromHost(trip.host, trip.id)}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="group inline-flex items-center gap-2 rounded-full bg-camel/12 px-4 py-2.5 text-sm font-medium text-camel-dark ring-1 ring-camel/20 transition hover:bg-camel/18 hover:text-camel"
+								>
+									<BookOpen className="h-4 w-4" aria-hidden />
+									Your Home Guide
+									<ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden />
+								</Link>
+							) : null}
+							<Link
+								href={`/${encodeURIComponent(trip.property.slug)}`}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="group inline-flex items-center gap-2 text-sm font-medium text-camel-dark transition hover:text-camel"
+							>
+								<Home className="h-4 w-4" aria-hidden />
+								View property
+								<ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden />
+							</Link>
+						</div>
 					</motion.div>
 				</div>
 

@@ -38,6 +38,7 @@ export interface GuestTripDetail {
 	host: {
 		first_name: string;
 		last_name: string;
+		host_name: string | null;
 		email: string;
 		phone: string | null;
 	};

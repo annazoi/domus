@@ -44,6 +44,7 @@ const guestBookingSelect = {
 	},
 	host: {
 		select: {
+			host_name: true,
 			first_name: true,
 			last_name: true,
 			email: true,
@@ -246,6 +247,7 @@ function mapGuestBookingRow(row: NonNullable<GuestBookingRow>) {
 		host: {
 			first_name: row.host.first_name,
 			last_name: row.host.last_name,
+			host_name: row.host.host_name,
 			email: row.host.email,
 			phone: row.host.phone,
 		},

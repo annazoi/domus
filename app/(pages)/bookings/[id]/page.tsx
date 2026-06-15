@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { BookingStatus } from '@prisma/client';
-import { Check, ChevronRight, MapPin } from 'lucide-react';
+import { BookOpen, Check, ChevronRight, MapPin } from 'lucide-react';
+import { homeGuidePathFromHost } from '@/lib/bookings/home-guide-path';
 import { prisma } from '@/lib/prisma';
 
 const PRIMARY_LINK_CLASS =
@@ -23,8 +24,16 @@ const bookingSelect = {
 	fees: true,
 	discount_amount: true,
 	created_at: true,
+	host: {
+		select: {
+			host_name: true,
+			first_name: true,
+			last_name: true,
+		},
+	},
 	property: {
 		select: {
+			id: true,
 			title: true,
 			slug: true,
 			address: true,
@@ -188,10 +197,27 @@ export default async function BookingConfirmationPage({
 						</div>
 					</dl>
 
-					<div className="mt-8 flex flex-col gap-3 sm:flex-row">
+					{!isCancelled ? (
+						<div className="mt-8 rounded-2xl border border-camel/20 bg-gradient-to-br from-camel/8 via-white to-white p-5">
+							<p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-camel">Before you arrive</p>
+							<p className="mt-2 max-w-lg text-sm text-[#1A1A1A]/65">
+								Access codes, check-in details, amenities, and everything else for your stay.
+							</p>
+							<Link
+								href={homeGuidePathFromHost(booking.host, booking.id)}
+								className={`${PRIMARY_LINK_CLASS} mt-4`}
+							>
+								<BookOpen className="mr-2 h-4 w-4" />
+								Your Home Guide
+								<ChevronRight className="ml-1 h-4 w-4" />
+							</Link>
+						</div>
+					) : null}
+
+					<div className="mt-6 flex flex-col gap-3 sm:flex-row">
 						<Link
 							href={`/${encodeURIComponent(booking.property.slug)}`}
-							className={PRIMARY_LINK_CLASS}
+							className={isCancelled ? PRIMARY_LINK_CLASS : SECONDARY_LINK_CLASS}
 						>
 							View property
 							<ChevronRight className="ml-1 h-4 w-4" />
