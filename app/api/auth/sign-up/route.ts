@@ -1,4 +1,5 @@
 import { isGuestAccount } from '@/app/api/_utils/guest-account';
+import { assertHostNameAvailable } from '@/app/api/_utils/host-name';
 import { hashPassword } from '@/app/api/_utils/password';
 import { prisma } from '@/lib/prisma';
 
@@ -35,12 +36,23 @@ export async function POST(request: Request) {
 			return Response.json({ message: 'Password must be at least 8 characters.' }, { status: 400 });
 		}
 
-		const hashedPassword = hashPassword(password);
-
 		const existingUser = await prisma.user.findUnique({
 			where: { email },
 			select: { id: true, password: true },
 		});
+
+		const hostNameCheck = await assertHostNameAvailable(first_name, last_name, existingUser?.id);
+		if (!hostNameCheck.ok) {
+			if (hostNameCheck.reason === 'empty') {
+				return Response.json({ message: 'Enter a valid first and last name.' }, { status: 400 });
+			}
+			return Response.json(
+				{ message: 'An account with this name already exists. Use a different name or contact support.' },
+				{ status: 409 },
+			);
+		}
+
+		const hashedPassword = hashPassword(password);
 
 		let user: {
 			id: string;
@@ -59,6 +71,7 @@ export async function POST(request: Request) {
 				data: {
 					first_name,
 					last_name,
+					host_name: hostNameCheck.host_name,
 					password: hashedPassword,
 					is_archived: false,
 				},
@@ -75,6 +88,7 @@ export async function POST(request: Request) {
 				data: {
 					first_name,
 					last_name,
+					host_name: hostNameCheck.host_name,
 					email,
 					password: hashedPassword,
 					is_archived: false,

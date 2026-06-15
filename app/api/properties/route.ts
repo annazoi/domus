@@ -59,6 +59,17 @@ export async function POST(request: Request) {
 
 		return Response.json(mapProperty(created), { status: 201 });
 	} catch (error) {
+		if (error instanceof Error) {
+			if (error.message === 'HOST_NAME_TAKEN') {
+				return Response.json(
+					{ message: 'An account with this name already exists. Update your profile name before creating a property.' },
+					{ status: 409 },
+				);
+			}
+			if (error.message === 'HOST_NAME_EMPTY') {
+				return Response.json({ message: 'Enter a valid first and last name on your profile.' }, { status: 400 });
+			}
+		}
 		console.error('POST /api/properties failed', error);
 		return Response.json(
 			{ message: error instanceof Error ? error.message : 'Could not create property.' },

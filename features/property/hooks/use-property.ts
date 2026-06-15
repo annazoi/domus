@@ -37,11 +37,12 @@ export const usePropertiesPage = (page: number, pageSize: number, search?: strin
 	});
 };
 
-export const useProperty = (id: string) => {
+export const useProperty = (id: string, options?: { enabled?: boolean; retry?: boolean | number }) => {
 	return useQuery({
 		queryKey: propertyQueryKey.detail(id),
 		queryFn: () => getPropertyById(id),
-		enabled: Boolean(id),
+		enabled: options?.enabled !== false && Boolean(id),
+		retry: options?.retry,
 	});
 };
 

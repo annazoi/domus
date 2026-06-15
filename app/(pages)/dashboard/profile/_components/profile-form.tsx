@@ -119,8 +119,11 @@ export function ProfileForm() {
 			});
 			setForm(toFormState(updated));
 			push({ title: 'Profile updated', tone: 'success' });
-		} catch {
-			push({ title: 'Could not update profile', tone: 'error' });
+		} catch (error) {
+			push({
+				title: error instanceof Error ? error.message : 'Could not update profile',
+				tone: 'error',
+			});
 		}
 	};
 

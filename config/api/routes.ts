@@ -20,6 +20,9 @@ export const ApiRoutes = {
 		meBanner: '/users/me/banner',
 		search: (q: string) => `/users/search?${toSearchParams({ q })}`,
 	},
+	hosts: {
+		host: (hostName: string) => `/hosts/${encodeURIComponent(hostName)}`,
+	},
 	properties: {
 		prefix: '/properties',
 		property: (id: string) => `/properties/${id}`,

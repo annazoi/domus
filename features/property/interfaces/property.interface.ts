@@ -20,6 +20,7 @@ export interface PropertyApplianceEntry {
 export interface PropertyHostProfile {
 	first_name: string;
 	last_name: string;
+	host_name: string;
 	bio?: string | null;
 	avatar_url?: string | null;
 }

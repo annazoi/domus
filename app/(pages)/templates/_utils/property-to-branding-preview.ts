@@ -10,6 +10,7 @@ import {
 	readVideoUrlSourceFromDocumentPath,
 	type VideoUrlSource,
 } from '@/lib/media/video-url';
+import { hostNameSlugFromParts } from '@/lib/slug/host-name-slug';
 import {
 	type PropertyBrandingTheme,
 	PropertyBrandingTheme as Theme,
@@ -76,7 +77,7 @@ export type BrandingPreviewDemo = {
 		cta: string;
 		disclaimer: string;
 	};
-	host: { label: string; name: string; imageSrc: string; inquire: string; rating: string; bio: string };
+	host: { label: string; name: string; host_name: string; imageSrc: string; inquire: string; rating: string; bio: string };
 	footer: { wordmark: string; tagline: string; links: { label: string }[]; copyright: string };
 };
 
@@ -120,17 +121,18 @@ function hostDisplayName(host: PropertyHostProfile): string {
 
 function mapPropertyHostToBranding(host: PropertyHostProfile | null | undefined): BrandingPreviewDemo['host'] {
 	if (!host) {
-		return { label: '', name: '', imageSrc: '', inquire: '', rating: '', bio: '' };
+		return { label: '', name: '', host_name: '', imageSrc: '', inquire: '', rating: '', bio: '' };
 	}
 
 	const name = hostDisplayName(host);
 	if (!name) {
-		return { label: '', name: '', imageSrc: '', inquire: '', rating: '', bio: '' };
+		return { label: '', name: '', host_name: '', imageSrc: '', inquire: '', rating: '', bio: '' };
 	}
 
 	return {
 		label: 'Hosted by',
 		name,
+		host_name: host.host_name?.trim() || hostNameSlugFromParts(host.first_name, host.last_name),
 		imageSrc: host.avatar_url?.trim() ?? '',
 		inquire: '',
 		rating: '',
@@ -141,6 +143,7 @@ function mapPropertyHostToBranding(host: PropertyHostProfile | null | undefined)
 const DEMO_HOST: PropertyHostProfile = {
 	first_name: 'Morgan',
 	last_name: 'Vale',
+	host_name: 'morgan-vale',
 	bio: 'Local host with a decade on the coast — quick replies, thoughtful recommendations, and a light touch when you need privacy.',
 	avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
 };

@@ -4,6 +4,7 @@ import { buildPaginationMeta, type PaginatedResult } from '@/lib/pagination';
 import { prisma } from '@/lib/prisma';
 import { normalizeRichTextForDb } from '@/lib/rich-text/normalize-rich-text-for-db';
 import { Prisma } from '@prisma/client';
+import { assertHostNameAvailable } from '../_utils/host-name';
 import { propertyDetailInclude } from '../_utils/property-include';
 import { parseTimeToUtcDate } from '../_utils/time-of-day';
 
@@ -172,11 +173,56 @@ export const propertyService = {
 		});
 	},
 
+	async listPublishedSummariesByHostId(hostId: string) {
+		const rows = await prisma.property.findMany({
+			where: { user_id: hostId, isPublished: true },
+			orderBy: { updated_at: 'desc' },
+			select: {
+				id: true,
+				title: true,
+				slug: true,
+				city: true,
+				short_description: true,
+				images: {
+					orderBy: [{ is_cover: 'desc' }, { order: 'asc' }],
+					take: 1,
+					select: { document: { select: { url: true } } },
+				},
+			},
+		});
+
+		return rows.map((property) => ({
+			id: property.id,
+			title: property.title,
+			slug: property.slug,
+			city: property.city,
+			short_description: property.short_description?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() ?? '',
+			cover_url: property.images[0]?.document?.url ?? null,
+		}));
+	},
+
 	create(hostId: string, body: UpsertPropertyInput, slug: string) {
 		return prisma.$transaction(async (tx) => {
+			const host = await tx.user.findUnique({
+				where: { id: hostId },
+				select: { host_name: true, first_name: true, last_name: true },
+			});
+			if (!host) {
+				throw new Error('HOST_NOT_FOUND');
+			}
+
+			let host_name = host.host_name;
+			if (!host_name) {
+				const hostNameCheck = await assertHostNameAvailable(host.first_name, host.last_name, hostId);
+				if (!hostNameCheck.ok) {
+					throw new Error(hostNameCheck.reason === 'taken' ? 'HOST_NAME_TAKEN' : 'HOST_NAME_EMPTY');
+				}
+				host_name = hostNameCheck.host_name;
+			}
+
 			await tx.user.update({
 				where: { id: hostId },
-				data: { is_host: true },
+				data: { is_host: true, host_name },
 			});
 			return tx.property.create({
 				data: toPropertyData({ body, hostId, slug }),

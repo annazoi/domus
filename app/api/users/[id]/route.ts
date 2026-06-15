@@ -31,6 +31,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 		if (result.error === 'duplicate_email') {
 			return Response.json({ message: 'Another account already uses this email.' }, { status: 409 });
 		}
+		if (result.error === 'duplicate_host_name') {
+			return Response.json(
+				{ message: 'An account with this name already exists. Choose a different first or last name.' },
+				{ status: 409 },
+			);
+		}
 	}
 
 	return Response.json(result);

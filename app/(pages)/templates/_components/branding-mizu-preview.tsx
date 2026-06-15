@@ -9,7 +9,7 @@ import './mizu-booking-day-picker.css';
 import { BrandingPreviewMap } from '@/components/google-maps';
 import { cn, Input } from '@/components/ui';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
-import { AmenityGlyph, BrandingHeroMedia, BrandingWordmark, FillImg } from './branding-preview-shared';
+import { AmenityGlyph, BrandingHeroMedia, BrandingHostProfileLink, BrandingWordmark, FillImg } from './branding-preview-shared';
 import { BrandingGuestExtrasSection } from './branding-guest-extras-section';
 import { BrandingPrivacyAccess } from './branding-privacy-access';
 import { BrandingRichTextBlock } from './branding-rich-text-block';
@@ -575,42 +575,45 @@ export function MizuPreview({
 
 							{data.host.name.trim() ? (
 								<MizuSection title="Your host">
-									<div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-										{data.host.imageSrc.trim() ? (
-											<div className="relative mx-auto h-20 w-20 shrink-0 overflow-hidden rounded-full ring-2 ring-[#c4785a]/40 ring-offset-2 ring-offset-[#fff9f4] sm:mx-0">
-												<Image src={data.host.imageSrc} alt="" fill className="object-cover" sizes="80px" unoptimized />
+									<BrandingHostProfileLink
+										hostName={data.host.host_name}
+										listingPreview={listingPreview}
+										className="rounded-2xl transition hover:bg-[#c4785a]/5"
+									>
+										<div className="flex flex-col gap-5 p-1 sm:flex-row sm:items-start">
+											{data.host.imageSrc.trim() ? (
+												<div className="relative mx-auto h-20 w-20 shrink-0 overflow-hidden rounded-full ring-2 ring-[#c4785a]/40 ring-offset-2 ring-offset-[#fff9f4] transition group-hover/host:ring-[#c4785a]/70 sm:mx-0">
+													<Image src={data.host.imageSrc} alt="" fill className="object-cover" sizes="80px" unoptimized />
+												</div>
+											) : null}
+											<div className="min-w-0 flex-1 text-center sm:text-left">
+												{data.host.label ? (
+													<p className="font-[family-name:var(--preview-mizu-body)] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#4d7c6f]">
+														{data.host.label}
+													</p>
+												) : null}
+												<p className="mt-1 font-[family-name:var(--preview-mizu-headline)] text-2xl text-[#1a2e35] transition group-hover/host:text-[#c4785a]">
+													{data.host.name}
+												</p>
+												{data.host.rating.trim() ? (
+													<p className="mt-1 font-[family-name:var(--preview-mizu-body)] text-sm text-[#1a2e35]/65">
+														{data.host.rating}
+													</p>
+												) : null}
+												{data.host.bio.trim() ? (
+													<p className="mt-3 max-w-2xl font-[family-name:var(--preview-mizu-body)] text-[15px] leading-relaxed text-[#1a2e35]/72">
+														{data.host.bio}
+													</p>
+												) : null}
+												{data.host.inquire ? (
+													<span className="mt-4 inline-flex items-center gap-1.5 font-[family-name:var(--preview-mizu-body)] text-sm font-semibold text-[#c4785a] transition group-hover/host:text-[#a86145]">
+														{data.host.inquire}
+														<ArrowRight className="h-4 w-4" aria-hidden />
+													</span>
+												) : null}
 											</div>
-										) : null}
-										<div className="min-w-0 flex-1 text-center sm:text-left">
-											{data.host.label ? (
-												<p className="font-[family-name:var(--preview-mizu-body)] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#4d7c6f]">
-													{data.host.label}
-												</p>
-											) : null}
-											<p className="mt-1 font-[family-name:var(--preview-mizu-headline)] text-2xl text-[#1a2e35]">
-												{data.host.name}
-											</p>
-											{data.host.rating.trim() ? (
-												<p className="mt-1 font-[family-name:var(--preview-mizu-body)] text-sm text-[#1a2e35]/65">
-													{data.host.rating}
-												</p>
-											) : null}
-											{data.host.bio.trim() ? (
-												<p className="mt-3 max-w-2xl font-[family-name:var(--preview-mizu-body)] text-[15px] leading-relaxed text-[#1a2e35]/72">
-													{data.host.bio}
-												</p>
-											) : null}
-											{data.host.inquire ? (
-												<button
-													type="button"
-													className="mt-4 inline-flex cursor-pointer items-center gap-1.5 font-[family-name:var(--preview-mizu-body)] text-sm font-semibold text-[#c4785a] transition hover:text-[#a86145]"
-												>
-													{data.host.inquire}
-													<ArrowRight className="h-4 w-4" aria-hidden />
-												</button>
-											) : null}
 										</div>
-									</div>
+									</BrandingHostProfileLink>
 								</MizuSection>
 							) : null}
 						</div>

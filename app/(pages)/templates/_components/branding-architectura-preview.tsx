@@ -9,7 +9,7 @@ import './kaze-booking-day-picker.css';
 import { BrandingPreviewMap } from '@/components/google-maps';
 import { cn, Input } from '@/components/ui';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
-import { AmenityGlyph, BrandingHeroMedia, BrandingWordmark, FillImg } from './branding-preview-shared';
+import { AmenityGlyph, BrandingHeroMedia, BrandingHostProfileLink, BrandingWordmark, FillImg } from './branding-preview-shared';
 import { BrandingGuestExtrasSection } from './branding-guest-extras-section';
 import { BrandingPrivacyAccess } from './branding-privacy-access';
 import { BrandingRichTextBlock } from './branding-rich-text-block';
@@ -532,40 +532,43 @@ export function ArchitecturaPreview({
 
 						{data.host.name.trim() ? (
 							<KazeSection title="Your host">
-								<div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-									{data.host.imageSrc.trim() ? (
-										<div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-[#EEF1EE]">
-											<Image src={data.host.imageSrc} alt="" fill className="object-cover" sizes="64px" unoptimized />
+								<BrandingHostProfileLink
+									hostName={data.host.host_name}
+									listingPreview={listingPreview}
+									className="rounded-xl transition hover:bg-[#2F5D44]/5"
+								>
+									<div className="flex flex-col gap-5 p-1 sm:flex-row sm:items-start">
+										{data.host.imageSrc.trim() ? (
+											<div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-[#EEF1EE] transition group-hover/host:ring-2 group-hover/host:ring-[#2F5D44]/30">
+												<Image src={data.host.imageSrc} alt="" fill className="object-cover" sizes="64px" unoptimized />
+											</div>
+										) : null}
+										<div className="min-w-0 flex-1">
+											{data.host.label ? (
+												<p className="font-[family-name:var(--preview-kaze-body)] text-xs font-medium uppercase tracking-[0.12em] text-[#2F5D44]">
+													{data.host.label}
+												</p>
+											) : null}
+											<p className="mt-1 font-[family-name:var(--preview-kaze-headline)] text-xl font-semibold text-[#1C211C] transition group-hover/host:text-[#2F5D44]">
+												{data.host.name}
+											</p>
+											{data.host.rating.trim() ? (
+												<p className="mt-1 font-[family-name:var(--preview-kaze-body)] text-sm text-[#5F665F]">{data.host.rating}</p>
+											) : null}
+											{data.host.bio.trim() ? (
+												<p className="mt-3 max-w-2xl font-[family-name:var(--preview-kaze-body)] text-[15px] leading-relaxed text-[#5F665F]">
+													{data.host.bio}
+												</p>
+											) : null}
+											{data.host.inquire ? (
+												<span className="mt-4 inline-flex items-center gap-1.5 font-[family-name:var(--preview-kaze-body)] text-sm font-semibold text-[#2F5D44] transition group-hover/host:text-[#244A36]">
+													{data.host.inquire}
+													<ArrowRight className="h-4 w-4" aria-hidden />
+												</span>
+											) : null}
 										</div>
-									) : null}
-									<div className="min-w-0 flex-1">
-										{data.host.label ? (
-											<p className="font-[family-name:var(--preview-kaze-body)] text-xs font-medium uppercase tracking-[0.12em] text-[#2F5D44]">
-												{data.host.label}
-											</p>
-										) : null}
-										<p className="mt-1 font-[family-name:var(--preview-kaze-headline)] text-xl font-semibold text-[#1C211C]">
-											{data.host.name}
-										</p>
-										{data.host.rating.trim() ? (
-											<p className="mt-1 font-[family-name:var(--preview-kaze-body)] text-sm text-[#5F665F]">{data.host.rating}</p>
-										) : null}
-										{data.host.bio.trim() ? (
-											<p className="mt-3 max-w-2xl font-[family-name:var(--preview-kaze-body)] text-[15px] leading-relaxed text-[#5F665F]">
-												{data.host.bio}
-											</p>
-										) : null}
-										{data.host.inquire ? (
-											<button
-												type="button"
-												className="mt-4 inline-flex cursor-pointer items-center gap-1.5 font-[family-name:var(--preview-kaze-body)] text-sm font-semibold text-[#2F5D44] hover:text-[#244A36]"
-											>
-												{data.host.inquire}
-												<ArrowRight className="h-4 w-4" aria-hidden />
-											</button>
-										) : null}
 									</div>
-								</div>
+								</BrandingHostProfileLink>
 							</KazeSection>
 						) : null}
 					</div>

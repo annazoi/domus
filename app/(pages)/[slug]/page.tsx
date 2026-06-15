@@ -6,19 +6,27 @@ import { propertyToBrandingPreview } from '@/app/(pages)/templates/_utils/proper
 import { Skeleton } from '@/components/ui';
 import { usePropertyServices } from '@/features/services/hooks/use-property-services';
 import { useProperty } from '@/features/property/hooks/use-property';
+import { usePublicHost } from '@/features/user/hooks/use-public-host';
+import { PublicHostProfileSkeleton, PublicHostProfileView } from './_components/public-host-profile';
 
-/** Single-segment app routes — avoid treating these as property slugs. */
-const RESERVED = new Set(['auth', 'templates', 'properties']);
+/** Single-segment app routes — avoid treating these as property or host slugs. */
+const RESERVED = new Set(['auth', 'templates', 'properties', 'dashboard', 'bookings', 'confirm-and-pay', 'guest-details']);
 
-export default function PropertyListingBySlugPage() {
+export default function SlugPage() {
 	const { slug } = useParams<{ slug: string }>();
 	const key = slug ?? '';
 	if (RESERVED.has(key.toLowerCase())) notFound();
 
-	const { data: property, isLoading } = useProperty(key);
+	const { data: property, isLoading: propertyLoading } = useProperty(key, { retry: false });
 	const { data: guestExtras = [] } = usePropertyServices(property?.id ?? '');
+	const shouldFetchHost = !propertyLoading && !property;
+	const { data: host, isLoading: hostLoading } = usePublicHost(key, { enabled: shouldFetchHost });
 
-	if (isLoading) {
+	if (propertyLoading || (shouldFetchHost && hostLoading)) {
+		if (shouldFetchHost && hostLoading && !propertyLoading) {
+			return <PublicHostProfileSkeleton />;
+		}
+
 		return (
 			<div className="min-h-screen bg-[#f4f2ee] px-4 py-5 sm:px-8">
 				<div className="mx-auto max-w-[1440px] space-y-8">
@@ -34,9 +42,15 @@ export default function PropertyListingBySlugPage() {
 			</div>
 		);
 	}
-	if (!property) return <p className="p-6 text-sm text-red-700">Property not found.</p>;
 
-	const data = propertyToBrandingPreview(property, { guestExtras });
+	if (property) {
+		const data = propertyToBrandingPreview(property, { guestExtras });
+		return <BrandingThemeFullPreview theme={property.branding_theme} data={data} listingPreview />;
+	}
 
-	return <BrandingThemeFullPreview theme={property.branding_theme} data={data} listingPreview />;
+	if (host) {
+		return <PublicHostProfileView host={host} />;
+	}
+
+	notFound();
 }

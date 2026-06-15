@@ -8,7 +8,7 @@ import { DayPicker } from 'react-day-picker';
 import { BrandingPreviewMap } from '@/components/google-maps';
 import { cn, Input } from '@/components/ui';
 import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
-import { AmenityGlyph, BrandingHeroMedia, BrandingWordmark, FillImg } from './branding-preview-shared';
+import { AmenityGlyph, BrandingHeroMedia, BrandingHostProfileLink, BrandingWordmark, FillImg } from './branding-preview-shared';
 import { BrandingGuestExtrasSection } from './branding-guest-extras-section';
 import { BrandingPrivacyAccess } from './branding-privacy-access';
 import { BrandingRichTextBlock } from './branding-rich-text-block';
@@ -433,31 +433,39 @@ export function CanvasPreview({
 							</div>
 
 							{data.host.name.trim() ? (
-								<div className="flex flex-col gap-6 border border-[#0a0a0a]/10 p-8 sm:flex-row sm:items-center">
-									{data.host.imageSrc.trim() ? (
-										<div className="relative h-24 w-24 shrink-0 overflow-hidden bg-[#0a0a0a]/5">
-											<Image src={data.host.imageSrc} alt="" fill className="object-cover grayscale" sizes="96px" unoptimized />
+								<BrandingHostProfileLink
+									hostName={data.host.host_name}
+									listingPreview={listingPreview}
+									className="transition hover:bg-[#0a0a0a]/[0.02]"
+								>
+									<div className="flex flex-col gap-6 border border-[#0a0a0a]/10 p-8 sm:flex-row sm:items-center">
+										{data.host.imageSrc.trim() ? (
+											<div className="relative h-24 w-24 shrink-0 overflow-hidden bg-[#0a0a0a]/5 transition group-hover/host:opacity-90">
+												<Image src={data.host.imageSrc} alt="" fill className="object-cover grayscale" sizes="96px" unoptimized />
+											</div>
+										) : null}
+										<div>
+											{data.host.label ? (
+												<p className="font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.25em] text-[#0a0a0a]/40">
+													{data.host.label}
+												</p>
+											) : null}
+											<p className="mt-2 font-[family-name:var(--preview-hikari-display)] text-2xl font-bold transition group-hover/host:text-[#0a0a0a]/75">
+												{data.host.name}
+											</p>
+											{data.host.rating.trim() ? (
+												<p className="mt-1 font-[family-name:var(--preview-hikari-body)] text-xs text-[#d4a853]">
+													{data.host.rating}
+												</p>
+											) : null}
+											{data.host.bio.trim() ? (
+												<p className="mt-3 max-w-lg font-[family-name:var(--preview-hikari-body)] text-sm leading-relaxed text-[#0a0a0a]/65">
+													{data.host.bio}
+												</p>
+											) : null}
 										</div>
-									) : null}
-									<div>
-										{data.host.label ? (
-											<p className="font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.25em] text-[#0a0a0a]/40">
-												{data.host.label}
-											</p>
-										) : null}
-										<p className="mt-2 font-[family-name:var(--preview-hikari-display)] text-2xl font-bold">{data.host.name}</p>
-										{data.host.rating.trim() ? (
-											<p className="mt-1 font-[family-name:var(--preview-hikari-body)] text-xs text-[#d4a853]">
-												{data.host.rating}
-											</p>
-										) : null}
-										{data.host.bio.trim() ? (
-											<p className="mt-3 max-w-lg font-[family-name:var(--preview-hikari-body)] text-sm leading-relaxed text-[#0a0a0a]/65">
-												{data.host.bio}
-											</p>
-										) : null}
 									</div>
-								</div>
+								</BrandingHostProfileLink>
 							) : null}
 						</div>
 

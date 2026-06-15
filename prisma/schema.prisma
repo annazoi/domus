@@ -62,6 +62,7 @@ model User {
   email      String   @unique
   first_name String
   last_name  String
+  host_name  String?  @unique
   role       UserRole @default(USER)
   vat_number String?
   password   String

@@ -6,6 +6,7 @@ export const propertyDetailInclude = {
 			id: true,
 			first_name: true,
 			last_name: true,
+			host_name: true,
 			bio: true,
 			avatar: { select: { url: true } },
 		},

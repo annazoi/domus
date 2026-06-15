@@ -1,6 +1,7 @@
 import axios from 'axios';
 import axiosInstance, { postMultipart } from '@/config/api/axios';
 import { ApiRoutes } from '@/config/api/routes';
+import type { PublicHostProfile } from '../interfaces/public-host.interface';
 import type { CreateUserDto, UpdateUserDto, User, UsersResponse } from '../interfaces/user.interface';
 // import type { AccountQuery } from '@/features/account/interfaces/account.interfaces';
 
@@ -31,11 +32,26 @@ export const getMe = async (): Promise<User> => {
 	}
 };
 
+export const getPublicHost = async (hostName: string): Promise<PublicHostProfile> => {
+	try {
+		const response = await axiosInstance.get(ApiRoutes.hosts.host(hostName));
+		return response.data;
+	} catch (error) {
+		if (axios.isAxiosError(error) && error.response?.status === 404) {
+			throw new Error('Host not found');
+		}
+		throw new Error('Failed to load host profile. Please try again.');
+	}
+};
+
 export const updateUser = async (uuid: string, user: UpdateUserDto): Promise<User> => {
 	try {
 		const response = await axiosInstance.put(ApiRoutes.users.user(uuid), user);
 		return response.data;
 	} catch (error) {
+		if (axios.isAxiosError(error)) {
+			throw new Error((error.response?.data as { message?: string } | undefined)?.message ?? error.message);
+		}
 		throw new Error('Failed to update user. Please try again.');
 	}
 };

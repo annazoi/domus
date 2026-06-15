@@ -1,6 +1,7 @@
 import type { Property as PropertyDTO } from '@/features/property/interfaces/property.interface';
 import type { PropertyBrandingTheme } from '@/app/(pages)/templates/_constants/property-branding-theme';
 import { formatUtcTimeOfDay } from '@/app/api/_utils/time-of-day';
+import { hostNameSlugFromParts } from '@/lib/slug/host-name-slug';
 
 export type PropertyImageDocument = {
 	id: string;
@@ -50,6 +51,7 @@ export type PropertyHostRow = {
 	id: string;
 	first_name: string;
 	last_name: string;
+	host_name: string | null;
 	bio: string | null;
 	avatar: { url: string } | null;
 };
@@ -113,6 +115,9 @@ export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 		? {
 				first_name: property.user.first_name,
 				last_name: property.user.last_name,
+				host_name:
+					property.user.host_name?.trim() ||
+					hostNameSlugFromParts(property.user.first_name, property.user.last_name),
 				bio: property.user.bio,
 				avatar_url: property.user.avatar?.url ?? null,
 			}

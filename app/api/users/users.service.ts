@@ -4,12 +4,15 @@ import {
 	buildImageDocumentCreateInput,
 	removeDocumentWithCloudinaryAsset,
 } from '@/app/api/utils/documents/documents.service';
+import type { PublicHostProfile } from '@/features/user/interfaces/public-host.interface';
+import { assertHostNameAvailable } from '@/app/api/_utils/host-name';
 
 const userSelect = {
 	id: true,
 	email: true,
 	first_name: true,
 	last_name: true,
+	host_name: true,
 	phone: true,
 	vat_number: true,
 	bio: true,
@@ -27,6 +30,7 @@ type UserRow = {
 	email: string;
 	first_name: string;
 	last_name: string;
+	host_name: string | null;
 	phone: string | null;
 	vat_number: string | null;
 	bio: string | null;
@@ -68,6 +72,22 @@ export type UpdateUserInput = {
 
 const isValidEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 
+function mapPublicHost(user: UserRow): PublicHostProfile | null {
+	if (!user.host_name) return null;
+
+	return {
+		id: user.id,
+		host_name: user.host_name,
+		first_name: user.first_name,
+		last_name: user.last_name,
+		bio: user.bio ?? undefined,
+		avatar_url: user.avatar?.url ?? null,
+		banner_url: user.banner?.url ?? null,
+		created_at: user.created_at.toISOString(),
+		properties: [],
+	};
+}
+
 export const usersService = {
 	async getById(id: string) {
 		const user = await prisma.user.findUnique({
@@ -76,6 +96,19 @@ export const usersService = {
 		});
 		if (!user) return null;
 		return mapUser(user);
+	},
+
+	async findPublicHostBySlug(slug: string) {
+		const normalized = slug.trim().toLowerCase();
+		if (!normalized) return null;
+
+		const host = await prisma.user.findFirst({
+			where: { host_name: normalized, is_host: true },
+			select: userSelect,
+		});
+
+		if (!host) return null;
+		return mapPublicHost(host);
 	},
 
 	async update(id: string, input: UpdateUserInput) {
@@ -112,11 +145,33 @@ export const usersService = {
 					: null;
 		const bio = input.bio === undefined ? undefined : input.bio?.trim() ? input.bio.trim() : null;
 
+		let host_name: string | undefined;
+		if (first_name !== undefined || last_name !== undefined) {
+			const current = await prisma.user.findUnique({
+				where: { id },
+				select: { first_name: true, last_name: true, host_name: true },
+			});
+			if (!current) {
+				return { error: 'required' as const };
+			}
+
+			const nextFirst = first_name ?? current.first_name;
+			const nextLast = last_name ?? current.last_name;
+			const hostNameCheck = await assertHostNameAvailable(nextFirst, nextLast, id);
+			if (!hostNameCheck.ok) {
+				return { error: hostNameCheck.reason === 'empty' ? ('required' as const) : ('duplicate_host_name' as const) };
+			}
+			if (hostNameCheck.host_name !== current.host_name) {
+				host_name = hostNameCheck.host_name;
+			}
+		}
+
 		const user = await prisma.user.update({
 			where: { id },
 			data: {
 				...(first_name !== undefined ? { first_name } : {}),
 				...(last_name !== undefined ? { last_name } : {}),
+				...(host_name !== undefined ? { host_name } : {}),
 				...(email !== undefined ? { email } : {}),
 				...(phone !== undefined ? { phone } : {}),
 				...(vat_number !== undefined ? { vat_number } : {}),

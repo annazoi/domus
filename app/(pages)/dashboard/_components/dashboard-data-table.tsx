@@ -30,8 +30,10 @@ type DashboardDataTableSkeletonProps = {
 	headerAlignment?: (header: string) => ColumnAlignment | undefined;
 };
 
+const tableHeadRowClass = 'bg-dashboard-inset';
+
 const baseHeaderClass =
-	'px-5 py-4 text-xs font-normal uppercase tracking-[0.18em] text-camel md:px-8 lg:px-10';
+	'px-5 py-4 text-xs font-medium uppercase tracking-[0.18em] text-dashboard-muted md:px-8 lg:px-10';
 
 const baseCellClass = 'px-5 py-5 align-middle md:px-8 lg:px-10';
 
@@ -94,7 +96,7 @@ export function DashboardDataTableSkeleton({
 			<div className="overflow-x-auto">
 				<table className="w-full border-collapse text-left" style={{ minWidth }}>
 					<thead>
-						<tr className="border-b border-dashboard-border bg-dashboard-inset/50">
+						<tr className={tableHeadRowClass}>
 							{headers.map((header) => (
 								<th
 									key={header}
@@ -163,7 +165,7 @@ export function DashboardDataTable<T>({
 				<table className="w-full border-collapse text-left" style={{ minWidth }}>
 					<thead>
 						{table.getHeaderGroups().map((headerGroup) => (
-							<tr key={headerGroup.id} className="border-b border-dashboard-border bg-dashboard-inset/50">
+							<tr key={headerGroup.id} className={tableHeadRowClass}>
 								{headerGroup.headers.map((header) => (
 									<th key={header.id} className={headerClassName(header.column.id)}>
 										{header.isPlaceholder

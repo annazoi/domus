@@ -1,6 +1,8 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { cn } from '@/components/ui';
 import { amenityOptionByValue, type AmenityId } from '@/config/constants/dropdowns/amenities.options';
 import {
@@ -55,6 +57,27 @@ export function BrandingWordmark({
 		);
 	}
 	return <span className={className}>{wordmark}</span>;
+}
+
+export function BrandingHostProfileLink({
+	hostName,
+	listingPreview,
+	className,
+	children,
+}: {
+	hostName: string;
+	listingPreview?: boolean;
+	className?: string;
+	children: ReactNode;
+}) {
+	const slug = hostName.trim();
+	if (!listingPreview || !slug) return <>{children}</>;
+
+	return (
+		<Link href={`/${slug}`} className={cn('group/host block cursor-pointer', className)}>
+			{children}
+		</Link>
+	);
 }
 
 export function BrandingHeroMedia({
