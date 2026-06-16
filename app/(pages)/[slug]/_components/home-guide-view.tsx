@@ -1,12 +1,14 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useMemo, useState, type ReactNode } from 'react';
 import { MapPin } from 'lucide-react';
+import { cloudinaryDisplayUrl, profileInitials } from '@/lib/profile/display';
 import { BrandingRichTextBlock } from '@/app/(pages)/templates/_components/branding-rich-text-block';
 import { AmenityGlyph } from '@/app/(pages)/templates/_components/branding-preview-shared';
 import { BrandingPreviewMap } from '@/components/google-maps';
-import { cn } from '@/components/ui';
+import { cn, ImageGalleryLightbox, type ImageGalleryOriginRect } from '@/components/ui';
 import type { HomeGuideData } from '@/lib/bookings/home-guide-data';
 
 type TabId = 'overview' | 'access' | 'amenities' | 'rules' | 'contact';
@@ -56,6 +58,129 @@ function TabPanel({ id, labelledBy, active, children }: { id: TabId; labelledBy:
 	);
 }
 
+function HomeGuideGallery({
+	photos,
+	title,
+}: {
+	photos: HomeGuideData['property']['gallery'];
+	title: string;
+}) {
+	const [lightboxOpen, setLightboxOpen] = useState(false);
+	const [lightboxIndex, setLightboxIndex] = useState(0);
+	const [originRect, setOriginRect] = useState<ImageGalleryOriginRect | null>(null);
+
+	if (photos.length === 0) return null;
+
+	const openAt = (index: number, target: EventTarget & Element) => {
+		const rect = target.getBoundingClientRect();
+		setOriginRect({
+			top: rect.top,
+			left: rect.left,
+			width: rect.width,
+			height: rect.height,
+		});
+		setLightboxIndex(index);
+		setLightboxOpen(true);
+	};
+
+	const [hero, ...thumbnails] = photos;
+	const imageUrls = photos.map((photo) => photo.url);
+
+	return (
+		<section className="mt-10" aria-label="Property photos">
+			<div className="mb-3 flex items-baseline justify-between gap-4">
+				<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/45">Gallery</p>
+				<p className="text-xs tabular-nums text-espresso/40">
+					{photos.length} {photos.length === 1 ? 'photo' : 'photos'}
+				</p>
+			</div>
+
+			<button
+				type="button"
+				onClick={(event) => openAt(0, event.currentTarget)}
+				className="group relative block w-full cursor-pointer overflow-hidden text-left"
+			>
+				{/* eslint-disable-next-line @next/next/no-img-element */}
+				<img
+					src={hero.url}
+					alt={hero.caption || title}
+					className="aspect-[5/2] w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+				/>
+				<span className="pointer-events-none absolute inset-0 bg-espresso/0 transition group-hover:bg-espresso/10" aria-hidden />
+			</button>
+
+			{thumbnails.length > 0 ? (
+				<div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+					{thumbnails.map((photo, index) => (
+						<button
+							key={photo.id}
+							type="button"
+							onClick={(event) => openAt(index + 1, event.currentTarget)}
+							className="group relative cursor-pointer overflow-hidden"
+						>
+							{/* eslint-disable-next-line @next/next/no-img-element */}
+							<img
+								src={photo.url}
+								alt={photo.caption || title}
+								className="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+							/>
+							<span className="pointer-events-none absolute inset-0 bg-espresso/0 transition group-hover:bg-espresso/10" aria-hidden />
+						</button>
+					))}
+				</div>
+			) : null}
+
+			<ImageGalleryLightbox
+				open={lightboxOpen}
+				onClose={() => setLightboxOpen(false)}
+				images={imageUrls}
+				initialIndex={lightboxIndex}
+				originRect={originRect}
+			/>
+		</section>
+	);
+}
+
+function HomeGuideServices({ services }: { services: HomeGuideData['property']['services'] }) {
+	if (services.length === 0) return null;
+
+	return (
+		<section className="mt-10 border-t border-black/10 pt-10" aria-label="Guest extras">
+			<div className="mb-6 flex items-baseline justify-between gap-4">
+				<div>
+					<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/45">Guest extras</p>
+					<p className="mt-2 font-serif text-xl tracking-tight text-espresso">Enhance your stay</p>
+				</div>
+				<p className="text-xs tabular-nums text-espresso/40">
+					{services.length} {services.length === 1 ? 'extra' : 'extras'}
+				</p>
+			</div>
+
+			<ul className="divide-y divide-black/8">
+				{services.map((service) => (
+					<li key={service.id} className="flex gap-4 py-5 first:pt-0 last:pb-0">
+						{service.imageUrl ? (
+							<div className="relative h-20 w-20 shrink-0 overflow-hidden bg-espresso/5">
+								{/* eslint-disable-next-line @next/next/no-img-element */}
+								<img src={service.imageUrl} alt="" className="h-full w-full object-cover" />
+							</div>
+						) : null}
+						<div className="min-w-0 flex-1">
+							<div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+								<p className="font-serif text-lg text-espresso">{service.name}</p>
+								<p className="shrink-0 text-sm font-medium tabular-nums text-camel-dark">{service.priceLabel}</p>
+							</div>
+							{service.description ? (
+								<p className="mt-1.5 text-sm leading-relaxed text-espresso/55">{service.description}</p>
+							) : null}
+						</div>
+					</li>
+				))}
+			</ul>
+		</section>
+	);
+}
+
 export function HomeGuideView({ data }: { data: HomeGuideData }) {
 	const { property, host } = data;
 	const hasReservation = Boolean(data.checkIn && data.checkOut && data.guests !== null);
@@ -84,8 +209,44 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 			: null,
 	].filter(Boolean) as Array<{ label: string; value: ReactNode }>;
 
+	const guestItems = data.guest
+		? ([
+				{ label: 'Name', value: data.guest.name },
+				{
+					label: 'Email',
+					value: (
+						<a
+							href={`mailto:${data.guest.email}`}
+							className="font-normal text-camel-dark underline decoration-camel/30 underline-offset-2 hover:text-camel"
+						>
+							{data.guest.email}
+						</a>
+					),
+				},
+				data.guest.phone
+					? {
+							label: 'Phone',
+							value: (
+								<a
+									href={`tel:${data.guest.phone}`}
+									className="font-normal text-camel-dark underline decoration-camel/30 underline-offset-2 hover:text-camel"
+								>
+									{data.guest.phone}
+								</a>
+							),
+						}
+					: null,
+				data.guests !== null ? { label: 'Party size', value: `${data.guests} guest${data.guests === 1 ? '' : 's'}` } : null,
+				data.bookingId
+					? {
+							label: 'Reference',
+							value: <span className="font-mono text-xs uppercase tracking-wider">{data.bookingId.slice(0, 8)}</span>,
+						}
+					: null,
+			].filter(Boolean) as Array<{ label: string; value: ReactNode }>)
+		: [];
+
 	const hostItems = [
-		{ label: 'Name', value: host.name },
 		{
 			label: 'Email',
 			value: (
@@ -111,6 +272,9 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 				}
 			: null,
 	].filter(Boolean) as Array<{ label: string; value: ReactNode }>;
+
+	const hostAvatarUrl = host.avatarUrl ? cloudinaryDisplayUrl(host.avatarUrl) : '';
+	const hostMonogram = profileInitials(host.first_name, host.last_name);
 
 	const tabs = useMemo(() => {
 		const items: Array<{ id: TabId; label: string }> = [{ id: 'overview', label: 'Overview' }];
@@ -170,12 +334,7 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 					) : null}
 				</header>
 
-				{property.coverImage ? (
-					<div className="relative mt-10 aspect-[5/2] overflow-hidden">
-						{/* eslint-disable-next-line @next/next/no-img-element */}
-						<img src={property.coverImage} alt={property.title} className="h-full w-full object-cover" />
-					</div>
-				) : null}
+				<HomeGuideGallery photos={property.gallery} title={property.title} />
 
 				<div className="mt-10 border-b border-black/10">
 					<div
@@ -214,6 +373,15 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 							<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/45">Welcome</p>
 							<div className="mt-4">
 								<GuideProse html={property.welcomeMessage} />
+							</div>
+						</div>
+					) : null}
+
+					{guestItems.length > 0 ? (
+						<div className={property.welcomeMessage ? 'mb-8' : undefined}>
+							<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/45">Guest</p>
+							<div className="mt-4">
+								<DetailList items={guestItems} />
 							</div>
 						</div>
 					) : null}
@@ -325,10 +493,31 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 
 				<TabPanel id="contact" labelledBy="home-guide-tab-contact" active={activeTab === 'contact'}>
 					<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/45">Your host</p>
-					<div className="mt-4">
-						<DetailList items={hostItems} />
+					<div className="mt-5 flex items-start gap-5">
+						<div className="shrink-0">
+							{hostAvatarUrl ? (
+								<div className="relative h-[4.5rem] w-[4.5rem] overflow-hidden rounded-full ring-1 ring-black/10">
+									<Image src={hostAvatarUrl} alt={host.name} fill className="object-cover" unoptimized />
+								</div>
+							) : (
+								<div className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-espresso/6 font-serif text-xl tracking-tight text-camel-dark ring-1 ring-black/10">
+									{hostMonogram}
+								</div>
+							)}
+						</div>
+						<div className="min-w-0 flex-1 pt-1">
+							<p className="font-serif text-2xl tracking-tight text-espresso">{host.name}</p>
+							{host.host_name ? (
+								<p className="mt-1 text-sm text-espresso/45">@{host.host_name}</p>
+							) : null}
+							<div className="mt-5">
+								<DetailList items={hostItems} />
+							</div>
+						</div>
 					</div>
 				</TabPanel>
+
+				<HomeGuideServices services={property.services} />
 
 				<footer className="mt-14 flex flex-col gap-4 border-t border-black/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
 					<p className="text-sm text-espresso/45">Bookmark this page for your stay.</p>

@@ -2,14 +2,14 @@
 
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Home, Mail, MessageCircle, Phone, Users, X } from 'lucide-react';
+import { Home, Mail, Phone, Users, X } from 'lucide-react';
+import { cloudinaryDisplayUrl, profileInitials } from '@/lib/profile/display';
+import { HomeGuideShareCard } from '@/components/bookings/home-guide-share-card';
 import { Button, DatePickerField, Input, Select, Textarea, cn, useToast } from '@/components/ui';
 import { useUpdateBooking } from '@/features/bookings/hooks/use-bookings';
 import { BookingStatus } from '@/features/bookings/interfaces/booking-status';
 import type { HostBookingDetail, UpdateHostBookingInput } from '@/features/bookings/interfaces/booking.interface';
-import { useCreateConversation } from '@/features/messaging/hooks/use-conversations';
 
 type BookingFormState = {
 	start_date: string;
@@ -190,9 +190,7 @@ export function BookingDetailModal({
 	onClose: () => void;
 	onUpdated?: (booking: HostBookingDetail) => void;
 }) {
-	const router = useRouter();
 	const { push } = useToast();
-	const createConversation = useCreateConversation();
 	const { mutateAsync: saveBooking, isPending: saving } = useUpdateBooking();
 	const [form, setForm] = useState<BookingFormState | null>(null);
 
@@ -214,19 +212,6 @@ export function BookingDetailModal({
 
 	const setField = <K extends keyof BookingFormState>(key: K, value: BookingFormState[K]) => {
 		setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
-	};
-
-	const openMessages = () => {
-		if (!booking) return;
-		createConversation.mutate(
-			{ property_id: booking.property_id, guest_user_id: booking.guest_user_id },
-			{
-				onSuccess: (conversation) => {
-					onClose();
-					router.push(`/dashboard/messages?conversation=${conversation.id}`);
-				},
-			},
-		);
 	};
 
 	const handleSubmit = async (event: FormEvent) => {
@@ -430,6 +415,15 @@ export function BookingDetailModal({
 											</div>
 										</div>
 									</Section>
+								) : null}
+
+								{form.status !== BookingStatus.CANCELLED ? (
+									<HomeGuideShareCard
+										host={booking.host}
+										bookingId={booking.id}
+										variant="host"
+										className="mt-8"
+									/>
 								) : null}
 
 								<Section title="Booking profile" className="mt-8">

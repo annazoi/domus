@@ -6,6 +6,7 @@ import {
 } from '@/app/api/utils/documents/documents.service';
 import type { PublicHostProfile } from '@/features/user/interfaces/public-host.interface';
 import { assertHostNameAvailable } from '@/app/api/_utils/host-name';
+import { hostNameSlugFromParts } from '@/lib/slug/host-name-slug';
 
 const userSelect = {
 	id: true,
@@ -50,6 +51,7 @@ function mapUser(user: UserRow) {
 		email: user.email,
 		first_name: user.first_name,
 		last_name: user.last_name,
+		host_name: user.host_name,
 		phone: user.phone ?? undefined,
 		vat_number: user.vat_number,
 		bio: user.bio ?? undefined,
@@ -73,19 +75,44 @@ export type UpdateUserInput = {
 const isValidEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 
 function mapPublicHost(user: UserRow): PublicHostProfile | null {
-	if (!user.host_name) return null;
+	const host_name = user.host_name?.trim() || hostNameSlugFromParts(user.first_name, user.last_name);
+	if (!host_name) return null;
 
 	return {
 		id: user.id,
-		host_name: user.host_name,
+		host_name,
 		first_name: user.first_name,
 		last_name: user.last_name,
+		email: user.email,
+		phone: user.phone,
+		vat_number: user.vat_number,
 		bio: user.bio ?? undefined,
 		avatar_url: user.avatar?.url ?? null,
 		banner_url: user.banner?.url ?? null,
 		created_at: user.created_at.toISOString(),
 		properties: [],
 	};
+}
+
+async function findHostByPublicSlug(slug: string) {
+	const normalized = slug.trim().toLowerCase();
+	if (!normalized) return null;
+
+	const byHostName = await prisma.user.findFirst({
+		where: { host_name: normalized, is_host: true },
+		select: userSelect,
+	});
+	if (byHostName) return byHostName;
+
+	const hosts = await prisma.user.findMany({
+		where: {
+			is_host: true,
+			OR: [{ host_name: null }, { host_name: '' }],
+		},
+		select: userSelect,
+	});
+
+	return hosts.find((host) => hostNameSlugFromParts(host.first_name, host.last_name) === normalized) ?? null;
 }
 
 export const usersService = {
@@ -99,14 +126,7 @@ export const usersService = {
 	},
 
 	async findPublicHostBySlug(slug: string) {
-		const normalized = slug.trim().toLowerCase();
-		if (!normalized) return null;
-
-		const host = await prisma.user.findFirst({
-			where: { host_name: normalized, is_host: true },
-			select: userSelect,
-		});
-
+		const host = await findHostByPublicSlug(slug);
 		if (!host) return null;
 		return mapPublicHost(host);
 	},

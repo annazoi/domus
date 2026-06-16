@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import { BookingStatus } from '@/features/bookings/interfaces/booking-status';
 import type { UpdateHostBookingInput } from '@/features/bookings/interfaces/booking.interface';
 import { eachDayInRange, toApiDate, toUtcDay } from '@/features/property-availability/utils/date';
+import { sendBookingConfirmationEmails } from '@/lib/email/booking-confirmation-emails';
 import { buildPaginationMeta, type PaginatedResult } from '@/lib/pagination';
 import { prisma } from '@/lib/prisma';
 
@@ -49,6 +50,7 @@ const guestBookingSelect = {
 			last_name: true,
 			email: true,
 			phone: true,
+			avatar: { select: { url: true } },
 		},
 	},
 	service_orders: {
@@ -121,6 +123,14 @@ const hostBookingSelect = {
 			service: { select: { name: true } },
 		},
 		orderBy: { service: { name: 'asc' } },
+	},
+	host: {
+		select: {
+			host_name: true,
+			first_name: true,
+			last_name: true,
+			avatar: { select: { url: true } },
+		},
 	},
 } as const;
 
@@ -250,6 +260,7 @@ function mapGuestBookingRow(row: NonNullable<GuestBookingRow>) {
 			host_name: row.host.host_name,
 			email: row.host.email,
 			phone: row.host.phone,
+			avatar_url: row.host.avatar?.url ?? null,
 		},
 		service_orders: row.service_orders.map((order) => ({
 			id: order.id,
@@ -316,6 +327,12 @@ function mapHostBookingRow(row: NonNullable<HostBookingRow>) {
 			unit_price: Number(order.unit_price),
 			line_total: Number(order.unit_price) * order.quantity,
 		})),
+		host: {
+			first_name: row.host.first_name,
+			last_name: row.host.last_name,
+			host_name: row.host.host_name,
+			avatar_url: row.host.avatar?.url ?? null,
+		},
 	};
 }
 
@@ -470,7 +487,7 @@ export const bookingsService = {
 	async updateHostBooking(hostId: string, bookingId: string, body: UpdateHostBookingInput) {
 		const existing = await prisma.booking.findFirst({
 			where: { id: bookingId, host_user_id: hostId },
-			select: { id: true, customer_id: true },
+			select: { id: true, customer_id: true, status: true },
 		});
 		if (!existing) return null;
 
@@ -528,6 +545,13 @@ export const bookingsService = {
 				},
 			}),
 		]);
+
+		const nextStatus = bookingStatusFromApi(body.status);
+		if (nextStatus === PrismaBookingStatus.CONFIRMED && existing.status !== PrismaBookingStatus.CONFIRMED) {
+			void sendBookingConfirmationEmails(bookingId).catch((error) => {
+				console.error(`Failed to send booking confirmation emails for ${bookingId}:`, error);
+			});
+		}
 
 		const row = await prisma.booking.findFirst({
 			where: { id: bookingId },

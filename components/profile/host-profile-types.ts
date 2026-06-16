@@ -1,4 +1,4 @@
-export interface PublicHostProperty {
+export interface HostProfileProperty {
 	id: string;
 	title: string;
 	slug: string;
@@ -7,17 +7,15 @@ export interface PublicHostProperty {
 	cover_url: string | null;
 }
 
-export interface PublicHostProfile {
-	id: string;
-	host_name: string;
+export interface HostProfileData {
 	first_name: string;
 	last_name: string;
-	email: string;
+	host_name?: string;
+	email?: string;
 	phone?: string | null;
 	vat_number?: string | null;
-	bio?: string;
+	bio?: string | null;
 	avatar_url?: string | null;
 	banner_url?: string | null;
 	created_at: string;
-	properties: PublicHostProperty[];
 }

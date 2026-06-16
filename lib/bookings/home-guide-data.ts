@@ -1,9 +1,10 @@
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, type PricingUnit as PrismaPricingUnit } from '@prisma/client';
 import { amenityOptionByValue, type AmenityId } from '@/config/constants/dropdowns/amenities.options';
 import { ApartmentOptionsLabels } from '@/config/constants/dropdowns/apartment.options';
 import { RoomTypeOptionsLabels } from '@/config/constants/dropdowns/room-type.options';
 import { formatPropertyTimeLabel } from '@/app/(pages)/templates/_utils/format-property-time';
 import { formatUtcTimeOfDay } from '@/app/api/_utils/time-of-day';
+import { PRICING_UNIT_LABELS, type PricingUnit } from '@/features/services/interfaces/pricing-unit';
 import { resolveHostGuideSlug } from '@/lib/bookings/home-guide-path';
 import { prisma } from '@/lib/prisma';
 
@@ -13,10 +14,16 @@ export type HomeGuideData = {
 	checkIn: string | null;
 	checkOut: string | null;
 	guests: number | null;
+	guest: {
+		name: string;
+		email: string;
+		phone: string | null;
+	} | null;
 	property: {
 		title: string;
 		slug: string;
 		coverImage: string | null;
+		gallery: Array<{ id: string; url: string; caption: string }>;
 		welcomeMessage: string;
 		locationAccess: string;
 		doorCode: string;
@@ -38,6 +45,13 @@ export type HomeGuideData = {
 		bathrooms: number;
 		amenities: Array<{ id: AmenityId; label: string; description: string; quantity?: number }>;
 		appliances: Array<{ id: string; title: string; description: string }>;
+		services: Array<{
+			id: string;
+			name: string;
+			description: string;
+			priceLabel: string;
+			imageUrl: string | null;
+		}>;
 	};
 	host: {
 		name: string;
@@ -46,6 +60,7 @@ export type HomeGuideData = {
 		last_name: string;
 		email: string;
 		phone: string | null;
+		avatarUrl: string | null;
 	};
 };
 
@@ -73,10 +88,13 @@ const propertySelect = {
 	beds: true,
 	bathrooms: true,
 	images: {
-		where: { is_cover: true },
-		take: 1,
 		orderBy: { order: 'asc' },
-		select: { document: { select: { url: true } } },
+		select: {
+			id: true,
+			is_cover: true,
+			description: true,
+			document: { select: { url: true, type: true } },
+		},
 	},
 	amenities: {
 		where: { selected: true },
@@ -86,6 +104,27 @@ const propertySelect = {
 	appliances: {
 		orderBy: { order: 'asc' },
 		select: { id: true, title: true, description: true },
+	},
+	property_services: {
+		where: { service: { active: true } },
+		orderBy: { service: { name: 'asc' } },
+		select: {
+			service: {
+				select: {
+					id: true,
+					name: true,
+					description: true,
+					price: true,
+					pricing_unit: true,
+					images: {
+						orderBy: { order: 'asc' },
+						select: {
+							document: { select: { url: true } },
+						},
+					},
+				},
+			},
+		},
 	},
 	user: {
 		select: {
@@ -115,6 +154,56 @@ function formatStayDate(date: Date) {
 	});
 }
 
+function mapPropertyGallery(
+	images: Array<{
+		id: string;
+		is_cover: boolean;
+		description: string | null;
+		document: { url: string; type: string } | null;
+	}>,
+	propertyTitle: string,
+) {
+	const photos = images
+		.filter((image) => image.document?.url && image.document.type === 'IMAGE')
+		.sort((a, b) => {
+			if (a.is_cover !== b.is_cover) return a.is_cover ? -1 : 1;
+			return 0;
+		})
+		.map((image, index) => ({
+			id: image.id,
+			url: image.document!.url,
+			caption: image.description?.trim() || `${propertyTitle} — ${index + 1}`,
+		}));
+
+	return photos;
+}
+
+function formatServicePriceLabel(price: number, unit: PrismaPricingUnit) {
+	const pricingUnit = unit as PricingUnit;
+	return `$${price.toFixed(2)} · ${PRICING_UNIT_LABELS[pricingUnit].toLowerCase()}`;
+}
+
+function mapPropertyServices(
+	links: Array<{
+		service: {
+			id: string;
+			name: string;
+			description: string | null;
+			price: { toString(): string };
+			pricing_unit: PrismaPricingUnit;
+			images: Array<{ document: { url: string } | null }>;
+		};
+	}>,
+) {
+	return links.map(({ service }) => ({
+		id: service.id,
+		name: service.name,
+		description: service.description?.trim() ?? '',
+		priceLabel: formatServicePriceLabel(Number(service.price), service.pricing_unit),
+		imageUrl: service.images[0]?.document?.url ?? null,
+	}));
+}
+
 function mapPropertyGuide(
 	property: {
 		id: string;
@@ -139,15 +228,40 @@ function mapPropertyGuide(
 		bedrooms: number;
 		beds: number;
 		bathrooms: number;
-		images: Array<{ document: { url: string } | null }>;
+		images: Array<{
+			id: string;
+			is_cover: boolean;
+			description: string | null;
+			document: { url: string; type: string } | null;
+		}>;
 		amenities: Array<{ value: string; description: string | null; quantity: number | null }>;
 		appliances: Array<{ id: string; title: string; description: string | null }>;
+		property_services: Array<{
+			service: {
+				id: string;
+				name: string;
+				description: string | null;
+				price: { toString(): string };
+				pricing_unit: PrismaPricingUnit;
+				images: Array<{ document: { url: string } | null }>;
+			};
+		}>;
 		user: { host_name: string | null; first_name: string; last_name: string; email: string; phone: string | null };
 	},
-	booking: { id: string; check_in: Date; check_out: Date; guests: number } | null,
-	host: { host_name: string | null; first_name: string; last_name: string; email: string; phone: string | null },
+	booking: {
+		id: string;
+		check_in: Date;
+		check_out: Date;
+		guests: number;
+		customer: { first_name: string; last_name: string; email: string; phone: string | null };
+	} | null,
+	host: { host_name: string | null; first_name: string; last_name: string; email: string; phone: string | null; avatar: { url: string } | null },
 ): HomeGuideData {
 	const hostName = `${host.first_name} ${host.last_name}`.trim() || 'Your host';
+	const guestName = booking
+		? `${booking.customer.first_name} ${booking.customer.last_name}`.trim() || 'Guest'
+		: '';
+	const gallery = mapPropertyGallery(property.images, property.title);
 
 	return {
 		propertyId: property.id,
@@ -155,10 +269,18 @@ function mapPropertyGuide(
 		checkIn: booking ? formatStayDate(booking.check_in) : null,
 		checkOut: booking ? formatStayDate(booking.check_out) : null,
 		guests: booking?.guests ?? null,
+		guest: booking
+			? {
+					name: guestName,
+					email: booking.customer.email,
+					phone: booking.customer.phone,
+				}
+			: null,
 		property: {
 			title: property.title,
 			slug: property.slug,
-			coverImage: property.images[0]?.document?.url ?? null,
+			coverImage: gallery[0]?.url ?? null,
+			gallery,
 			welcomeMessage: property.welcome_message?.trim() ?? '',
 			locationAccess: property.location_access?.trim() ?? '',
 			doorCode: property.door_code?.trim() ?? '',
@@ -194,6 +316,7 @@ function mapPropertyGuide(
 				title: appliance.title,
 				description: appliance.description?.trim() ?? '',
 			})),
+			services: mapPropertyServices(property.property_services),
 		},
 		host: {
 			name: hostName,
@@ -202,6 +325,7 @@ function mapPropertyGuide(
 			last_name: host.last_name,
 			email: host.email,
 			phone: host.phone,
+			avatarUrl: host.avatar?.url ?? null,
 		},
 	};
 }
@@ -212,6 +336,7 @@ const hostSelect = {
 	last_name: true,
 	email: true,
 	phone: true,
+	avatar: { select: { url: true } },
 } as const;
 
 async function loadBookingGuide(bookingId: string) {
@@ -227,6 +352,14 @@ async function loadBookingGuide(bookingId: string) {
 			guests: true,
 			property: { select: propertySelect },
 			host: { select: hostSelect },
+			customer: {
+				select: {
+					first_name: true,
+					last_name: true,
+					email: true,
+					phone: true,
+				},
+			},
 		},
 	});
 }

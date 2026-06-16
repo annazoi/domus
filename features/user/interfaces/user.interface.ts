@@ -7,6 +7,7 @@ export interface User {
 	last_name: string;
 	uuid: string;
 	email: string;
+	host_name?: string | null;
 	phone?: string;
 	vat_number: string | null;
 	bio?: string;

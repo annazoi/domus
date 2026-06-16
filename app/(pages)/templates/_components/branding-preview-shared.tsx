@@ -74,7 +74,7 @@ export function BrandingHostProfileLink({
 	if (!listingPreview || !slug) return <>{children}</>;
 
 	return (
-		<Link href={`/${slug}`} className={cn('group/host block cursor-pointer', className)}>
+		<Link href={`/${encodeURIComponent(slug)}`} className={cn('group/host block cursor-pointer', className)}>
 			{children}
 		</Link>
 	);

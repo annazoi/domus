@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { BookingStatus } from '@prisma/client';
-import { BookOpen, Check, ChevronRight, MapPin } from 'lucide-react';
-import { homeGuidePathFromHost } from '@/lib/bookings/home-guide-path';
+import { Check, ChevronRight, MapPin } from 'lucide-react';
+import { HomeGuideShareCard } from '@/components/bookings/home-guide-share-card';
 import { prisma } from '@/lib/prisma';
 
 const PRIMARY_LINK_CLASS =
@@ -198,20 +198,7 @@ export default async function BookingConfirmationPage({
 					</dl>
 
 					{!isCancelled ? (
-						<div className="mt-8 rounded-2xl border border-camel/20 bg-gradient-to-br from-camel/8 via-white to-white p-5">
-							<p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-camel">Before you arrive</p>
-							<p className="mt-2 max-w-lg text-sm text-[#1A1A1A]/65">
-								Access codes, check-in details, amenities, and everything else for your stay.
-							</p>
-							<Link
-								href={homeGuidePathFromHost(booking.host, booking.id)}
-								className={`${PRIMARY_LINK_CLASS} mt-4`}
-							>
-								<BookOpen className="mr-2 h-4 w-4" />
-								Your Home Guide
-								<ChevronRight className="ml-1 h-4 w-4" />
-							</Link>
-						</div>
+						<HomeGuideShareCard host={booking.host} bookingId={booking.id} className="mt-8" />
 					) : null}
 
 					<div className="mt-6 flex flex-col gap-3 sm:flex-row">

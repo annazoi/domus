@@ -41,6 +41,7 @@ export interface GuestTripDetail {
 		host_name: string | null;
 		email: string;
 		phone: string | null;
+		avatar_url: string | null;
 	};
 	service_orders: BookingServiceOrder[];
 }
@@ -90,6 +91,12 @@ export interface HostBookingDetail extends Booking {
 		state: string | null;
 		zip: string | null;
 		country: string | null;
+	};
+	host: {
+		first_name: string;
+		last_name: string;
+		host_name: string | null;
+		avatar_url: string | null;
 	};
 }
 

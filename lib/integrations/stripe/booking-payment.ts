@@ -2,6 +2,7 @@ import { BookingStatus, Reason } from '@prisma/client';
 import type { PrismaClient } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { eachDayInRange } from '@/features/property-availability/utils/date';
+import { sendBookingConfirmationEmails } from '@/lib/email/booking-confirmation-emails';
 import { eurosToCents } from '@/lib/integrations/stripe/fees';
 import type { PriceSnapshot } from '@/lib/pricing/price-snapshot';
 import { prisma } from '@/lib/prisma';
@@ -136,6 +137,10 @@ export async function confirmPaidBooking(
 		});
 
 		await reserveBookingAvailability(booking, tx);
+	});
+
+	void sendBookingConfirmationEmails(bookingId).catch((error) => {
+		console.error(`Failed to send booking confirmation emails for ${bookingId}:`, error);
 	});
 
 	return booking;

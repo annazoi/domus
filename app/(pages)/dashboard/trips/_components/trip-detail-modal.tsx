@@ -2,9 +2,11 @@
 
 import { useEffect, type ReactNode } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUpRight, BookOpen, CalendarDays, ChevronRight, Home, Mail, MapPin, Phone, Users, X } from 'lucide-react';
-import { homeGuidePathFromHost } from '@/lib/bookings/home-guide-path';
+import { ArrowUpRight, CalendarDays, ChevronRight, Home, Mail, MapPin, Phone, Users, X } from 'lucide-react';
+import { cloudinaryDisplayUrl, profileInitials } from '@/lib/profile/display';
+import { HomeGuideShareCard } from '@/components/bookings/home-guide-share-card';
 import { Button, Skeleton, cn } from '@/components/ui';
 import { useGuestTrip } from '@/features/bookings/hooks/use-bookings';
 import { BookingStatus } from '@/features/bookings/interfaces/booking-status';
@@ -90,6 +92,8 @@ function TripDetailContent({ trip }: { trip: GuestTripDetail }) {
 	const extrasTotal = trip.service_orders.reduce((sum, order) => sum + order.line_total, 0);
 	const stayTotal = Math.max(0, trip.total_price - extrasTotal);
 	const location = [trip.property.city, trip.property.country].filter(Boolean).join(', ');
+	const hostAvatarUrl = trip.host.avatar_url ? cloudinaryDisplayUrl(trip.host.avatar_url) : '';
+	const hostMonogram = profileInitials(trip.host.first_name, trip.host.last_name);
 
 	return (
 		<motion.div
@@ -135,19 +139,7 @@ function TripDetailContent({ trip }: { trip: GuestTripDetail }) {
 							</span>
 						</div>
 
-						<div className="mt-8 flex flex-col gap-3">
-							{trip.status !== BookingStatus.CANCELLED ? (
-								<Link
-									href={homeGuidePathFromHost(trip.host, trip.id)}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="group inline-flex items-center gap-2 rounded-full bg-camel/12 px-4 py-2.5 text-sm font-medium text-camel-dark ring-1 ring-camel/20 transition hover:bg-camel/18 hover:text-camel"
-								>
-									<BookOpen className="h-4 w-4" aria-hidden />
-									Your Home Guide
-									<ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden />
-								</Link>
-							) : null}
+						<div className="mt-8">
 							<Link
 								href={`/${encodeURIComponent(trip.property.slug)}`}
 								target="_blank"
@@ -198,8 +190,24 @@ function TripDetailContent({ trip }: { trip: GuestTripDetail }) {
 
 						<section>
 							<h5 className="font-serif text-lg tracking-tight text-espresso">Your host</h5>
+							<div className="mt-4 flex items-start gap-4 rounded-xl bg-dashboard-bg/80 p-4 ring-1 ring-dashboard-border/50">
+								{hostAvatarUrl ? (
+									<div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full ring-1 ring-dashboard-border/60">
+										<Image src={hostAvatarUrl} alt={trip.host_name} fill className="object-cover" unoptimized />
+									</div>
+								) : (
+									<div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-camel/10 font-serif text-lg text-camel-dark ring-1 ring-dashboard-border/60">
+										{hostMonogram}
+									</div>
+								)}
+								<div className="min-w-0 flex-1">
+									<p className="font-serif text-xl tracking-tight text-espresso">{trip.host_name}</p>
+									{trip.host.host_name ? (
+										<p className="mt-0.5 text-sm text-dashboard-muted">@{trip.host.host_name}</p>
+									) : null}
+								</div>
+							</div>
 							<div className="mt-3 space-y-2">
-								<ContactRow icon={<Users className="h-4 w-4" />} label="Name" value={trip.host_name} />
 								<ContactRow
 									icon={<Mail className="h-4 w-4" />}
 									label="Email"
@@ -214,6 +222,12 @@ function TripDetailContent({ trip }: { trip: GuestTripDetail }) {
 								/>
 							</div>
 						</section>
+
+						{trip.status !== BookingStatus.CANCELLED ? (
+							<section>
+								<HomeGuideShareCard host={trip.host} bookingId={trip.id} />
+							</section>
+						) : null}
 
 						<section>
 							<h5 className="font-serif text-lg tracking-tight text-espresso">Payment</h5>

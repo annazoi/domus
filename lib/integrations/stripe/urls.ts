@@ -1,24 +1,37 @@
 import { environments } from '@/config/environments';
 
+function isLocalHost(hostOrUrl: string) {
+	return /localhost|127\.0\.0\.1/i.test(hostOrUrl);
+}
+
+function resolveUrlFromRequest(request: Request) {
+	const origin = request.headers.get('origin')?.replace(/\/$/, '');
+	if (origin) return origin;
+
+	const host = request.headers.get('host');
+	if (!host) return null;
+
+	const protocol = isLocalHost(host) ? 'http' : 'https';
+	return `${protocol}://${host}`.replace(/\/$/, '');
+}
+
 export function getAppUrl(request?: Request) {
-	const appUrl = process.env.APP_URL?.replace(/\/$/, '');
-	const publicUrl = environments.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
-	const configured = appUrl || publicUrl;
-	if (configured && !configured.includes('localhost')) {
-		return configured;
+	const fromEnv = (environments.APP_URL || environments.NEXT_PUBLIC_API_URL)?.replace(/\/$/, '') || null;
+	const fromRequest = request ? resolveUrlFromRequest(request) : null;
+
+	if (fromRequest && isLocalHost(fromRequest)) {
+		return fromRequest;
 	}
 
-	if (request) {
-		const origin = request.headers.get('origin');
-		if (origin) return origin.replace(/\/$/, '');
-		const host = request.headers.get('host');
-		if (host) {
-			const protocol = host.includes('localhost') ? 'http' : 'https';
-			return `${protocol}://${host}`;
-		}
+	if (fromEnv && !isLocalHost(fromEnv)) {
+		return fromEnv;
 	}
 
-	return configured || 'http://localhost:3000';
+	if (fromRequest) {
+		return fromRequest;
+	}
+
+	return fromEnv || 'http://localhost:3000';
 }
 
 export function getHostBillingUrls(request?: Request) {
