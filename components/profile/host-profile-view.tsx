@@ -19,7 +19,7 @@ const reveal = {
 	animate: { opacity: 1, y: 0 },
 };
 
-function HostContactFields({ profile }: { profile: HostProfileData }) {
+function HostContactFields({ profile, animate = true }: { profile: HostProfileData; animate?: boolean }) {
 	const fields: Array<{ key: string; label: string; value: ReactNode }> = [];
 
 	if (profile.email?.trim()) {
@@ -71,17 +71,34 @@ function HostContactFields({ profile }: { profile: HostProfileData }) {
 		<div className="profile-contact-fields">
 			<p className="profile-eyebrow">Contact</p>
 			<dl className="profile-contact-list mt-4">
-				{fields.map((field, index) => (
-					<motion.div
-						key={field.key}
-						{...reveal}
-						transition={{ duration: 0.34, delay: 0.3 + index * 0.05, ease: [0.22, 1, 0.36, 1] }}
-						className="profile-contact-row"
-					>
-						<dt className="profile-contact-label">{field.label}</dt>
-						<dd className="min-w-0">{field.value}</dd>
-					</motion.div>
-				))}
+				{fields.map((field, index) => {
+					const rowClassName = 'profile-contact-row';
+					const rowContent = (
+						<>
+							<dt className="profile-contact-label">{field.label}</dt>
+							<dd className="min-w-0">{field.value}</dd>
+						</>
+					);
+
+					if (!animate) {
+						return (
+							<div key={field.key} className={rowClassName}>
+								{rowContent}
+							</div>
+						);
+					}
+
+					return (
+						<motion.div
+							key={field.key}
+							{...reveal}
+							transition={{ duration: 0.34, delay: 0.3 + index * 0.05, ease: [0.22, 1, 0.36, 1] }}
+							className={rowClassName}
+						>
+							{rowContent}
+						</motion.div>
+					);
+				})}
 			</dl>
 		</div>
 	);
@@ -153,7 +170,7 @@ function HostListingsSearch({
 			</label>
 			<div className="profile-listings-search-field group">
 				<Search
-					className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--profile-accent)]"
+					className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:color-mix(in_srgb,var(--profile-accent)_70%,transparent)] transition group-focus-within:text-[color:var(--profile-accent)]"
 					aria-hidden
 				/>
 				<input
@@ -192,7 +209,13 @@ function HostListingsSearch({
 	);
 }
 
-function HostListingsSection({ properties }: { properties: HostProfileProperty[] }) {
+function HostListingsSection({
+	properties,
+	animate = true,
+}: {
+	properties: HostProfileProperty[];
+	animate?: boolean;
+}) {
 	const [query, setQuery] = useState('');
 	const filtered = useMemo(() => filterProperties(properties, query), [properties, query]);
 
@@ -224,22 +247,30 @@ function HostListingsSection({ properties }: { properties: HostProfileProperty[]
 			<div className="px-5 py-6 sm:px-7 sm:py-7">
 				{properties.length > 0 ? (
 					filtered.length > 0 ? (
-						<motion.div layout className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-							<AnimatePresence mode="popLayout">
+						animate ? (
+							<motion.div layout className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+								<AnimatePresence mode="popLayout">
+									{filtered.map((property) => (
+										<motion.div
+											key={property.id}
+											layout
+											initial={{ opacity: 0, y: 10 }}
+											animate={{ opacity: 1, y: 0 }}
+											exit={{ opacity: 0, scale: 0.98 }}
+											transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+										>
+											<HostPropertyCard property={property} />
+										</motion.div>
+									))}
+								</AnimatePresence>
+							</motion.div>
+						) : (
+							<div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
 								{filtered.map((property) => (
-									<motion.div
-										key={property.id}
-										layout
-										initial={{ opacity: 0, y: 10 }}
-										animate={{ opacity: 1, y: 0 }}
-										exit={{ opacity: 0, scale: 0.98 }}
-										transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-									>
-										<HostPropertyCard property={property} />
-									</motion.div>
+									<HostPropertyCard key={property.id} property={property} />
 								))}
-							</AnimatePresence>
-						</motion.div>
+							</div>
+						)
 					) : (
 						<div className="profile-listings-empty rounded-xl px-6 py-12 text-center">
 							<p className="profile-heading text-2xl tracking-tight">No matches found</p>
@@ -280,88 +311,87 @@ export function HostProfileView({
 	const bannerUrl = profile.banner_url ? cloudinaryDisplayUrl(profile.banner_url) : '';
 	const avatarUrl = profile.avatar_url ? cloudinaryDisplayUrl(profile.avatar_url) : '';
 	const memberSince = formatProfileMemberSince(profile.created_at);
+	const animateEntrance = layout !== 'dashboard';
+
+	const profileHero = (
+		<>
+			<div className="relative isolate min-h-[12rem] overflow-hidden sm:min-h-[14rem]">
+				{bannerUrl ? (
+					<Image src={bannerUrl} alt="" fill className="object-cover" unoptimized priority />
+				) : (
+					<div
+						className="absolute inset-0"
+						style={{
+							background:
+								'radial-gradient(ellipse 85% 70% at 20% 15%, color-mix(in srgb, var(--profile-accent) 24%, transparent), transparent 68%), radial-gradient(ellipse 60% 55% at 90% 85%, color-mix(in srgb, var(--profile-text) 10%, transparent), transparent 62%), linear-gradient(135deg, var(--profile-image-bg), var(--profile-bg))',
+						}}
+					/>
+				)}
+				<div className="profile-canvas-grain pointer-events-none absolute inset-0 opacity-[0.14]" aria-hidden />
+				<div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[color:var(--profile-panel)] via-[color:var(--profile-panel)]/15 to-transparent" />
+			</div>
+
+			<div className="relative px-6 pb-8 pt-0 sm:px-9 sm:pb-9">
+				<div className="flex min-w-0 items-end gap-5">
+					<div className="-mt-12 shrink-0 sm:-mt-14">
+						{avatarUrl ? (
+							<div className="relative h-[5.25rem] w-[5.25rem] overflow-hidden rounded-full border-[3px] border-[color:var(--profile-panel)] shadow-[0_18px_50px_-18px_rgba(154,133,112,0.65)] sm:h-24 sm:w-24">
+								<Image src={avatarUrl} alt={fullName} fill className="object-cover" unoptimized />
+							</div>
+						) : (
+							<div className="flex h-[5.25rem] w-[5.25rem] items-center justify-center rounded-full border-[3px] border-[color:var(--profile-panel)] bg-[color:var(--profile-image-bg)] font-serif text-2xl tracking-tight text-[color:var(--profile-accent)] shadow-[0_18px_50px_-18px_rgba(154,133,112,0.65)] sm:h-24 sm:w-24 sm:text-3xl">
+								{monogram}
+							</div>
+						)}
+					</div>
+
+					<div className="min-w-0 pb-0.5">
+						<p className="profile-eyebrow-accent profile-eyebrow">Host on Domus</p>
+						<h1 className="profile-heading mt-1 break-words text-3xl tracking-tight sm:text-4xl">{fullName}</h1>
+						<p className="profile-meta mt-1.5">Member since {memberSince}</p>
+					</div>
+				</div>
+
+				<section className="profile-viewer-about mt-8 rounded-xl px-5 py-6 sm:px-7 sm:py-7">
+					<div className="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)] lg:items-start lg:gap-10">
+						<div className="min-w-0">
+							<p className="profile-eyebrow">About</p>
+							{profile.bio?.trim() ? (
+								<p className="profile-viewer-bio mt-3 max-w-2xl font-serif text-xl leading-relaxed tracking-tight text-[color:var(--profile-text)] sm:text-[1.35rem]">
+									{profile.bio}
+								</p>
+							) : (
+								<p className="mt-3 text-sm italic text-[color:var(--profile-text-soft)]">{emptyBioMessage}</p>
+							)}
+						</div>
+
+						<div className="profile-contact-aside lg:pl-8">
+							<HostContactFields profile={profile} animate={animateEntrance} />
+						</div>
+					</div>
+				</section>
+			</div>
+		</>
+	);
 
 	const content = (
 		<div className="space-y-8">
 			{header}
 
-			<motion.article
-				className="profile-viewer-shell overflow-hidden rounded-[1.5rem] border"
-				initial={{ opacity: 0, y: 16 }}
-				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
-			>
-				<div className="relative isolate min-h-[12rem] overflow-hidden sm:min-h-[14rem]">
-					{bannerUrl ? (
-						<Image src={bannerUrl} alt="" fill className="object-cover" unoptimized priority />
-					) : (
-						<div
-							className="absolute inset-0"
-							style={{
-								background:
-									'radial-gradient(ellipse 85% 70% at 20% 15%, color-mix(in srgb, var(--profile-accent) 24%, transparent), transparent 68%), radial-gradient(ellipse 60% 55% at 90% 85%, color-mix(in srgb, var(--profile-text) 10%, transparent), transparent 62%), linear-gradient(135deg, var(--profile-image-bg), var(--profile-bg))',
-							}}
-						/>
-					)}
-					<div className="profile-canvas-grain pointer-events-none absolute inset-0 opacity-[0.14]" aria-hidden />
-					<div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[color:var(--profile-panel)] via-[color:var(--profile-panel)]/15 to-transparent" />
-				</div>
+			{animateEntrance ? (
+				<motion.article
+					className="profile-viewer-shell overflow-hidden rounded-[1.5rem] border"
+					initial={{ opacity: 0, y: 16 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+				>
+					{profileHero}
+				</motion.article>
+			) : (
+				<article className="profile-viewer-shell overflow-hidden rounded-[1.5rem] border">{profileHero}</article>
+			)}
 
-				<div className="relative px-6 pb-8 pt-0 sm:px-9 sm:pb-9">
-					<div className="flex min-w-0 items-end gap-5">
-						<motion.div
-							{...reveal}
-							transition={{ duration: 0.36, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-							className="-mt-12 shrink-0 sm:-mt-14"
-						>
-							{avatarUrl ? (
-								<div className="relative h-[5.25rem] w-[5.25rem] overflow-hidden rounded-full border-[3px] border-[color:var(--profile-panel)] shadow-[0_18px_50px_-18px_rgba(154,133,112,0.65)] sm:h-24 sm:w-24">
-									<Image src={avatarUrl} alt={fullName} fill className="object-cover" unoptimized />
-								</div>
-							) : (
-								<div className="flex h-[5.25rem] w-[5.25rem] items-center justify-center rounded-full border-[3px] border-[color:var(--profile-panel)] bg-[color:var(--profile-image-bg)] font-serif text-2xl tracking-tight text-[color:var(--profile-accent)] shadow-[0_18px_50px_-18px_rgba(154,133,112,0.65)] sm:h-24 sm:w-24 sm:text-3xl">
-									{monogram}
-								</div>
-							)}
-						</motion.div>
-
-						<motion.div
-							{...reveal}
-							transition={{ duration: 0.36, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
-							className="min-w-0 pb-0.5"
-						>
-							<p className="profile-eyebrow-accent profile-eyebrow">Host on Domus</p>
-							<h1 className="profile-heading mt-1 break-words text-3xl tracking-tight sm:text-4xl">{fullName}</h1>
-							<p className="profile-meta mt-1.5">Member since {memberSince}</p>
-						</motion.div>
-					</div>
-
-					<motion.section
-						{...reveal}
-						transition={{ duration: 0.36, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
-						className="profile-viewer-about mt-8 rounded-xl px-5 py-6 sm:px-7 sm:py-7"
-					>
-						<div className="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)] lg:items-start lg:gap-10">
-							<div className="min-w-0">
-								<p className="profile-eyebrow">About</p>
-								{profile.bio?.trim() ? (
-									<p className="profile-viewer-bio mt-3 max-w-2xl font-serif text-xl leading-relaxed tracking-tight text-[color:var(--profile-text)] sm:text-[1.35rem]">
-										{profile.bio}
-									</p>
-								) : (
-									<p className="mt-3 text-sm italic text-[color:var(--profile-text-soft)]">{emptyBioMessage}</p>
-								)}
-							</div>
-
-							<div className="profile-contact-aside lg:pl-8">
-								<HostContactFields profile={profile} />
-							</div>
-						</div>
-					</motion.section>
-				</div>
-			</motion.article>
-
-			<HostListingsSection properties={properties} />
+			<HostListingsSection properties={properties} animate={animateEntrance} />
 		</div>
 	);
 

@@ -11,5 +11,6 @@ export const usePublicHost = (hostName: string, options?: { enabled?: boolean })
 		queryFn: () => getPublicHost(hostName),
 		enabled: options?.enabled !== false && Boolean(hostName),
 		retry: false,
+		refetchOnMount: 'always',
 	});
 };

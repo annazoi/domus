@@ -13,9 +13,9 @@ function resolveHostSlug(user: { host_name?: string | null; first_name: string; 
 }
 
 export function ProfileViewer() {
-	const { data: user, isLoading, isError } = useGetMe();
+	const { data: user, isPending, isError } = useGetMe();
 
-	if (isLoading) {
+	if (isPending) {
 		return <HostProfileSkeleton layout="dashboard" />;
 	}
 
@@ -39,6 +39,7 @@ export function ProfileViewer() {
 		<HostProfileBySlug
 			hostName={hostSlug}
 			layout="dashboard"
+			notFoundOnError={false}
 			header={
 				<div className="flex flex-wrap items-center justify-between gap-4">
 					<Link href="/dashboard/profile">
