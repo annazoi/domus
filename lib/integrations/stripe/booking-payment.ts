@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { eachDayInRange } from '@/features/property-availability/utils/date';
 import { sendBookingConfirmationEmails } from '@/lib/email/booking-confirmation-emails';
 import { eurosToCents } from '@/lib/integrations/stripe/fees';
+import { getCheckoutSession } from '@/lib/integrations/stripe/services/stripe-payments.service';
 import type { PriceSnapshot } from '@/lib/pricing/price-snapshot';
 import { prisma } from '@/lib/prisma';
 
@@ -144,6 +145,46 @@ export async function confirmPaidBooking(
 	});
 
 	return booking;
+}
+
+export async function tryConfirmBookingFromStripeSession(bookingId: string) {
+	const booking = await prisma.booking.findUnique({
+		where: { id: bookingId },
+		select: { id: true, status: true, stripe_session_id: true },
+	});
+
+	if (!booking || booking.status !== BookingStatus.PENDING || !booking.stripe_session_id) {
+		return booking;
+	}
+
+	const session = await getCheckoutSession(booking.stripe_session_id);
+	if (session.payment_status !== 'paid') {
+		return booking;
+	}
+
+	const paymentIntentId =
+		typeof session.payment_intent === 'string'
+			? session.payment_intent
+			: session.payment_intent?.id ?? null;
+
+	try {
+		await confirmPaidBooking(bookingId, {
+			stripeSessionId: session.id,
+			paymentIntentId,
+			paidAmountCents: session.amount_total,
+		});
+	} catch (error) {
+		if (error instanceof BookingAmountMismatchError) {
+			console.error(`Booking ${bookingId} payment amount mismatch during checkout sync:`, error.message);
+			return booking;
+		}
+		throw error;
+	}
+
+	return prisma.booking.findUnique({
+		where: { id: bookingId },
+		select: { id: true, status: true, stripe_session_id: true },
+	});
 }
 
 export async function storePaymentIntentReference(bookingId: string, paymentIntentId: string) {

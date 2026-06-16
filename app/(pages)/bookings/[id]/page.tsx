@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { BookingStatus } from '@prisma/client';
 import { Check, ChevronRight, MapPin } from 'lucide-react';
 import { HomeGuideShareCard } from '@/components/bookings/home-guide-share-card';
+import { tryConfirmBookingFromStripeSession } from '@/lib/integrations/stripe/booking-payment';
 import { prisma } from '@/lib/prisma';
 
 const PRIMARY_LINK_CLASS =
@@ -98,6 +99,10 @@ export default async function BookingConfirmationPage({
 }) {
 	const { id } = await params;
 	const { paid } = await searchParams;
+
+	if (paid === '1') {
+		await tryConfirmBookingFromStripeSession(id);
+	}
 
 	const booking = await prisma.booking.findUnique({
 		where: { id },

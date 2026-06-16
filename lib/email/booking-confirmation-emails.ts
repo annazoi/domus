@@ -206,7 +206,7 @@ export async function sendBookingConfirmationEmails(bookingId: string) {
 			resend.emails.send({
 				from,
 				to: guestTo,
-				subject: `Booking confirmed — ${propertyTitle}`,
+				subject: `Booking confirmed - ${propertyTitle}`,
 				html: buildGuestEmailHtml(booking, baseUrl),
 			}),
 		);
@@ -227,6 +227,14 @@ export async function sendBookingConfirmationEmails(bookingId: string) {
 	for (const result of results) {
 		if (result.status === 'rejected') {
 			console.error(`Failed to send booking confirmation email for ${bookingId}:`, result.reason);
+			continue;
+		}
+		const response = result.value as { data?: { id?: string } | null; error?: { message?: string } | null };
+		if (response.error) {
+			console.error(
+				`Resend rejected booking confirmation email for ${bookingId}:`,
+				response.error.message ?? response.error,
+			);
 		}
 	}
 }

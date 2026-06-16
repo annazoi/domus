@@ -14,7 +14,10 @@ export function getResendClient() {
 }
 
 export function getEmailFromAddress() {
-	return environments.RESEND_FROM_EMAIL?.trim() || 'Domus <onboarding@resend.dev>';
+	const raw = environments.RESEND_FROM_EMAIL?.trim();
+	if (!raw) return 'Domus <onboarding@resend.dev>';
+	if (raw.includes('<')) return raw;
+	return `Domus <${raw}>`;
 }
 
 export function isEmailConfigured() {
