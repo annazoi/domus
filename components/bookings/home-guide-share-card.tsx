@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, Check, Copy, ExternalLink } from 'lucide-react';
+import { BookOpen, Check, ExternalLink, Link2 } from 'lucide-react';
 import { cn } from '@/components/ui';
 import { homeGuidePathFromHost } from '@/lib/bookings/home-guide-path';
 
@@ -78,18 +78,22 @@ export function HomeGuideShareCard({
 					</div>
 
 					<div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-stretch">
-						<div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-black/8 bg-white/80 px-3 py-2.5 ring-1 ring-black/[0.03]">
-							<p className="min-w-0 flex-1 truncate font-mono text-xs text-espresso/70 sm:text-[13px]">{fullUrl}</p>
-							<button
-								type="button"
-								onClick={copyLink}
-								className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-espresso/70 transition hover:bg-camel/10 hover:text-camel-dark"
-								aria-label="Copy home guide link"
-							>
-								{copied ? <Check className="h-3.5 w-3.5 text-camel" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}
-								{copied ? 'Copied' : 'Copy'}
-							</button>
-						</div>
+						<a
+							href={fullUrl}
+							onClick={(event) => {
+								event.preventDefault();
+								void copyLink();
+							}}
+							title={fullUrl}
+							className="inline-flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-black/8 bg-white/80 px-4 py-2.5 text-sm font-medium text-espresso/75 ring-1 ring-black/[0.03] transition hover:border-camel/25 hover:bg-white hover:text-espresso max-w-fit"
+						>
+							{copied ? (
+								<Check className="h-3.5 w-3.5 shrink-0 text-camel" aria-hidden />
+							) : (
+								<Link2 className="h-3.5 w-3.5 shrink-0 text-camel/80" aria-hidden />
+							)}
+							<span className="truncate">{copied ? 'Link copied' : 'Copy home guide link'}</span>
+						</a>
 						<Link
 							href={path}
 							target="_blank"
