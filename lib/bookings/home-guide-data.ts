@@ -55,7 +55,7 @@ export type HomeGuideData = {
 		beds: number;
 		bathrooms: number;
 		amenities: Array<{ id: AmenityId; label: string; description: string; quantity?: number }>;
-		appliances: Array<{ id: string; title: string; description: string }>;
+		appliances: Array<{ id: string; title: string; description: string; imageUrl: string | null }>;
 		services: Array<{
 			id: string;
 			name: string;
@@ -115,7 +115,16 @@ const propertySelect = {
 	},
 	appliances: {
 		orderBy: { order: 'asc' },
-		select: { id: true, title: true, description: true },
+		select: {
+			id: true,
+			title: true,
+			description: true,
+			documents: {
+				orderBy: { created_at: 'desc' },
+				take: 1,
+				select: { url: true, type: true },
+			},
+		},
 	},
 	property_services: {
 		where: { service: { active: true } },
@@ -281,7 +290,12 @@ function mapPropertyGuide(
 			document: { url: string; type: string } | null;
 		}>;
 		amenities: Array<{ value: string; description: string | null; quantity: number | null }>;
-		appliances: Array<{ id: string; title: string; description: string | null }>;
+		appliances: Array<{
+			id: string;
+			title: string;
+			description: string | null;
+			documents: Array<{ url: string; type: string }>;
+		}>;
 		property_services: Array<{
 			service: {
 				id: string;
@@ -376,6 +390,10 @@ function mapPropertyGuide(
 				id: appliance.id,
 				title: appliance.title,
 				description: appliance.description?.trim() ?? '',
+				imageUrl:
+					appliance.documents.find((document) => document.type === 'IMAGE')?.url ??
+					appliance.documents[0]?.url ??
+					null,
 			})),
 			services: mapPropertyServices(property.property_services),
 		},

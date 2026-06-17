@@ -2,8 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useMemo, useState, type ReactNode } from 'react';
-import { Lock, MapPin } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { BookOpen, ImageIcon, Lock, MapPin, Wind, X } from 'lucide-react';
 import { cloudinaryDisplayUrl, profileInitials } from '@/lib/profile/display';
 import { BrandingRichTextBlock } from '@/app/(pages)/templates/_components/branding-rich-text-block';
 import { AmenityGlyph } from '@/app/(pages)/templates/_components/branding-preview-shared';
@@ -322,6 +323,181 @@ function HomeGuidePropertyServices({
 				</div>
 			</div>
 		</section>
+	);
+}
+
+function richTextPreview(html: string, max = 100) {
+	const text = html
+		.replace(/<[^>]*>/g, ' ')
+		.replace(/&nbsp;/gi, ' ')
+		.replace(/\s+/g, ' ')
+		.trim();
+	if (!text) return '';
+	if (text.length <= max) return text;
+	return `${text.slice(0, max)}…`;
+}
+
+type HomeGuideAppliance = HomeGuideData['property']['appliances'][number];
+
+const modalEase = [0.22, 1, 0.36, 1] as const;
+
+function HomeGuideEquipmentGuides({ appliances }: { appliances: HomeGuideAppliance[] }) {
+	const [activeApplianceId, setActiveApplianceId] = useState<string | null>(null);
+
+	const activeAppliance = useMemo(
+		() => (activeApplianceId ? appliances.find((appliance) => appliance.id === activeApplianceId) ?? null : null),
+		[activeApplianceId, appliances],
+	);
+
+	const closeModal = useCallback(() => setActiveApplianceId(null), []);
+
+	useEffect(() => {
+		if (!activeApplianceId) return;
+		const onKey = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') closeModal();
+		};
+		window.addEventListener('keydown', onKey);
+		return () => window.removeEventListener('keydown', onKey);
+	}, [activeApplianceId, closeModal]);
+
+	if (appliances.length === 0) return null;
+
+	return (
+		<div>
+			<div className="max-w-xl">
+				<p className="text-[10px] font-medium uppercase tracking-[0.22em] text-camel/90">Guest how-tos</p>
+				<h3 className="mt-2 font-serif text-2xl tracking-tight text-espresso">Equipment guides</h3>
+				<p className="mt-2 text-sm leading-relaxed text-espresso/58">
+					Step-by-step instructions for appliances and devices in the home - air conditioning, heating, laundry, and more.
+				</p>
+			</div>
+
+			<ul className="mt-6 grid gap-3">
+				{appliances.map((appliance, index) => {
+					const preview = richTextPreview(appliance.description);
+					return (
+						<li key={appliance.id}>
+							<button
+								type="button"
+								onClick={() => setActiveApplianceId(appliance.id)}
+								className="group relative w-full cursor-pointer overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br from-white/90 via-white/75 to-white/55 p-4 text-left transition duration-300 hover:border-camel/30 hover:shadow-[0_12px_40px_-28px_rgba(120,84,40,0.45)]"
+							>
+								<div className="flex gap-4">
+									<div
+										className={cn(
+											'relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl ring-1 ring-black/[0.06]',
+											appliance.imageUrl ? 'bg-espresso/5' : 'bg-camel/[0.08]',
+										)}
+									>
+										{appliance.imageUrl ? (
+											// eslint-disable-next-line @next/next/no-img-element
+											<img src={appliance.imageUrl} alt="" className="h-full w-full object-cover" />
+										) : (
+											<Wind className="h-7 w-7 text-camel/55" aria-hidden />
+										)}
+										<span className="absolute bottom-1.5 right-1.5 rounded-full bg-[#f7f5f2]/95 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-espresso/55">
+											{String(index + 1).padStart(2, '0')}
+										</span>
+									</div>
+									<div className="min-w-0 flex-1">
+										<p className="truncate font-medium text-espresso">{appliance.title}</p>
+										{preview ? (
+											<p className="mt-1 line-clamp-2 text-sm text-espresso/55">{preview}</p>
+										) : (
+											<p className="mt-1 text-sm italic text-espresso/40">Tap to view instructions</p>
+										)}
+										<div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-espresso/40">
+											<span className="inline-flex items-center gap-1">
+												<BookOpen className="h-3 w-3" aria-hidden />
+												Guide
+											</span>
+											{appliance.imageUrl ? (
+												<span className="inline-flex items-center gap-1">
+													<ImageIcon className="h-3 w-3" aria-hidden />
+													Photo
+												</span>
+											) : null}
+										</div>
+									</div>
+								</div>
+							</button>
+						</li>
+					);
+				})}
+			</ul>
+
+			<AnimatePresence>
+				{activeApplianceId && activeAppliance ? (
+					<motion.div
+						key={activeApplianceId}
+						className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
+						role="presentation"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						transition={{ duration: 0.22 }}
+						onClick={closeModal}
+					>
+						<motion.div
+							className="absolute inset-0 bg-espresso/45 backdrop-blur-[3px]"
+							aria-hidden
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							transition={{ duration: 0.22 }}
+						/>
+						<motion.div
+							role="dialog"
+							aria-modal="true"
+							aria-labelledby="home-guide-equipment-title"
+							className="relative z-10 flex max-h-[min(92vh,760px)] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-black/10 bg-white shadow-[0_32px_100px_-28px_rgba(0,0,0,0.4)] sm:rounded-3xl"
+							initial={{ opacity: 0, y: 40, scale: 0.98 }}
+							animate={{ opacity: 1, y: 0, scale: 1 }}
+							exit={{ opacity: 0, y: 28, scale: 0.98 }}
+							transition={{ duration: 0.28, ease: modalEase }}
+							onClick={(event) => event.stopPropagation()}
+						>
+							<div className="flex shrink-0 items-start justify-between gap-4 border-b border-black/8 px-5 py-5 sm:px-6">
+								<div className="min-w-0 pr-2">
+									<p className="text-[10px] font-medium uppercase tracking-[0.2em] text-camel/90">Equipment guide</p>
+									<h3 id="home-guide-equipment-title" className="mt-2 font-serif text-2xl tracking-tight text-espresso">
+										{activeAppliance.title}
+									</h3>
+								</div>
+								<button
+									type="button"
+									onClick={closeModal}
+									className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-espresso/50 transition hover:bg-black/5 hover:text-espresso"
+									aria-label="Close guide"
+								>
+									<X className="h-4 w-4" />
+								</button>
+							</div>
+
+							{activeAppliance.imageUrl ? (
+								<div className="relative aspect-[16/10] shrink-0 bg-espresso/5">
+									{/* eslint-disable-next-line @next/next/no-img-element */}
+									<img src={activeAppliance.imageUrl} alt="" className="h-full w-full object-cover" />
+								</div>
+							) : null}
+
+							<div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-6">
+								{activeAppliance.description ? (
+									<div>
+										<p className="text-[10px] font-medium uppercase tracking-[0.16em] text-espresso/40">Instructions</p>
+										<div className="mt-4">
+											<GuideProse html={activeAppliance.description} className="text-sm leading-relaxed" />
+										</div>
+									</div>
+								) : (
+									<p className="text-sm italic text-espresso/40">No instructions provided.</p>
+								)}
+							</div>
+						</motion.div>
+					</motion.div>
+				) : null}
+			</AnimatePresence>
+		</div>
 	);
 }
 
@@ -701,23 +877,7 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 							</div>
 						) : null}
 
-						{property.appliances.length > 0 ? (
-							<div>
-								<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/45">Equipment</p>
-								<div className="mt-4 space-y-8">
-									{property.appliances.map((appliance) => (
-										<div key={appliance.id}>
-											<h3 className="font-serif text-lg text-espresso">{appliance.title}</h3>
-											{appliance.description ? (
-												<div className="mt-2">
-													<GuideProse html={appliance.description} className="text-sm leading-relaxed" />
-												</div>
-											) : null}
-										</div>
-									))}
-								</div>
-							</div>
-						) : null}
+						{property.appliances.length > 0 ? <HomeGuideEquipmentGuides appliances={property.appliances} /> : null}
 					</TabPanel>
 				)}
 
