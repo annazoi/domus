@@ -434,9 +434,22 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 						{property.amenities.length > 0 ? (
 							<div className={property.appliances.length > 0 ? 'mb-10' : undefined}>
 								<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/45">Amenities</p>
-								<ul className="mt-4 divide-y divide-black/8">
+								<ul
+									className={cn(
+										'mt-4',
+										property.amenities.length > 8
+											? 'grid gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-3'
+											: 'divide-y divide-black/8',
+									)}
+								>
 									{property.amenities.map((amenity) => (
-										<li key={amenity.id} className="flex gap-3 py-3.5 first:pt-0 last:pb-0">
+										<li
+											key={amenity.id}
+											className={cn(
+												'flex gap-3',
+												property.amenities.length > 8 ? 'items-start' : 'py-3.5 first:pt-0 last:pb-0',
+											)}
+										>
 											<AmenityGlyph id={amenity.id} className="mt-0.5 h-4 w-4 shrink-0 text-espresso/45" />
 											<div className="min-w-0 flex-1">
 												<p className="text-sm text-espresso">
