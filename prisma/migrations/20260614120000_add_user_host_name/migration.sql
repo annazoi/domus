@@ -16,7 +16,7 @@ numbered AS (
   SELECT
     id,
     base,
-    ROW_NUMBER() OVER (PARTITION BY base ORDER BY created_at ASC, id ASC) AS rn
+    ROW_NUMBER() OVER (PARTITION BY base ORDER BY id ASC) AS rn
   FROM slugs
   WHERE base <> ''
 )

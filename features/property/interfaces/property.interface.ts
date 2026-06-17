@@ -39,6 +39,7 @@ export interface Property {
 	check_out_time: string;
 	door_code?: string;
 	safe_box_code?: string;
+	wifi_password?: string;
 	house_rules_instructions?: string;
 	privacy_policy?: string;
 	property_type: string;
@@ -78,6 +79,7 @@ export interface UpsertPropertyInput {
 	check_out_time: string;
 	door_code?: string;
 	safe_box_code?: string;
+	wifi_password?: string;
 	house_rules_instructions?: string;
 	privacy_policy?: string;
 	property_type: string;

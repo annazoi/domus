@@ -55,6 +55,7 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 			check_out_time: checkOut,
 			door_code: defaults.door_code ?? '',
 			safe_box_code: defaults.safe_box_code ?? '',
+			wifi_password: defaults.wifi_password ?? '',
 			house_rules_instructions: defaults.house_rules_instructions ?? '',
 			privacy_policy: defaults.privacy_policy ?? '',
 		},
@@ -73,6 +74,7 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 				check_out_time: normalizeTimeValue(saved.check_out_time, PROPERTY_FORM_DEFAULT_VALUES.check_out_time),
 				door_code: saved.door_code ?? '',
 				safe_box_code: saved.safe_box_code ?? '',
+				wifi_password: saved.wifi_password ?? '',
 				house_rules_instructions: saved.house_rules_instructions ?? '',
 				privacy_policy: saved.privacy_policy ?? '',
 			});
@@ -140,7 +142,7 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 					/>
 				</div>
 			</div>
-			<div className="grid gap-4 md:grid-cols-2">
+			<div className="grid gap-4 md:grid-cols-3">
 				<div className="space-y-1.5">
 					<label htmlFor="property-door-code" className="text-sm font-medium text-espresso">
 						Door code
@@ -172,6 +174,24 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 								value={field.value ?? ''}
 								onChange={field.onChange}
 								placeholder="Enter safe box code"
+								autoComplete="off"
+							/>
+						)}
+					/>
+				</div>
+				<div className="space-y-1.5">
+					<label htmlFor="property-wifi-password" className="text-sm font-medium text-espresso">
+						Wi-Fi password
+					</label>
+					<Controller
+						control={control}
+						name="wifi_password"
+						render={({ field }) => (
+							<Input
+								id="property-wifi-password"
+								value={field.value ?? ''}
+								onChange={field.onChange}
+								placeholder="Enter Wi-Fi password"
 								autoComplete="off"
 							/>
 						)}

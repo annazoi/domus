@@ -81,6 +81,7 @@ export type PropertyWithImages = {
 	check_out_time: Date;
 	door_code: string | null;
 	safe_box_code: string | null;
+	wifi_password: string | null;
 	house_rules_instructions: string | null;
 	privacy_policy: string | null;
 	isPublished: boolean;
@@ -132,6 +133,7 @@ export const mapProperty = (property: PropertyWithImages): PropertyDTO => ({
 	check_out_time: formatUtcTimeOfDay(property.check_out_time),
 	door_code: property.door_code ?? '',
 	safe_box_code: property.safe_box_code ?? '',
+	wifi_password: property.wifi_password ?? '',
 	house_rules_instructions: property.house_rules_instructions ?? '',
 	privacy_policy: property.privacy_policy ?? '',
 	property_type: property.property_type,

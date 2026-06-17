@@ -150,6 +150,7 @@ model Property {
   check_out_time DateTime @default(now())
   door_code String?
   safe_box_code String?
+  wifi_password String?
   house_rules_instructions String?
   privacy_policy String?
   max_guests    Int

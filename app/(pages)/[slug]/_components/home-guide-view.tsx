@@ -207,6 +207,9 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 		property.safeBoxCode
 			? { label: 'Safe box', value: <span className="font-mono tracking-wide">{property.safeBoxCode}</span> }
 			: null,
+		property.wifiPassword
+			? { label: 'Wi-Fi password', value: <span className="font-mono tracking-wide">{property.wifiPassword}</span> }
+			: null,
 	].filter(Boolean) as Array<{ label: string; value: ReactNode }>;
 
 	const guestItems = data.guest

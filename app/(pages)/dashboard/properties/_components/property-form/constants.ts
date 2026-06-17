@@ -13,6 +13,7 @@ export const PROPERTY_FORM_DEFAULT_VALUES: UpsertPropertyInput = {
 	check_out_time: '11:00',
 	door_code: '',
 	safe_box_code: '',
+	wifi_password: '',
 	house_rules_instructions: '',
 	privacy_policy: '',
 	property_type: ApartmentOptions[0].value,

@@ -28,6 +28,7 @@ export type HomeGuideData = {
 		locationAccess: string;
 		doorCode: string;
 		safeBoxCode: string;
+		wifiPassword: string;
 		houseRules: string;
 		privacyPolicy: string;
 		checkInTime: string;
@@ -72,6 +73,7 @@ const propertySelect = {
 	location_access: true,
 	door_code: true,
 	safe_box_code: true,
+	wifi_password: true,
 	house_rules_instructions: true,
 	privacy_policy: true,
 	check_in_time: true,
@@ -213,6 +215,7 @@ function mapPropertyGuide(
 		location_access: string | null;
 		door_code: string | null;
 		safe_box_code: string | null;
+		wifi_password: string | null;
 		house_rules_instructions: string | null;
 		privacy_policy: string | null;
 		check_in_time: Date;
@@ -285,6 +288,7 @@ function mapPropertyGuide(
 			locationAccess: property.location_access?.trim() ?? '',
 			doorCode: property.door_code?.trim() ?? '',
 			safeBoxCode: property.safe_box_code?.trim() ?? '',
+			wifiPassword: property.wifi_password?.trim() ?? '',
 			houseRules: property.house_rules_instructions?.trim() ?? '',
 			privacyPolicy: property.privacy_policy?.trim() ?? '',
 			checkInTime: formatPropertyTimeLabel(formatUtcTimeOfDay(property.check_in_time)),

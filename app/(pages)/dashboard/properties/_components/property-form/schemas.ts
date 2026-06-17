@@ -24,6 +24,7 @@ export const houseRulesFormSchema = z.object({
 	check_out_time: z.string(),
 	door_code: z.string().optional(),
 	safe_box_code: z.string().optional(),
+	wifi_password: z.string().optional(),
 	house_rules_instructions: z.string().optional(),
 	privacy_policy: z.string().optional(),
 });
