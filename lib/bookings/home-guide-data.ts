@@ -19,6 +19,16 @@ export type HomeGuideData = {
 		email: string;
 		phone: string | null;
 	} | null;
+	paidExtras: Array<{
+		id: string;
+		name: string;
+		description: string;
+		quantity: number;
+		unitPriceLabel: string;
+		lineTotalLabel: string;
+		imageUrl: string | null;
+	}>;
+	extrasTotalLabel: string | null;
 	property: {
 		title: string;
 		slug: string;
@@ -185,6 +195,39 @@ function formatServicePriceLabel(price: number, unit: PrismaPricingUnit) {
 	return `$${price.toFixed(2)} · ${PRICING_UNIT_LABELS[pricingUnit].toLowerCase()}`;
 }
 
+function mapPaidExtras(
+	orders: Array<{
+		id: string;
+		quantity: number;
+		unit_price: { toString(): string };
+		service: {
+			name: string;
+			description: string | null;
+			images: Array<{ document: { url: string } | null }>;
+		};
+	}>,
+) {
+	return orders.map((order) => {
+		const unitPrice = Number(order.unit_price);
+		const lineTotal = unitPrice * order.quantity;
+		return {
+			id: order.id,
+			name: order.service.name,
+			description: order.service.description?.trim() ?? '',
+			quantity: order.quantity,
+			unitPriceLabel: `$${unitPrice.toFixed(2)} each`,
+			lineTotalLabel: `$${lineTotal.toFixed(2)}`,
+			imageUrl: order.service.images[0]?.document?.url ?? null,
+		};
+	});
+}
+
+function formatExtrasTotalLabel(orders: Array<{ unit_price: { toString(): string }; quantity: number }>) {
+	if (orders.length === 0) return null;
+	const total = orders.reduce((sum, order) => sum + Number(order.unit_price) * order.quantity, 0);
+	return `$${total.toFixed(2)}`;
+}
+
 function mapPropertyServices(
 	links: Array<{
 		service: {
@@ -257,6 +300,16 @@ function mapPropertyGuide(
 		check_out: Date;
 		guests: number;
 		customer: { first_name: string; last_name: string; email: string; phone: string | null };
+		service_orders: Array<{
+			id: string;
+			quantity: number;
+			unit_price: { toString(): string };
+			service: {
+				name: string;
+				description: string | null;
+				images: Array<{ document: { url: string } | null }>;
+			};
+		}>;
 	} | null,
 	host: { host_name: string | null; first_name: string; last_name: string; email: string; phone: string | null; avatar: { url: string } | null },
 ): HomeGuideData {
@@ -265,6 +318,8 @@ function mapPropertyGuide(
 		? `${booking.customer.first_name} ${booking.customer.last_name}`.trim() || 'Guest'
 		: '';
 	const gallery = mapPropertyGallery(property.images, property.title);
+	const paidExtras = booking ? mapPaidExtras(booking.service_orders) : [];
+	const extrasTotalLabel = booking ? formatExtrasTotalLabel(booking.service_orders) : null;
 
 	return {
 		propertyId: property.id,
@@ -279,6 +334,8 @@ function mapPropertyGuide(
 					phone: booking.customer.phone,
 				}
 			: null,
+		paidExtras,
+		extrasTotalLabel,
 		property: {
 			title: property.title,
 			slug: property.slug,
@@ -362,6 +419,27 @@ async function loadBookingGuide(bookingId: string) {
 					last_name: true,
 					email: true,
 					phone: true,
+				},
+			},
+			service_orders: {
+				orderBy: { created_at: 'asc' },
+				select: {
+					id: true,
+					quantity: true,
+					unit_price: true,
+					service: {
+						select: {
+							name: true,
+							description: true,
+							images: {
+								orderBy: { order: 'asc' },
+								take: 1,
+								select: {
+									document: { select: { url: true } },
+								},
+							},
+						},
+					},
 				},
 			},
 		},

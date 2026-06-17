@@ -3,15 +3,15 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useMemo, useState, type ReactNode } from 'react';
-import { MapPin } from 'lucide-react';
+import { Lock, MapPin } from 'lucide-react';
 import { cloudinaryDisplayUrl, profileInitials } from '@/lib/profile/display';
 import { BrandingRichTextBlock } from '@/app/(pages)/templates/_components/branding-rich-text-block';
 import { AmenityGlyph } from '@/app/(pages)/templates/_components/branding-preview-shared';
 import { BrandingPreviewMap } from '@/components/google-maps';
-import { cn, ImageGalleryLightbox, type ImageGalleryOriginRect } from '@/components/ui';
+import { Button, Checkbox, cn, ImageGalleryLightbox, type ImageGalleryOriginRect } from '@/components/ui';
 import type { HomeGuideData } from '@/lib/bookings/home-guide-data';
 
-type TabId = 'overview' | 'access' | 'amenities' | 'rules' | 'contact';
+type TabId = 'overview' | 'access' | 'amenities' | 'extras' | 'rules' | 'contact';
 
 function GuideProse({ html, className }: { html: string; className?: string }) {
 	if (!html.trim()) return null;
@@ -44,7 +44,19 @@ function joinParts(parts: Array<string | null | undefined>, separator = ' · ') 
 	return parts.filter(Boolean).join(separator);
 }
 
-function TabPanel({ id, labelledBy, active, children }: { id: TabId; labelledBy: string; active: boolean; children: ReactNode }) {
+function TabPanel({
+	id,
+	labelledBy,
+	active,
+	services,
+	children,
+}: {
+	id: TabId;
+	labelledBy: string;
+	active: boolean;
+	services?: HomeGuideData['property']['services'];
+	children: ReactNode;
+}) {
 	return (
 		<div
 			id={`home-guide-panel-${id}`}
@@ -54,6 +66,9 @@ function TabPanel({ id, labelledBy, active, children }: { id: TabId; labelledBy:
 			className={cn('pt-8', !active && 'hidden')}
 		>
 			{children}
+			{services && services.length > 0 ? (
+				<HomeGuidePropertyServices services={services} className="mt-10 border-t border-black/10 pt-10" />
+			) : null}
 		</div>
 	);
 }
@@ -141,43 +156,243 @@ function HomeGuideGallery({
 	);
 }
 
-function HomeGuideServices({ services }: { services: HomeGuideData['property']['services'] }) {
-	if (services.length === 0) return null;
+type HomeGuideService = HomeGuideData['property']['services'][number];
+
+function parseServicePrice(priceLabel: string) {
+	const match = priceLabel.match(/\$([\d,.]+)/);
+	return match ? Number(match[1].replace(/,/g, '')) : 0;
+}
+
+function formatGuidePrice(value: number) {
+	return `$${value.toFixed(2)}`;
+}
+
+function HomeGuideExtraServiceRow({
+	service,
+	selected,
+	onToggle,
+}: {
+	service: HomeGuideService;
+	selected: boolean;
+	onToggle: () => void;
+}) {
+	const unitPrice = parseServicePrice(service.priceLabel);
 
 	return (
-		<section className="mt-10 border-t border-black/10 pt-10" aria-label="Guest extras">
-			<div className="mb-6 flex items-baseline justify-between gap-4">
-				<div>
-					<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/45">Guest extras</p>
-					<p className="mt-2 font-serif text-xl tracking-tight text-espresso">Enhance your stay</p>
-				</div>
-				<p className="text-xs tabular-nums text-espresso/40">
-					{services.length} {services.length === 1 ? 'extra' : 'extras'}
-				</p>
-			</div>
+		<li>
+			<button
+				type="button"
+				onClick={onToggle}
+				aria-pressed={selected}
+				aria-label={`${selected ? 'Remove' : 'Add'} ${service.name}`}
+				className={cn(
+					'group flex w-full cursor-pointer gap-4 border p-4 text-left transition duration-300 sm:gap-5 sm:p-5',
+					selected
+						? 'border-camel/50 bg-white shadow-[0_12px_40px_rgba(26,26,26,0.06)] ring-1 ring-camel/20'
+						: 'border-black/8 bg-white/45 hover:border-black/15 hover:bg-white/70',
+				)}
+			>
+				{service.imageUrl ? (
+					<div className="relative h-[4.5rem] w-[4.5rem] shrink-0 overflow-hidden bg-espresso/5 sm:h-20 sm:w-20">
+						{/* eslint-disable-next-line @next/next/no-img-element */}
+						<img src={service.imageUrl} alt="" className="h-full w-full object-cover" />
+					</div>
+				) : (
+					<div className="flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center bg-espresso/[0.04] sm:h-20 sm:w-20">
+						<span className="font-serif text-2xl text-camel/55">{service.name.charAt(0)}</span>
+					</div>
+				)}
 
-			<ul className="divide-y divide-black/8">
-				{services.map((service) => (
-					<li key={service.id} className="flex gap-4 py-5 first:pt-0 last:pb-0">
-						{service.imageUrl ? (
-							<div className="relative h-20 w-20 shrink-0 overflow-hidden bg-espresso/5">
-								{/* eslint-disable-next-line @next/next/no-img-element */}
-								<img src={service.imageUrl} alt="" className="h-full w-full object-cover" />
+				<div className="min-w-0 flex-1">
+					<div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+						<div className="min-w-0">
+							<p className="font-serif text-lg tracking-tight text-espresso">{service.name}</p>
+							<p className="mt-1 text-xs uppercase tracking-[0.12em] text-espresso/40">{service.priceLabel}</p>
+						</div>
+						<p
+							className={cn(
+								'shrink-0 font-medium tabular-nums transition duration-300',
+								selected ? 'text-camel-dark' : 'text-espresso/70',
+							)}
+						>
+							{formatGuidePrice(unitPrice)}
+						</p>
+					</div>
+					{service.description ? (
+						<p className="mt-2 text-sm leading-relaxed text-espresso/55">{service.description}</p>
+					) : null}
+				</div>
+
+				<Checkbox
+					checked={selected}
+					onChange={() => onToggle()}
+					onClick={(event) => event.stopPropagation()}
+					className="mt-1 shrink-0 accent-camel"
+					aria-label={`Add ${service.name}`}
+				/>
+			</button>
+		</li>
+	);
+}
+
+function HomeGuidePropertyServices({
+	services,
+	className,
+}: {
+	services: HomeGuideData['property']['services'];
+	className?: string;
+}) {
+	const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+
+	if (services.length === 0) return null;
+
+	const selectedServices = services.filter((service) => selectedIds.has(service.id));
+	const total = selectedServices.reduce((sum, service) => sum + parseServicePrice(service.priceLabel), 0);
+	const hasSelection = selectedServices.length > 0;
+
+	const toggleService = (serviceId: string) => {
+		setSelectedIds((current) => {
+			const next = new Set(current);
+			if (next.has(serviceId)) {
+				next.delete(serviceId);
+			} else {
+				next.add(serviceId);
+			}
+			return next;
+		});
+	};
+
+	return (
+		<section className={className} aria-label="Guest extras">
+			<div className="overflow-hidden border border-black/10 bg-gradient-to-b from-white/85 to-white/50">
+				<div className="border-b border-black/8 px-5 py-6 sm:px-6 sm:py-7">
+					<div className="flex items-start justify-between gap-4">
+						<div className="max-w-lg">
+							<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/45">Guest extras</p>
+							<p className="mt-2 font-serif text-2xl tracking-tight text-espresso">Enhance your stay</p>
+							<p className="mt-3 text-sm leading-relaxed text-espresso/55">
+								Optional add-ons you can request for your stay. Select what you&apos;d like, then complete payment below.
+							</p>
+						</div>
+						<p className="shrink-0 text-xs tabular-nums text-espresso/40">
+							{services.length} {services.length === 1 ? 'extra' : 'extras'}
+						</p>
+					</div>
+				</div>
+
+				<ul className="space-y-3 px-5 py-6 sm:px-6">
+					{services.map((service) => (
+						<HomeGuideExtraServiceRow
+							key={service.id}
+							service={service}
+							selected={selectedIds.has(service.id)}
+							onToggle={() => toggleService(service.id)}
+						/>
+					))}
+				</ul>
+
+				<div className="border-t border-black/10 bg-espresso/[0.03] px-5 py-5 sm:px-6 sm:py-6">
+					<div className="flex items-end justify-between gap-4 border-b border-black/8 pb-5">
+						<div>
+							<p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-espresso/40">Your selection</p>
+							<p className="mt-1 text-sm text-espresso">
+								{hasSelection
+									? `${selectedServices.length} extra${selectedServices.length === 1 ? '' : 's'} selected`
+									: 'Select at least one extra to continue'}
+							</p>
+						</div>
+						<p className="font-serif text-2xl tabular-nums tracking-tight text-espresso">
+							{hasSelection ? formatGuidePrice(total) : '—'}
+						</p>
+					</div>
+
+					<Button
+						type="button"
+						disabled={!hasSelection}
+						variant="primary"
+						className="mt-5 flex w-full items-center justify-center gap-2.5 py-4 text-[11px] font-semibold uppercase tracking-[0.22em]"
+					>
+						<Lock className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} aria-hidden />
+						Pay securely
+					</Button>
+
+					<p className="mt-3 text-center text-[10px] font-medium uppercase tracking-[0.14em] text-espresso/35">
+						Encrypted checkout
+					</p>
+				</div>
+			</div>
+		</section>
+	);
+}
+
+function HomeGuidePaidExtras({
+	extras,
+	totalLabel,
+}: {
+	extras: HomeGuideData['paidExtras'];
+	totalLabel: string | null;
+}) {
+	if (extras.length === 0) return null;
+
+	return (
+		<div>
+			<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/45">Your booking</p>
+			<p className="mt-3 max-w-md font-serif text-xl leading-snug tracking-tight text-espresso">
+				Extras included with your stay
+			</p>
+
+			<ul className="mt-8 space-y-4">
+				{extras.map((extra) => (
+					<li
+						key={extra.id}
+						className="group relative overflow-hidden border border-black/8 bg-white/55 transition duration-300 hover:border-camel/25 hover:bg-white/80"
+					>
+						<span
+							className="pointer-events-none absolute inset-y-0 left-0 w-0.5 bg-camel/70 transition group-hover:bg-camel"
+							aria-hidden
+						/>
+						<div className="flex gap-4 p-4 sm:gap-5 sm:p-5">
+							{extra.imageUrl ? (
+								<div className="relative h-[4.5rem] w-[4.5rem] shrink-0 overflow-hidden bg-espresso/5 sm:h-20 sm:w-20">
+									{/* eslint-disable-next-line @next/next/no-img-element */}
+									<img src={extra.imageUrl} alt="" className="h-full w-full object-cover" />
+								</div>
+							) : (
+								<div className="flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center bg-espresso/[0.04] sm:h-20 sm:w-20">
+									<span className="font-serif text-2xl text-camel/55">{extra.name.charAt(0)}</span>
+								</div>
+							)}
+							<div className="min-w-0 flex-1">
+								<div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+									<div className="min-w-0">
+										<p className="font-serif text-lg tracking-tight text-espresso">{extra.name}</p>
+										{extra.quantity > 1 ? (
+											<p className="mt-1 inline-flex items-center rounded-full bg-espresso/[0.05] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-espresso/55">
+												Qty {extra.quantity}
+											</p>
+										) : null}
+									</div>
+									<p className="shrink-0 text-sm font-medium tabular-nums text-camel-dark">{extra.lineTotalLabel}</p>
+								</div>
+								{extra.description ? (
+									<p className="mt-2 text-sm leading-relaxed text-espresso/55">{extra.description}</p>
+								) : null}
+								{extra.quantity > 1 ? (
+									<p className="mt-2 text-xs tabular-nums text-espresso/40">{extra.unitPriceLabel}</p>
+								) : null}
 							</div>
-						) : null}
-						<div className="min-w-0 flex-1">
-							<div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
-								<p className="font-serif text-lg text-espresso">{service.name}</p>
-								<p className="shrink-0 text-sm font-medium tabular-nums text-camel-dark">{service.priceLabel}</p>
-							</div>
-							{service.description ? (
-								<p className="mt-1.5 text-sm leading-relaxed text-espresso/55">{service.description}</p>
-							) : null}
 						</div>
 					</li>
 				))}
 			</ul>
-		</section>
+
+			{totalLabel && extras.length > 1 ? (
+				<div className="mt-6 flex items-center justify-between border-t border-black/10 pt-5">
+					<p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-espresso/45">Extras total</p>
+					<p className="font-serif text-xl tabular-nums tracking-tight text-espresso">{totalLabel}</p>
+				</div>
+			) : null}
+		</div>
 	);
 }
 
@@ -287,6 +502,9 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 		if (property.amenities.length > 0 || property.appliances.length > 0) {
 			items.push({ id: 'amenities', label: 'Amenities' });
 		}
+		if (data.paidExtras.length > 0) {
+			items.push({ id: 'extras', label: 'Extras' });
+		}
 		if (property.houseRules || property.privacyPolicy) {
 			items.push({ id: 'rules', label: 'Rules' });
 		}
@@ -294,6 +512,7 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 		return items;
 	}, [
 		accessItems.length,
+		data.paidExtras.length,
 		locationLine,
 		property.amenities.length,
 		property.appliances.length,
@@ -303,6 +522,7 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 	]);
 
 	const [activeTab, setActiveTab] = useState<TabId>('overview');
+	const propertyServices = property.services.length > 0 ? property.services : undefined;
 
 	return (
 		<div className="min-h-screen bg-[#f7f5f2]">
@@ -370,7 +590,12 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 					</div>
 				</div>
 
-				<TabPanel id="overview" labelledBy="home-guide-tab-overview" active={activeTab === 'overview'}>
+				<TabPanel
+					id="overview"
+					labelledBy="home-guide-tab-overview"
+					active={activeTab === 'overview'}
+					services={propertyServices}
+				>
 					{property.welcomeMessage ? (
 						<div className="mb-8">
 							<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/45">Welcome</p>
@@ -400,7 +625,12 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 				</TabPanel>
 
 				{(accessItems.length > 0 || property.locationAccess || locationLine) && (
-					<TabPanel id="access" labelledBy="home-guide-tab-access" active={activeTab === 'access'}>
+					<TabPanel
+						id="access"
+						labelledBy="home-guide-tab-access"
+						active={activeTab === 'access'}
+						services={propertyServices}
+					>
 						{accessItems.length > 0 ? <DetailList items={accessItems} /> : null}
 						{property.locationAccess ? (
 							<div className={accessItems.length > 0 ? 'mt-8' : undefined}>
@@ -430,7 +660,12 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 				)}
 
 				{(property.amenities.length > 0 || property.appliances.length > 0) && (
-					<TabPanel id="amenities" labelledBy="home-guide-tab-amenities" active={activeTab === 'amenities'}>
+					<TabPanel
+						id="amenities"
+						labelledBy="home-guide-tab-amenities"
+						active={activeTab === 'amenities'}
+						services={propertyServices}
+					>
 						{property.amenities.length > 0 ? (
 							<div className={property.appliances.length > 0 ? 'mb-10' : undefined}>
 								<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/45">Amenities</p>
@@ -486,8 +721,24 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 					</TabPanel>
 				)}
 
+				{data.paidExtras.length > 0 && (
+					<TabPanel
+						id="extras"
+						labelledBy="home-guide-tab-extras"
+						active={activeTab === 'extras'}
+						services={propertyServices}
+					>
+						<HomeGuidePaidExtras extras={data.paidExtras} totalLabel={data.extrasTotalLabel} />
+					</TabPanel>
+				)}
+
 				{(property.houseRules || property.privacyPolicy) && (
-					<TabPanel id="rules" labelledBy="home-guide-tab-rules" active={activeTab === 'rules'}>
+					<TabPanel
+						id="rules"
+						labelledBy="home-guide-tab-rules"
+						active={activeTab === 'rules'}
+						services={propertyServices}
+					>
 						{property.houseRules ? (
 							<div className={property.privacyPolicy ? 'mb-10' : undefined}>
 								<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/45">House rules</p>
@@ -507,7 +758,12 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 					</TabPanel>
 				)}
 
-				<TabPanel id="contact" labelledBy="home-guide-tab-contact" active={activeTab === 'contact'}>
+				<TabPanel
+					id="contact"
+					labelledBy="home-guide-tab-contact"
+					active={activeTab === 'contact'}
+					services={propertyServices}
+				>
 					<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/45">Your host</p>
 					<div className="mt-5 flex items-start gap-5">
 						<div className="shrink-0">
@@ -532,8 +788,6 @@ export function HomeGuideView({ data }: { data: HomeGuideData }) {
 						</div>
 					</div>
 				</TabPanel>
-
-				<HomeGuideServices services={property.services} />
 
 				<footer className="mt-14 flex flex-col gap-4 border-t border-black/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
 					<p className="text-sm text-espresso/45">Bookmark this page for your stay.</p>
