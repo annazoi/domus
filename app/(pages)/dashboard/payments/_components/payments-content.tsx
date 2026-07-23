@@ -32,7 +32,7 @@ export default function PaymentsContent() {
 				<p className="text-xs uppercase tracking-[0.2em] text-camel">Payments</p>
 				<h1 className="mt-2 font-serif text-4xl tracking-tight">Stripe payouts</h1>
 				<p className="mt-3 max-w-2xl text-sm text-espresso/65">
-					Connect your Stripe Express account to receive payouts when guests book your properties. Domus
+					Connect your Stripe Express account to receive payouts when guests book your properties. Hozya
 					automatically deducts the platform commission at checkout.
 				</p>
 			</div>

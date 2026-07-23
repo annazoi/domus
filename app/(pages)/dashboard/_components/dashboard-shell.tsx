@@ -142,7 +142,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 				>
 					<div className="flex items-center justify-between px-2">
 						<Link href="/" className={['font-serif text-2xl tracking-tight', isCollapsed ? 'hidden' : 'block'].join(' ')}>
-							<Image src={logo} alt="Domus" width={100} height={100} className='w-15 h-15' />
+							<Image src={logo} alt="Hozya" width={100} height={100} className='w-15 h-15' />
 						</Link>
 						<Button
 							type="button"

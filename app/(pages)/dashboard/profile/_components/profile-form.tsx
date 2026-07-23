@@ -183,7 +183,7 @@ export function ProfileForm() {
 			<form className="dashboard-panel rounded-2xl px-5 py-6 sm:px-8 md:py-8" onSubmit={handleSubmit}>
 				<div className="space-y-10">
 					<section className="space-y-5">
-						<SectionHeading title="Identity" description="How your name appears across Domus." />
+						<SectionHeading title="Identity" description="How your name appears across Hozya." />
 						<div className="grid gap-5 sm:grid-cols-2">
 							<Field label="First name">
 								<Input
@@ -215,7 +215,7 @@ export function ProfileForm() {
 					</section>
 
 					<section className="space-y-5">
-						<SectionHeading title="Contact" description="Where guests and Domus can reach you." />
+						<SectionHeading title="Contact" description="Where guests and Hozya can reach you." />
 						<div className="grid gap-5 sm:grid-cols-2">
 							<div className="sm:col-span-2">
 								<Field label="Email">

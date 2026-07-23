@@ -39,19 +39,19 @@
   --color-landing-ivory: #faf9f6;
   --color-landing-clay: #b89775;
 
-  --color-dom-cream: #efe9df;
-  --color-dom-sand: #e7dfd2;
-  --color-dom-ink: #1d1916;
-  --color-dom-coffee: #2a2521;
-  --color-dom-mocha: #3a3530;
-  --color-dom-muted: #8a807a;
-  --color-dom-gold: #c8a96a;
+  --color-hoz-cream: #efe9df;
+  --color-hoz-sand: #e7dfd2;
+  --color-hoz-ink: #1d1916;
+  --color-hoz-coffee: #2a2521;
+  --color-hoz-mocha: #3a3530;
+  --color-hoz-muted: #8a807a;
+  --color-hoz-gold: #c8a96a;
 
-  --shadow-dom-soft: 0 30px 60px -20px rgba(0, 0, 0, 0.35);
+  --shadow-hoz-soft: 0 30px 60px -20px rgba(0, 0, 0, 0.35);
 
-  --font-sans: var(--font-domus), Georgia, serif;
-  --font-serif: var(--font-domus), Georgia, serif;
-  --font-display: var(--font-domus), Georgia, serif;
+  --font-sans: var(--font-hozya), Georgia, serif;
+  --font-serif: var(--font-hozya), Georgia, serif;
+  --font-display: var(--font-hozya), Georgia, serif;
 }
 
 :root {
@@ -254,7 +254,7 @@ html[data-dashboard-theme='dark'] {
   box-shadow: 0 16px 36px rgb(61 50 41 / 0.14);
   backdrop-filter: blur(4px);
   overflow: hidden;
-  font-family: var(--font-domus), Georgia, serif;
+  font-family: var(--font-hozya), Georgia, serif;
 }
 
 .pac-item {

@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-import heroImage from '@/public/images/landing-hero.png';
+import heroImage from '@/public/images/landing-journal-photos.png';
 import featureVillaExteriorImage from '@/public/images/landing-feature-exterior.png';
 import featureVillaPoolImage from '@/public/images/landing-feature-pool.png';
 import featureVillaInteriorImage from '@/public/images/landing-feature-interior.png';
@@ -39,7 +39,7 @@ function PillDot({ children }: { children: ReactNode }) {
 }
 
 const SCROLL_REVEAL_COPY =
-	'Domus turns your rental into a polished, bookable brand. Direct reservations, Stripe payouts, and guest data built in. You bring the property - we bring the site that makes people want to stay.';
+	'Hozya turns your rental into a polished, bookable brand. Direct reservations, Stripe payouts, and guest data built in. You bring the property - we bring the site that makes people want to stay.';
 
 export default function Home() {
 	const [menuOpen, setMenuOpen] = useState(false);
@@ -119,7 +119,7 @@ export default function Home() {
 	const authLabel = isLoggedIn ? 'Dashboard' : 'Sign in';
 
 	return (
-		<div ref={rootRef} className="domus-landing">
+		<div ref={rootRef} className="hozya-landing">
 			<LandingNav isLoggedIn={Boolean(isLoggedIn)} />
 
 			<div className="fixed top-5 right-5 z-50 hidden flex-col items-end gap-3 md:flex">
@@ -176,28 +176,28 @@ export default function Home() {
 			<section id="home" className="relative min-h-screen w-full">
 				<Image
 					src={heroImage}
-					alt="Luxury villa with infinity pool at sunset"
+					alt="Luxury terrace with infinity pool overlooking the ocean at sunset"
 					fill
 					priority
 					sizes="100vw"
 					className="hero-img"
 				/>
-				<div className="absolute inset-0" />
+				<div className="hero-scrim" aria-hidden />
 
 				<div className="relative z-10 hidden px-6 pt-10 md:block md:px-12">
-					<a href="#home" className="font-display text-3xl text-dom-cream">
-						<Image src={logo} alt="Domus" width={200} height={200} />
+					<a href="#home" className="hero-logo font-display text-3xl text-hoz-cream">
+						<Image src={logo} alt="Hozya" width={200} height={200} />
 					</a>
 				</div>
 
 				<div className="relative z-10 px-6 pt-24 md:px-12 md:pt-16">
-					<h1 id="heroTitle" className="h-display text-dom-cream text-[18vw] md:text-[14vw] leading-[0.85]">
-						Domus
+					<h1 id="heroTitle" className="hero-title h-display text-hoz-cream text-[18vw] md:text-[14vw] leading-[0.85]">
+						Hozya
 					</h1>
 				</div>
 
 				<div className="absolute bottom-10 left-6 right-6 z-10 flex flex-col gap-6 md:left-12 md:right-12 md:flex-row md:items-end md:justify-between">
-					<p className="text-dom-cream text-2xl md:text-3xl max-w-md leading-tight">
+					<p className="hero-tagline text-hoz-cream text-2xl md:text-3xl max-w-md leading-tight">
 						A website for your
 						<br />
 						rental house. In minutes.
@@ -216,7 +216,7 @@ export default function Home() {
 				</div>
 			</section>
 
-			<section className="scroll-text-section bg-dom-cream px-6 py-28 md:px-12 md:py-40 min-h-[70vh] flex items-center justify-center">
+			<section className="scroll-text-section bg-hoz-cream px-6 py-28 md:px-12 md:py-40 min-h-[70vh] flex items-center justify-center">
 				<p className="scroll-text-reveal max-w-5xl">
 					{SCROLL_REVEAL_COPY.split(/\s+/).map((word, index) => (
 						<span key={`${word}-${index}`} className="scroll-text-word">
@@ -226,8 +226,8 @@ export default function Home() {
 				</p>
 			</section>
 
-			{/* <section className="bg-dom-cream py-8 border-y border-dom-ink/10 overflow-hidden">
-				<div className="marquee whitespace-nowrap text-dom-ink/70 text-xl font-display">
+			{/* <section className="bg-hoz-cream py-8 border-y border-hoz-ink/10 overflow-hidden">
+				<div className="marquee whitespace-nowrap text-hoz-ink/70 text-xl font-display">
 					<span className="flex gap-16 px-8">
 						<span>Custom domain</span>
 						<span>•</span>
@@ -259,7 +259,7 @@ export default function Home() {
 				</div>
 			</section> */}
 
-			<section id="features" className="bg-dom-cream py-24 px-6 md:px-12">
+			<section id="features" className="bg-hoz-cream py-24 px-6 md:px-12">
 				<div className="max-w-7xl mx-auto">
 
 					<div className="grid md:grid-cols-12 gap-6">
@@ -273,9 +273,9 @@ export default function Home() {
 									className="object-cover"
 								/>
 							</div>
-							<div className="absolute top-4 left-4 bg-dom-cream rounded-2xl px-4 py-3">
+							<div className="absolute top-4 left-4 bg-hoz-cream rounded-2xl px-4 py-3">
 								<div className="font-display text-3xl leading-none">5min</div>
-								<div className="text-sm text-dom-muted">to launch</div>
+								<div className="text-sm text-hoz-muted">to launch</div>
 							</div>
 						</div>
 						<div className="md:col-span-5 reveal">
@@ -301,8 +301,8 @@ export default function Home() {
 							</div>
 						</div>
 						<div className="md:col-span-6 mt-6 flex flex-col justify-center reveal">
-							<p className="text-xl md:text-2xl text-dom-ink/80 leading-relaxed">
-								Domus is a rental platform that turns your rental property into a polished, branded
+							<p className="text-xl md:text-2xl text-hoz-ink/80 leading-relaxed">
+								Hozya is a rental platform that turns your rental property into a polished, branded
 								website - with bookings, payments and guest data built in. You bring the house. We bring the
 								everything-else.
 							</p>
@@ -319,21 +319,21 @@ export default function Home() {
 				</div>
 			</section>
 
-			<section id="templates" className="bg-dom-coffee text-dom-cream py-24 px-6 md:px-12 relative overflow-hidden rounded-t-3xl">
+			<section id="templates" className="bg-hoz-coffee text-hoz-cream py-24 px-6 md:px-12 relative overflow-hidden rounded-t-3xl">
 				<div className="absolute -bottom-10 left-0 right-0 text-center ghost-text h-display text-[22vw] pointer-events-none select-none">
-					DOMUS
+					HOZYA
 				</div>
 				<div className="max-w-7xl mx-auto relative z-10">
 					<div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-16">
 						<div>
-							<p className="font-display text-2xl mb-3 text-dom-cream/70">— Our templates</p>
+							<p className="font-display text-2xl mb-3 text-hoz-cream/70">— Our templates</p>
 							<h2 className="h-display text-5xl md:text-7xl">
 								Pick a look.
 								<br />
 								Make it yours.
 							</h2>
 						</div>
-						<p className="max-w-sm text-dom-cream/70">
+						<p className="max-w-sm text-hoz-cream/70">
 							Three handcrafted designs, fully customisable. Click any template to preview the live layout.
 						</p>
 					</div>
@@ -370,7 +370,7 @@ export default function Home() {
 									<h3 className="font-display text-3xl">{option.label}</h3>
 									<div className="mt-3 flex flex-wrap gap-2">
 										{option.tags.map((tag) => (
-											<span key={tag} className="rounded-full bg-dom-mocha px-3 py-1 text-xs">
+											<span key={tag} className="rounded-full bg-hoz-mocha px-3 py-1 text-xs">
 												{tag}
 											</span>
 										))}
@@ -382,19 +382,19 @@ export default function Home() {
 				</div>
 			</section>
 
-			<section id="pricing" className="pricing-section bg-dom-cream py-24 px-6 md:px-12 relative overflow-hidden">
+			<section id="pricing" className="pricing-section bg-hoz-cream py-24 px-6 md:px-12 relative overflow-hidden">
 				<div className="pricing-grain pointer-events-none" aria-hidden />
 				<div className="max-w-7xl mx-auto relative z-10">
 					<div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-16 reveal">
 						<div>
-							<p className="font-display text-2xl mb-3 text-dom-mocha">— Pricing</p>
-							<h2 className="h-display text-5xl md:text-7xl text-dom-ink">
+							<p className="font-display text-2xl mb-3 text-hoz-mocha">— Pricing</p>
+							<h2 className="h-display text-5xl md:text-7xl text-hoz-ink">
 								Start small.
 								<br />
 								Scale when ready.
 							</h2>
 						</div>
-						<p className="max-w-sm text-dom-muted text-lg leading-relaxed">
+						<p className="max-w-sm text-hoz-muted text-lg leading-relaxed">
 							No setup fees. Cancel anytime. Every plan includes your booking engine and Stripe payouts.
 						</p>
 					</div>
@@ -405,8 +405,8 @@ export default function Home() {
 								01
 							</span>
 							<div className="pricing-card-head">
-								<h3 className="font-display text-3xl text-dom-ink">Essential</h3>
-								<p className="pricing-tagline text-dom-muted">One property, fully yours</p>
+								<h3 className="font-display text-3xl text-hoz-ink">Essential</h3>
+								<p className="pricing-tagline text-hoz-muted">One property, fully yours</p>
 							</div>
 							<div className="pricing-amount">
 								<span className="pricing-currency">$</span>
@@ -432,8 +432,8 @@ export default function Home() {
 								02
 							</span>
 							<div className="pricing-card-head">
-								<h3 className="font-display text-3xl text-dom-cream">Portfolio</h3>
-								<p className="pricing-tagline text-dom-cream/65">For hosts with multiple stays</p>
+								<h3 className="font-display text-3xl text-hoz-cream">Portfolio</h3>
+								<p className="pricing-tagline text-hoz-cream/65">For hosts with multiple stays</p>
 							</div>
 							<div className="pricing-amount pricing-amount-light">
 								<span className="pricing-currency">$</span>
@@ -458,8 +458,8 @@ export default function Home() {
 								03
 							</span>
 							<div className="pricing-card-head">
-								<h3 className="font-display text-3xl text-dom-ink">Estate</h3>
-								<p className="pricing-tagline text-dom-muted">For operators at scale</p>
+								<h3 className="font-display text-3xl text-hoz-ink">Estate</h3>
+								<p className="pricing-tagline text-hoz-muted">For operators at scale</p>
 							</div>
 							<div className="pricing-amount">
 								<span className="pricing-currency">$</span>
@@ -482,30 +482,30 @@ export default function Home() {
 				</div>
 			</section>
 
-			<section id="reviews" className="bg-dom-coffee text-dom-cream py-24 px-6 md:px-12 border-t border-dom-cream/10 rounded-b-3xl">
+			<section id="reviews" className="bg-hoz-coffee text-hoz-cream py-24 px-6 md:px-12 border-t border-hoz-cream/10 rounded-b-3xl">
 				<div className="max-w-7xl mx-auto">
-					<p className="font-display text-2xl mb-3 text-dom-cream/70">— What hosts say</p>
+					<p className="font-display text-2xl mb-3 text-hoz-cream/70">— What hosts say</p>
 					<h2 className="h-display text-5xl md:text-7xl mb-16">about our platform...</h2>
 					<div className="grid md:grid-cols-3 gap-6">
-						<article className="bg-dom-mocha rounded-3xl p-8 reveal">
-							<div className="text-dom-gold text-xl mb-6">★★★★★</div>
-							<p className="text-dom-cream/85 leading-relaxed">
-								Domus felt like hiring a designer and developer at once. My cabin site launched in an afternoon
+						<article className="bg-hoz-mocha rounded-3xl p-8 reveal">
+							<div className="text-hoz-gold text-xl mb-6">★★★★★</div>
+							<p className="text-hoz-cream/85 leading-relaxed">
+								Hozya felt like hiring a designer and developer at once. My cabin site launched in an afternoon
 								and bookings doubled in a month.
 							</p>
 							<p className="mt-6 font-display text-2xl">A Home Away From Home</p>
 						</article>
-						<article className="bg-dom-mocha rounded-3xl p-8 reveal">
-							<div className="text-dom-gold text-xl mb-6">★★★★★</div>
-							<p className="text-dom-cream/85 leading-relaxed">
+						<article className="bg-hoz-mocha rounded-3xl p-8 reveal">
+							<div className="text-hoz-gold text-xl mb-6">★★★★★</div>
+							<p className="text-hoz-cream/85 leading-relaxed">
 								The booking engine is a dream - direct reservations, Stripe payouts, and a calendar that finally
 								syncs with everything.
 							</p>
 							<p className="mt-6 font-display text-2xl">Adventure Awaits</p>
 						</article>
-						<article className="bg-dom-mocha rounded-3xl p-8 reveal">
-							<div className="text-dom-gold text-xl mb-6">★★★★★</div>
-							<p className="text-dom-cream/85 leading-relaxed">
+						<article className="bg-hoz-mocha rounded-3xl p-8 reveal">
+							<div className="text-hoz-gold text-xl mb-6">★★★★★</div>
+							<p className="text-hoz-cream/85 leading-relaxed">
 								My guests now think I run a boutique brand. The templates are gorgeous and the guest CRM keeps
 								everything organized.
 							</p>
@@ -515,10 +515,10 @@ export default function Home() {
 				</div>
 			</section>
 
-			<section className="bg-dom-cream py-24 px-6 md:px-12">
+			<section className="bg-hoz-cream py-24 px-6 md:px-12">
 				<div className="max-w-7xl mx-auto">
-					<p className="font-display text-2xl mb-3 text-dom-mocha">— From the journal</p>
-					<h2 className="h-display text-5xl md:text-7xl text-dom-ink mb-16">
+					<p className="font-display text-2xl mb-3 text-hoz-mocha">— From the journal</p>
+					<h2 className="h-display text-5xl md:text-7xl text-hoz-ink mb-16">
 						Host stories &<br />
 						field notes
 					</h2>
@@ -532,9 +532,9 @@ export default function Home() {
 								className="object-cover journal-card-img"
 							/>
 							<div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-							<div className="absolute inset-0 p-6 flex flex-col justify-end text-dom-cream">
+							<div className="absolute inset-0 p-6 flex flex-col justify-end text-hoz-cream">
 								<div>
-									<h3 className="font-display text-2xl mb-4 text-dom-cream">How to make the most of your direct bookings</h3>
+									<h3 className="font-display text-2xl mb-4 text-hoz-cream">How to make the most of your direct bookings</h3>
 									<span className="pill">
 										<span>Read</span>
 										<PillDot>
@@ -553,9 +553,9 @@ export default function Home() {
 								className="object-cover journal-card-img"
 							/>
 							<div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-							<div className="absolute inset-0 p-6 flex flex-col justify-end text-dom-cream">
+							<div className="absolute inset-0 p-6 flex flex-col justify-end text-hoz-cream">
 								<div>
-									<h3 className="font-display text-2xl mb-4 text-dom-cream">A guide to pricing your rental like a hotel</h3>
+									<h3 className="font-display text-2xl mb-4 text-hoz-cream">A guide to pricing your rental like a hotel</h3>
 									<span className="pill">
 										<span>Read</span>
 										<PillDot>
@@ -574,9 +574,9 @@ export default function Home() {
 								className="object-cover journal-card-img"
 							/>
 							<div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-							<div className="absolute inset-0 p-6 flex flex-col justify-end text-dom-cream">
+							<div className="absolute inset-0 p-6 flex flex-col justify-end text-hoz-cream">
 								<div>
-									<h3 className="font-display text-2xl mb-4 text-dom-cream">Five photos every listing page needs</h3>
+									<h3 className="font-display text-2xl mb-4 text-hoz-cream">Five photos every listing page needs</h3>
 									<span className="pill">
 										<span>Read</span>
 										<PillDot>
@@ -590,7 +590,7 @@ export default function Home() {
 				</div>
 			</section>
 
-			<section id="book" className="bg-dom-ink text-dom-cream py-24 px-6 md:px-12 rounded-t-3xl">
+			<section id="book" className="bg-hoz-ink text-hoz-cream py-24 px-6 md:px-12 rounded-t-3xl">
 				<div className="max-w-7xl mx-auto">
 					<div className="grid md:grid-cols-2 gap-10 mb-12">
 						<h2 className="h-display text-5xl md:text-7xl">
@@ -598,14 +598,14 @@ export default function Home() {
 							<br />
 							stay today
 						</h2>
-						<p className="text-dom-cream/70 text-lg">
+						<p className="text-hoz-cream/70 text-lg">
 							Plans start at $29/month with custom domain, booking engine and unlimited guests. Tell us about
 							your property and we&apos;ll set up your free trial.
 						</p>
 					</div>
 
 					<form
-						className="bg-dom-mocha rounded-3xl p-6 md:p-10"
+						className="bg-hoz-mocha rounded-3xl p-6 md:p-10"
 						onSubmit={(e) => {
 							e.preventDefault();
 							window.alert('Thanks! We will be in touch.');
@@ -613,23 +613,23 @@ export default function Home() {
 					>
 						<div className="grid md:grid-cols-3 gap-6">
 							<div>
-								<label className="block text-sm mb-2 text-dom-cream/70">Full name</label>
+								<label className="block text-sm mb-2 text-hoz-cream/70">Full name</label>
 								<input className="input" placeholder="Justin Fee" required />
 							</div>
 							<div>
-								<label className="block text-sm mb-2 text-dom-cream/70">Email</label>
+								<label className="block text-sm mb-2 text-hoz-cream/70">Email</label>
 								<input type="email" className="input" placeholder="your@email.com" required />
 							</div>
 							<div>
-								<label className="block text-sm mb-2 text-dom-cream/70">Property name</label>
+								<label className="block text-sm mb-2 text-hoz-cream/70">Property name</label>
 								<input className="input" placeholder="Canoply Chalet" />
 							</div>
 							<div>
-								<label className="block text-sm mb-2 text-dom-cream/70">Location</label>
+								<label className="block text-sm mb-2 text-hoz-cream/70">Location</label>
 								<input className="input" placeholder="Mountain hills, Canada" />
 							</div>
 							<div>
-								<label className="block text-sm mb-2 text-dom-cream/70">Nightly rate</label>
+								<label className="block text-sm mb-2 text-hoz-cream/70">Nightly rate</label>
 								<input className="input" placeholder="$290 / night" />
 							</div>
 							<div className="flex items-end">
@@ -655,7 +655,7 @@ export default function Home() {
 				</div>
 			</section>
 
-			<footer className="bg-dom-ink text-dom-cream pt-16 pb-6 px-6 md:px-12 relative overflow-hidden">
+			<footer className="bg-hoz-ink text-hoz-cream pt-16 pb-6 px-6 md:px-12 relative overflow-hidden">
 				<div className="max-w-7xl mx-auto">
 					<div className="max-w-xl mb-12">
 						<h3 className="h-display text-4xl md:text-5xl">Beautiful sites for hosts who care.</h3>
@@ -668,7 +668,7 @@ export default function Home() {
 							</a>
 							<a
 								href="#"
-								className="w-10 h-10 rounded-full bg-dom-mocha grid place-items-center"
+								className="w-10 h-10 rounded-full bg-hoz-mocha grid place-items-center"
 								aria-label="Instagram"
 							>
 								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -679,7 +679,7 @@ export default function Home() {
 							</a>
 							<a
 								href="#"
-								className="w-10 h-10 rounded-full bg-dom-mocha grid place-items-center"
+								className="w-10 h-10 rounded-full bg-hoz-mocha grid place-items-center"
 								aria-label="Facebook"
 							>
 								<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -689,10 +689,10 @@ export default function Home() {
 						</div>
 					</div>
 
-					<div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-sm border-t border-dom-cream/10 pt-10">
+					<div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-sm border-t border-hoz-cream/10 pt-10">
 						<div>
 							<p className="font-semibold mb-3">Product</p>
-							<ul className="space-y-2 text-dom-cream/70">
+							<ul className="space-y-2 text-hoz-cream/70">
 								<li>
 									<a href="#templates">Templates</a>
 								</li>
@@ -706,7 +706,7 @@ export default function Home() {
 						</div>
 						<div>
 							<p className="font-semibold mb-3">Hosts</p>
-							<ul className="space-y-2 text-dom-cream/70">
+							<ul className="space-y-2 text-hoz-cream/70">
 								<li>
 									<a href="#">Booking system</a>
 								</li>
@@ -720,7 +720,7 @@ export default function Home() {
 						</div>
 						<div>
 							<p className="font-semibold mb-3">Resources</p>
-							<ul className="space-y-2 text-dom-cream/70">
+							<ul className="space-y-2 text-hoz-cream/70">
 								<li>
 									<a href="#">Journal</a>
 								</li>
@@ -734,7 +734,7 @@ export default function Home() {
 						</div>
 						<div>
 							<p className="font-semibold mb-3">Company</p>
-							<ul className="space-y-2 text-dom-cream/70">
+							<ul className="space-y-2 text-hoz-cream/70">
 								<li>
 									<a href="#">About</a>
 								</li>
@@ -748,11 +748,11 @@ export default function Home() {
 						</div>
 					</div>
 
-					<p className="text-dom-cream/40 text-xs mt-10">© 2025 Domus. All rights reserved.</p>
+					<p className="text-hoz-cream/40 text-xs mt-10">© 2025 Hozya. All rights reserved.</p>
 				</div>
 
 				<div className="ghost-text h-display text-[28vw] leading-none text-center pointer-events-none select-none -mb-10">
-					Domus
+					Hozya
 				</div>
 			</footer>
 		</div>

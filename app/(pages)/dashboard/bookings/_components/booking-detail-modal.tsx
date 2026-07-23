@@ -109,10 +109,10 @@ const modalFields = cn(
 	'[&_button[role=combobox]]:w-full [&_button[role=combobox]]:border-0 [&_button[role=combobox]]:!bg-transparent',
 	'[&_button[role=combobox]]:px-0 [&_button[role=combobox]]:py-1 [&_button[role=combobox]]:shadow-none',
 	'[&_button[role=combobox]]:focus-visible:ring-0',
-	'[&_.domus-date-picker-field_button]:w-full [&_.domus-date-picker-field_button]:border-0',
-	'[&_.domus-date-picker-field_button]:!bg-transparent [&_.domus-date-picker-field_button]:px-0',
-	'[&_.domus-date-picker-field_button]:py-1 [&_.domus-date-picker-field_button]:text-espresso',
-	'[&_.domus-date-picker-field_button]:shadow-none [&_.domus-date-picker-field_button]:focus-visible:ring-0',
+	'[&_.hozya-date-picker-field_button]:w-full [&_.hozya-date-picker-field_button]:border-0',
+	'[&_.hozya-date-picker-field_button]:!bg-transparent [&_.hozya-date-picker-field_button]:px-0',
+	'[&_.hozya-date-picker-field_button]:py-1 [&_.hozya-date-picker-field_button]:text-espresso',
+	'[&_.hozya-date-picker-field_button]:shadow-none [&_.hozya-date-picker-field_button]:focus-visible:ring-0',
 );
 
 function formatMoney(value: number) {

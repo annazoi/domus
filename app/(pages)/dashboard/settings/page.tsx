@@ -2,7 +2,7 @@ import { Button, Input } from '@/components/ui';
 
 const fields = [
 	{ label: 'Profile name', placeholder: 'Zoian A.' },
-	{ label: 'Business email', placeholder: 'host@domus.com' },
+	{ label: 'Business email', placeholder: 'host@hozya.com' },
 	{ label: 'Brand color', placeholder: '#9a8570' },
 	{ label: 'Domain', placeholder: 'stays.yourbrand.com' },
 	{ label: 'Payout account', placeholder: '•••• 8743' },

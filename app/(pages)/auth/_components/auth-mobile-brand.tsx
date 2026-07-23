@@ -5,10 +5,10 @@ import logo from '@/public/images/logo.png';
 export function AuthMobileBrand() {
 	return (
 		<header className="login-mobile-header">
-			<Link href="/" className="login-mobile-brand" aria-label="Domus home">
+			<Link href="/" className="login-mobile-brand" aria-label="Hozya home">
 				<Image
 					src={logo}
-					alt="Domus"
+					alt="Hozya"
 					width={320}
 					height={96}
 					priority

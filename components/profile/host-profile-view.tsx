@@ -330,7 +330,7 @@ export function HostProfileView({
 							transition={{ duration: 0.36, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
 							className="min-w-0 pb-0.5"
 						>
-							<p className="profile-eyebrow-accent profile-eyebrow">Host on Domus</p>
+							<p className="profile-eyebrow-accent profile-eyebrow">Host on Hozya</p>
 							<h1 className="profile-heading mt-1 break-words text-3xl tracking-tight sm:text-4xl">{fullName}</h1>
 							<p className="profile-meta mt-1.5">Member since {memberSince}</p>
 						</motion.div>

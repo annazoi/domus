@@ -94,7 +94,7 @@ export function LandingNav({ isLoggedIn }: LandingNavProps) {
 					menuOpen ? 'landing-nav-bar--menu-open' : '',
 				].join(' ')}
 			>
-				<Link href="#home" className="landing-nav-logo" aria-label="Domus home" onClick={closeMenu}>
+				<Link href="#home" className="landing-nav-logo" aria-label="Hozya home" onClick={closeMenu}>
 					<Image src={logo} alt="" width={120} height={40} priority className="landing-nav-logo-img" />
 				</Link>
 

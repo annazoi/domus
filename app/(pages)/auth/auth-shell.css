@@ -110,7 +110,7 @@
   right: 2.5rem;
   z-index: 2;
   color: white;
-  font-family: var(--font-domus), Georgia, serif;
+  font-family: var(--font-hozya), Georgia, serif;
   font-weight: 300;
   font-size: 2.5rem;
   line-height: 1.15;
@@ -170,7 +170,7 @@
 }
 
 .login-card h1 {
-  font-family: var(--font-domus), Georgia, serif;
+  font-family: var(--font-hozya), Georgia, serif;
   font-weight: 300;
   font-size: clamp(2rem, 5vw, 3rem);
   line-height: 1.15;

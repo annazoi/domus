@@ -517,7 +517,7 @@ function decorateFullTemplateDemo(theme: PropertyBrandingTheme, d: BrandingPrevi
 					? '© 2026 Kaze Pavilion. Template preview.'
 					: hikari
 						? '© 2026 Hikari. Template preview.'
-						: '© 2026 Domus Studio. Template preview.',
+						: '© 2026 Hozya Studio. Template preview.',
 		},
 	};
 }
