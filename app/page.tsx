@@ -43,23 +43,21 @@ const SCROLL_REVEAL_COPY =
 
 export default function Home() {
 	const [menuOpen, setMenuOpen] = useState(false);
+	const [menuVisible, setMenuVisible] = useState(false);
 	const rootRef = useRef<HTMLDivElement>(null);
 	const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
 	useEffect(() => {
 		let ctx: { revert: () => void } | undefined;
-
 		void (async () => {
 			const [{ gsap }, { ScrollTrigger }] = await Promise.all([
 				import('gsap'),
 				import('gsap/ScrollTrigger'),
 			]);
-
 			gsap.registerPlugin(ScrollTrigger);
 
 			ctx = gsap.context(() => {
 				gsap.from('#heroTitle', { y: 80, opacity: 0, duration: 1.2, ease: 'power3.out' });
-
 				gsap.utils.toArray<HTMLElement>('.reveal').forEach((el) => {
 					gsap.to(el, {
 						opacity: 1,
@@ -115,6 +113,12 @@ export default function Home() {
 	}, []);
 
 	const closeMenu = () => setMenuOpen(false);
+	const toggleMenu = () => {
+		setMenuOpen((open) => {
+			if (!open) setMenuVisible(true);
+			return !open;
+		});
+	};
 	const authHref = isLoggedIn ? '/dashboard' : '/auth/sign-in';
 	const authLabel = isLoggedIn ? 'Dashboard' : 'Sign in';
 
@@ -129,14 +133,20 @@ export default function Home() {
 						<PillArrow />
 					</PillDot>
 				</Link>
-				<button type="button" className="pill" onClick={() => setMenuOpen((open) => !open)}>
+				<button type="button" className="pill" onClick={toggleMenu}>
 					<span>Menu</span>
 					<PillDot>
 						<MenuBarsIcon />
 					</PillDot>
 				</button>
-				{menuOpen ? (
-					<nav className="menu-panel">
+				{menuVisible ? (
+					<nav
+						className={['menu-panel', menuOpen ? 'menu-panel--open' : ''].join(' ')}
+						onAnimationEnd={(event) => {
+							if (event.target !== event.currentTarget || menuOpen) return;
+							setMenuVisible(false);
+						}}
+					>
 						<ul>
 							<li>
 								<a href="#home" onClick={closeMenu}>

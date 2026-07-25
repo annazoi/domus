@@ -80,6 +80,41 @@ html:has(.hozya-landing) {
   padding: 2rem;
   width: 18rem;
   box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.35);
+  transform-origin: top right;
+  animation: menu-panel-close 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.hozya-landing .menu-panel--open {
+  animation: menu-panel-open 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes menu-panel-open {
+  from {
+    opacity: 0;
+    transform: translateY(-0.75rem) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes menu-panel-close {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-0.75rem) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hozya-landing .menu-panel,
+  .hozya-landing .menu-panel--open {
+    animation: none;
+  }
 }
 
 .hozya-landing .menu-panel ul {
