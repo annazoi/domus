@@ -45,8 +45,16 @@ const SCROLL_REVEAL_COPY =
 export default function Home() {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [menuVisible, setMenuVisible] = useState(false);
+	const [scrolled, setScrolled] = useState(false);
 	const rootRef = useRef<HTMLDivElement>(null);
 	const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+
+	useEffect(() => {
+		const onScroll = () => setScrolled(window.scrollY > 32);
+		onScroll();
+		window.addEventListener('scroll', onScroll, { passive: true });
+		return () => window.removeEventListener('scroll', onScroll);
+	}, []);
 
 	useEffect(() => {
 		let ctx: { revert: () => void } | undefined;
@@ -88,8 +96,8 @@ export default function Home() {
 					});
 				});
 
-				gsap.to('#home .hero-img', {
-					yPercent: 12,
+				gsap.to('#home .hero-media', {
+					yPercent: -15,
 					ease: 'none',
 					scrollTrigger: {
 						trigger: '.scroll-text-section',
@@ -147,14 +155,18 @@ export default function Home() {
 			<LandingCursor />
 			<LandingNav isLoggedIn={Boolean(isLoggedIn)} />
 
-			<div className="fixed top-5 right-5 z-50 hidden flex-col items-end gap-3 md:flex">
-				<Link href={authHref} className="pill">
+			<div className="landing-float-actions fixed top-5 right-5 z-50 hidden flex-col items-end gap-3 md:flex">
+				<Link href={authHref} className={['pill', scrolled ? 'pill-dark' : ''].filter(Boolean).join(' ')}>
 					<span>{authLabel}</span>
 					<PillDot>
 						<PillArrow />
 					</PillDot>
 				</Link>
-				<button type="button" className="pill" onClick={toggleMenu}>
+				<button
+					type="button"
+					className={['pill', scrolled ? 'pill-dark' : ''].filter(Boolean).join(' ')}
+					onClick={toggleMenu}
+				>
 					<span>Menu</span>
 					<PillDot>
 						<MenuBarsIcon />
@@ -206,14 +218,16 @@ export default function Home() {
 
 			<div className="hero-stage">
 				<section id="home" className="hero-section">
-					<Image
-						src={heroImage}
-						alt="Luxury terrace with infinity pool overlooking the ocean at sunset"
-						fill
-						priority
-						sizes="100vw"
-						className="hero-img"
-					/>
+					<div className="hero-media">
+						<Image
+							src={heroImage}
+							alt="Luxury terrace with infinity pool overlooking the ocean at sunset"
+							fill
+							priority
+							sizes="100vw"
+							className="hero-img"
+						/>
+					</div>
 					<div className="hero-scrim" aria-hidden />
 
 					<div className="relative z-10 hidden px-6 pt-10 md:block md:px-12">
@@ -224,9 +238,8 @@ export default function Home() {
 
 					<div className="hero-copy">
 						<div className="hero-copy__text">
-							<p className="hero-tagline">Create your own rental website</p>
 							<h1 className="hero-title h-display">Estate of Mind.</h1>
-						</div>
+							<p className="hero-tagline">Create your own rental website</p>
 						<div className="hero-ctas">
 							<a href="#templates" className="pill">
 								Explore templates
@@ -237,6 +250,7 @@ export default function Home() {
 									<PillArrow />
 								</PillDot>
 							</a>
+						</div>
 						</div>
 					</div>
 				</section>
