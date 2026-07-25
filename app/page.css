@@ -10,6 +10,55 @@ html:has(.hozya-landing) {
   min-height: 100vh;
 }
 
+@media (pointer: fine) {
+  .hozya-landing.has-custom-cursor,
+  .hozya-landing.has-custom-cursor * {
+    cursor: none !important;
+  }
+
+  .hozya-landing.has-custom-cursor input,
+  .hozya-landing.has-custom-cursor textarea,
+  .hozya-landing.has-custom-cursor select,
+  .hozya-landing.has-custom-cursor [contenteditable='true'] {
+    cursor: text !important;
+  }
+}
+
+.landing-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+  pointer-events: none;
+  mix-blend-mode: difference;
+  opacity: 0;
+  transform: translate3d(-100px, -100px, 0) translate(-50%, -50%);
+  transition:
+    width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease;
+  will-change: transform;
+}
+
+.landing-cursor--visible {
+  opacity: 1;
+}
+
+.landing-cursor--hover {
+  width: 28px;
+  height: 28px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-cursor {
+    transition: opacity 0.15s ease;
+  }
+}
+
 .hozya-landing a {
   color: inherit;
   text-decoration: none;

@@ -16,6 +16,7 @@ import journalPricingImage from '@/public/images/landing-journal-pricing.png';
 import journalPhotosImage from '@/public/images/landing-journal-photos.png';
 import logo from '@/public/images/logo.png';
 import { useAuthStore } from '@/store/auth';
+import { LandingCursor } from '@/app/_components/landing-cursor';
 import { LandingNav } from '@/app/_components/landing-nav';
 
 function PillArrow() {
@@ -143,6 +144,7 @@ export default function Home() {
 
 	return (
 		<div ref={rootRef} className="hozya-landing">
+			<LandingCursor />
 			<LandingNav isLoggedIn={Boolean(isLoggedIn)} />
 
 			<div className="fixed top-5 right-5 z-50 hidden flex-col items-end gap-3 md:flex">
