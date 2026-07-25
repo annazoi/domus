@@ -6,7 +6,7 @@ html:has(.hozya-landing) {
   background: #efe9df;
   color: #1d1916;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  overflow-x: clip;
   min-height: 100vh;
 }
 
@@ -460,12 +460,39 @@ html:has(.hozya-landing) {
   opacity: 0.8;
 }
 
+.hozya-landing .hero-stage {
+  height: 100vh;
+  height: 100svh;
+}
+
+.hozya-landing .hero-section {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hozya-landing .hero-section a,
+.hozya-landing .hero-section button {
+  pointer-events: auto;
+}
+
+.hozya-landing .hero-stage ~ * {
+  position: relative;
+  z-index: 2;
+}
+
 .hozya-landing .hero-img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  will-change: transform;
 }
 
 .hozya-landing .hero-scrim {
@@ -473,25 +500,87 @@ html:has(.hozya-landing) {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgb(29 25 22 / 0.55) 0%, rgb(29 25 22 / 0.22) 26%, transparent 52%),
-    linear-gradient(0deg, rgb(29 25 22 / 0.62) 0%, rgb(29 25 22 / 0.28) 24%, transparent 48%),
-    linear-gradient(115deg, rgb(29 25 22 / 0.48) 0%, rgb(29 25 22 / 0.2) 38%, transparent 62%);
+    linear-gradient(0deg, rgb(29 25 22 / 0.62) 0%, rgb(29 25 22 / 0.28) 32%, transparent 58%),
+    linear-gradient(90deg, rgb(29 25 22 / 0.38) 0%, rgb(29 25 22 / 0.12) 28%, transparent 52%),
+    linear-gradient(180deg, rgb(29 25 22 / 0.42) 0%, transparent 28%);
 }
 
 .hozya-landing .hero-logo img {
   filter: drop-shadow(0 2px 14px rgb(0 0 0 / 0.35));
 }
 
+.hozya-landing .hero-copy {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 1.75rem;
+  padding: 5.5rem 1.5rem 2.25rem;
+  pointer-events: none;
+}
+
+.hozya-landing .hero-copy .pill {
+  pointer-events: auto;
+}
+
+.hozya-landing .hero-copy__text {
+  max-width: min(100%, 42rem);
+}
+
+.hozya-landing .hero-tagline {
+  margin: 0 0 0.85rem;
+  color: #efe9df;
+  font-size: clamp(0.9375rem, 1.6vw, 1.125rem);
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  text-shadow:
+    0 2px 18px rgb(29 25 22 / 0.55),
+    0 1px 3px rgb(29 25 22 / 0.4);
+}
+
 .hozya-landing .hero-title {
+  margin: 0;
+  color: #efe9df;
+  font-size: clamp(3.5rem, 12vw, 7.75rem);
+  line-height: 0.88;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
   text-shadow:
     0 2px 28px rgb(29 25 22 / 0.55),
     0 1px 6px rgb(29 25 22 / 0.4);
 }
 
-.hozya-landing .hero-tagline {
-  text-shadow:
-    0 2px 20px rgb(29 25 22 / 0.6),
-    0 1px 4px rgb(29 25 22 / 0.45);
+.hozya-landing .hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .hozya-landing .hero-copy {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 0 3rem 2.75rem;
+  }
+
+  .hozya-landing .hero-tagline {
+    margin-bottom: 1rem;
+  }
+
+  .hozya-landing .hero-title {
+    font-size: clamp(5rem, 8.5vw, 8rem);
+  }
+
+  .hozya-landing .hero-ctas {
+    flex-shrink: 0;
+    padding-bottom: 0.35rem;
+  }
 }
 
 .hozya-landing .scroll-text-reveal {

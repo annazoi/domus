@@ -57,7 +57,26 @@ export default function Home() {
 			gsap.registerPlugin(ScrollTrigger);
 
 			ctx = gsap.context(() => {
-				gsap.from('#heroTitle', { y: 80, opacity: 0, duration: 1.2, ease: 'power3.out' });
+				gsap.from('.hero-tagline', {
+					y: 24,
+					opacity: 0,
+					duration: 0.85,
+					ease: 'power3.out',
+				});
+				gsap.from('.hero-title', {
+					y: 48,
+					opacity: 0,
+					duration: 1.1,
+					delay: 0.12,
+					ease: 'power3.out',
+				});
+				gsap.from('.hero-ctas', {
+					y: 20,
+					opacity: 0,
+					duration: 0.85,
+					delay: 0.32,
+					ease: 'power3.out',
+				});
 				gsap.utils.toArray<HTMLElement>('.reveal').forEach((el) => {
 					gsap.to(el, {
 						opacity: 1,
@@ -69,12 +88,12 @@ export default function Home() {
 				});
 
 				gsap.to('#home .hero-img', {
-					yPercent: 15,
+					yPercent: 12,
 					ease: 'none',
 					scrollTrigger: {
-						trigger: '#home',
-						start: 'top top',
-						end: 'bottom top',
+						trigger: '.scroll-text-section',
+						start: 'top bottom',
+						end: 'top top',
 						scrub: true,
 					},
 				});
@@ -183,48 +202,43 @@ export default function Home() {
 				) : null}
 			</div>
 
-			<section id="home" className="relative min-h-screen w-full">
-				<Image
-					src={heroImage}
-					alt="Luxury terrace with infinity pool overlooking the ocean at sunset"
-					fill
-					priority
-					sizes="100vw"
-					className="hero-img"
-				/>
-				<div className="hero-scrim" aria-hidden />
+			<div className="hero-stage">
+				<section id="home" className="hero-section">
+					<Image
+						src={heroImage}
+						alt="Luxury terrace with infinity pool overlooking the ocean at sunset"
+						fill
+						priority
+						sizes="100vw"
+						className="hero-img"
+					/>
+					<div className="hero-scrim" aria-hidden />
 
-				<div className="relative z-10 hidden px-6 pt-10 md:block md:px-12">
-					<a href="#home" className="hero-logo font-display text-3xl text-hoz-cream">
-						<Image src={logo} alt="Hozya" width={200} height={200} />
-					</a>
-				</div>
-
-				<div className="relative z-10 px-6 pt-24 md:px-12 md:pt-16">
-					<h1 id="heroTitle" className="hero-title h-display text-hoz-cream text-[18vw] md:text-[14vw] leading-[0.85]">
-						Hozya
-					</h1>
-				</div>
-
-				<div className="absolute bottom-10 left-6 right-6 z-10 flex flex-col gap-6 md:left-12 md:right-12 md:flex-row md:items-end md:justify-between">
-					<p className="hero-tagline text-hoz-cream text-2xl md:text-3xl max-w-md leading-tight">
-						A website for your
-						<br />
-						rental house. In minutes.
-					</p>
-					<div className="flex gap-3">
-						<a href="#templates" className="pill">
-							Explore templates
-						</a>
-						<a href="#book" className="pill pill-dark">
-							<span>Get started</span>
-							<PillDot>
-								<PillArrow />
-							</PillDot>
+					<div className="relative z-10 hidden px-6 pt-10 md:block md:px-12">
+						<a href="#home" className="hero-logo font-display text-3xl text-hoz-cream">
+							<Image src={logo} alt="Hozya" width={200} height={200} />
 						</a>
 					</div>
-				</div>
-			</section>
+
+					<div className="hero-copy">
+						<div className="hero-copy__text">
+							<p className="hero-tagline">Create your own rental website</p>
+							<h1 className="hero-title h-display">Estate of Mind.</h1>
+						</div>
+						<div className="hero-ctas">
+							<a href="#templates" className="pill">
+								Explore templates
+							</a>
+							<a href="#book" className="pill pill-dark">
+								<span>Get started</span>
+								<PillDot>
+									<PillArrow />
+								</PillDot>
+							</a>
+						</div>
+					</div>
+				</section>
+			</div>
 
 			<section className="scroll-text-section bg-hoz-cream px-6 py-28 md:px-12 md:py-40 min-h-[70vh] flex items-center justify-center">
 				<p className="scroll-text-reveal max-w-5xl">
