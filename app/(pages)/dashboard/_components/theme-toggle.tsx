@@ -25,7 +25,7 @@ export function ThemeToggle({ compact = false, className }: ThemeToggleProps) {
 				'group relative inline-flex shrink-0 items-center rounded-full p-1 transition-shadow duration-300',
 				isDark
 					? 'bg-[#0f0d0b] shadow-[inset_0_1px_0_rgb(255_255_255/0.06),0_0_0_1px_rgb(255_255_255/0.08),0_12px_32px_-18px_rgb(0_0_0/0.85)]'
-					: 'bg-[#ebe4d9] shadow-[inset_0_1px_0_rgb(255_255_255/0.65),0_0_0_1px_rgb(61_50_41/0.08),0_10px_24px_-18px_rgb(61_50_41/0.35)]',
+					: 'bg-[#ebe4d9]',
 				compact ? 'h-9 w-[4.25rem]' : 'h-10 w-[5.5rem]',
 				className,
 			)}

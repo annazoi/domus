@@ -550,7 +550,7 @@ html:has(.hozya-landing) {
 
 .hozya-landing .hero-img {
   object-fit: cover;
-  object-position: center top;
+  object-position: center bottom;
 }
 
 .hozya-landing .hero-scrim {

@@ -256,7 +256,7 @@ export default function Home() {
 				</section>
 			</div>
 
-			<section className="scroll-text-section bg-hoz-cream px-6 py-28 md:px-12 md:py-40 min-h-[70vh] flex items-center justify-center">
+			<section className="scroll-text-section bg-hoz-cream px-6 py-28 md:px-12 md:py-40 min-h-[45vh] flex items-center justify-center rounded-t-3xl">
 				<p className="scroll-text-reveal max-w-5xl">
 					{SCROLL_REVEAL_COPY.split(/\s+/).map((word, index) => (
 						<span key={`${word}-${index}`} className="scroll-text-word">
@@ -359,7 +359,7 @@ export default function Home() {
 				</div>
 			</section>
 
-			<section id="templates" className="bg-hoz-coffee text-hoz-cream py-24 px-6 md:px-12 relative overflow-hidden rounded-t-3xl">
+			<section id="templates" className="bg-hoz-coffee text-hoz-cream py-24 px-6 md:px-12 relative overflow-hidden">
 				<div className="absolute -bottom-10 left-0 right-0 text-center ghost-text h-display text-[22vw] pointer-events-none select-none">
 					HOZYA
 				</div>
@@ -522,7 +522,7 @@ export default function Home() {
 				</div>
 			</section>
 
-			<section id="reviews" className="bg-hoz-coffee text-hoz-cream py-24 px-6 md:px-12 border-t border-hoz-cream/10 rounded-b-3xl">
+			<section id="reviews" className="bg-hoz-coffee text-hoz-cream py-24 px-6 md:px-12 border-t border-hoz-cream/10">
 				<div className="max-w-7xl mx-auto">
 					<p className="font-display text-2xl mb-3 text-hoz-cream/70">— What hosts say</p>
 					<h2 className="h-display text-5xl md:text-7xl mb-16">about our platform...</h2>
@@ -630,7 +630,7 @@ export default function Home() {
 				</div>
 			</section>
 
-			<section id="book" className="bg-hoz-ink text-hoz-cream py-24 px-6 md:px-12 rounded-t-3xl">
+			<section id="book" className="bg-hoz-ink text-hoz-cream py-24 px-6 md:px-12 rounded-t-3xl mt-[-2rem]">
 				<div className="max-w-7xl mx-auto">
 					<div className="grid md:grid-cols-2 gap-10 mb-12">
 						<h2 className="h-display text-5xl md:text-7xl">
@@ -707,7 +707,8 @@ export default function Home() {
 								</PillDot>
 							</a>
 							<a
-								href="#"
+								href="https://www.instagram.com/hozya_com/"
+								target="_blank"
 								className="w-10 h-10 rounded-full bg-hoz-mocha grid place-items-center"
 								aria-label="Instagram"
 							>
@@ -731,8 +732,8 @@ export default function Home() {
 
 					<div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-sm border-t border-hoz-cream/10 pt-10">
 						<div>
-							<p className="font-semibold mb-3">Product</p>
-							<ul className="space-y-2 text-hoz-cream/70">
+							<p className="font-semibold mb-3 text-lg">Product</p>
+							<ul className="space-y-2 text-hoz-cream/70 text-base">
 								<li>
 									<a href="#templates">Templates</a>
 								</li>
@@ -745,8 +746,8 @@ export default function Home() {
 							</ul>
 						</div>
 						<div>
-							<p className="font-semibold mb-3">Hosts</p>
-							<ul className="space-y-2 text-hoz-cream/70">
+							<p className="font-semibold mb-3 text-lg">Hosts</p>
+							<ul className="space-y-2 text-hoz-cream/70 text-base">
 								<li>
 									<a href="#">Booking system</a>
 								</li>
@@ -759,8 +760,8 @@ export default function Home() {
 							</ul>
 						</div>
 						<div>
-							<p className="font-semibold mb-3">Resources</p>
-							<ul className="space-y-2 text-hoz-cream/70">
+							<p className="font-semibold mb-3 text-lg">Resources</p>
+							<ul className="space-y-2 text-hoz-cream/70 text-base">
 								<li>
 									<a href="#">Journal</a>
 								</li>
@@ -773,8 +774,8 @@ export default function Home() {
 							</ul>
 						</div>
 						<div>
-							<p className="font-semibold mb-3">Company</p>
-							<ul className="space-y-2 text-hoz-cream/70">
+							<p className="font-semibold mb-3 text-lg">Company</p>
+							<ul className="space-y-2 text-hoz-cream/70 text-base">
 								<li>
 									<a href="#">About</a>
 								</li>
@@ -788,7 +789,9 @@ export default function Home() {
 						</div>
 					</div>
 
-					<p className="text-hoz-cream/40 text-xs mt-10">© 2025 Hozya. All rights reserved.</p>
+					<p className="text-hoz-cream/40 text-xs mt-10">
+						© {new Date().getFullYear()} Hozya. All rights reserved.
+					</p>
 				</div>
 
 				<div className="ghost-text h-display text-[28vw] leading-none text-center pointer-events-none select-none -mb-10">
