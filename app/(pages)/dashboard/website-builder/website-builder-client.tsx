@@ -147,7 +147,7 @@ export function WebsiteBuilderClient() {
 				</div>
 			</aside>
 
-			<div className="relative flex min-h-[28rem] flex-1 flex-col bg-dom-sand">
+			<div className="relative flex min-h-[28rem] flex-1 flex-col bg-hoz-sand">
 				<div className="flex flex-1 items-center justify-center overflow-auto p-4 md:p-8">
 					{!isLoading && !current ? (
 						<p className="max-w-sm text-center text-sm text-espresso/55">

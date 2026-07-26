@@ -4,6 +4,7 @@ ALTER TABLE "users" ADD COLUMN "host_name" TEXT;
 WITH slugs AS (
   SELECT
     id,
+    created_at,
     TRIM(BOTH '-' FROM REGEXP_REPLACE(
       REGEXP_REPLACE(LOWER(TRIM(CONCAT(first_name, ' ', last_name))), '\s+', '-', 'g'),
       '[^a-z-]',

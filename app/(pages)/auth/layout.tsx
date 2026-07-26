@@ -17,7 +17,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           className="login-aside-hero object-cover"
         />
         <Link href="/" className="login-brand">
-          <Image src="/images/logo.png" alt="Domus" width={200} height={200} />
+          <Image src="/images/logo.png" alt="Hozya" width={200} height={200} />
         </Link>
         <h2 className="login-quote">
           Own your brand.

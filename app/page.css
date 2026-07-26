@@ -1,31 +1,80 @@
-html:has(.domus-landing) {
+html:has(.hozya-landing) {
   scroll-behavior: smooth;
 }
 
-.domus-landing {
+.hozya-landing {
   background: #efe9df;
   color: #1d1916;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  overflow-x: clip;
   min-height: 100vh;
 }
 
-.domus-landing a {
+@media (pointer: fine) {
+  .hozya-landing.has-custom-cursor,
+  .hozya-landing.has-custom-cursor * {
+    cursor: none !important;
+  }
+
+  .hozya-landing.has-custom-cursor input,
+  .hozya-landing.has-custom-cursor textarea,
+  .hozya-landing.has-custom-cursor select,
+  .hozya-landing.has-custom-cursor [contenteditable='true'] {
+    cursor: text !important;
+  }
+}
+
+.landing-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+  pointer-events: none;
+  mix-blend-mode: difference;
+  opacity: 0;
+  transform: translate3d(-100px, -100px, 0) translate(-50%, -50%);
+  transition:
+    width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease;
+  will-change: transform;
+}
+
+.landing-cursor--visible {
+  opacity: 1;
+}
+
+.landing-cursor--hover {
+  width: 28px;
+  height: 28px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-cursor {
+    transition: opacity 0.15s ease;
+  }
+}
+
+.hozya-landing a {
   color: inherit;
   text-decoration: none;
 }
 
-.domus-landing img {
+.hozya-landing img {
   display: block;
   max-width: 100%;
 }
 
-.domus-landing .h-display {
+.hozya-landing .h-display {
   letter-spacing: -0.04em;
   line-height: 0.92;
 }
 
-.domus-landing .pill {
+.hozya-landing .pill {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
@@ -36,18 +85,19 @@ html:has(.domus-landing) {
   font-weight: 500;
   transition:
     transform 0.25s ease,
-    background 0.25s ease;
+    background 0.35s ease,
+    color 0.35s ease;
   border: none;
   cursor: pointer;
   font: inherit;
 }
 
-.domus-landing .pill:hover {
+.hozya-landing .pill:hover {
   transform: translateY(-2px);
   background: #fff;
 }
 
-.domus-landing .pill .dot {
+.hozya-landing .pill .dot {
   width: 30px;
   height: 30px;
   border-radius: 999px;
@@ -56,69 +106,112 @@ html:has(.domus-landing) {
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  transition:
+    background 0.35s ease,
+    color 0.35s ease;
 }
 
-.domus-landing .pill-dark {
+.hozya-landing .pill-dark {
   background: #1d1916;
   color: #efe9df;
 }
 
-.domus-landing .pill-dark .dot {
+.hozya-landing .pill-dark:hover {
+  background: rgb(77, 69, 63);
+  color: #efe9df;
+}
+
+.hozya-landing .pill-dark .dot {
   background: #efe9df;
   color: #1d1916;
 }
 
-.domus-landing .menu-panel {
+.hozya-landing .menu-panel {
   background: #3a3530;
   color: #efe9df;
   border-radius: 1.5rem;
   padding: 2rem;
   width: 18rem;
   box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.35);
+  transform-origin: top right;
+  animation: menu-panel-close 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-.domus-landing .menu-panel ul {
+.hozya-landing .menu-panel--open {
+  animation: menu-panel-open 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes menu-panel-open {
+  from {
+    opacity: 0;
+    transform: translateY(-0.75rem) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes menu-panel-close {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-0.75rem) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hozya-landing .menu-panel,
+  .hozya-landing .menu-panel--open {
+    animation: none;
+  }
+}
+
+.hozya-landing .menu-panel ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.domus-landing .menu-panel li + li {
+.hozya-landing .menu-panel li + li {
   margin-top: 0.75rem;
 }
 
-.domus-landing .menu-panel a {
+.hozya-landing .menu-panel a {
   font-size: 1.875rem;
   line-height: 2.25rem;
 }
 
-.domus-landing .menu-panel a:hover {
+.hozya-landing .menu-panel a:hover {
   opacity: 0.7;
 }
 
-.domus-landing .ghost-text {
+.hozya-landing .ghost-text {
   -webkit-text-stroke: 1px rgba(239, 233, 223, 0.18);
   color: transparent;
 }
 
-.domus-landing .reveal {
+.hozya-landing .reveal {
   opacity: 0;
   transform: translateY(40px);
 }
 
-.domus-landing .marquee {
+.hozya-landing .marquee {
   display: flex;
   gap: 4rem;
-  animation: domus-marquee 40s linear infinite;
+  animation: hozya-marquee 40s linear infinite;
 }
 
-@keyframes domus-marquee {
+@keyframes hozya-marquee {
   to {
     transform: translateX(-50%);
   }
 }
 
-.domus-landing .input {
+.hozya-landing .input {
   width: 100%;
   background: #efe9df;
   color: #1d1916;
@@ -129,16 +222,16 @@ html:has(.domus-landing) {
   font: inherit;
 }
 
-.domus-landing .input::placeholder {
+.hozya-landing .input::placeholder {
   color: #8a807a;
 }
 
-.domus-landing .card-img {
+.hozya-landing .card-img {
   border-radius: 1.5rem;
   overflow: hidden;
 }
 
-.domus-landing .landing-nav-bar {
+.hozya-landing .landing-nav-bar {
   position: sticky;
   top: 0;
   z-index: 60;
@@ -154,23 +247,23 @@ html:has(.domus-landing) {
 }
 
 @media (max-width: 767px) {
-  .domus-landing .landing-nav-bar {
+  .hozya-landing .landing-nav-bar {
     display: flex;
   }
 }
 
 @media (min-width: 768px) {
-  .domus-landing .landing-nav-bar,
-  .domus-landing .landing-nav-drawer {
+  .hozya-landing .landing-nav-bar,
+  .hozya-landing .landing-nav-drawer {
     display: none;
   }
 }
 
-.domus-landing .landing-nav-bar--hero {
+.hozya-landing .landing-nav-bar--hero {
   background: linear-gradient(180deg, rgb(29 25 22 / 0.52) 0%, rgb(29 25 22 / 0.18) 72%, transparent 100%);
 }
 
-.domus-landing .landing-nav-bar--solid {
+.hozya-landing .landing-nav-bar--solid {
   background: rgb(239 233 223 / 0.92);
   border-bottom: 1px solid rgb(29 25 22 / 0.08);
   box-shadow: 0 10px 30px -18px rgb(29 25 22 / 0.28);
@@ -178,19 +271,19 @@ html:has(.domus-landing) {
   backdrop-filter: blur(14px);
 }
 
-.domus-landing .landing-nav-bar--menu-open.landing-nav-bar--hero,
-.domus-landing .landing-nav-bar--menu-open.landing-nav-bar--solid {
+.hozya-landing .landing-nav-bar--menu-open.landing-nav-bar--hero,
+.hozya-landing .landing-nav-bar--menu-open.landing-nav-bar--solid {
   background: rgb(239 233 223 / 0.96);
   border-bottom-color: rgb(29 25 22 / 0.1);
 }
 
-.domus-landing .landing-nav-logo {
+.hozya-landing .landing-nav-logo {
   display: flex;
   align-items: center;
   min-width: 0;
 }
 
-.domus-landing .landing-nav-logo-img {
+.hozya-landing .landing-nav-logo-img {
   width: auto;
   height: 2.35rem;
   max-width: 7.5rem;
@@ -199,19 +292,19 @@ html:has(.domus-landing) {
   transition: filter 0.35s ease;
 }
 
-.domus-landing .landing-nav-bar--solid .landing-nav-logo-img,
-.domus-landing .landing-nav-bar--menu-open .landing-nav-logo-img {
+.hozya-landing .landing-nav-bar--solid .landing-nav-logo-img,
+.hozya-landing .landing-nav-bar--menu-open .landing-nav-logo-img {
   filter: none;
 }
 
-.domus-landing .landing-nav-bar__actions {
+.hozya-landing .landing-nav-bar__actions {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
 }
 
-.domus-landing .landing-nav-auth-chip {
+.hozya-landing .landing-nav-auth-chip {
   display: inline-flex;
   align-items: center;
   padding: 0.45rem 0.85rem;
@@ -225,20 +318,20 @@ html:has(.domus-landing) {
     border-color 0.25s ease;
 }
 
-.domus-landing .landing-nav-bar--hero .landing-nav-auth-chip {
+.hozya-landing .landing-nav-bar--hero .landing-nav-auth-chip {
   color: #efe9df;
   border: 1px solid rgb(239 233 223 / 0.35);
   background: rgb(29 25 22 / 0.22);
 }
 
-.domus-landing .landing-nav-bar--solid .landing-nav-auth-chip,
-.domus-landing .landing-nav-bar--menu-open .landing-nav-auth-chip {
-  color: #1d1916;
-  border: 1px solid rgb(29 25 22 / 0.12);
-  background: rgb(255 255 255 / 0.72);
+.hozya-landing .landing-nav-bar--solid .landing-nav-auth-chip,
+.hozya-landing .landing-nav-bar--menu-open .landing-nav-auth-chip {
+  color: #efe9df;
+  border: 1px solid transparent;
+  background: #1d1916;
 }
 
-.domus-landing .landing-nav-toggle {
+.hozya-landing .landing-nav-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -253,19 +346,19 @@ html:has(.domus-landing) {
     transform 0.25s ease;
 }
 
-.domus-landing .landing-nav-bar--hero .landing-nav-toggle {
+.hozya-landing .landing-nav-bar--hero .landing-nav-toggle {
   color: #efe9df;
   background: rgb(29 25 22 / 0.35);
   border: 1px solid rgb(239 233 223 / 0.28);
 }
 
-.domus-landing .landing-nav-bar--solid .landing-nav-toggle,
-.domus-landing .landing-nav-bar--menu-open .landing-nav-toggle {
+.hozya-landing .landing-nav-bar--solid .landing-nav-toggle,
+.hozya-landing .landing-nav-bar--menu-open .landing-nav-toggle {
   background: #1d1916;
   color: #efe9df;
 }
 
-.domus-landing .landing-nav-drawer {
+.hozya-landing .landing-nav-drawer {
   position: fixed;
   inset: 0;
   z-index: 55;
@@ -277,20 +370,20 @@ html:has(.domus-landing) {
     visibility 0.35s ease;
 }
 
-.domus-landing .landing-nav-drawer--open {
+.hozya-landing .landing-nav-drawer--open {
   pointer-events: auto;
   visibility: visible;
   opacity: 1;
 }
 
-.domus-landing .landing-nav-drawer__grain {
+.hozya-landing .landing-nav-drawer__grain {
   position: absolute;
   inset: 0;
   background: #2a2521;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
 }
 
-.domus-landing .landing-nav-drawer__inner {
+.hozya-landing .landing-nav-drawer__inner {
   position: relative;
   z-index: 1;
   display: flex;
@@ -299,7 +392,7 @@ html:has(.domus-landing) {
   padding: 5.5rem 1.75rem 2.5rem;
 }
 
-.domus-landing .landing-nav-drawer__eyebrow {
+.hozya-landing .landing-nav-drawer__eyebrow {
   margin: 0 0 1.25rem;
   font-size: 0.6875rem;
   font-weight: 600;
@@ -308,18 +401,18 @@ html:has(.domus-landing) {
   color: rgb(200 169 106 / 0.85);
 }
 
-.domus-landing .landing-nav-drawer__links {
+.hozya-landing .landing-nav-drawer__links {
   list-style: none;
   margin: 0;
   padding: 0;
   flex: 1;
 }
 
-.domus-landing .landing-nav-drawer__links li {
+.hozya-landing .landing-nav-drawer__links li {
   overflow: hidden;
 }
 
-.domus-landing .landing-nav-drawer__links a {
+.hozya-landing .landing-nav-drawer__links a {
   display: block;
   padding: 0.55rem 0;
   font-family: var(--font-display);
@@ -336,16 +429,16 @@ html:has(.domus-landing) {
   transition-delay: calc(var(--nav-i, 0) * 45ms + 80ms);
 }
 
-.domus-landing .landing-nav-drawer--open .landing-nav-drawer__links a {
+.hozya-landing .landing-nav-drawer--open .landing-nav-drawer__links a {
   transform: translateY(0);
   opacity: 1;
 }
 
-.domus-landing .landing-nav-drawer__links a:active {
+.hozya-landing .landing-nav-drawer__links a:active {
   color: #c8a96a;
 }
 
-.domus-landing .landing-nav-drawer__footer {
+.hozya-landing .landing-nav-drawer__footer {
   margin-top: 2rem;
   padding-top: 1.75rem;
   border-top: 1px solid rgb(239 233 223 / 0.12);
@@ -359,12 +452,12 @@ html:has(.domus-landing) {
     opacity 0.45s ease 0.28s;
 }
 
-.domus-landing .landing-nav-drawer--open .landing-nav-drawer__footer {
+.hozya-landing .landing-nav-drawer--open .landing-nav-drawer__footer {
   transform: translateY(0);
   opacity: 1;
 }
 
-.domus-landing .landing-nav-drawer__cta {
+.hozya-landing .landing-nav-drawer__cta {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
@@ -376,7 +469,7 @@ html:has(.domus-landing) {
   font-weight: 500;
 }
 
-.domus-landing .landing-nav-drawer__cta .dot {
+.hozya-landing .landing-nav-drawer__cta .dot {
   width: 30px;
   height: 30px;
   border-radius: 999px;
@@ -386,98 +479,230 @@ html:has(.domus-landing) {
   place-items: center;
 }
 
-.domus-landing .landing-nav-drawer__secondary {
+.hozya-landing .landing-nav-drawer__secondary {
   font-size: 0.9375rem;
   color: rgb(239 233 223 / 0.62);
 }
 
-.domus-landing .landing-nav-drawer__secondary:hover {
+.hozya-landing .landing-nav-drawer__secondary:hover {
   color: #efe9df;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .domus-landing .landing-nav-drawer__links a,
-  .domus-landing .landing-nav-drawer__footer {
+  .hozya-landing .landing-nav-drawer__links a,
+  .hozya-landing .landing-nav-drawer__footer {
     transform: none;
     opacity: 1;
     transition: none;
   }
 }
 
-.domus-landing .book-form-auth {
+.hozya-landing .book-form-auth {
   margin-top: 1.5rem;
   color: rgba(239, 233, 223, 0.7);
   font-size: 0.9375rem;
 }
 
-.domus-landing .book-form-auth a {
+.hozya-landing .book-form-auth a {
   color: #efe9df;
   text-decoration: underline;
   text-underline-offset: 0.2em;
 }
 
-.domus-landing .book-form-auth a:hover {
+.hozya-landing .book-form-auth a:hover {
   opacity: 0.8;
 }
 
-.domus-landing .hero-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.hozya-landing .hero-stage {
+  height: 100vh;
+  height: 100svh;
 }
 
-.domus-landing .scroll-text-reveal {
+.hozya-landing .hero-section {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hozya-landing .hero-section a,
+.hozya-landing .hero-section button {
+  pointer-events: auto;
+}
+
+.hozya-landing .hero-stage ~ * {
+  position: relative;
+  z-index: 2;
+}
+
+.hozya-landing .hero-media {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 125%;
+  will-change: transform;
+}
+
+.hozya-landing .hero-img {
+  object-fit: cover;
+  object-position: center top;
+}
+
+.hozya-landing .hero-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(0deg, rgb(29 25 22 / 0.62) 0%, rgb(29 25 22 / 0.28) 32%, transparent 58%),
+    linear-gradient(90deg, rgb(29 25 22 / 0.38) 0%, rgb(29 25 22 / 0.12) 28%, transparent 52%),
+    linear-gradient(180deg, rgb(29 25 22 / 0.42) 0%, transparent 28%);
+}
+
+.hozya-landing .hero-logo img {
+  filter: drop-shadow(0 2px 14px rgb(0 0 0 / 0.35));
+}
+
+.hozya-landing .hero-copy {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 1.75rem;
+  padding: 5.5rem 1.5rem 2.25rem;
+  pointer-events: none;
+}
+
+.hozya-landing .hero-copy .pill {
+  pointer-events: auto;
+}
+
+.hozya-landing .hero-copy__text {
+  position: absolute;
+  left: 50%;
+  top:50%;
+  display: flex;
+  flex-direction: column;
+  gap:2rem;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #efe9df;
+  text-shadow:
+    0 2px 18px rgb(29 25 22 / 0.55),
+    0 1px 3px rgb(29 25 22 / 0.4);
+}
+
+.hozya-landing .hero-tagline {
+  margin: 0 0 0.85rem;
+  color: #efe9df;
+  font-size: 2.25rem;
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  text-shadow:
+    0 2px 18px rgb(29 25 22 / 0.55),
+    0 1px 3px rgb(29 25 22 / 0.4);
+}
+
+.hozya-landing .hero-title {
+  margin: 0;
+  color: #efe9df;
+  font-size: clamp(3.5rem, 12vw, 7.75rem);
+  line-height: 0.88;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+  text-shadow:
+    0 2px 28px rgb(29 25 22 / 0.55),
+    0 1px 6px rgb(29 25 22 / 0.4);
+}
+
+.hozya-landing .hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .hozya-landing .hero-copy {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 0 3rem 2.75rem;
+  }
+
+  .hozya-landing .hero-tagline {
+    margin-bottom: 1rem;
+  }
+
+  .hozya-landing .hero-title {
+    font-size: clamp(5rem, 8.5vw, 8rem);
+  }
+
+  .hozya-landing .hero-ctas {
+    flex-shrink: 0;
+    padding-bottom: 0.35rem;
+  }
+}
+
+.hozya-landing .scroll-text-reveal {
   font-size: clamp(1.75rem, 4.5vw, 2.25rem);
   font-weight: 500;
   line-height: 1.25;
   letter-spacing: -0.03em;
 }
 
-.domus-landing .scroll-text-word {
+.hozya-landing .scroll-text-word {
   display: inline;
   will-change: color;
 }
 
-.domus-landing .template-card-img {
+.hozya-landing .template-card-img {
   transition: transform 0.7s;
 }
 
-.domus-landing .template-card-link {
+.hozya-landing .template-card-link {
   transition: opacity 0.25s ease;
 }
 
-.domus-landing .template-card-link:hover {
+.hozya-landing .template-card-link:hover {
   opacity: 0.95;
 }
 
-.domus-landing .group:hover .template-card-img {
+.hozya-landing .group:hover .template-card-img {
   transform: scale(1.05);
 }
 
-.domus-landing .template-card-preview .pill {
+.hozya-landing .template-card-preview .pill {
   transform: translateY(6px);
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.domus-landing .group:hover .template-card-preview .pill {
+.hozya-landing .group:hover .template-card-preview .pill {
   transform: translateY(0);
 }
 
-.domus-landing .journal-card-img {
+.hozya-landing .journal-card-img {
   transition: transform 0.7s;
 }
 
-.domus-landing .journal-group:hover .journal-card-img {
+.hozya-landing .journal-group:hover .journal-card-img {
   transform: scale(1.05);
 }
 
-.domus-landing .pricing-section {
+.hozya-landing .pricing-section {
   border-top: 1px solid rgb(29 25 22 / 0.08);
 }
 
-.domus-landing .pricing-grain {
+.hozya-landing .pricing-grain {
   position: absolute;
   inset: 0;
   opacity: 0.45;
@@ -485,13 +710,13 @@ html:has(.domus-landing) {
   mix-blend-mode: multiply;
 }
 
-.domus-landing .pricing-grid {
+.hozya-landing .pricing-grid {
   display: grid;
   gap: 1.5rem;
 }
 
 @media (min-width: 768px) {
-  .domus-landing .pricing-grid {
+  .hozya-landing .pricing-grid {
     grid-template-columns: repeat(3, 1fr);
     align-items: stretch;
     gap: 1.5rem;
@@ -499,12 +724,12 @@ html:has(.domus-landing) {
 }
 
 @media (min-width: 1024px) {
-  .domus-landing .pricing-grid {
+  .hozya-landing .pricing-grid {
     gap: 2rem;
   }
 }
 
-.domus-landing .pricing-card {
+.hozya-landing .pricing-card {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -519,12 +744,12 @@ html:has(.domus-landing) {
     box-shadow 0.45s ease;
 }
 
-.domus-landing .pricing-card:hover {
+.hozya-landing .pricing-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 32px 56px -24px rgb(29 25 22 / 0.28);
 }
 
-.domus-landing .pricing-card-featured {
+.hozya-landing .pricing-card-featured {
   background: #2a2521;
   border-color: rgb(200 169 106 / 0.35);
   box-shadow:
@@ -532,7 +757,7 @@ html:has(.domus-landing) {
     inset 0 1px 0 rgb(239 233 223 / 0.08);
 }
 
-.domus-landing .pricing-card-featured::before {
+.hozya-landing .pricing-card-featured::before {
   content: '';
   position: absolute;
   top: 0;
@@ -542,18 +767,18 @@ html:has(.domus-landing) {
   background: linear-gradient(90deg, transparent, #c8a96a 20%, #c8a96a 80%, transparent);
 }
 
-.domus-landing .pricing-card-featured:hover {
+.hozya-landing .pricing-card-featured:hover {
   box-shadow:
     0 40px 72px -28px rgb(0 0 0 / 0.5),
     inset 0 1px 0 rgb(239 233 223 / 0.1);
 }
 
-.domus-landing .pricing-card-estate {
+.hozya-landing .pricing-card-estate {
   background: #e7dfd2;
   border-color: rgb(29 25 22 / 0.1);
 }
 
-.domus-landing .pricing-tier-index {
+.hozya-landing .pricing-tier-index {
   position: absolute;
   top: 1.25rem;
   right: 1.5rem;
@@ -564,11 +789,11 @@ html:has(.domus-landing) {
   user-select: none;
 }
 
-.domus-landing .pricing-card-featured .pricing-tier-index {
+.hozya-landing .pricing-card-featured .pricing-tier-index {
   color: rgb(239 233 223 / 0.07);
 }
 
-.domus-landing .pricing-badge {
+.hozya-landing .pricing-badge {
   position: absolute;
   top: 1.5rem;
   left: 2rem;
@@ -582,22 +807,22 @@ html:has(.domus-landing) {
   border-radius: 999px;
 }
 
-.domus-landing .pricing-card-head {
+.hozya-landing .pricing-card-head {
   position: relative;
   margin-bottom: 2rem;
   padding-top: 0.5rem;
 }
 
-.domus-landing .pricing-card-featured .pricing-card-head {
+.hozya-landing .pricing-card-featured .pricing-card-head {
   padding-top: 1.75rem;
 }
 
-.domus-landing .pricing-tagline {
+.hozya-landing .pricing-tagline {
   margin-top: 0.35rem;
   font-size: 0.95rem;
 }
 
-.domus-landing .pricing-amount {
+.hozya-landing .pricing-amount {
   display: flex;
   align-items: flex-start;
   gap: 0.1rem;
@@ -605,24 +830,24 @@ html:has(.domus-landing) {
   color: #1d1916;
 }
 
-.domus-landing .pricing-amount-light {
+.hozya-landing .pricing-amount-light {
   color: #efe9df;
 }
 
-.domus-landing .pricing-currency {
+.hozya-landing .pricing-currency {
   font-size: 1.75rem;
   line-height: 1.2;
   margin-top: 0.65rem;
   opacity: 0.7;
 }
 
-.domus-landing .pricing-value {
+.hozya-landing .pricing-value {
   font-size: clamp(4rem, 12vw, 5.5rem);
   letter-spacing: -0.05em;
   line-height: 0.9;
 }
 
-.domus-landing .pricing-period {
+.hozya-landing .pricing-period {
   align-self: flex-end;
   margin-bottom: 0.65rem;
   margin-left: 0.35rem;
@@ -631,7 +856,7 @@ html:has(.domus-landing) {
   white-space: nowrap;
 }
 
-.domus-landing .pricing-features {
+.hozya-landing .pricing-features {
   list-style: none;
   margin: 0 0 2rem;
   padding: 0;
@@ -641,7 +866,7 @@ html:has(.domus-landing) {
   gap: 0.85rem;
 }
 
-.domus-landing .pricing-features li {
+.hozya-landing .pricing-features li {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -649,7 +874,7 @@ html:has(.domus-landing) {
   color: rgb(29 25 22 / 0.82);
 }
 
-.domus-landing .pricing-features li::before {
+.hozya-landing .pricing-features li::before {
   content: '';
   flex-shrink: 0;
   width: 6px;
@@ -659,30 +884,30 @@ html:has(.domus-landing) {
   box-shadow: 0 0 0 3px rgb(200 169 106 / 0.2);
 }
 
-.domus-landing .pricing-features-light li {
+.hozya-landing .pricing-features-light li {
   color: rgb(239 233 223 / 0.88);
 }
 
-.domus-landing .pricing-features-light li::before {
+.hozya-landing .pricing-features-light li::before {
   background: #c8a96a;
   box-shadow: 0 0 0 3px rgb(200 169 106 / 0.25);
 }
 
-.domus-landing .pricing-cta {
+.hozya-landing .pricing-cta {
   margin-top: auto;
   width: fit-content;
 }
 
 @media (min-width: 768px) {
-  .domus-landing .pricing-card {
+  .hozya-landing .pricing-card {
     padding: 2.5rem;
   }
 
-  .domus-landing .pricing-card-featured {
+  .hozya-landing .pricing-card-featured {
     transform: translateY(-0.75rem);
   }
 
-  .domus-landing .pricing-card-featured:hover {
+  .hozya-landing .pricing-card-featured:hover {
     transform: translateY(calc(-0.75rem - 4px));
   }
 }

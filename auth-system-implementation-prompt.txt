@@ -1,0 +1,672 @@
+================================================================================
+AI CODING AGENT PROMPT: Implement Authentication System (Hozya-style)
+================================================================================
+
+You are implementing a full-stack authentication system for a Next.js App Router
+application. Replicate the architecture, patterns, and behavior described below.
+Do not substitute a different auth approach (no NextAuth, no Clerk, no bcrypt,
+no cookie-based JWT sessions) unless explicitly told otherwise.
+
+This system is intentionally lightweight: the client persists the logged-in user
+ID in local storage and sends it on every API request via a custom header. There
+is no Bearer token flow in active use.
+
+================================================================================
+1. TECH STACK & CONSTRAINTS
+================================================================================
+
+Required stack:
+- Next.js 16+ with App Router (route handlers under app/api/**)
+- TypeScript (strict, no `any` unless unavoidable)
+- PostgreSQL + Prisma ORM
+- Zustand with persist + devtools middleware
+- Axios for client HTTP (baseURL: `/api`)
+- jsonwebtoken for password encoding (NOT bcrypt, NOT argon2)
+- React client components for auth forms
+- TanStack Query for data fetching after login (optional but expected in app)
+
+Environment variables:
+- DATABASE_URL — PostgreSQL connection string
+- JWT_SECRET — required for password hashing/verification (throw if missing at runtime)
+
+Export env values from a central config module (e.g. config/environments/index.ts).
+Do not read process.env directly throughout the codebase.
+
+================================================================================
+2. HIGH-LEVEL AUTH MODEL
+================================================================================
+
+Session model:
+- There is NO server-issued access token in the active implementation.
+- After sign-in or sign-up, the API returns user profile fields (id, email, names).
+- The client stores `user_uuid` (same as database User.id) in a persisted Zustand store.
+- An Axios request interceptor attaches `x-user-id: <user_uuid>` to every API call.
+- API route handlers read that header to identify the current user.
+- Logout clears Zustand state, removes the persist key from localStorage, and
+  redirects to `/auth/sign-in`.
+
+Important security note (document in code comments if needed):
+- `x-user-id` is client-controlled and is NOT cryptographically verified.
+- This pattern assumes a trusted first-party SPA context, not a public API.
+- Do NOT present this as production-grade API security against malicious clients.
+- Implement exactly as specified; do not "improve" it to JWT sessions unless asked.
+
+No Next.js middleware:
+- Do NOT add middleware.ts for auth gating.
+- Protected pages rely on client state + API 401 responses.
+- Dashboard is accessible without server redirect; API calls fail if not authenticated.
+
+Legacy token hooks (include but keep commented out):
+- Store fields: access_token, expires_in (commented out in Zustand)
+- Axios interceptor: Bearer Authorization header (commented out)
+- Token expiry check via isTokenExpired helper (commented out)
+- API responses still return access_token: null, expires_in: null for compatibility
+
+================================================================================
+3. DATABASE: USER MODEL (Prisma)
+================================================================================
+
+Minimum User fields required for auth:
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  first_name  String
+  last_name   String
+  password    String             // JWT-encoded password OR '' for guest accounts
+  phone       String?
+  // ... other app-specific fields as needed
+}
+
+Guest account convention:
+- A "guest" user has password === '' (empty string).
+- Guest users are created during booking/checkout flows without a password.
+- They can later "sign up" with the same email to convert to a full account.
+
+================================================================================
+4. SHARED TYPES
+================================================================================
+
+Create features/user/interfaces/user.interface.ts (or equivalent):
+
+export interface LoggedInUser {
+  user_uuid: string | null;
+  email: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  isLoggedIn?: boolean | null;
+}
+
+export interface User {
+  id: string;
+  uuid: string;          // alias of id in API responses
+  email: string;
+  first_name: string;
+  last_name: string;
+  host_name?: string | null;
+  vat_number: string | null;
+  phone?: string;
+  bio?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateUserDto {
+  first_name: string;
+  last_name: string;
+  email: string;
+  password: string;
+}
+
+export interface UpdateUserDto {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string | null;
+}
+
+For fixed enum values (roles, statuses), use the shared constant pattern:
+  export const RoleTypes = { USER: 'USER' } as const;
+  export type RoleType = (typeof RoleTypes)[keyof typeof RoleTypes];
+Never inline magic string unions for DB-backed values.
+
+================================================================================
+5. PASSWORD UTILITIES
+================================================================================
+
+File: app/api/_utils/password.ts
+
+Use JWT to encode the plaintext password in the stored value:
+
+const PASSWORD_PAYLOAD_KEY = 'password';
+
+function getJwtSecret(): string {
+  const secret = environments.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET is not configured');
+  return secret;
+}
+
+export function hashPassword(password: string): string {
+  return jwt.sign({ [PASSWORD_PAYLOAD_KEY]: password }, getJwtSecret());
+}
+
+export function isHashedPassword(storedPassword: string): boolean {
+  return storedPassword.startsWith('eyJ');  // JWT header prefix
+}
+
+export function verifyPassword(password: string, storedPassword: string): boolean {
+  if (isHashedPassword(storedPassword)) {
+    try {
+      const decoded = jwt.verify(storedPassword, getJwtSecret()) as Record<string, string>;
+      return decoded[PASSWORD_PAYLOAD_KEY] === password;
+    } catch {
+      return false;
+    }
+  }
+  // Legacy plaintext fallback for migration
+  return storedPassword === password;
+}
+
+File: app/api/_utils/guest-account.ts
+
+export function isGuestAccount(password: string): boolean {
+  return password === '';
+}
+
+================================================================================
+6. AUTH REQUEST UTILITIES
+================================================================================
+
+File: app/api/_utils/auth.ts
+
+/** Authenticated user id (host or guest), from `x-user-id` header. */
+export const getUserIdFromRequest = (request: Request): string | null => {
+  const id = request.headers.get('x-user-id');
+  if (!id) return null;
+  return id;
+};
+
+export const getHostIdFromRequest = getUserIdFromRequest;  // alias
+
+Usage in every protected route handler:
+  const userId = getUserIdFromRequest(request);
+  if (!userId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
+
+For resource ownership:
+  if (id !== userId) return Response.json({ message: 'Forbidden' }, { status: 403 });
+
+Optionally verify user still exists:
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+  if (!user) return Response.json({ message: 'Invalid host session. Please sign in again.' }, { status: 401 });
+
+================================================================================
+7. HOST NAME (SIGN-UP UNIQUENESS)
+================================================================================
+
+On sign-up, derive a URL slug from first + last name:
+
+File: lib/slug/host-name-slug.ts
+  - Lowercase, trim, spaces → hyphens, strip non [a-z-], collapse hyphens
+  - hostNameSlugFromParts(firstName, lastName)
+
+File: app/api/_utils/host-name.ts
+  - resolveHostNameSlug(firstName, lastName)
+  - findHostNameOwnerId(hostName, excludeUserId?)
+  - assertHostNameAvailable(firstName, lastName, excludeUserId?)
+    → { ok: true, host_name } | { ok: false, reason: 'empty' | 'taken' }
+
+Sign-up must reject taken host names with 409 and a clear message.
+
+================================================================================
+8. API ROUTES: SIGN-IN
+================================================================================
+
+Route: POST /api/auth/sign-in
+File: app/api/auth/sign-in/route.ts
+
+Request body:
+  { email?: string; password?: string }
+
+Validation:
+  - email and password required → 400
+  - email trimmed, lowercased
+  - basic email regex: /\S+@\S+\.\S+/
+
+Logic:
+  1. findUnique user by email (select id, email, first_name, last_name, vat_number, password)
+  2. Reject if: no user, isGuestAccount(password), or !verifyPassword(input, stored)
+     → 401 { message: 'Invalid credentials. Please try again.' }
+  3. On success, update user:
+     - is_archived: false
+     - if password is NOT hashed yet, upgrade: password: hashPassword(input)
+  4. Return 200 JSON:
+
+{
+  id: user.id,
+  user_uuid: user.id,
+  uuid: user.id,
+  email: user.email,
+  first_name: user.first_name,
+  last_name: user.last_name,
+  access_token: null,
+}
+
+Errors:
+  - 500 generic: 'Could not sign in. Please try again.'
+  - Never leak whether email exists vs wrong password (same 401 message)
+
+================================================================================
+9. API ROUTES: SIGN-UP
+================================================================================
+
+Route: POST /api/auth/sign-up
+File: app/api/auth/sign-up/route.ts
+
+Request body:
+  { first_name?, last_name?, email?, password? }
+
+Validation:
+  - first_name and last_name required (trimmed) → 400
+  - email and password required → 400
+  - email format valid → 400
+  - password min length 8 → 400
+
+Logic:
+  1. Check existing user by email
+  2. If exists AND NOT guest account → 409 'User already exists with this email.'
+  3. If exists AND IS guest account → UPDATE user with names, host_name, hashed password, is_archived: false
+  4. If not exists → CREATE user with same fields
+  5. Return 201 JSON (same shape as sign-in + created_at)
+
+Errors:
+  - 500: 'Could not create account. Please try again.'
+
+================================================================================
+10. API ROUTES: CURRENT USER
+================================================================================
+
+Route: GET /api/users/me
+  - Requires x-user-id → 401 if missing
+  - Returns full user profile via usersService.getById(userId)
+  - 404 if user not found
+
+Route: GET/PUT /api/users/[id]
+  - Requires x-user-id
+  - id must equal authenticated userId → 403 otherwise
+  - PUT validates update via usersService (duplicate email, host name conflicts, etc.)
+
+================================================================================
+11. API ROUTE REGISTRY
+================================================================================
+
+File: config/api/routes.ts
+
+export const ApiRoutes = {
+  auth: {
+    login: '/auth/sign-in',
+    register: '/auth/sign-up',
+  },
+  users: {
+    prefix: '/users',
+    user: (id: string) => `/users/${id}`,
+    me: '/users/me',
+    search: (q: string) => `/users/search?q=${encodeURIComponent(q)}`,
+  },
+  // ... other app routes
+};
+
+All client API calls must use ApiRoutes constants, not hardcoded paths.
+
+================================================================================
+12. AXIOS CLIENT
+================================================================================
+
+File: config/api/axios.ts
+
+const axiosInstance = axios.create({
+  baseURL: '/api',   // always hit route handlers, not page routes
+  headers: { 'Content-Type': 'application/json' },
+});
+
+axiosInstance.interceptors.request.use((config) => {
+  const authState = getAuthStoreState();
+  const userId = authState?.user_uuid;
+
+  // Commented-out token expiry + Bearer auth (keep for future use):
+  // if (authState?.expires_in && isTokenExpired(authState.expires_in)) {
+  //   authState.logout();
+  //   return Promise.reject(new Error('Token expired'));
+  // }
+  // if (authState.access_token) {
+  //   config.headers.Authorization = `Bearer ${authState.access_token}`;
+  // }
+
+  if (userId) {
+    config.headers['x-user-id'] = userId;
+  }
+
+  return config;
+});
+
+export default axiosInstance;
+
+Also export postMultipart helper that strips Content-Type for FormData uploads.
+
+================================================================================
+13. ZUSTAND AUTH STORE
+================================================================================
+
+File: store/auth.ts
+
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+
+const STORE_KEY = 'auth';
+
+interface UserStore extends LoggedInUser {
+  login(user: LoggedInUser): void;
+  logout(): void;
+  updateUser(user: Partial<LoggedInUser>): void;
+}
+
+export const useAuthStore = create<UserStore>()(
+  devtools(
+    persist(
+      (set) => ({
+        isLoggedIn: false,
+        user_uuid: null,
+        first_name: null,
+        last_name: null,
+        email: null,
+
+        login: (user) => {
+          set((state) => ({
+            ...state,
+            user_uuid: user.user_uuid,
+            email: user.email,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            isLoggedIn: true,
+          }));
+        },
+
+        logout: () => {
+          set((state) => ({
+            ...state,
+            isLoggedIn: false,
+            user_uuid: null,
+            first_name: null,
+            last_name: null,
+            email: null,
+          }));
+          localStorage.removeItem(STORE_KEY);
+          window.location.href = '/auth/sign-in';
+        },
+
+        updateUser: (user) => {
+          set((state) => ({ ...state, ...user }));
+        },
+      }),
+      { name: STORE_KEY },
+    ),
+  ),
+);
+
+export const getAuthStoreState = () => useAuthStore.getState();
+
+Hydration helper (required for SSR/persist race conditions):
+
+export const useAuthHydrated = () => {
+  const [hydrated, setHydrated] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return useAuthStore.persist?.hasHydrated() ?? false;
+  });
+
+  useEffect(() => {
+    if (hydrated) return;
+    const persist = useAuthStore.persist;
+    if (!persist) { setHydrated(true); return; }
+    if (persist.hasHydrated()) { setHydrated(true); return; }
+    return persist.onFinishHydration(() => setHydrated(true));
+  }, [hydrated]);
+
+  return hydrated;
+};
+
+TanStack Query hooks that depend on auth must use:
+  enabled: hydrated && Boolean(userId)
+
+================================================================================
+14. AUTH UI PAGES
+================================================================================
+
+Routes:
+  /auth/sign-in  → SignInForm
+  /auth/sign-up  → SignUpForm
+
+Layout: app/(pages)/auth/layout.tsx
+  - Split layout: hero image aside + form card section
+  - Link back to home with logo
+  - Mobile brand component
+  - Dedicated auth-shell.css for styling
+
+Sign-in form (client component):
+  - Fields: email, password
+  - Link to /auth/forgot-password (page may not exist yet — include link anyway)
+  - Link to /auth/sign-up
+  - On submit: POST ApiRoutes.auth.login via axiosInstance
+  - On success: call useAuthStore.login() with response data, router.push('/dashboard')
+  - On error: show err.response?.data?.message or fallback
+  - Loading state with spinner, disable submit while loading
+
+Sign-up form (client component):
+  - Fields: first_name, last_name, email, password (minLength 8)
+  - On submit: POST ApiRoutes.auth.register
+  - On success: login + redirect to /dashboard (same as sign-in)
+  - Legal text: Terms of Service / Privacy Policy
+  - Link to /auth/sign-in
+
+Both forms:
+  - 'use client' directive
+  - axios.isAxiosError for error handling
+  - Trim names on submit
+
+================================================================================
+15. POST-LOGIN APP INTEGRATION
+================================================================================
+
+Landing page / nav:
+  - Read isLoggedIn from useAuthStore
+  - If logged in: show "Dashboard" link to /dashboard
+  - If not: show "Sign in" link to /auth/sign-in
+
+Dashboard shell:
+  - Logout button calls useAuthStore.logout()
+  - No server-side auth check in dashboard layout
+
+Profile page:
+  - useGetMe() fetches GET /api/users/me (requires x-user-id)
+  - On profile update success, call updateUser() to sync Zustand store
+
+Guest booking flow:
+  - If user is logged in, pre-fill guest details from auth store
+  - ensureGuestUserAndCustomerForHost() creates User with password: '' if needed
+  - If authenticatedUserId present, reuse that user instead of creating guest
+
+================================================================================
+16. GUEST ACCOUNT UPGRADE FLOW
+================================================================================
+
+File: app/api/booking/ensure-guest-and-customer.ts (or equivalent)
+
+When a booking is made without an authenticated user:
+  1. findUnique user by email
+  2. If none: create user with password: '' (guest)
+  3. If exists and isGuestAccount: update name/phone
+  4. Create or update Customer record linking guest_user_id + host_user_id
+
+When authenticatedUserId is provided:
+  - Use that user's id directly (skip guest creation)
+  - Still ensure Customer record exists for the host
+
+Sign-up with same email as guest:
+  - Upgrades guest → full account (sets password, names, host_name)
+
+Sign-in with guest account:
+  - Must fail (isGuestAccount blocks login) until they complete sign-up
+
+================================================================================
+17. WEBSOCKET AUTH (if app uses Socket.IO)
+================================================================================
+
+Server middleware:
+  io.use((socket, next) => {
+    const userId = socket.handshake.auth?.userId;
+    if (!userId) { next(new Error('Unauthorized')); return; }
+    socket.data.userId = userId;
+    next();
+  });
+
+Client hook:
+  const userId = getAuthStoreState().user_uuid;
+  if (!userId) return;
+  const socket = io({ path: '/socket.io', auth: { userId } });
+
+================================================================================
+18. PROTECTED API ROUTE PATTERN (REFERENCE)
+================================================================================
+
+Every host-scoped or user-scoped route follows this template:
+
+export async function GET(request: Request) {
+  const userId = getUserIdFromRequest(request);
+  if (!userId) return Response.json({ message: 'Unauthorized' }, { status: 401 });
+
+  // Optional: scope check
+  const hostFilter = url.searchParams.get('host_id');
+  if (hostFilter && hostFilter !== 'me') {
+    return Response.json({ message: 'Forbidden' }, { status: 403 });
+  }
+
+  // Business logic using userId as hostId / guestId
+}
+
+List endpoints use query param conventions:
+  host_id=me   → resolve to authenticated userId
+  guest_id=me  → resolve to authenticated userId
+
+================================================================================
+19. FILE STRUCTURE CHECKLIST
+================================================================================
+
+Create these files (paths are canonical):
+
+app/api/_utils/auth.ts
+app/api/_utils/password.ts
+app/api/_utils/guest-account.ts
+app/api/_utils/host-name.ts
+app/api/auth/sign-in/route.ts
+app/api/auth/sign-up/route.ts
+app/api/users/me/route.ts
+app/api/users/[id]/route.ts
+app/(pages)/auth/layout.tsx
+app/(pages)/auth/sign-in/page.tsx
+app/(pages)/auth/sign-up/page.tsx
+app/(pages)/auth/_components/sign-in-form.tsx
+app/(pages)/auth/_components/sign-up-form.tsx
+app/(pages)/auth/auth-shell.css
+config/api/axios.ts
+config/api/routes.ts
+config/environments/index.ts
+features/user/interfaces/user.interface.ts
+lib/slug/host-name-slug.ts
+lib/token.ts                    // isTokenExpired helper (for future token flow)
+store/auth.ts
+
+================================================================================
+20. ERROR RESPONSE CONVENTIONS
+================================================================================
+
+All API errors return JSON: { message: string }
+
+Status codes:
+  400 — validation errors (specific message)
+  401 — missing x-user-id or invalid credentials
+  403 — authenticated but not allowed (wrong resource owner)
+  404 — resource not found
+  409 — duplicate email, duplicate host name
+  500 — generic server error (no stack traces to client)
+
+Sign-in/sign-up catch blocks return generic 500 messages; do not expose internals.
+
+================================================================================
+21. TESTING CHECKLIST
+================================================================================
+
+Manual / automated tests to verify:
+
+[ ] Sign up with new email → 201, user created, is_archived false, password hashed (starts with eyJ)
+[ ] Sign up with duplicate email (non-guest) → 409
+[ ] Sign up with guest email → upgrades guest, sets password
+[ ] Sign in with valid credentials → 200, returns user fields
+[ ] Sign in with wrong password → 401 (generic message)
+[ ] Sign in as guest account → 401
+[ ] Sign in with legacy plaintext password → succeeds and upgrades to hashed on next login
+[ ] After login, axios sends x-user-id header on API calls
+[ ] GET /api/users/me without header → 401
+[ ] GET /api/users/me with valid header → 200 profile
+[ ] PUT /api/users/[other-id] → 403
+[ ] Logout clears store and redirects to /auth/sign-in
+[ ] useAuthHydrated prevents queries before persist hydration
+[ ] host_name uniqueness enforced on sign-up
+[ ] Landing nav reflects isLoggedIn state
+
+================================================================================
+22. IMPLEMENTATION ORDER
+================================================================================
+
+1. Prisma User model + migration
+2. Environment config + JWT_SECRET
+3. Password + guest-account + auth utils
+4. host-name slug utils
+5. sign-in and sign-up API routes
+6. Zustand auth store + useAuthHydrated
+7. Axios instance with x-user-id interceptor
+8. ApiRoutes registry
+9. Auth layout + sign-in/sign-up forms
+10. GET /api/users/me + users/[id] routes
+11. Wire logout in dashboard shell
+12. Integrate auth into landing nav and profile page
+13. Guest account flow (if booking feature exists)
+14. Socket.IO auth (if messaging feature exists)
+
+================================================================================
+23. DO NOT DO
+================================================================================
+
+- Do not use NextAuth, Clerk, Auth0, Supabase Auth, or similar
+- Do not use bcrypt/argon2 for passwords (use JWT encoding as specified)
+- Do not add middleware.ts for auth unless explicitly requested
+- Do not issue real access_token JWTs for session management (return null)
+- Do not use magic string unions for DB enum values
+- Do not put business logic in route handlers beyond validation + service calls
+- Do not create README files unless asked
+- Do not "fix" the x-user-id security model — replicate it faithfully
+
+================================================================================
+24. SUCCESS CRITERIA
+================================================================================
+
+The implementation is complete when:
+
+1. A user can sign up, sign in, access /dashboard, and log out.
+2. Authenticated API calls include x-user-id and protected routes return 401 without it.
+3. Guest users (password '') cannot sign in but can upgrade via sign-up.
+4. Passwords are stored JWT-encoded; legacy plaintext auto-migrates on sign-in.
+5. Zustand persist survives page refresh; hydrated queries wait for rehydration.
+6. All auth paths use ApiRoutes constants and shared types.
+7. Error messages and status codes match the conventions above.
+
+================================================================================
+END OF PROMPT
+================================================================================

@@ -24,6 +24,7 @@ import {
 	Luggage,
 	Menu,
 	MessageCircle,
+	Repeat,
 	Settings,
 	Users,
 	Wallet,
@@ -32,7 +33,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui';
 import Image from 'next/image';
-import logo from '@/public/images/logo.png';
+import logo from '@/public/images/dash-logo.png';
 import { useAuthStore } from '@/store/auth';
 import { DashboardTheme, useDashboardThemeStore } from '@/store/dashboard-theme';
 import { ThemeToggle } from './theme-toggle';
@@ -56,7 +57,7 @@ const navItems: NavItem[] = [
 	{ label: 'Profile', href: '/dashboard/profile', icon: <CircleUser className="h-4 w-4" /> },
 	// { label: 'Settings', href: '/dashboard/settings', icon: <Settings className="h-4 w-4" /> },
 	{ label: 'Payments', href: '/dashboard/payments', icon: <CreditCard className="h-4 w-4" /> },
-	{ label: 'Subscription', href: '/dashboard/subscription', icon: <CreditCard className="h-4 w-4" /> },
+	{ label: 'Subscription', href: '/dashboard/subscription', icon: <Repeat className="h-4 w-4" /> },
 ];
 
 const isItemActive = (pathname: string, href: string) =>
@@ -142,7 +143,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 				>
 					<div className="flex items-center justify-between px-2">
 						<Link href="/" className={['font-serif text-2xl tracking-tight', isCollapsed ? 'hidden' : 'block'].join(' ')}>
-							<Image src={logo} alt="Domus" width={100} height={100} className='w-15 h-15' />
+							<Image src={logo} alt="Hozya" width={100} height={100} className='w-15 h-auto' />
 						</Link>
 						<Button
 							type="button"

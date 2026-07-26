@@ -93,7 +93,7 @@ function emailShell(title: string, body: string) {
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border:1px solid rgba(184,151,117,0.25);border-radius:16px;overflow:hidden;">
 <tr>
 <td style="padding:28px 28px 8px;">
-<p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#b89775;">Domus</p>
+<p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#b89775;">Hozya</p>
 <h1 style="margin:0;font-size:28px;line-height:1.2;font-weight:400;color:#3d3229;">${title}</h1>
 </td>
 </tr>

@@ -81,7 +81,7 @@ export function DatePickerField({
 		: undefined;
 
 	return (
-		<div className={cn('domus-date-picker-field w-full min-w-0', className)}>
+		<div className={cn('hozya-date-picker-field w-full min-w-0', className)}>
 			<DatePicker
 				selected={selected}
 				onChange={(date: Date | null) => onChange(date ? toApiDate(date) : '')}
@@ -89,13 +89,13 @@ export function DatePickerField({
 				disabled={disabled}
 				required={required}
 				id={fieldId}
-				className="domus-date-picker-field__wrapper"
+				className="hozya-date-picker-field__wrapper"
 				dateFormat="MMM d, yyyy"
 				placeholderText={placeholder}
 				showPopperArrow={false}
 				popperPlacement="bottom-start"
-				popperClassName="domus-react-datepicker-popper"
-				calendarClassName="domus-react-datepicker"
+				popperClassName="hozya-react-datepicker-popper"
+				calendarClassName="hozya-react-datepicker"
 				popperProps={{ strategy: 'fixed' }}
 				todayButton="Today"
 				shouldCloseOnSelect

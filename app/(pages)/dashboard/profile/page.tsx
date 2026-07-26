@@ -11,7 +11,7 @@ export default function ProfilePage() {
 					<p className="text-xs uppercase tracking-[0.2em] text-camel">Profile</p>
 					<h1 className="mt-2 font-serif text-4xl tracking-tight md:text-5xl">Your details, kept current.</h1>
 					<p className="mt-3 max-w-2xl text-sm text-espresso/55">
-						Update your name, contact information, and business details. Changes apply across your Domus account.
+						Update your name, contact information, and business details. Changes apply across your Hozya account.
 					</p>
 				</div>
 				<Link href="/dashboard/profile/view">

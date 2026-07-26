@@ -120,7 +120,8 @@ export async function POST(request: Request) {
 			},
 			{ status: 201 },
 		);
-	} catch {
+	} catch (error) {
+		console.error('[auth/sign-up]', error);
 		return Response.json({ message: 'Could not create account. Please try again.' }, { status: 500 });
 	}
 }

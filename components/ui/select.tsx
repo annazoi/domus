@@ -71,7 +71,7 @@ function readOptions(children: ReactNode): Opt[] {
 }
 
 const menuClassName = cn(
-	'dashboard-select-menu max-h-[min(16rem,50vh)] overflow-auto rounded-xl border border-dashboard-border bg-dashboard-panel py-1 shadow-[var(--shadow-dashboard-panel)]',
+	'dashboard-select-menu max-h-[min(16rem,50vh)] overflow-auto rounded-xl border border-dashboard-border bg-dashboard-panel shadow-[var(--shadow-dashboard-panel)] flex flex-col gap-1',
 );
 
 const row = cn(
