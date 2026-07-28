@@ -34,7 +34,7 @@ export type BrandingPreviewDemo = {
 	concept: { eyebrow: string; title: string; paragraphs: [string, string] };
 	gallery: {
 		large: { src: string; caption: string };
-		stack: [{ src: string }, { src: string }];
+		stack: { src: string }[];
 		full: { src: string; caption: string };
 	};
 	amenities: { id: AmenityId; label: string; description: string; quantity?: number; imageSrc: string }[];
@@ -166,11 +166,20 @@ const DEMO_IDS = {
 } as const;
 
 const DEMO_IMG_URLS = [
-	'https://images.unsplash.com/photo-1600210492493-0946911123ea?auto=format&fit=crop&w=1600&q=80',
-	'https://images.unsplash.com/photo-1600210492493-0946911123ea?auto=format&fit=crop&w=1200&q=80',
-	'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=80',
-	'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1000&q=80',
 	'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1600&q=80',
+	'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1200&q=80',
+	'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=1200&q=80',
+	'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80',
+	'https://images.unsplash.com/photo-1556912173-46c40145d0bf?auto=format&fit=crop&w=1200&q=80',
+	'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1600&q=80',
+] as const;
+
+const HIKARI_GALLERY_URLS = [
+	'/images/landing-feature-interior.png',
+	'/images/landing-template-hikari.png',
+	'/images/landing-journal-photos.png',
+	'/images/landing-hero.png',
+	'/images/landing-feature-pool.png',
 ] as const;
 
 function demoDocument(url: string, order: number): PropertyDocument {
@@ -191,27 +200,9 @@ function demoDocument(url: string, order: number): PropertyDocument {
 	};
 }
 
-function demoVideoDocument(url: string, order: number): PropertyDocument {
-	const t = new Date('2026-05-01T12:00:00.000Z').toISOString();
-	return {
-		id: `${DEMO_IDS.user}-doc-${order}`,
-		user_id: DEMO_IDS.user,
-		filename: `demo-walkthrough.mp4`,
-		mimetype: 'video/mp4',
-		size: 1,
-		url,
-		path: 'video-source:YOUTUBE',
-		type: 'VIDEO',
-		order,
-		created_at: t,
-		updated_at: t,
-		property_amenity_id: null,
-	};
-}
-
 function demoImages(): PropertyImage[] {
-	const cap = ['', '', '', '', ''];
-	const photos = DEMO_IMG_URLS.map((url, order) => ({
+	const cap = Array.from({ length: DEMO_IMG_URLS.length }, () => '');
+	return DEMO_IMG_URLS.map((url, order) => ({
 		id: `${DEMO_IDS.property}-img-${order}`,
 		user_id: DEMO_IDS.user,
 		property_id: DEMO_IDS.property,
@@ -222,21 +213,6 @@ function demoImages(): PropertyImage[] {
 		is_cover: order === 0,
 		order,
 	}));
-	const videoUrl = 'https://www.youtube.com/watch?v=EngW7tLk6R8';
-	return [
-		...photos,
-		{
-			id: `${DEMO_IDS.property}-vid-0`,
-			user_id: DEMO_IDS.user,
-			property_id: DEMO_IDS.property,
-			document_id: `${DEMO_IDS.user}-doc-5`,
-			description: 'House walkthrough',
-			created_at: new Date('2026-05-01T12:00:00.000Z').toISOString(),
-			document: demoVideoDocument(videoUrl, 5),
-			is_cover: false,
-			order: 5,
-		},
-	];
 }
 
 /** Synthetic listing matching `Property` — drives `/templates` previews via {@link propertyToBrandingPreview}. */
@@ -262,10 +238,10 @@ export const DEMO_PROPERTY_FOR_BRANDING: Property = {
 		'<p>We do not use interior cameras. Contact details are used only for your stay and are not shared with third parties.</p>',
 	property_type: 'house',
 	room_type: 'entire_place',
-	max_guests: 4,
-	bedrooms: 2,
-	beds: 2,
-	bathrooms: 2,
+	max_guests: 8,
+	bedrooms: 4,
+	beds: 5,
+	bathrooms: 3,
 	country: 'United States',
 	city: 'Big Sur',
 	address: 'Highway 1 (exact address shared after booking)',
@@ -274,20 +250,34 @@ export const DEMO_PROPERTY_FOR_BRANDING: Property = {
 	isVisible: true,
 	branding_theme: Theme.CANVAS,
 	amenity_ids: [
-		Amenities.WIFI,
-		Amenities.POOL,
-		Amenities.KITCHEN,
+		Amenities.FREE_PARKING,
 		Amenities.INDOOR_FIREPLACE,
-		Amenities.BATHTUB,
+		Amenities.POOL,
+		Amenities.HOT_TUB,
 		Amenities.BBQ_GRILL,
+		Amenities.COFFEE_MAKER,
+		Amenities.TV,
+		Amenities.WASHER,
+		Amenities.DRYER,
+		Amenities.AIR_CONDITIONING,
+		Amenities.OUTDOOR_FURNITURE,
+		Amenities.PATIO,
+		Amenities.WIFI,
 	],
 	amenities: [
-		Amenities.WIFI,
-		Amenities.POOL,
-		Amenities.KITCHEN,
+		Amenities.FREE_PARKING,
 		Amenities.INDOOR_FIREPLACE,
-		Amenities.BATHTUB,
+		Amenities.POOL,
+		Amenities.HOT_TUB,
 		Amenities.BBQ_GRILL,
+		Amenities.COFFEE_MAKER,
+		Amenities.TV,
+		Amenities.WASHER,
+		Amenities.DRYER,
+		Amenities.AIR_CONDITIONING,
+		Amenities.OUTDOOR_FURNITURE,
+		Amenities.PATIO,
+		Amenities.WIFI,
 	].map((value) => ({ value, description: null, selected: true })),
 	appliances: [],
 	minimum_advance_reservation_hours: null,
@@ -389,10 +379,10 @@ export function propertyToBrandingPreview(
 		},
 		gallery: {
 			large: { src: img(1), caption: photos[1]?.description?.trim() ?? '' },
-			stack: [{ src: img(2) }, { src: img(3) }],
+			stack: [{ src: img(2) }, { src: img(3) }, { src: img(4) }].filter((item) => item.src),
 			full: {
-				src: img(4),
-				caption: photos[4]?.description?.trim() ?? '',
+				src: img(5) || img(4),
+				caption: photos[5]?.description?.trim() ?? photos[4]?.description?.trim() ?? '',
 			},
 		},
 		amenities,
@@ -469,8 +459,25 @@ function decorateFullTemplateDemo(theme: PropertyBrandingTheme, d: BrandingPrevi
 			: arch
 				? { ...d.hero, series: 'Kaze Pavilion · Rental' }
 				: hikari
-					? { ...d.hero, series: 'Hikari · 光' }
+					? {
+							...d.hero,
+							series: 'Hikari · 光',
+							imageSrc: '/images/landing-feature-exterior.png',
+							videoSrc: '',
+							videoSource: undefined,
+						}
 					: d.hero,
+		gallery: hikari
+			? {
+					large: { src: HIKARI_GALLERY_URLS[0], caption: '' },
+					stack: [
+						{ src: HIKARI_GALLERY_URLS[1] },
+						{ src: HIKARI_GALLERY_URLS[2] },
+						{ src: HIKARI_GALLERY_URLS[3] },
+					],
+					full: { src: HIKARI_GALLERY_URLS[4], caption: '' },
+				}
+			: d.gallery,
 		concept: {
 			...d.concept,
 			eyebrow: mizu ? 'The stay' : arch ? 'Overview' : hikari ? 'Essence' : '— Overview',
