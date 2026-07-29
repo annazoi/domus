@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { Cormorant_Garamond, DM_Sans } from 'next/font/google';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, ArrowUpRight, Bath, BedDouble, Menu, Star, Users } from 'lucide-react';
+import { ArrowRight, Bath, BedDouble, Menu, Star, Users } from 'lucide-react';
 import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { DayPicker } from 'react-day-picker';
 import { BrandingPreviewMap } from '@/components/google-maps';
@@ -39,6 +39,22 @@ type HikariStayHighlight = {
 };
 
 const PARKING_AMENITY_IDS: AmenityId[] = [Amenities.PARKING, Amenities.FREE_PARKING, Amenities.PAID_PARKING];
+
+const HIKARI_TRUST_AVATARS = [
+	'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=96&q=80',
+	'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=96&q=80',
+	'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=96&q=80',
+	'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=96&q=80',
+] as const;
+
+function hikariNavTarget(label: string) {
+	const key = label.trim().toLowerCase();
+	if (key === 'home' || key === 'stay') return 'hikari-hero';
+	if (key === 'gallery' || key === 'space') return 'hikari-gallery';
+	if (key === 'amenities') return 'hikari-amenities';
+	if (key === 'booking' || key === 'reserve' || key === 'book') return 'hikari-booking';
+	return '';
+}
 
 function buildHikariStayHighlights(data: BrandingPreviewDemo): HikariStayHighlight[] {
 	const items: HikariStayHighlight[] = [];
@@ -99,6 +115,7 @@ function HikariBookingPanel({
 		listingPreview && (!propertyRef || !datesSelected || booking.checkingAvailability);
 
 	return (
+
 		<div className="border border-[#0a0a0a] bg-[#fcfcfa] p-6 sm:p-8">
 			<div className="flex items-start justify-between gap-4 border-b border-[#0a0a0a]/10 pb-5">
 				<div>
@@ -293,7 +310,18 @@ export function CanvasPreview({
 			? `${data.stay.propertyType ? `${data.stay.propertyType} in ` : ''}${data.hero.location}.`
 			: '');
 	const hostName = data.host.name.trim();
-	const headerCta = data.booking.cta.trim() || 'Check availability';
+	const hostImage = data.host.imageSrc.trim();
+	const headerCta = data.booking.cta.trim() || 'Book your stay';
+	const trustAvatars = useMemo(() => {
+		const next: string[] = [];
+		if (hostImage) next.push(hostImage);
+		for (const src of HIKARI_TRUST_AVATARS) {
+			if (next.length >= 4) break;
+			if (next.includes(src)) continue;
+			next.push(src);
+		}
+		return next;
+	}, [hostImage]);
 	const heroRef = useRef<HTMLElement>(null);
 	const stayBandRef = useRef<HTMLDivElement>(null);
 	const { scrollYProgress } = useScroll({
@@ -321,8 +349,9 @@ export function CanvasPreview({
 		>
 			<main className="relative z-10">
 				<section
+					id="hikari-hero"
 					ref={heroRef}
-					className="relative h-[min(88vh,52rem)] min-h-[26rem] overflow-hidden sm:min-h-[32rem]"
+					className="relative flex min-h-[100svh] flex-col overflow-hidden sm:min-h-[min(100svh,56rem)]"
 				>
 					{(heroVideo || heroImageSrc) ? (
 						<motion.div style={{ y: parallaxY }} className="absolute inset-x-0 -top-[24%] h-[148%] w-full will-change-transform">
@@ -339,10 +368,7 @@ export function CanvasPreview({
 					) : (
 						<div className="absolute inset-0 bg-[#1c1917]" />
 					)}
-					<div
-						className="pointer-events-none absolute inset-x-0 top-0 z-10 h-36 bg-gradient-to-b from-black/50 to-transparent"
-						aria-hidden
-					/>
+					<div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-black/45 via-black/25 to-black/50" aria-hidden />
 
 					<header className="relative z-30">
 						<div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-5 py-5 sm:px-10 lg:px-12">
@@ -350,85 +376,88 @@ export function CanvasPreview({
 								wordmark={data.wordmark}
 								logoSrc={data.logoSrc}
 								logoAlt={data.logoAlt}
-								className="font-[family-name:var(--preview-hikari-display)] text-xl font-semibold tracking-[0.08em] text-[#f6f3ee] drop-shadow-[0_1px_12px_rgba(0,0,0,0.45)] sm:text-2xl"
+								className="font-[family-name:var(--preview-hikari-display)] text-xl font-semibold tracking-[0.06em] text-white drop-shadow-[0_1px_12px_rgba(0,0,0,0.35)] sm:text-2xl"
 							/>
 							{data.nav.length > 0 ? (
-								<nav className="hidden items-center gap-8 lg:flex">
-									{data.nav.map((item) => (
-										<span
-											key={item.label}
-											className={cn(
-												'font-[family-name:var(--preview-hikari-body)] text-[15px] tracking-wide drop-shadow-[0_1px_8px_rgba(0,0,0,0.4)]',
-												item.current ? 'font-medium text-[#f6f3ee]' : 'text-[#f6f3ee]/70',
-											)}
-										>
-											{item.label}
-										</span>
-									))}
+								<nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 lg:flex">
+									{data.nav.map((item) => {
+										const target = hikariNavTarget(item.label);
+										return (
+											<button
+												key={item.label}
+												type="button"
+												onClick={() => (target ? scrollToId(target) : undefined)}
+												className={cn(
+													'cursor-pointer font-[family-name:var(--preview-hikari-body)] text-[15px] tracking-wide text-white/85 transition hover:text-white',
+													item.current && 'font-medium text-white',
+												)}
+											>
+												{item.label}
+											</button>
+										);
+									})}
 								</nav>
 							) : null}
 							<div className="flex items-center gap-3">
 								<button
 									type="button"
 									onClick={() => scrollToId('hikari-booking')}
-									className="hidden cursor-pointer items-center gap-1.5 rounded-full bg-[#b08a62] px-5 py-2.5 text-[15px] font-medium text-white shadow-[0_8px_24px_-8px_rgba(0,0,0,0.45)] transition hover:bg-[#c49a72] sm:inline-flex"
+									className="hidden cursor-pointer rounded-full bg-white px-5 py-2.5 text-[14px] font-medium text-[#1c1917] shadow-[0_8px_24px_-10px_rgba(0,0,0,0.45)] transition hover:bg-white/90 sm:inline-flex"
 								>
 									{headerCta}
-									<ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
 								</button>
-								{listingPreview ? null : <Menu className="h-5 w-5 text-[#f6f3ee]/85 lg:hidden" strokeWidth={1.25} />}
+								{listingPreview ? null : <Menu className="h-5 w-5 text-white/90 lg:hidden" strokeWidth={1.25} />}
 							</div>
 						</div>
 					</header>
+
+					<div className="relative z-20 flex flex-1 flex-col items-center justify-center px-5 pb-16 pt-8 text-center sm:px-10 sm:pb-20">
+						{trustAvatars.length > 0 ? (
+							<div className="flex flex-wrap items-center justify-center gap-3">
+								<div className="flex items-center pl-1">
+									{trustAvatars.map((src, index) => (
+										<span
+											key={`${src}-${index}`}
+											className="relative -ml-2 h-9 w-9 overflow-hidden rounded-full border-2 border-white/90 first:ml-0"
+											style={{ zIndex: trustAvatars.length - index }}
+										>
+											{/* eslint-disable-next-line @next/next/no-img-element */}
+											<img src={src} alt="" className="h-full w-full object-cover" />
+										</span>
+									))}
+								</div>
+								<p className="font-[family-name:var(--preview-hikari-body)] text-sm text-white/90 drop-shadow-[0_1px_8px_rgba(0,0,0,0.35)]">
+									{listingPreview && hostName ? `Hosted by ${hostName}` : 'Trusted by travelers worldwide'}
+								</p>
+							</div>
+						) : null}
+
+						<h1 className="mt-6 max-w-4xl font-[family-name:var(--preview-hikari-display)] text-[clamp(2.6rem,7vw,4.75rem)] font-medium leading-[1.05] tracking-[-0.03em] text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)]">
+							{data.hero.title}
+						</h1>
+
+						{heroSupport ? (
+							<p className="mt-5 max-w-xl text-[15px] leading-relaxed text-white/85 drop-shadow-[0_1px_10px_rgba(0,0,0,0.35)] sm:text-base">
+								{heroSupport}
+							</p>
+						) : null}
+
+						<button
+							type="button"
+							onClick={() => scrollToId('hikari-booking')}
+							className="mt-8 cursor-pointer rounded-full bg-white px-7 py-3.5 text-[15px] font-medium text-[#1c1917] shadow-[0_12px_32px_-12px_rgba(0,0,0,0.5)] transition hover:bg-white/92"
+						>
+							{data.booking.cta.trim() || 'Reserve now'}
+						</button>
+					</div>
 				</section>
 
 				<section className="relative z-20 bg-[#f6f3ee] px-5 pb-12 pt-10 sm:px-10 sm:pb-16 sm:pt-12 lg:px-12">
 					<div className="mx-auto max-w-[1400px]">
-						<div className="max-w-3xl">
-							{data.hero.series ? (
-								<p className="flex items-center gap-3 font-[family-name:var(--preview-hikari-body)] text-[11px] font-medium uppercase tracking-[0.22em] text-[#b08a62]">
-									<span className="h-px w-6 bg-[#b08a62]" aria-hidden />
-									{data.hero.series}
-								</p>
-							) : null}
-							<h1 className="mt-4 font-[family-name:var(--preview-hikari-display)] text-[clamp(2.4rem,5vw,4rem)] font-medium leading-[1.08] tracking-[-0.02em] text-[#1c1917]">
-								{data.hero.title}
-							</h1>
-							{heroSupport ? (
-								<p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-[#1c1917]/62 sm:text-base">
-									{heroSupport}
-								</p>
-							) : null}
-							<div className="mt-7 flex flex-wrap items-center gap-3">
-								<button
-									type="button"
-									onClick={() => scrollToId(hostName ? 'hikari-host' : 'hikari-booking')}
-									className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-[#1c1917] px-6 py-3 text-[15px] font-medium text-[#f6f3ee] transition hover:bg-[#1c1917]/85"
-								>
-									{hostName ? 'Meet the host' : headerCta}
-									<ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
-								</button>
-								{hostName || galleryImages.length > 1 ? (
-									<button
-										type="button"
-										onClick={() =>
-											hostName
-												? scrollToId('hikari-booking')
-												: openGallery(galleryImages[1] ?? heroImageSrc)
-										}
-										className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[#1c1917]/18 bg-transparent px-6 py-3 text-[15px] font-medium text-[#1c1917] transition hover:border-[#1c1917]/35 hover:bg-white/60"
-									>
-										{hostName ? headerCta : 'View photos'}
-										<ArrowRight className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
-									</button>
-								) : null}
-							</div>
-						</div>
-
 						{stayBandImage ? (
 							<div
 								ref={stayBandRef}
-								className="relative mt-12 aspect-[16/10] w-full overflow-hidden bg-[#1c1917]/8 sm:mt-14 sm:aspect-[21/9]"
+								className="relative aspect-[16/10] w-full overflow-hidden bg-[#1c1917]/8 sm:aspect-[21/9]"
 							>
 								<motion.div
 									style={{ y: stayBandY }}
@@ -451,7 +480,7 @@ export function CanvasPreview({
 							<ul
 								className={cn(
 									'grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4',
-									stayBandImage ? 'mt-3 sm:mt-4' : 'mt-12',
+									stayBandImage ? 'mt-3 sm:mt-4' : undefined,
 								)}
 							>
 								{stayHighlights.map((item) => (
@@ -469,7 +498,7 @@ export function CanvasPreview({
 						) : null}
 
 						{mosaicImages.length > 0 ? (
-							<div className="mt-14 sm:mt-16">
+							<div id="hikari-gallery" className="mt-14 scroll-mt-8 sm:mt-16">
 								<div
 									className={cn(
 										'grid gap-3 sm:gap-3.5',
@@ -508,7 +537,7 @@ export function CanvasPreview({
 						) : null}
 
 						{data.amenities.length > 0 ? (
-							<div className="mt-16 sm:mt-20">
+							<div id="hikari-amenities" className="mt-16 scroll-mt-8 sm:mt-20">
 								<div className="mx-auto max-w-2xl text-center">
 									<p className="font-[family-name:var(--preview-hikari-body)] text-[11px] font-medium uppercase tracking-[0.22em] text-[#1c1917]/40">
 										Amenities

@@ -452,7 +452,12 @@ function decorateFullTemplateDemo(theme: PropertyBrandingTheme, d: BrandingPrevi
 			: mizu
 				? [{ label: 'House' }, { label: 'Gallery', current: true }, { label: 'Book' }]
 				: hikari
-					? [{ label: 'Stay' }, { label: 'Space', current: true }, { label: 'Reserve' }]
+					? [
+							{ label: 'Home' },
+							{ label: 'Gallery' },
+							{ label: 'Amenities' },
+							{ label: 'Booking', current: true },
+						]
 					: [{ label: 'Stays' }, { label: 'Area', current: true }, { label: 'Host' }],
 		hero: mizu
 			? { ...d.hero, series: 'Mizu House · 水' }
@@ -496,7 +501,7 @@ function decorateFullTemplateDemo(theme: PropertyBrandingTheme, d: BrandingPrevi
 		booking: {
 			...d.booking,
 			eyebrow: arch ? 'Book this rental' : mizu ? 'Plan your stay' : hikari ? 'Reserve' : 'Book this stay',
-			cta: arch ? 'Check availability' : mizu ? 'Reserve dates' : hikari ? 'Check availability' : 'Check availability',
+			cta: arch ? 'Check availability' : mizu ? 'Reserve dates' : hikari ? 'Reserve now' : 'Check availability',
 		},
 		host: {
 			...d.host,

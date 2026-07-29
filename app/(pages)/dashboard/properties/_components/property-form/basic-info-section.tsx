@@ -104,12 +104,19 @@ export function BasicInfoSection({
 			push({ title: 'Saved.', tone: 'success' });
 		} catch (submitError) {
 			console.error('Basic info save failed', submitError);
-			const message = submitError instanceof Error ? submitError.message : 'Could not save property. Please try again.';
-			if (message.toLowerCase().includes('slug')) {
-				setFieldError('slug', { type: 'server', message });
+			const message =
+				submitError instanceof Error && submitError.message.trim()
+					? submitError.message
+					: 'Could not save listing. Please try again.';
+			const isTechnical = /prisma|invocation|does not exist|ECONNREFUSED|P\d{4}|\\Users\\|node_modules/i.test(
+				message,
+			);
+			const userMessage = isTechnical ? 'Could not save listing. Please try again.' : message;
+			if (userMessage.toLowerCase().includes('slug')) {
+				setFieldError('slug', { type: 'server', message: userMessage });
 				return;
 			}
-			push({ title: message, tone: 'error' });
+			push({ title: userMessage, tone: 'error' });
 		}
 	});
 

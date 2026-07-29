@@ -72,7 +72,7 @@ export async function POST(request: Request) {
 		}
 		console.error('POST /api/properties failed', error);
 		return Response.json(
-			{ message: error instanceof Error ? error.message : 'Could not create property.' },
+			{ message: 'Could not create listing. Please try again.' },
 			{ status: 500 },
 		);
 	}
