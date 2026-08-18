@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { Cormorant_Garamond, DM_Sans } from 'next/font/google';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion';
 import { ArrowRight, Bath, BedDouble, Menu, Star, Users } from 'lucide-react';
 import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { DayPicker } from 'react-day-picker';
@@ -13,7 +13,6 @@ import type { BrandingPreviewDemo } from '../_utils/branding-preview-demo';
 import { AmenityGlyph, BrandingHeroMedia, BrandingHostProfileLink, BrandingWordmark } from './branding-preview-shared';
 import { BrandingGuestExtrasSection } from './branding-guest-extras-section';
 import { BrandingPrivacyAccess } from './branding-privacy-access';
-import { BrandingRichTextBlock } from './branding-rich-text-block';
 import { BrandingVideoSection } from './branding-video-section';
 import { PhotoGalleryLightbox } from './photo-gallery-carousel';
 import { formatStay, useBrandingStayBooking } from './use-branding-stay-booking';
@@ -54,6 +53,58 @@ function hikariNavTarget(label: string) {
 	if (key === 'amenities') return 'hikari-amenities';
 	if (key === 'booking' || key === 'reserve' || key === 'book') return 'hikari-booking';
 	return '';
+}
+
+function HikariScrollRevealWord({
+	word,
+	index,
+	total,
+	progress,
+}: {
+	word: string;
+	index: number;
+	total: number;
+	progress: MotionValue<number>;
+}) {
+	const start = index / Math.max(total, 1);
+	const end = (index + 1) / Math.max(total, 1);
+	const color = useTransform(progress, [start, end], ['rgba(28, 25, 23, 0.14)', '#1c1917']);
+
+	return (
+		<motion.span style={{ color }} className="inline will-change-[color]">
+			{word}{' '}
+		</motion.span>
+	);
+}
+
+function HikariScrollRevealText({ words }: { words: string[] }) {
+	const sectionRef = useRef<HTMLElement>(null);
+	const { scrollYProgress } = useScroll({
+		target: sectionRef,
+		offset: ['start 78%', 'center 42%'],
+	});
+
+	if (words.length === 0) return null;
+
+	return (
+		<section
+			ref={sectionRef}
+			className="relative z-20 flex items-center justify-center bg-[#f6f3ee] px-6 py-28 md:px-12 md:py-25 md:pb-18"
+			aria-label="About the stay"
+		>
+			<p className="max-w-5xl text-center font-[family-name:var(--preview-hikari-display)] text-[clamp(1.75rem,4.5vw,2.25rem)] font-medium leading-[1.25] tracking-[-0.03em]">
+				{words.map((word, index) => (
+					<HikariScrollRevealWord
+						key={`${word}-${index}`}
+						word={word}
+						index={index}
+						total={words.length}
+						progress={scrollYProgress}
+					/>
+				))}
+			</p>
+		</section>
+	);
 }
 
 function buildHikariStayHighlights(data: BrandingPreviewDemo): HikariStayHighlight[] {
@@ -115,54 +166,58 @@ function HikariBookingPanel({
 		listingPreview && (!propertyRef || !datesSelected || booking.checkingAvailability);
 
 	return (
-
-		<div className="border border-[#0a0a0a] bg-[#fcfcfa] p-6 sm:p-8">
-			<div className="flex items-start justify-between gap-4 border-b border-[#0a0a0a]/10 pb-5">
+		<div className="lg:border-l lg:border-[#1c1917]/10 lg:pl-10">
+			<div className="flex items-start justify-between gap-4">
 				<div>
-					<p className="font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.3em] text-[#0a0a0a]/45">
+					<p className="font-[family-name:var(--preview-hikari-body)] text-[11px] font-medium uppercase tracking-[0.22em] text-[#1c1917]/40">
 						{data.booking.eyebrow}
 					</p>
 					{data.booking.price.trim() ? (
-						<p className="mt-2 font-[family-name:var(--preview-hikari-display)] text-4xl font-bold tracking-tight text-[#0a0a0a]">
+						<p className="mt-2 font-[family-name:var(--preview-hikari-display)] text-[2.35rem] font-medium leading-none tracking-[-0.03em] text-[#1c1917]">
 							{data.booking.price}
-							<span className="ml-1 text-sm font-normal text-[#0a0a0a]/40">{data.booking.per}</span>
+							<span className="ml-1.5 align-middle font-[family-name:var(--preview-hikari-body)] text-sm font-normal text-[#1c1917]/40">
+								{data.booking.per}
+							</span>
 						</p>
 					) : null}
 				</div>
 				{data.booking.rating.trim() ? (
-					<div className="flex items-center gap-1 border border-[#d4a853]/40 px-2.5 py-1">
-						<Star className="h-3.5 w-3.5 fill-[#d4a853] text-[#d4a853]" aria-hidden />
-						<span className="font-[family-name:var(--preview-hikari-body)] text-xs font-medium">{data.booking.rating}</span>
+					<div className="flex items-center gap-1.5 rounded-full bg-[#f6f3ee] px-3 py-1.5">
+						<Star className="h-3.5 w-3.5 fill-[#b08a62] text-[#b08a62]" aria-hidden />
+						<span className="font-[family-name:var(--preview-hikari-body)] text-xs font-medium text-[#1c1917]">
+							{data.booking.rating}
+						</span>
 					</div>
 				) : null}
 			</div>
 
-			<p className="mt-4 font-[family-name:var(--preview-hikari-body)] text-sm text-[#0a0a0a]/55">{priceHint}</p>
+			<p className="mt-5 text-sm leading-relaxed text-[#1c1917]/55">{priceHint}</p>
 			{data.booking.guests.trim() ? (
-				<p className="mt-2 font-[family-name:var(--preview-hikari-body)] text-xs uppercase tracking-[0.18em] text-[#0a0a0a]/45">
-					{data.booking.guests}
-				</p>
+				<p className="mt-1.5 text-sm text-[#1c1917]/40">{data.booking.guests}</p>
 			) : null}
 
-			<div ref={booking.stayPickerRef} className="relative mt-6 [--rdp-accent-color:#0a0a0a] [--rdp-accent-background-color:rgba(10,10,10,0.08)]">
-				<div className="grid grid-cols-2 gap-px bg-[#0a0a0a]/10">
+			<div
+				ref={booking.stayPickerRef}
+				className="relative mt-6 [--rdp-accent-color:#b08a62] [--rdp-accent-background-color:rgba(176,138,98,0.14)]"
+			>
+				<div className="grid grid-cols-2 gap-6 border-y border-[#1c1917]/10 py-4">
 					<button
 						type="button"
 						onClick={() => booking.setStayPickerOpen(true)}
-						className="cursor-pointer bg-[#fcfcfa] p-4 text-left"
+						className="cursor-pointer text-left"
 					>
-						<p className="font-[family-name:var(--preview-hikari-body)] text-[9px] uppercase tracking-[0.2em] text-[#0a0a0a]/40">In</p>
-						<p className="mt-1 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold">
+						<p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#1c1917]/40">Check in</p>
+						<p className="mt-1.5 font-[family-name:var(--preview-hikari-display)] text-lg font-medium tracking-tight">
 							{booking.stayRange?.from ? formatStay(booking.stayRange.from) : data.booking.arrival || '—'}
 						</p>
 					</button>
 					<button
 						type="button"
 						onClick={() => booking.setStayPickerOpen(true)}
-						className="cursor-pointer bg-[#fcfcfa] p-4 text-left"
+						className="cursor-pointer border-l border-[#1c1917]/10 pl-6 text-left"
 					>
-						<p className="font-[family-name:var(--preview-hikari-body)] text-[9px] uppercase tracking-[0.2em] text-[#0a0a0a]/40">Out</p>
-						<p className="mt-1 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold">
+						<p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#1c1917]/40">Check out</p>
+						<p className="mt-1.5 font-[family-name:var(--preview-hikari-display)] text-lg font-medium tracking-tight">
 							{booking.stayRange?.to ? formatStay(booking.stayRange.to) : data.booking.departure || '—'}
 						</p>
 					</button>
@@ -171,7 +226,7 @@ function HikariBookingPanel({
 					<div
 						role="dialog"
 						aria-label="Select stay dates"
-						className="absolute inset-x-0 top-full z-30 mt-1 border border-[#0a0a0a] bg-white p-3 shadow-2xl"
+						className="absolute inset-x-0 top-full z-30 mt-2 rounded-2xl border border-[#1c1917]/10 bg-white p-3 shadow-[0_24px_60px_-24px_rgba(28,25,23,0.4)]"
 					>
 						<DayPicker
 							mode="range"
@@ -185,19 +240,19 @@ function HikariBookingPanel({
 							disabled={booking.dayDisabled}
 							numberOfMonths={1}
 						/>
-						<div className="mt-2 flex gap-2 border-t border-[#0a0a0a]/10 pt-2">
+						<div className="mt-2 flex gap-2 border-t border-[#1c1917]/08 pt-2">
 							<button
 								type="button"
 								onClick={booking.clearStayRange}
 								disabled={!booking.stayRange?.from && !booking.stayRange?.to}
-								className="cursor-pointer flex-1 py-2 font-[family-name:var(--preview-hikari-body)] text-xs uppercase tracking-widest text-[#0a0a0a]/45 transition hover:text-[#0a0a0a] disabled:cursor-not-allowed disabled:opacity-40"
+								className="cursor-pointer flex-1 rounded-full py-2.5 text-sm text-[#1c1917]/45 transition hover:text-[#1c1917] disabled:cursor-not-allowed disabled:opacity-40"
 							>
 								Clear
 							</button>
 							<button
 								type="button"
 								onClick={() => booking.setStayPickerOpen(false)}
-								className="cursor-pointer flex-1 py-2 font-[family-name:var(--preview-hikari-body)] text-xs uppercase tracking-widest text-[#0a0a0a]"
+								className="cursor-pointer flex-1 rounded-full bg-[#1c1917] py-2.5 text-sm font-medium text-[#f6f3ee] transition hover:bg-[#b08a62]"
 							>
 								Apply
 							</button>
@@ -207,7 +262,10 @@ function HikariBookingPanel({
 			</div>
 
 			<div className="mt-5">
-				<label htmlFor={booking.guestFieldId} className="font-[family-name:var(--preview-hikari-body)] text-[9px] uppercase tracking-[0.2em] text-[#0a0a0a]/40">
+				<label
+					htmlFor={booking.guestFieldId}
+					className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#1c1917]/40"
+				>
 					Guests
 				</label>
 				<Input
@@ -220,7 +278,7 @@ function HikariBookingPanel({
 						const v = parseInt(e.target.value, 10);
 						if (!Number.isNaN(v)) booking.setGuestCount(Math.min(guestCap, Math.max(1, v)));
 					}}
-					className="mt-2 rounded-none border-[#0a0a0a]/15"
+					className="mt-2 rounded-none border-0 border-b border-[#1c1917]/15 bg-transparent px-0 shadow-none"
 					variant="compact"
 				/>
 			</div>
@@ -230,11 +288,11 @@ function HikariBookingPanel({
 				onClick={() => void booking.handleReserveClick()}
 				disabled={reserveDisabled}
 				className={cn(
-					'group mt-8 flex w-full cursor-pointer items-center justify-between bg-[#1c1917] px-5 py-4 font-[family-name:var(--preview-hikari-display)] text-sm font-semibold uppercase tracking-[0.2em] text-[#f6f3ee] transition hover:bg-[#b08a62] hover:text-white disabled:cursor-not-allowed disabled:opacity-50',
+					'group mt-7 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#1c1917] px-5 py-3.5 text-[15px] font-medium text-[#f6f3ee] shadow-[0_12px_32px_-16px_rgba(28,25,23,0.55)] transition hover:bg-[#b08a62] disabled:cursor-not-allowed disabled:opacity-50',
 				)}
 			>
 				<span>{booking.checkingAvailability ? 'Checking…' : data.booking.cta}</span>
-				<ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden />
+				<ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" aria-hidden />
 			</button>
 		</div>
 	);
@@ -247,8 +305,13 @@ export function CanvasPreview({
 	data: BrandingPreviewDemo;
 	listingPreview?: boolean;
 }) {
-	const aboutLong = [data.concept.paragraphs[0], data.concept.paragraphs[1]].filter(Boolean).join(' ').trim();
 	const aboutShort = data.concept.title.trim();
+	const aboutLong = [data.concept.paragraphs[0], data.concept.paragraphs[1]].filter(Boolean).join(' ').trim();
+	const welcomeText = data.welcome.html
+		.replace(/<[^>]*>/g, ' ')
+		.replace(/&nbsp;/gi, ' ')
+		.replace(/\s+/g, ' ')
+		.trim();
 	const heroVideo = data.hero.videoSrc?.trim() ?? '';
 	const heroImageSrc = data.hero.imageSrc.trim() || data.gallery.large.src.trim();
 	const mosaicImages = useMemo(() => {
@@ -324,6 +387,11 @@ export function CanvasPreview({
 	}, [hostImage]);
 	const heroRef = useRef<HTMLElement>(null);
 	const stayBandRef = useRef<HTMLDivElement>(null);
+	const scrollRevealCopy = welcomeText;
+	const scrollRevealWords = useMemo(
+		() => (scrollRevealCopy ? scrollRevealCopy.split(/\s+/).filter(Boolean) : []),
+		[scrollRevealCopy],
+	);
 	const { scrollYProgress } = useScroll({
 		target: heroRef,
 		offset: ['start start', 'end start'],
@@ -452,12 +520,14 @@ export function CanvasPreview({
 					</div>
 				</section>
 
+				{scrollRevealWords.length > 0 ? <HikariScrollRevealText words={scrollRevealWords} /> : null}
+
 				<section className="relative z-20 bg-[#f6f3ee] px-5 pb-12 pt-10 sm:px-10 sm:pb-16 sm:pt-12 lg:px-12">
 					<div className="mx-auto max-w-[1400px]">
 						{stayBandImage ? (
 							<div
 								ref={stayBandRef}
-								className="relative aspect-[16/10] w-full overflow-hidden bg-[#1c1917]/8 sm:aspect-[21/9]"
+								className="relative aspect-[16/10] w-full overflow-hidden bg-[#1c1917]/8 sm:aspect-[21/9] rounded-2xl"
 							>
 								<motion.div
 									style={{ y: stayBandY }}
@@ -479,19 +549,14 @@ export function CanvasPreview({
 						{stayHighlights.length > 0 ? (
 							<ul
 								className={cn(
-									'grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4',
-									stayBandImage ? 'mt-3 sm:mt-4' : undefined,
+									'grid grid-cols-2 gap-x-8 gap-y-8 sm:grid-cols-4',
+									stayBandImage ? 'mt-10 sm:mt-12' : undefined,
 								)}
 							>
 								{stayHighlights.map((item) => (
-									<li
-										key={item.key}
-										className="flex flex-col items-center justify-center rounded-2xl border border-[#1c1917]/08 bg-white px-4 py-7 text-center shadow-[0_10px_30px_-24px_rgba(28,25,23,0.35)] sm:px-5 sm:py-8"
-									>
-										<div className="flex h-10 w-10 items-center justify-center">{item.icon}</div>
-										<p className="mt-4 font-[family-name:var(--preview-hikari-body)] text-sm font-medium leading-snug text-[#1c1917]/80 sm:text-[15px]">
-											{item.label}
-										</p>
+									<li key={item.key} className="flex items-start gap-3">
+										<div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center">{item.icon}</div>
+										<p className="pt-1 text-[15px] font-medium leading-snug text-[#1c1917]/80">{item.label}</p>
 									</li>
 								))}
 							</ul>
@@ -499,6 +564,11 @@ export function CanvasPreview({
 
 						{mosaicImages.length > 0 ? (
 							<div id="hikari-gallery" className="mt-14 scroll-mt-8 sm:mt-16">
+								{aboutLong ? (
+									<p className="mx-auto mb-10 max-w-3xl text-center font-[family-name:var(--preview-hikari-display)] text-[clamp(1.15rem,2.4vw,1.45rem)] font-medium leading-[1.55] tracking-[-0.02em] text-[#1c1917]/75 sm:mb-12">
+										{aboutLong}
+									</p>
+								) : null}
 								<div
 									className={cn(
 										'grid gap-3 sm:gap-3.5',
@@ -538,27 +608,32 @@ export function CanvasPreview({
 
 						{data.amenities.length > 0 ? (
 							<div id="hikari-amenities" className="mt-16 scroll-mt-8 sm:mt-20">
-								<div className="mx-auto max-w-2xl text-center">
-									<p className="font-[family-name:var(--preview-hikari-body)] text-[11px] font-medium uppercase tracking-[0.22em] text-[#1c1917]/40">
-										Amenities
-									</p>
-									<h2 className="mt-3 font-[family-name:var(--preview-hikari-display)] text-[clamp(1.75rem,3.5vw,2.5rem)] font-medium leading-tight tracking-[-0.02em] text-[#1c1917]">
-										Everything you need for a comfortable stay
-									</h2>
-									<p className="mt-3 text-sm leading-relaxed text-[#1c1917]/55 sm:text-[15px]">
-										Thoughtfully selected amenities designed to make every stay comfortable, convenient, and truly unforgettable.
+								<div className="flex flex-col items-end justify-between gap-6 border-b border-[#1c1917]/12 pb-6 sm:flex-row sm:items-end">
+									<div className="max-w-xl">
+										<p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#1c1917]/40">Amenities</p>
+										<h2 className="mt-3 font-[family-name:var(--preview-hikari-display)] text-[clamp(1.85rem,3.4vw,2.65rem)] font-medium leading-[1.1] tracking-[-0.03em] text-[#1c1917]">
+											What the house provides
+										</h2>
+									</div>
+									<p className="text-sm tabular-nums text-[#1c1917]/40 sm:pb-1">
+										{String(data.amenities.length).padStart(2, '0')} listed
 									</p>
 								</div>
-								<ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-									{data.amenities.map((amenity) => (
+								<ul className="grid grid-cols-1 sm:grid-cols-2 sm:gap-x-12 lg:grid-cols-3 lg:gap-x-14">
+									{data.amenities.map((amenity, index) => (
 										<li
 											key={amenity.id}
-											className="flex flex-col items-center justify-center rounded-2xl border border-[#1c1917]/08 bg-white px-4 py-7 text-center sm:px-5 sm:py-8"
+											className="flex items-center gap-3.5 border-b border-[#1c1917]/10 py-5"
 										>
-											<AmenityGlyph id={amenity.id} className="h-7 w-7 text-[#1c1917]/70" />
-											<p className="mt-4 font-[family-name:var(--preview-hikari-body)] text-sm font-medium leading-snug text-[#1c1917]/80">
+											<span className="w-7 shrink-0 font-[family-name:var(--preview-hikari-display)] text-sm tabular-nums text-[#b08a62]">
+												{String(index + 1).padStart(2, '0')}
+											</span>
+											<AmenityGlyph id={amenity.id} className="h-4 w-4 shrink-0 text-[#1c1917]/40" />
+											<p className="min-w-0 text-[15px] leading-snug text-[#1c1917]/85">
 												{amenity.label}
-												{amenity.quantity ? ` · ${amenity.quantity}` : ''}
+												{amenity.quantity ? (
+													<span className="text-[#1c1917]/40"> · {amenity.quantity}</span>
+												) : null}
 											</p>
 										</li>
 									))}
@@ -568,109 +643,82 @@ export function CanvasPreview({
 					</div>
 				</section>
 
-				<section className="bg-[#fbfaf7]">
-					<div className="mx-auto grid max-w-[1400px] gap-12 px-5 py-16 sm:px-10 lg:grid-cols-[1fr_minmax(0,380px)] lg:gap-16 lg:py-24">
+				<section className="relative z-20 bg-[#f6f3ee]">
+					<div className="mx-auto grid max-w-[1400px] gap-12 px-5 py-16 sm:px-10 lg:grid-cols-[1fr_minmax(0,380px)] lg:gap-16 lg:px-12 lg:py-24">
 						<div className="space-y-16">
-							{aboutLong ? (
-								<div>
-									<p className="font-[family-name:var(--preview-hikari-display)] text-6xl font-bold leading-none text-[#0a0a0a]/[0.04]">01</p>
-									<p className="-mt-8 max-w-2xl font-[family-name:var(--preview-hikari-body)] text-base leading-[1.85] text-[#0a0a0a]/70 sm:text-lg">
-										{aboutLong}
-									</p>
-								</div>
-							) : null}
-
-							{data.welcome.html ? (
-								<div>
-									<p className="font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.35em] text-[#0a0a0a]/40">
-										Welcome
-									</p>
-									<div className="mt-4 max-w-2xl">
-										<BrandingRichTextBlock html={data.welcome.html} variant="canvas" />
-									</div>
-								</div>
-							) : null}
-
 							{data.videos.length > 0 ? (
 								<BrandingVideoSection videos={data.videos} variant="canvas" eyebrow="Video tour" />
 							) : null}
 
 							<BrandingGuestExtrasSection guestExtras={data.guestExtras} variant="canvas" />
 
-							{data.houseRules.html ? (
-								<div>
-									<p className="mb-4 font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.35em] text-[#0a0a0a]/40">
-										House rules
-									</p>
-									<div className="max-w-2xl border border-[#0a0a0a]/10 bg-white p-6">
-										<BrandingRichTextBlock html={data.houseRules.html} variant="canvas" />
-									</div>
-								</div>
-							) : null}
-
 							<div>
-								<p className="mb-6 font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.35em] text-[#0a0a0a]/40">
-									{data.location.eyebrow || 'Location'}
-								</p>
-								<div className="relative aspect-[2/1] w-full overflow-hidden bg-[#0a0a0a]/5">
+								<div className="max-w-xl">
+									<p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#1c1917]/40">
+										{data.location.eyebrow || 'Location'}
+									</p>
+									<h2 className="mt-3 font-[family-name:var(--preview-hikari-display)] text-[clamp(1.75rem,3.5vw,2.5rem)] font-medium leading-tight tracking-[-0.02em] text-[#1c1917]">
+										Find your way here
+									</h2>
+								</div>
+								<div className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-2xl bg-[#1c1917]/6 sm:aspect-[2/1]">
 									{listingPreview && (data.location.mapCenter || data.location.mapEmbedSrc) ? (
 										<BrandingPreviewMap
 											title="Property location"
 											center={data.location.mapCenter}
 											embedSrc={data.location.mapEmbedSrc}
-											className="absolute inset-0 h-full w-full border-0 grayscale"
+											className="absolute inset-0 h-full w-full border-0"
 										/>
 									) : data.location.mapImage.trim() ? (
-										<Image src={data.location.mapImage} alt="" fill className="object-cover grayscale" sizes="100vw" unoptimized />
+										<Image src={data.location.mapImage} alt="" fill className="object-cover" sizes="100vw" unoptimized />
 									) : null}
 								</div>
-								<div className="mt-8 grid gap-8 sm:grid-cols-2">
-									{data.location.columns.map((c) => (
-										<div key={c.title}>
-											<h3 className="font-[family-name:var(--preview-hikari-display)] text-xs font-bold uppercase tracking-[0.2em]">
-												{c.title}
-											</h3>
-											<p className="mt-2 font-[family-name:var(--preview-hikari-body)] text-sm leading-relaxed text-[#0a0a0a]/60">
-												{c.text}
-											</p>
-										</div>
-									))}
-								</div>
+								{data.location.columns.length > 0 ? (
+									<div className="mt-8 grid gap-8 sm:grid-cols-2">
+										{data.location.columns.map((c) => (
+											<div key={c.title}>
+												<h3 className="font-[family-name:var(--preview-hikari-display)] text-xl font-medium tracking-tight text-[#1c1917]">
+													{c.title}
+												</h3>
+												<p className="mt-2 text-sm leading-relaxed text-[#1c1917]/55">{c.text}</p>
+											</div>
+										))}
+									</div>
+								) : null}
 							</div>
 
 							{data.host.name.trim() ? (
 								<BrandingHostProfileLink
 									hostName={data.host.host_name}
 									listingPreview={listingPreview}
-									className="scroll-mt-8 transition hover:bg-[#0a0a0a]/[0.02]"
+									className="scroll-mt-8"
 								>
 									<div
 										id="hikari-host"
-										className="flex flex-col gap-6 border border-[#0a0a0a]/10 p-8 sm:flex-row sm:items-center"
+										className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6"
 									>
 										{data.host.imageSrc.trim() ? (
-											<div className="relative h-24 w-24 shrink-0 overflow-hidden bg-[#0a0a0a]/5 transition group-hover/host:opacity-90">
-												<Image src={data.host.imageSrc} alt="" fill className="object-cover grayscale" sizes="96px" unoptimized />
+											<div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full transition group-hover/host:opacity-90">
+												<Image src={data.host.imageSrc} alt="" fill className="object-cover" sizes="80px" unoptimized />
 											</div>
 										) : null}
 										<div>
 											{data.host.label ? (
-												<p className="font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.25em] text-[#0a0a0a]/40">
+												<p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#1c1917]/40">
 													{data.host.label}
 												</p>
 											) : null}
-											<p className="mt-2 font-[family-name:var(--preview-hikari-display)] text-2xl font-bold transition group-hover/host:text-[#0a0a0a]/75">
+											<p className="mt-2 font-[family-name:var(--preview-hikari-display)] text-[1.75rem] font-medium tracking-tight text-[#1c1917] transition group-hover/host:text-[#b08a62]">
 												{data.host.name}
 											</p>
 											{data.host.rating.trim() ? (
-												<p className="mt-1 font-[family-name:var(--preview-hikari-body)] text-xs text-[#d4a853]">
+												<p className="mt-1 inline-flex items-center gap-1.5 text-sm text-[#b08a62]">
+													<Star className="h-3.5 w-3.5 fill-[#b08a62] text-[#b08a62]" aria-hidden />
 													{data.host.rating}
 												</p>
 											) : null}
 											{data.host.bio.trim() ? (
-												<p className="mt-3 max-w-lg font-[family-name:var(--preview-hikari-body)] text-sm leading-relaxed text-[#0a0a0a]/65">
-													{data.host.bio}
-												</p>
+												<p className="mt-3 max-w-lg text-sm leading-relaxed text-[#1c1917]/55">{data.host.bio}</p>
 											) : null}
 										</div>
 									</div>
@@ -690,24 +738,29 @@ export function CanvasPreview({
 				</section>
 			</main>
 
-			<footer className="relative z-10 border-t border-[#0a0a0a] bg-[#0a0a0a] px-5 py-8 text-[#fcfcfa] sm:px-10">
-				<div className="mx-auto flex max-w-[1400px] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<p className="font-[family-name:var(--preview-hikari-display)] text-sm font-bold uppercase tracking-[0.3em]">
+			<footer className="relative z-10 bg-[#1c1917] px-5 py-10 sm:px-10 lg:px-12">
+				<div className="mx-auto flex max-w-[1400px] flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+					<p className="font-[family-name:var(--preview-hikari-display)] text-xl font-medium tracking-[-0.02em] text-[#f6f3ee]">
 						{data.footer.wordmark}
 					</p>
-					{data.privacyPolicy.html ? (
-									<div className="pointer-events-auto z-20">
-										<BrandingPrivacyAccess html={data.privacyPolicy.html} variant="canvas" />
-									</div>
-								) : null}
+					{(data.houseRules.html || data.privacyPolicy.html) ? (
+						<div className="pointer-events-auto z-20 flex flex-wrap gap-2">
+							{data.houseRules.html ? (
+								<BrandingPrivacyAccess html={data.houseRules.html} variant="canvas" title="House rules" />
+							) : null}
+							{data.privacyPolicy.html ? (
+								<BrandingPrivacyAccess html={data.privacyPolicy.html} variant="canvas" title="Privacy" />
+							) : null}
+						</div>
+					) : null}
 					{data.footer.links.length > 0 ? (
-						<div className="flex flex-wrap gap-8 font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.2em] text-[#fcfcfa]/45">
+						<div className="flex flex-wrap gap-6 text-sm text-[#f6f3ee]/45">
 							{data.footer.links.map((l) => (
 								<span key={l.label}>{l.label}</span>
 							))}
 						</div>
 					) : null}
-					<p className="font-[family-name:var(--preview-hikari-body)] text-xs text-[#fcfcfa]/35">{data.footer.copyright}</p>
+					<p className="text-sm text-[#f6f3ee]/40">{data.footer.copyright}</p>
 				</div>
 			</footer>
 

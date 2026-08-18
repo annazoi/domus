@@ -19,14 +19,15 @@ type BrandingVideoSectionProps = {
 
 const variantStyles = {
 	canvas: {
-		eyebrow: 'font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.35em] text-[#0a0a0a]/40',
-		grid: 'grid gap-4 sm:grid-cols-2',
-		card: 'group relative aspect-[16/10] overflow-hidden border border-[#0a0a0a]/10 bg-[#0a0a0a]/5',
+		eyebrow:
+			'font-[family-name:var(--preview-hikari-body)] text-[11px] font-medium uppercase tracking-[0.22em] text-[#1c1917]/40',
+		grid: 'grid gap-3 sm:grid-cols-2 sm:gap-4',
+		card: 'group relative aspect-[16/10] overflow-hidden rounded-2xl bg-[#1c1917]/8',
 		caption:
-			'absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0a0a0a]/75 to-transparent px-4 py-4 font-[family-name:var(--preview-hikari-body)] text-xs text-[#fcfcfa]/85',
-		play: 'flex h-14 w-14 items-center justify-center rounded-full border border-[#fcfcfa]/30 bg-[#0a0a0a]/45 text-[#fcfcfa] backdrop-blur-sm transition group-hover:scale-105 group-hover:bg-[#d4a853] group-hover:text-[#0a0a0a]',
+			'absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1c1917]/75 to-transparent px-4 py-4 font-[family-name:var(--preview-hikari-body)] text-xs text-white/90',
+		play: 'flex h-14 w-14 items-center justify-center rounded-full bg-white/95 text-[#1c1917] shadow-sm transition group-hover:scale-105 group-hover:bg-[#b08a62] group-hover:text-white',
 		label:
-			'absolute left-3 top-3 rounded-full bg-[#fcfcfa]/90 px-2.5 py-1 font-[family-name:var(--preview-hikari-body)] text-[9px] font-medium uppercase tracking-[0.18em] text-[#0a0a0a]',
+			'absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 font-[family-name:var(--preview-hikari-body)] text-[9px] font-medium uppercase tracking-[0.18em] text-[#1c1917]',
 	},
 	mizu: {
 		eyebrow:

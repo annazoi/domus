@@ -2,7 +2,7 @@
 
 import { X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/components/ui';
 import { BrandingRichTextBlock } from './branding-rich-text-block';
@@ -11,7 +11,7 @@ type BrandingPrivacyVariant = 'canvas' | 'mizu' | 'architectura';
 
 const buttonStyles: Record<BrandingPrivacyVariant, string> = {
 	canvas:
-		'cursor-pointer rounded-full border border-[#fcfcfa]/30 bg-[#0a0a0a]/40 px-4 py-2 font-[family-name:var(--preview-hikari-body)] text-[10px] font-medium uppercase tracking-[0.22em] text-[#fcfcfa] backdrop-blur-md transition hover:border-[#d4a853]/50 hover:bg-[#0a0a0a]/60',
+		'cursor-pointer rounded-full border border-white/20 bg-white/8 px-4 py-2 font-[family-name:var(--preview-hikari-body)] text-[11px] font-medium text-[#f6f3ee]/85 transition hover:border-white/40 hover:bg-white/14 hover:text-white',
 	mizu: 'cursor-pointer rounded-full border border-[#fff9f4]/25 bg-[#1a2e35]/45 px-4 py-2 font-[family-name:var(--preview-mizu-body)] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#fff9f4] backdrop-blur-md transition hover:border-[#f5d4c8]/40 hover:bg-[#1a2e35]/65',
 	architectura:
 		'cursor-pointer font-[family-name:var(--preview-kaze-body)] text-sm font-medium text-[#2F5D44] underline decoration-[#2F5D44]/30 underline-offset-4 transition hover:text-[#244A36] hover:decoration-[#244A36]/40',
@@ -22,12 +22,12 @@ const modalStyles: Record<
 	{ panel: string; title: string; close: string; overlay: string }
 > = {
 	canvas: {
-		overlay: 'bg-[#0a0a0a]/55',
-		panel: 'max-w-lg rounded-none border border-[#0a0a0a] bg-[#fcfcfa] shadow-2xl',
-		title:
-			'font-[family-name:var(--preview-hikari-display)] text-2xl font-bold uppercase tracking-[0.08em] text-[#0a0a0a]',
+		overlay: 'bg-[#1c1917]/45 backdrop-blur-[3px]',
+		panel:
+			'max-w-lg rounded-t-3xl border border-[#1c1917]/10 bg-white shadow-[0_32px_100px_-28px_rgba(28,25,23,0.4)] sm:rounded-3xl',
+		title: 'font-[family-name:var(--preview-hikari-display)] text-2xl font-medium tracking-tight text-[#1c1917]',
 		close:
-			'flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#0a0a0a]/15 text-[#0a0a0a]/55 transition hover:border-[#0a0a0a]/30 hover:text-[#0a0a0a]',
+			'flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-[#1c1917]/50 transition hover:bg-black/5 hover:text-[#1c1917]',
 	},
 	mizu: {
 		overlay: 'bg-[#1a2e35]/60',
@@ -47,16 +47,20 @@ const modalStyles: Record<
 	},
 };
 
-function BrandingPrivacyModal({
+function BrandingPolicyModal({
 	open,
 	onClose,
 	html,
 	variant,
+	title,
+	titleId,
 }: {
 	open: boolean;
 	onClose: () => void;
 	html: string;
 	variant: BrandingPrivacyVariant;
+	title: string;
+	titleId: string;
 }) {
 	const [mounted, setMounted] = useState(false);
 	const styles = modalStyles[variant];
@@ -96,7 +100,7 @@ function BrandingPrivacyModal({
 					<motion.div
 						role="dialog"
 						aria-modal
-						aria-labelledby="branding-privacy-title"
+						aria-labelledby={titleId}
 						className={cn('relative z-10 flex max-h-[min(85vh,720px)] w-full flex-col', styles.panel)}
 						initial={{ opacity: 0, y: 24, scale: 0.98 }}
 						animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -105,10 +109,10 @@ function BrandingPrivacyModal({
 						onClick={(event) => event.stopPropagation()}
 					>
 						<div className="flex shrink-0 items-start justify-between gap-4 border-b border-black/8 px-6 py-5 sm:px-8">
-							<h2 id="branding-privacy-title" className={styles.title}>
-								Privacy
+							<h2 id={titleId} className={styles.title}>
+								{title}
 							</h2>
-							<button type="button" onClick={onClose} className={styles.close} aria-label="Close privacy policy">
+							<button type="button" onClick={onClose} className={styles.close} aria-label={`Close ${title}`}>
 								<X className="h-4 w-4" strokeWidth={1.5} />
 							</button>
 						</div>
@@ -127,22 +131,32 @@ export function BrandingPrivacyAccess({
 	html,
 	variant,
 	className,
+	title = 'Privacy',
 }: {
 	html: string;
 	variant: BrandingPrivacyVariant;
 	className?: string;
+	title?: string;
 }) {
 	const content = html.trim();
 	const [open, setOpen] = useState(false);
+	const titleId = useId();
 
 	if (!content) return null;
 
 	return (
 		<>
 			<button type="button" onClick={() => setOpen(true)} className={cn(buttonStyles[variant], className)}>
-				Privacy
+				{title}
 			</button>
-			<BrandingPrivacyModal open={open} onClose={() => setOpen(false)} html={content} variant={variant} />
+			<BrandingPolicyModal
+				open={open}
+				onClose={() => setOpen(false)}
+				html={content}
+				variant={variant}
+				title={title}
+				titleId={titleId}
+			/>
 		</>
 	);
 }

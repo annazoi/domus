@@ -13,13 +13,14 @@ type BrandingGuestExtrasSectionProps = {
 
 const variantStyles = {
 	canvas: {
-		eyebrow: 'font-[family-name:var(--preview-hikari-body)] text-[10px] uppercase tracking-[0.35em] text-[#0a0a0a]/40',
-		grid: 'grid gap-4 sm:grid-cols-2',
-		card: 'flex gap-4 border border-[#0a0a0a]/10 bg-[#fcfcfa] p-4',
-		image: 'relative h-20 w-20 shrink-0 overflow-hidden bg-[#0a0a0a]/5',
-		name: 'font-[family-name:var(--preview-hikari-display)] text-sm font-semibold uppercase tracking-wider text-[#0a0a0a]',
-		description: 'mt-1 font-[family-name:var(--preview-hikari-body)] text-sm leading-relaxed text-[#0a0a0a]/60',
-		price: 'mt-2 font-[family-name:var(--preview-hikari-body)] text-sm font-medium text-[#d4a853]',
+		eyebrow:
+			'font-[family-name:var(--preview-hikari-body)] text-[11px] font-medium uppercase tracking-[0.22em] text-[#1c1917]/40',
+		grid: 'grid gap-8 sm:grid-cols-2',
+		card: 'flex gap-4',
+		image: 'relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-[#1c1917]/6',
+		name: 'font-[family-name:var(--preview-hikari-display)] text-lg font-medium tracking-tight text-[#1c1917]',
+		description: 'mt-1 font-[family-name:var(--preview-hikari-body)] text-sm leading-relaxed text-[#1c1917]/55',
+		price: 'mt-2 font-[family-name:var(--preview-hikari-body)] text-sm font-medium text-[#b08a62]',
 	},
 	mizu: {
 		eyebrow:

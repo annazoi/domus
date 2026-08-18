@@ -489,7 +489,7 @@ function decorateFullTemplateDemo(theme: PropertyBrandingTheme, d: BrandingPrevi
 		},
 		location: {
 			...d.location,
-			eyebrow: arch ? 'Neighborhood' : mizu ? '— Waterside' : hikari ? '— Setting' : '— Area',
+			eyebrow: arch ? 'Neighborhood' : mizu ? '— Waterside' : hikari ? '— Location' : '— Area',
 			mapImage: mizu
 				? 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80'
 				: arch

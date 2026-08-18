@@ -56,7 +56,7 @@ export function PlacesAutocompleteInput({
 		<div
 			className={cn(
 				'places-address-field flex w-full items-center overflow-hidden rounded-xl border border-black/10 bg-white',
-				'transition hover:border-camel/25 focus-within:border-camel/40 focus-within:ring-2 focus-within:ring-camel/12',
+				'transition hover:border-camel/25 focus-within:border-black/10 focus-within:ring-2 focus-within:ring-black/10',
 			)}
 		>
 			<span
