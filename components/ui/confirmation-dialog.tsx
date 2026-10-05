@@ -53,17 +53,17 @@ export function ConfirmationDialog({
 						role="dialog"
 						aria-modal
 						aria-labelledby="confirm-dialog-title"
-						className="relative z-10 w-full max-w-md rounded-2xl border border-black/10 bg-white p-6 shadow-xl"
+						className="relative z-10 w-full max-w-md rounded-2xl border border-dashboard-border bg-dashboard-panel p-6 shadow-xl"
 						initial={{ opacity: 0, scale: 0.96, y: 10 }}
 						animate={{ opacity: 1, scale: 1, y: 0 }}
 						exit={{ opacity: 0, scale: 0.96, y: 10 }}
 						transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
 						onClick={(event) => event.stopPropagation()}
 					>
-						<h3 id="confirm-dialog-title" className="font-serif text-2xl tracking-tight text-[#1A1A1A]">
+						<h3 id="confirm-dialog-title" className="font-serif text-2xl tracking-tight text-espresso">
 							{title}
 						</h3>
-						<p className="mt-2 text-sm text-[#1A1A1A]/65">{description}</p>
+						<p className="mt-2 text-sm text-dashboard-muted">{description}</p>
 						<div className="mt-6 flex justify-end gap-3">
 							<Button type="button" variant="ghostPill" onClick={onCancel} disabled={loading}>
 								{cancelLabel}
@@ -71,7 +71,7 @@ export function ConfirmationDialog({
 							<Button
 								type="button"
 								variant={confirmVariant === 'danger' ? 'secondary' : 'primary'}
-								className={confirmVariant === 'danger' ? 'border-red-300 text-red-700 hover:bg-red-50' : ''}
+								className={confirmVariant === 'danger' ? 'border-red-400/50 text-red-500 hover:bg-red-500/10' : ''}
 								onClick={onConfirm}
 								disabled={loading}
 							>

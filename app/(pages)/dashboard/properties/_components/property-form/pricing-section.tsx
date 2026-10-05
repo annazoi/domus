@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { DateTime } from 'luxon';
@@ -21,6 +22,7 @@ import {
 import type { Property, UpsertPropertyInput } from '@/features/property/interfaces/property.interface';
 import { toApiDate } from '@/features/property-availability/utils/date';
 import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
+import { DashboardPortal } from '@/app/(pages)/dashboard/_components/dashboard-portal';
 import { PropertyFormSection, dashboardFormFields } from './property-form-section';
 import { pricingFormSchema, type PricingFormInput, type PricingFormValues } from './schemas';
 import './availability-day-picker.css';
@@ -76,6 +78,9 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 	const [modalOpen, setModalOpen] = useState(false);
 	const [ranges, setRanges] = useState<RangeEntry[]>([{ id: 'range-1' }]);
 	const [activeRangeId, setActiveRangeId] = useState<string | null>(null);
+	const [selectionPickerOpen, setSelectionPickerOpen] = useState(false);
+	const [selectionDraft, setSelectionDraft] = useState<DateRange | undefined>(undefined);
+	const rangeIdCounter = useRef(1);
 	const [rangePrice, setRangePrice] = useState('');
 	const [rangeAvailable, setRangeAvailable] = useState(true);
 	const [rangeReason, setRangeReason] = useState<AvailabilityStatusType | ''>('');
@@ -180,25 +185,6 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		setSelectionMode(next);
 		setAnchor(null);
 		if (next === 'single' && selected.length) applySelection([selected[0]]);
-	};
-
-	const changeFrom = (value: string) => {
-		if (!value) return;
-		const to = selectionMode === 'single' ? value : (selected[selected.length - 1] ?? value);
-		setRangeFromInputs(value, to < value ? value : to);
-	};
-
-	const changeThrough = (value: string) => {
-		const from = selected[0];
-		if (!value || !from) return;
-		if (value < from) {
-			push({
-				title: 'The end date must be on or after the start date.',
-				tone: 'error',
-			});
-			return;
-		}
-		setRangeFromInputs(from, value);
 	};
 
 	const setRangeFromInputs = (from: string, to: string) => {
@@ -334,6 +320,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		hasOverlapWithSavedAvailability;
 
 	const resetRangeModalForm = () => {
+		rangeIdCounter.current = 1;
 		setRanges([{ id: 'range-1' }]);
 		setActiveRangeId(null);
 		setRangePrice('');
@@ -349,6 +336,41 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 	const closeModal = () => {
 		setModalOpen(false);
 		resetRangeModalForm();
+	};
+
+	const bookedDates = useMemo(
+		() =>
+			availabilityRows.filter((row) => row.reason === AvailabilityStatus.BOOKED).map((row) => toPickerDate(row.date)),
+		[availabilityRows],
+	);
+
+	const openSelectionPicker = () => {
+		setSelectionDraft(
+			first ? { from: toPickerDate(first), to: last && last !== first ? toPickerDate(last) : undefined } : undefined,
+		);
+		setSelectionPickerOpen(true);
+	};
+
+	const closeSelectionPicker = () => setSelectionPickerOpen(false);
+
+	const commitSelectionDraft = () => {
+		const from = selectionDraft?.from;
+		if (!from) return;
+		const to = selectionMode === 'single' ? from : (selectionDraft?.to ?? from);
+		setRangeFromInputs(toApiDate(fromPickerDate(from)), toApiDate(fromPickerDate(to)));
+		closeSelectionPicker();
+	};
+
+	const addRange = () => {
+		rangeIdCounter.current += 1;
+		const id = `range-${rangeIdCounter.current}`;
+		setRanges((previous) => [...previous, { id }]);
+		setActiveRangeId(id);
+	};
+
+	const removeRange = (id: string) => {
+		setRanges((previous) => (previous.length > 1 ? previous.filter((item) => item.id !== id) : previous));
+		setActiveRangeId((current) => (current === id ? null : current));
 	};
 
 	const handleApplyRanges = async () => {
@@ -626,32 +648,33 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 							</div>
 
 							<div className={cn('mt-4 grid gap-2', selectionMode === 'range' ? 'grid-cols-2' : 'grid-cols-1')}>
-								<label className="block">
+								<div>
 									<span className="mb-1.5 block text-xs font-semibold text-espresso">
 										{selectionMode === 'single' ? 'Date' : 'From'}
 									</span>
 									<Input
-										type="date"
 										variant="compact"
-										min={today.toISODate() ?? undefined}
-										value={first ?? ''}
-										onChange={(e) => changeFrom(e.target.value)}
-										className="h-10 min-w-0 rounded-lg px-2 text-xs"
+										readOnly
+										value={first ? formatDay(first, true) : ''}
+										placeholder="Select date"
+										onClick={openSelectionPicker}
+										aria-haspopup="dialog"
+										className="h-10 min-w-0 cursor-pointer rounded-lg px-3 text-xs"
 									/>
-								</label>
+								</div>
 								{selectionMode === 'range' ? (
-									<label className="block">
+									<div>
 										<span className="mb-1.5 block text-xs font-semibold text-espresso">Through</span>
 										<Input
-											type="date"
 											variant="compact"
-											min={first ?? today.toISODate() ?? undefined}
-											value={last ?? ''}
-											disabled={!first}
-											onChange={(e) => changeThrough(e.target.value)}
-											className="h-10 min-w-0 rounded-lg px-2 text-xs"
+											readOnly
+											value={last ? formatDay(last, true) : ''}
+											placeholder="Select date"
+											onClick={openSelectionPicker}
+											aria-haspopup="dialog"
+											className="h-10 min-w-0 cursor-pointer rounded-lg px-3 text-xs"
 										/>
-									</label>
+									</div>
 								) : null}
 							</div>
 
@@ -765,176 +788,320 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 				</div>
 			</div>
 
-			{modalOpen ? (
-				<div
-					className="fixed inset-0 z-50 flex items-center justify-center p-4"
-					role="presentation"
-					onClick={closeModal}
-				>
-					<div className="absolute inset-0 bg-black/45" aria-hidden />
-					<div
-						role="dialog"
-						aria-modal
-						aria-labelledby="availability-range-title"
-						className={cn(
-							'relative z-10 w-full max-w-md rounded-2xl bg-dashboard-panel p-6 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.35)]',
-							dashboardFormFields,
-						)}
-						onClick={(e) => e.stopPropagation()}
-					>
-						<div className="mb-5 flex items-start justify-between gap-4">
-							<h3 id="availability-range-title" className="font-serif text-xl text-espresso">
-								Availability &amp; pricing
-							</h3>
-							<Button type="button" variant="ghostIcon" onClick={closeModal} aria-label="Close">
-								<X className="h-5 w-5" />
-							</Button>
-						</div>
-
-						<div className="space-y-4">
-							{ranges.map((rangeItem, index) => (
-								<div key={rangeItem.id} className="relative">
-									<label className="block text-xs font-medium uppercase tracking-[0.12em] text-dashboard-muted">
-										Date range {index + 1}
-										<Input
-											variant="compact"
-											readOnly
-											value={formatRangeLabel(rangeItem.value)}
-											placeholder="Select dates"
-											onClick={() => setActiveRangeId((current) => (current === rangeItem.id ? null : rangeItem.id))}
-											className="mt-1.5 cursor-pointer"
-											aria-expanded={activeRangeId === rangeItem.id}
-											aria-haspopup="dialog"
-										/>
-									</label>
-									{index === 0 ? (
-										<Button
-											type="button"
-											variant="ghostPill"
-											className="mt-2 h-8 !px-2 flex items-center gap-1/2"
-											onClick={() => setRanges((previous) => [...previous, { id: `range-${previous.length + 1}` }])}
-										>
-											<Plus className="mr-1 h-4 w-4" />
-											Add another range
-										</Button>
-									) : null}
-									{activeRangeId === rangeItem.id ? (
-										<div
-											role="dialog"
-											aria-label={`Select date range ${index + 1}`}
-											className="availability-day-picker absolute left-0 right-0 top-full z-[70] mt-2 w-full rounded-xl border border-dashboard-border/60 bg-dashboard-bg p-3 shadow-[var(--shadow-dashboard-panel)] [&_.rdp-month]:w-full [&_.rdp-month_grid]:w-full [&_.rdp-day]:transition-[background,background-color] [&_.rdp-day]:duration-200 [&_.rdp-day]:ease-out [&_.rdp-day_button]:transition-[color,background-color,border-color,transform,box-shadow] [&_.rdp-day_button]:duration-200 [&_.rdp-day_button]:ease-out [&_.rdp-day_button]:active:scale-[0.94]"
-										>
-											<div className="mb-2 flex items-center justify-between gap-2 border-b border-dashboard-border/50 pb-2">
-												<p className="text-sm font-medium text-espresso">Select dates</p>
-												<Button
-													type="button"
-													variant="ghostIcon"
-													className="h-8 w-8"
-													onClick={() => setActiveRangeId(null)}
-													aria-label="Close date picker"
-												>
-													<X className="h-4 w-4" />
-												</Button>
-											</div>
-											<DayPicker
-												mode="range"
-												min={1}
-												excludeDisabled
-												disabled={[
-													{ before: today.toJSDate() },
-													...getDisabledDatesForRangePicker(ranges, rangeItem.id, availabilityRows),
-												]}
-												startMonth={today.toJSDate()}
-												selected={rangeItem.value}
-												onSelect={(nextRange) =>
-													setRanges((previous) =>
-														previous.map((item) => (item.id === rangeItem.id ? { ...item, value: nextRange } : item)),
-													)
-												}
-												defaultMonth={rangeItem.value?.from ?? today.toJSDate()}
-												className="w-full"
-											/>
-											<p className="mt-2 rounded-lg bg-camel/10 px-3 py-2 text-xs text-espresso" role="status">
-												{rangeItem.value?.from && rangeItem.value?.to
-													? `${formatRangeLabel(rangeItem.value)} · ${nightsInRange(rangeItem.value)} nights`
-													: rangeItem.value?.from
-														? 'Now choose the last night'
-														: 'Choose the first night'}
-											</p>
-											<div className="mt-3 flex items-center justify-between gap-2 border-t border-dashboard-border/50 pt-3">
-												<Button
-													type="button"
-													variant="ghostPill"
-													className="h-8 px-3"
-													disabled={!rangeItem.value?.from && !rangeItem.value?.to}
-													onClick={() =>
-														setRanges((previous) =>
-															previous.map((item) => (item.id === rangeItem.id ? { ...item, value: undefined } : item)),
-														)
-													}
-												>
-													Clear
-												</Button>
-												<Button
-													type="button"
-													variant="primarySm"
-													disabled={!rangeItem.value?.from || !rangeItem.value?.to}
-													onClick={() => setActiveRangeId(null)}
-												>
-													Done
-												</Button>
-											</div>
-										</div>
-									) : null}
-								</div>
-							))}
-							<label className="block text-xs font-medium uppercase tracking-[0.12em] text-dashboard-muted">
-								Price for this range (per night)
-								<Input
-									type="number"
-									min={0}
-									step={0.01}
-									placeholder="0.00"
-									value={rangePrice}
-									onChange={(e) => setRangePrice(e.target.value)}
-									className="mt-1.5"
-								/>
-							</label>
-							<label className="flex cursor-pointer items-center gap-3 rounded-lg bg-dashboard-bg px-4 py-3">
-								<Checkbox checked={rangeAvailable} onChange={(e) => setRangeAvailable(e.target.checked)} />
-								<span className="text-sm text-espresso">Available for booking</span>
-							</label>
-							<label className="block text-xs font-medium uppercase tracking-[0.12em] text-dashboard-muted">
-								Reason (when unavailable)
-								<select
-									value={rangeReason}
-									onChange={(e) => setRangeReason(e.target.value as AvailabilityStatusType | '')}
-									className="mt-1.5 h-10 w-full rounded-lg border-0 bg-dashboard-bg px-3 text-sm text-espresso focus:outline-none focus:ring-0"
-								>
-									<option value="">None</option>
-									<option value={AvailabilityStatus.BLOCKED}>Blocked</option>
-									<option value={AvailabilityStatus.MAINTENANCE}>Maintenance</option>
-									<option value={AvailabilityStatus.BOOKED}>Booked</option>
-								</select>
-							</label>
-						</div>
-
-						<div className="mt-8 flex justify-end gap-3">
-							<Button type="button" variant="ghostPill" onClick={closeModal}>
-								Cancel
-							</Button>
-							<Button
-								type="button"
-								variant="primary"
-								disabled={disableApplyRanges}
-								onClick={() => void handleApplyRanges()}
+			<DashboardPortal>
+				<AnimatePresence>
+					{modalOpen ? (
+						<motion.div
+							key="range-modal"
+							className="fixed inset-0 z-[70] flex items-center justify-center p-4"
+							role="presentation"
+							onClick={closeModal}
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							transition={{ duration: 0.18 }}
+						>
+							<div className="absolute inset-0 bg-black/45" aria-hidden />
+							<motion.div
+								role="dialog"
+								aria-modal
+								aria-labelledby="availability-range-title"
+								className={cn(
+									'relative z-10 max-h-[calc(100vh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl bg-dashboard-panel p-6 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.35)]',
+									dashboardFormFields,
+								)}
+								onClick={(e) => e.stopPropagation()}
+								initial={{ opacity: 0, y: 14, scale: 0.98 }}
+								animate={{ opacity: 1, y: 0, scale: 1 }}
+								exit={{ opacity: 0, y: 8, scale: 0.98 }}
+								transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
 							>
-								{applying ? 'Applying...' : 'Apply'}
-							</Button>
-						</div>
-					</div>
-				</div>
-			) : null}
+								<div className="mb-6 flex items-start justify-between gap-4">
+									<div>
+										<h3 id="availability-range-title" className="font-serif text-xl text-espresso">
+											Availability &amp; pricing
+										</h3>
+										<p className="mt-1 text-sm text-dashboard-muted">
+											Set one price and availability for one or more date ranges.
+										</p>
+									</div>
+									<Button type="button" variant="ghostIcon" onClick={closeModal} aria-label="Close">
+										<X className="h-5 w-5" />
+									</Button>
+								</div>
+
+								<div>
+									<AnimatePresence initial={false}>
+										{ranges.map((rangeItem, index) => (
+											<motion.div
+												key={rangeItem.id}
+												initial={{ height: 0, opacity: 0, overflow: 'hidden' }}
+												animate={{ height: 'auto', opacity: 1, transitionEnd: { overflow: 'visible' } }}
+												exit={{ height: 0, opacity: 0, overflow: 'hidden' }}
+												transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+											>
+												<div className="relative pb-4">
+													{ranges.length > 1 ? (
+														<button
+															type="button"
+															onClick={() => removeRange(rangeItem.id)}
+															className="absolute right-0 top-0 z-10 inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium text-dashboard-muted transition hover:bg-red-500/10 hover:text-red-600"
+														>
+															<X className="h-3.5 w-3.5" />
+															Remove
+														</button>
+													) : null}
+													<label className="block text-xs font-medium uppercase tracking-[0.12em] text-dashboard-muted">
+														Date range {index + 1}
+														<Input
+															variant="compact"
+															readOnly
+															value={formatRangeLabel(rangeItem.value)}
+															placeholder="Select dates"
+															onClick={() =>
+																setActiveRangeId((current) => (current === rangeItem.id ? null : rangeItem.id))
+															}
+															className="mt-1.5 cursor-pointer"
+															aria-expanded={activeRangeId === rangeItem.id}
+															aria-haspopup="dialog"
+														/>
+													</label>
+													<AnimatePresence initial={false}>
+														{activeRangeId === rangeItem.id ? (
+															<motion.div
+																key="picker"
+																role="dialog"
+																aria-label={`Select date range ${index + 1}`}
+																initial={{ height: 0, opacity: 0, overflow: 'hidden' }}
+																animate={{ height: 'auto', opacity: 1, transitionEnd: { overflow: 'visible' } }}
+																exit={{ height: 0, opacity: 0, overflow: 'hidden' }}
+																transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+																className="availability-day-picker mt-2 w-full rounded-xl border border-dashboard-border bg-dashboard-surface [&_.rdp-month]:w-full [&_.rdp-month_grid]:w-full [&_.rdp-day]:transition-[background,background-color] [&_.rdp-day]:duration-200 [&_.rdp-day]:ease-out [&_.rdp-day_button]:transition-[color,background-color,border-color,transform,box-shadow] [&_.rdp-day_button]:duration-200 [&_.rdp-day_button]:ease-out [&_.rdp-day_button]:active:scale-[0.94]"
+															>
+																<div className="p-3">
+																	<div className="mb-2 flex items-center justify-between gap-2 border-b border-dashboard-border/50 pb-2">
+																		<p className="text-sm font-medium text-espresso">Select dates</p>
+																		<Button
+																			type="button"
+																			variant="ghostIcon"
+																			className="h-8 w-8"
+																			onClick={() => setActiveRangeId(null)}
+																			aria-label="Close date picker"
+																		>
+																			<X className="h-4 w-4" />
+																		</Button>
+																	</div>
+																	<DayPicker
+																		mode="range"
+																		min={1}
+																		excludeDisabled
+																		disabled={[
+																			{ before: today.toJSDate() },
+																			...getDisabledDatesForRangePicker(ranges, rangeItem.id, availabilityRows),
+																		]}
+																		startMonth={today.toJSDate()}
+																		selected={rangeItem.value}
+																		onSelect={(nextRange) =>
+																			setRanges((previous) =>
+																				previous.map((item) =>
+																					item.id === rangeItem.id ? { ...item, value: nextRange } : item,
+																				),
+																			)
+																		}
+																		defaultMonth={rangeItem.value?.from ?? today.toJSDate()}
+																		className="w-full"
+																	/>
+																	<p
+																		className="mt-2 rounded-lg bg-camel/10 px-3 py-2 text-xs text-espresso"
+																		role="status"
+																	>
+																		{rangeItem.value?.from && rangeItem.value?.to
+																			? `${formatRangeLabel(rangeItem.value)} · ${nightsInRange(rangeItem.value)} nights`
+																			: rangeItem.value?.from
+																				? 'Now choose the last night'
+																				: 'Choose the first night'}
+																	</p>
+																	<div className="mt-3 flex items-center justify-between gap-2 border-t border-dashboard-border/50 pt-3">
+																		<Button
+																			type="button"
+																			variant="ghostPill"
+																			className="h-8 px-3"
+																			disabled={!rangeItem.value?.from && !rangeItem.value?.to}
+																			onClick={() =>
+																				setRanges((previous) =>
+																					previous.map((item) =>
+																						item.id === rangeItem.id ? { ...item, value: undefined } : item,
+																					),
+																				)
+																			}
+																		>
+																			Clear
+																		</Button>
+																		<Button
+																			type="button"
+																			variant="primarySm"
+																			disabled={!rangeItem.value?.from || !rangeItem.value?.to}
+																			onClick={() => setActiveRangeId(null)}
+																		>
+																			Done
+																		</Button>
+																	</div>
+																</div>
+															</motion.div>
+														) : null}
+													</AnimatePresence>
+												</div>
+											</motion.div>
+										))}
+									</AnimatePresence>
+									<button
+										type="button"
+										onClick={addRange}
+										className="mb-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-camel/60 bg-camel/[0.07] py-3 text-sm font-semibold text-camel-deep transition hover:border-camel hover:bg-camel/[0.14] active:scale-[0.99]"
+									>
+										<Plus className="h-4 w-4" />
+										Add another range
+									</button>
+									<div className="space-y-4">
+										<label className="block text-xs font-medium uppercase tracking-[0.12em] text-dashboard-muted">
+											Price for this range (per night)
+											<Input
+												type="number"
+												min={0}
+												step={0.01}
+												placeholder="0.00"
+												value={rangePrice}
+												onChange={(e) => setRangePrice(e.target.value)}
+												className="mt-1.5"
+											/>
+										</label>
+										<label className="flex cursor-pointer items-center gap-3 rounded-lg bg-dashboard-bg px-4 py-3">
+											<Checkbox checked={rangeAvailable} onChange={(e) => setRangeAvailable(e.target.checked)} />
+											<span className="text-sm text-espresso">Available for booking</span>
+										</label>
+										<label className="block text-xs font-medium uppercase tracking-[0.12em] text-dashboard-muted">
+											Reason (when unavailable)
+											<select
+												value={rangeReason}
+												onChange={(e) => setRangeReason(e.target.value as AvailabilityStatusType | '')}
+												className="mt-1.5 h-10 w-full rounded-lg border-0 bg-dashboard-bg px-3 text-sm text-espresso focus:outline-none focus:ring-0"
+											>
+												<option value="">None</option>
+												<option value={AvailabilityStatus.BLOCKED}>Blocked</option>
+												<option value={AvailabilityStatus.MAINTENANCE}>Maintenance</option>
+												<option value={AvailabilityStatus.BOOKED}>Booked</option>
+											</select>
+										</label>
+									</div>
+								</div>
+
+								<div className="mt-8 flex justify-end gap-3 border-t border-dashboard-border pt-5">
+									<Button type="button" variant="ghostPill" onClick={closeModal}>
+										Cancel
+									</Button>
+									<Button
+										type="button"
+										variant="primary"
+										disabled={disableApplyRanges}
+										onClick={() => void handleApplyRanges()}
+									>
+										{applying ? 'Applying...' : 'Apply'}
+									</Button>
+								</div>
+							</motion.div>
+						</motion.div>
+					) : null}
+				</AnimatePresence>
+				<AnimatePresence>
+					{selectionPickerOpen ? (
+						<motion.div
+							key="selection-picker"
+							className="fixed inset-0 z-[75] flex items-center justify-center p-4"
+							role="presentation"
+							onClick={closeSelectionPicker}
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							transition={{ duration: 0.16 }}
+						>
+							<div className="absolute inset-0 bg-black/45" aria-hidden />
+							<motion.div
+								role="dialog"
+								aria-modal
+								aria-label={selectionMode === 'single' ? 'Select a date' : 'Select dates'}
+								className="availability-day-picker relative z-10 w-full max-w-sm rounded-2xl bg-dashboard-panel p-5 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.35)] [&_.rdp-month]:w-full [&_.rdp-month_grid]:w-full"
+								onClick={(e) => e.stopPropagation()}
+								initial={{ opacity: 0, y: 12, scale: 0.98 }}
+								animate={{ opacity: 1, y: 0, scale: 1 }}
+								exit={{ opacity: 0, y: 8, scale: 0.98 }}
+								transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+							>
+								<div className="mb-3 flex items-center justify-between gap-2">
+									<p className="font-serif text-lg text-espresso">
+										{selectionMode === 'single' ? 'Select a date' : 'Select dates'}
+									</p>
+									<Button type="button" variant="ghostIcon" onClick={closeSelectionPicker} aria-label="Close">
+										<X className="h-5 w-5" />
+									</Button>
+								</div>
+								{selectionMode === 'single' ? (
+									<DayPicker
+										mode="single"
+										disabled={[{ before: today.toJSDate() }, ...bookedDates]}
+										startMonth={today.toJSDate()}
+										endMonth={lastMonthStart.toJSDate()}
+										defaultMonth={selectionDraft?.from ?? today.toJSDate()}
+										selected={selectionDraft?.from}
+										onSelect={(date) => setSelectionDraft(date ? { from: date } : undefined)}
+										className="w-full"
+									/>
+								) : (
+									<DayPicker
+										mode="range"
+										disabled={[{ before: today.toJSDate() }, ...bookedDates]}
+										startMonth={today.toJSDate()}
+										endMonth={lastMonthStart.toJSDate()}
+										defaultMonth={selectionDraft?.from ?? today.toJSDate()}
+										selected={selectionDraft}
+										onSelect={setSelectionDraft}
+										className="w-full"
+									/>
+								)}
+								<p className="mt-3 rounded-lg bg-camel/10 px-3 py-2 text-xs text-espresso" role="status">
+									{selectionDraft?.from && (selectionMode === 'single' || selectionDraft.to)
+										? selectionMode === 'single'
+											? formatRangeLabel({ from: selectionDraft.from, to: selectionDraft.from })
+											: `${formatRangeLabel(selectionDraft)} · ${nightsInRange(selectionDraft)} nights`
+										: selectionDraft?.from
+											? 'Now choose the last night'
+											: selectionMode === 'single'
+												? 'Choose a date'
+												: 'Choose the first night'}
+								</p>
+								<div className="mt-4 flex items-center justify-between gap-2 border-t border-dashboard-border pt-4">
+									<Button
+										type="button"
+										variant="ghostPill"
+										className="h-9 px-3"
+										disabled={!selectionDraft?.from}
+										onClick={() => setSelectionDraft(undefined)}
+									>
+										Clear
+									</Button>
+									<Button
+										type="button"
+										variant="primarySm"
+										disabled={!selectionDraft?.from || (selectionMode === 'range' && !selectionDraft.to)}
+										onClick={commitSelectionDraft}
+									>
+										Done
+									</Button>
+								</div>
+							</motion.div>
+						</motion.div>
+					) : null}
+				</AnimatePresence>
+			</DashboardPortal>
 			<ConfirmationDialog
 				open={confirm !== null}
 				title={confirm ? confirmCopy[confirm].title : ''}
@@ -1002,6 +1169,11 @@ function formatRangeLabel(range: DateRange | undefined) {
 	if (!range.to) return `${from.toFormat('MMM d, yyyy')} - ...`;
 	const to = fromPickerDate(range.to);
 	return `${from.toFormat('MMM d, yyyy')} - ${to.toFormat('MMM d, yyyy')}`;
+}
+
+function toPickerDate(iso: string) {
+	const [year, month, day] = iso.split('-').map(Number);
+	return new Date(year, month - 1, day);
 }
 
 function fromPickerDate(date: Date) {

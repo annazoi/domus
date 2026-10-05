@@ -60,7 +60,7 @@ export function PropertyFormSidebar({ activeTab, onTabChange }: PropertyFormSide
 	}, [open]);
 
 	return (
-		<div className="sticky top-16 z-20 -mx-5 border-b border-dashboard-border bg-[color:var(--color-dashboard-header)] px-5 md:-mx-10 md:top-[4.25rem] md:px-10">
+		<div className="sticky top-16 z-20 -mx-5 border-b border-dashboard-border bg-dashboard-bg px-5 md:-mx-10 md:top-16 md:px-10">
 			{/* Desktop: tab row */}
 			<nav className="hidden gap-1 py-2.5 min-[1600px]:flex" role="tablist" aria-label="Property form sections">
 				{sidebarItems.map((item, index) => {

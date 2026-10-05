@@ -85,7 +85,7 @@ export function RichTextLinkDialog({
 						role="dialog"
 						aria-modal
 						aria-labelledby={titleId}
-						className="relative z-10 w-full max-w-[420px] overflow-hidden rounded-2xl border border-black/10 bg-white shadow-[0_24px_80px_-32px_rgb(61_50_41/0.45)]"
+						className="relative z-10 w-full max-w-[420px] overflow-hidden rounded-2xl border border-dashboard-border bg-dashboard-panel shadow-[0_24px_80px_-32px_rgb(0_0_0/0.5)]"
 						initial={{ opacity: 0, y: 16, scale: 0.98 }}
 						animate={{ opacity: 1, y: 0, scale: 1 }}
 						exit={{ opacity: 0, y: 12, scale: 0.98 }}
@@ -95,7 +95,7 @@ export function RichTextLinkDialog({
 						<div className="h-1 bg-gradient-to-r from-camel/20 via-camel to-camel/20" aria-hidden />
 						<div className="p-6">
 							<div className="flex items-start gap-4">
-								<div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-camel/20 bg-cream/80 text-camel">
+								<div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-camel/20 bg-dashboard-inset text-camel">
 									<Link2 className="h-5 w-5" strokeWidth={1.75} />
 								</div>
 								<div className="min-w-0 flex-1 pt-0.5">
@@ -111,7 +111,7 @@ export function RichTextLinkDialog({
 							</div>
 
 							{trimmedSelection ? (
-								<div className="mt-5 rounded-xl border border-black/6 bg-dashboard-inset/60 px-4 py-3">
+								<div className="mt-5 rounded-xl border border-dashboard-border bg-dashboard-inset/60 px-4 py-3">
 									<p className="text-[10px] font-medium uppercase tracking-[0.22em] text-espresso/40">Selected text</p>
 									<p className="mt-1 truncate font-medium text-espresso">&ldquo;{trimmedSelection}&rdquo;</p>
 								</div>

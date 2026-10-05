@@ -129,7 +129,7 @@ export function NewConversationModal({
 									value={searchQuery}
 									onChange={(e) => setSearchQuery(e.target.value)}
 									placeholder="email or name"
-									className="mt-1.5 min-h-11 w-full rounded-xl border border-black/10 bg-[#fafafa] px-4 text-sm outline-none focus:border-camel/40 focus:ring-2 focus:ring-camel/20"
+									className="mt-1.5 min-h-11 w-full rounded-xl border border-dashboard-border bg-dashboard-surface px-4 text-sm outline-none focus:border-camel/40 focus:ring-2 focus:ring-camel/20"
 								/>
 							</div>
 
@@ -182,7 +182,7 @@ export function NewConversationModal({
 											id="conversation-property"
 											value={propertyId}
 											onChange={(e) => setPropertyId(e.target.value)}
-											className="mt-1.5 min-h-11 w-full rounded-xl border border-black/10 bg-[#fafafa] px-4 text-sm outline-none focus:border-camel/40 focus:ring-2 focus:ring-camel/20"
+											className="mt-1.5 min-h-11 w-full rounded-xl border border-dashboard-border bg-dashboard-surface px-4 text-sm outline-none focus:border-camel/40 focus:ring-2 focus:ring-camel/20"
 										>
 											<option value="">Select property…</option>
 											{propertyOptions.map((p) => (

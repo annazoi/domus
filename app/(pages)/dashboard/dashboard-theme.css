@@ -132,7 +132,7 @@ html[data-dashboard-theme='dark'] select option {
   --color-dashboard-muted: #7a6f64;
   --color-dashboard-row-hover: rgb(200 169 106 / 0.12);
   --shadow-dashboard-panel: 0 1px 0 rgb(29 25 22 / 0.04), 0 12px 28px -22px rgb(29 25 22 / 0.28);
-  --color-dashboard-header: rgb(239 233 223 / 0.88);
+  --color-dashboard-header: #efe9df;
   --color-dashboard-header-border: #dcd2c1;
   --color-dashboard-header-shadow: none;
   --color-dashboard-nav-active: rgb(200 169 106 / 0.18);
@@ -157,13 +157,13 @@ html[data-dashboard-theme='dark'] select option {
 
 .dashboard-root[data-theme='dark'] {
   --color-dashboard-bg: #12100e;
-  --color-dashboard-panel: #1a1714;
-  --color-dashboard-surface: #1d1916;
-  --color-dashboard-inset: #211d19;
-  --color-dashboard-border: rgb(255 255 255 / 0.08);
+  --color-dashboard-panel: #1c1814;
+  --color-dashboard-surface: #1c1814;
+  --color-dashboard-inset: #26201a;
+  --color-dashboard-border: rgb(255 255 255 / 0.1);
   --color-dashboard-muted: rgb(240 235 227 / 0.58);
   --color-dashboard-row-hover: rgb(200 169 106 / 0.09);
-  --color-dashboard-header: rgb(18 16 14 / 0.9);
+  --color-dashboard-header: #12100e;
   --color-dashboard-header-border: rgb(255 255 255 / 0.07);
   --color-dashboard-nav-active: rgb(200 169 106 / 0.16);
   --color-espresso: #f0ebe3;
@@ -177,8 +177,8 @@ html[data-dashboard-theme='dark'] select option {
   --color-primary-hover: #f3e4c8;
   --color-primary-foreground: #171411;
   --shadow-dashboard-panel: 0 1px 0 rgb(255 255 255 / 0.03), 0 14px 30px -22px rgb(0 0 0 / 0.8);
-  --hz-field: #12100e;
-  --hz-field-border: rgb(255 255 255 / 0.13);
+  --hz-field: #14110d;
+  --hz-field-border: rgb(255 255 255 / 0.14);
   --earnings-chart-glow-a: transparent;
   --earnings-chart-glow-b: transparent;
 }
@@ -335,4 +335,80 @@ html[data-dashboard-theme='dark'] select option {
   .dashboard-root button.dashboard-panel:hover {
     transform: none;
   }
+}
+
+/* Address autocomplete: the wrapper is the field; the inner input must not draw a second box. */
+.dashboard-root .places-address-field {
+  background-color: var(--hz-field);
+  border: 1px solid var(--hz-field-border);
+  border-radius: 0.75rem;
+  box-shadow: none;
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.dashboard-root .places-address-field:hover {
+  border-color: color-mix(in srgb, var(--hz-gold) 70%, var(--hz-field-border));
+}
+
+.dashboard-root .places-address-field:focus-within {
+  background-color: var(--color-dashboard-surface);
+  border-color: var(--hz-gold);
+  box-shadow: 0 0 0 1px var(--hz-gold);
+}
+
+.dashboard-root .places-address-field input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+.dashboard-root .places-address-field input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):hover,
+.dashboard-root .places-address-field input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):focus {
+  background-color: transparent;
+  border-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+}
+
+/* Search-style fields: an icon plus a transparent "plain" input inside a bordered box.
+   The box is the field; the inner input must not draw a second one. */
+.dashboard-root :is(div, label):has(> input.bg-transparent) {
+  background-color: var(--hz-field);
+  border: 1px solid var(--hz-field-border);
+  border-radius: 0.75rem;
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.dashboard-root :is(div, label):has(> input.bg-transparent):hover {
+  border-color: color-mix(in srgb, var(--hz-gold) 70%, var(--hz-field-border));
+}
+
+.dashboard-root :is(div, label):has(> input.bg-transparent):focus-within {
+  background-color: var(--color-dashboard-surface);
+  border-color: var(--hz-gold);
+  box-shadow: 0 0 0 1px var(--hz-gold);
+}
+
+.dashboard-root input.bg-transparent:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+.dashboard-root input.bg-transparent:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):hover,
+.dashboard-root input.bg-transparent:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):focus {
+  background-color: transparent;
+  border-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+}
+
+/* Dark theme: keep native controls, scrollbars and date pickers in the dark scheme. */
+.dashboard-root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+.dashboard-root[data-theme='dark'] .dashboard-panel {
+  background-color: var(--color-dashboard-panel);
+}
+
+.dashboard-root[data-theme='dark'] button.bg-primary,
+.dashboard-root[data-theme='dark'] a.bg-primary {
+  box-shadow: none;
+}
+
+.dashboard-root[data-theme='dark'] .availability-day-picker {
+  --picker-range-middle-text: var(--color-espresso);
 }

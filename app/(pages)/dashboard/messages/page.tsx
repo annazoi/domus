@@ -212,7 +212,7 @@ function MessagesContent() {
 											e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), void sendMessage())
 										}
 										placeholder="Type a message…"
-										className="min-h-11 flex-1 rounded-xl border border-black/10 bg-[#fafafa] px-4 text-sm outline-none ring-camel placeholder:text-espresso/35 focus:border-camel/40 focus:ring-2"
+										className="min-h-11 flex-1 rounded-xl border border-dashboard-border bg-dashboard-surface px-4 text-sm outline-none ring-camel placeholder:text-espresso/35 focus:border-camel/40 focus:ring-2"
 									/>
 									<Button
 										type="button"

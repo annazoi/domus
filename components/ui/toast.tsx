@@ -17,8 +17,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 		const tone = input.tone ?? 'info';
 		const content = (
 			<div>
-				<p className="text-sm text-[#1A1A1A]">{input.title}</p>
-				{input.description ? <p className="mt-0.5 text-xs text-[#1A1A1A]/60">{input.description}</p> : null}
+				<p className="text-sm text-espresso">{input.title}</p>
+				{input.description ? <p className="mt-0.5 text-xs text-dashboard-muted">{input.description}</p> : null}
 			</div>
 		);
 		if (tone === 'success') {
@@ -48,7 +48,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 				newestOnTop
 				icon={false}
 				toastClassName={() =>
-					'min-h-0 rounded-xl border border-black/10 bg-white px-4 py-3 shadow-md text-[#1A1A1A]'
+					'min-h-0 rounded-xl border border-dashboard-border bg-dashboard-panel px-4 py-3 shadow-md text-espresso'
 				}
 			/>
 		</ToastContext.Provider>
