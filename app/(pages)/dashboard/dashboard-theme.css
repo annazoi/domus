@@ -117,3 +117,222 @@ html[data-dashboard-theme='dark'] select option {
   );
 }
 
+
+/* ------------------------------------------------------------------
+   Hozya dashboard design layer (dashboard only).
+   Same world as the landing page: cream canvas, sand wells, ink text,
+   gold accents, pill buttons, soft motion. Landing/guest pages untouched.
+   ------------------------------------------------------------------ */
+.dashboard-root:not([data-theme='dark']) {
+  --color-dashboard-bg: #efe9df;
+  --color-dashboard-panel: #fbf8f2;
+  --color-dashboard-surface: #fbf8f2;
+  --color-dashboard-inset: #e7dfd2;
+  --color-dashboard-border: #dcd2c1;
+  --color-dashboard-muted: #7a6f64;
+  --color-dashboard-row-hover: rgb(200 169 106 / 0.12);
+  --shadow-dashboard-panel: 0 1px 0 rgb(29 25 22 / 0.04), 0 12px 28px -22px rgb(29 25 22 / 0.28);
+  --color-dashboard-header: rgb(239 233 223 / 0.88);
+  --color-dashboard-header-border: #dcd2c1;
+  --color-dashboard-header-shadow: none;
+  --color-dashboard-nav-active: rgb(200 169 106 / 0.18);
+  --color-espresso: #1d1916;
+  --color-camel: #a8873f;
+  --color-camel-dark: #8a6d30;
+  --color-camel-light: #c8a96a;
+  --color-camel-deep: #7d6128;
+  --color-dashboard-accent: #a8873f;
+  --color-dashboard-accent-hover: #8a6d30;
+  --color-primary: #1d1916;
+  --color-primary-hover: #3a3530;
+  --color-primary-foreground: #efe9df;
+  --hz-field: #f3ede2;
+  --hz-field-border: #d3c8b5;
+  --earnings-chart-glow-a: transparent;
+  --earnings-chart-glow-b: transparent;
+  --earnings-chart-bg-from: #fbf8f2;
+  --earnings-chart-bg-via: #fbf8f2;
+  --earnings-chart-bg-to: #fbf8f2;
+}
+
+.dashboard-root[data-theme='dark'] {
+  --color-dashboard-bg: #12100e;
+  --color-dashboard-panel: #1a1714;
+  --color-dashboard-surface: #1d1916;
+  --color-dashboard-inset: #211d19;
+  --color-dashboard-border: rgb(255 255 255 / 0.08);
+  --color-dashboard-muted: rgb(240 235 227 / 0.58);
+  --color-dashboard-row-hover: rgb(200 169 106 / 0.09);
+  --color-dashboard-header: rgb(18 16 14 / 0.9);
+  --color-dashboard-header-border: rgb(255 255 255 / 0.07);
+  --color-dashboard-nav-active: rgb(200 169 106 / 0.16);
+  --color-espresso: #f0ebe3;
+  --color-cream: #12100e;
+  --color-camel: #c9a978;
+  --color-camel-dark: #a8845d;
+  --color-camel-light: #e8d4b0;
+  --color-camel-deep: #ddc39a;
+  --color-dashboard-accent: #c9a978;
+  --color-primary: #e8d4b0;
+  --color-primary-hover: #f3e4c8;
+  --color-primary-foreground: #171411;
+  --shadow-dashboard-panel: 0 1px 0 rgb(255 255 255 / 0.03), 0 14px 30px -22px rgb(0 0 0 / 0.8);
+  --hz-field: #12100e;
+  --hz-field-border: rgb(255 255 255 / 0.13);
+  --earnings-chart-glow-a: transparent;
+  --earnings-chart-glow-b: transparent;
+}
+
+.dashboard-root {
+  --hz-sage: #4d7c6f;
+  --hz-clay: #c4785a;
+  --hz-gold: #d4a853;
+}
+
+/* Shape: generous panels, pill buttons (as on the landing page). */
+.dashboard-root .rounded-3xl {
+  border-radius: 1.25rem;
+}
+
+.dashboard-root .rounded-2xl {
+  border-radius: 1rem;
+}
+
+.dashboard-root .dashboard-panel {
+  border: 1px solid var(--color-dashboard-border);
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.dashboard-root a.dashboard-panel:hover,
+.dashboard-root button.dashboard-panel:hover {
+  border-color: var(--hz-gold);
+  transform: translateY(-2px);
+}
+
+.dashboard-root button.bg-primary,
+.dashboard-root a.bg-primary {
+  font-weight: 600;
+  box-shadow: 0 10px 22px -14px rgb(60 40 20 / 0.6);
+}
+
+.dashboard-root button.bg-primary:hover,
+.dashboard-root a.bg-primary:hover {
+  box-shadow: 0 14px 26px -14px rgb(60 40 20 / 0.7);
+}
+
+/* Fields sit in a recessed well so they never blend into the panel behind them. */
+.dashboard-root input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+.dashboard-root textarea,
+.dashboard-root select,
+.dashboard-root button[role='combobox'] {
+  background-color: var(--hz-field);
+  border-color: var(--hz-field-border);
+  border-radius: 0.75rem;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.dashboard-root input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):hover,
+.dashboard-root textarea:hover,
+.dashboard-root select:hover,
+.dashboard-root button[role='combobox']:hover {
+  border-color: color-mix(in srgb, var(--hz-gold) 70%, var(--hz-field-border));
+}
+
+.dashboard-root input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):focus,
+.dashboard-root textarea:focus,
+.dashboard-root select:focus,
+.dashboard-root button[role='combobox']:focus-visible {
+  background-color: var(--color-dashboard-surface);
+  border-color: var(--hz-gold);
+  box-shadow: 0 0 0 1px var(--hz-gold);
+  outline: none;
+}
+
+.dashboard-root input[type='checkbox'] {
+  accent-color: var(--color-camel);
+}
+
+/* Headings: calm scale, landing-style eyebrow with a gold rule. */
+.dashboard-root main h1 {
+  font-size: clamp(1.75rem, 1.2rem + 1.2vw, 2.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.dashboard-root main p.uppercase[class*='tracking-[0.2em]'] {
+  color: var(--color-camel-deep);
+  font-weight: 600;
+}
+
+.dashboard-root main p.uppercase[class*='tracking-[0.2em]']::before {
+  content: '';
+  display: inline-block;
+  width: 1.5rem;
+  height: 1px;
+  margin-right: 0.65rem;
+  vertical-align: middle;
+  background: var(--hz-gold);
+}
+
+/* Tables: sand header, gold-tinted row hover. */
+.dashboard-root table thead tr {
+  border-bottom: 1px solid var(--color-dashboard-border);
+}
+
+/* No glow or blur: separation comes from tone, borders and a tight contact shadow. */
+.dashboard-root .shadow-sm,
+.dashboard-root .shadow-md,
+.dashboard-root .shadow-lg,
+.dashboard-root .shadow-xl {
+  box-shadow: var(--shadow-dashboard-panel);
+}
+
+.dashboard-root .backdrop-blur-sm,
+.dashboard-root .backdrop-blur-md {
+  backdrop-filter: none;
+}
+
+.dashboard-root [class*='bg-gradient-to-br'][class*='from-dashboard-'] {
+  background-image: none;
+  background-color: var(--color-dashboard-surface);
+}
+
+
+/* Motion: page sections rise in, staggered. */
+@keyframes hz-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.dashboard-root main > div > div > * {
+  animation: hz-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dashboard-root main > div > div > *:nth-child(2) {
+  animation-delay: 0.06s;
+}
+.dashboard-root main > div > div > *:nth-child(3) {
+  animation-delay: 0.12s;
+}
+.dashboard-root main > div > div > *:nth-child(4) {
+  animation-delay: 0.18s;
+}
+.dashboard-root main > div > div > *:nth-child(n + 5) {
+  animation-delay: 0.24s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-root main > div > div > * {
+    animation: none;
+  }
+  .dashboard-root a.dashboard-panel:hover,
+  .dashboard-root button.dashboard-panel:hover {
+    transform: none;
+  }
+}

@@ -87,8 +87,8 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 	return (
 		<PropertyFormSection id="house-rules" title="House rules">
 			<div className="grid gap-4 md:grid-cols-2">
-				<div className="space-y-1.5">
-					<label htmlFor="property-check-in-time" className="text-sm font-medium text-espresso">
+				<div className="space-y-2.5">
+					<label htmlFor="property-check-in-time" className="block text-sm font-medium text-espresso">
 						Check-in time
 					</label>
 					<Controller
@@ -114,8 +114,8 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 						)}
 					/>
 				</div>
-				<div className="space-y-1.5">
-					<label htmlFor="property-check-out-time" className="text-sm font-medium text-espresso">
+				<div className="space-y-2.5">
+					<label htmlFor="property-check-out-time" className="block text-sm font-medium text-espresso">
 						Check-out time
 					</label>
 					<Controller
@@ -143,8 +143,8 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 				</div>
 			</div>
 			<div className="grid gap-4 md:grid-cols-3">
-				<div className="space-y-1.5">
-					<label htmlFor="property-door-code" className="text-sm font-medium text-espresso">
+				<div className="space-y-2.5">
+					<label htmlFor="property-door-code" className="block text-sm font-medium text-espresso">
 						Door code
 					</label>
 					<Controller
@@ -161,8 +161,8 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 						)}
 					/>
 				</div>
-				<div className="space-y-1.5">
-					<label htmlFor="property-safe-box-code" className="text-sm font-medium text-espresso">
+				<div className="space-y-2.5">
+					<label htmlFor="property-safe-box-code" className="block text-sm font-medium text-espresso">
 						Safe box code
 					</label>
 					<Controller
@@ -179,8 +179,8 @@ export function HouseRulesSection({ initialProperty, propertyId: propertyIdProp 
 						)}
 					/>
 				</div>
-				<div className="space-y-1.5">
-					<label htmlFor="property-wifi-password" className="text-sm font-medium text-espresso">
+				<div className="space-y-2.5">
+					<label htmlFor="property-wifi-password" className="block text-sm font-medium text-espresso">
 						Wi-Fi password
 					</label>
 					<Controller

@@ -106,8 +106,8 @@ export function LocationSection({
 
 	return (
 		<PropertyFormSection id="location" title="Location">
-			<div className="space-y-1.5">
-				<label htmlFor="property-address" className="text-sm font-medium text-espresso">
+			<div className="space-y-2.5">
+				<label htmlFor="property-address" className="block text-sm font-medium text-espresso">
 					Address
 				</label>
 				<Controller
@@ -134,8 +134,8 @@ export function LocationSection({
 				/>
 			</div>
 			<div className="grid gap-4 md:grid-cols-2">
-				<div className="space-y-1.5">
-					<label htmlFor="property-country" className="text-sm font-medium text-espresso">
+				<div className="space-y-2.5">
+					<label htmlFor="property-country" className="block text-sm font-medium text-espresso">
 						Country
 					</label>
 					<Input
@@ -144,8 +144,8 @@ export function LocationSection({
 						placeholder="Enter country"
 					/>
 				</div>
-				<div className="space-y-1.5">
-					<label htmlFor="property-city" className="text-sm font-medium text-espresso">
+				<div className="space-y-2.5">
+					<label htmlFor="property-city" className="block text-sm font-medium text-espresso">
 						City
 					</label>
 					<Input
@@ -157,8 +157,8 @@ export function LocationSection({
 			</div>
 		
 			<div className="grid gap-4 md:grid-cols-2">
-				<div className="space-y-1.5">
-					<label htmlFor="property-latitude" className="text-sm font-medium text-espresso">
+				<div className="space-y-2.5">
+					<label htmlFor="property-latitude" className="block text-sm font-medium text-espresso">
 						Latitude
 					</label>
 					<Controller
@@ -177,8 +177,8 @@ export function LocationSection({
 					/>
 					{errors.lat?.message ? <p className="text-xs text-red-700">{errors.lat.message}</p> : null}
 				</div>
-				<div className="space-y-1.5">
-					<label htmlFor="property-longitude" className="text-sm font-medium text-espresso">
+				<div className="space-y-2.5">
+					<label htmlFor="property-longitude" className="block text-sm font-medium text-espresso">
 						Longitude
 					</label>
 					<Controller

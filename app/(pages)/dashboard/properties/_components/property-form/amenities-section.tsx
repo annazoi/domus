@@ -208,7 +208,7 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 	return (
 		<PropertyFormSection id="amenities" title="Amenities">
 			<div className="mb-6">
-				<label htmlFor="amenities-search" className="mb-1.5 block text-sm font-medium text-espresso">
+				<label htmlFor="amenities-search" className="mb-2.5 block text-sm font-medium text-espresso">
 					Search amenities
 				</label>
 				<div className="flex items-center gap-2 rounded-xl border border-dashboard-border/60 bg-dashboard-surface px-3 py-2">
@@ -245,23 +245,23 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 										title={hasNote ? descByValue[amenity.value] : undefined}
 										className={cn(
 											'inline-flex overflow-hidden rounded-full text-sm transition',
-											active ? 'bg-camel text-white' : 'bg-black/5 text-espresso/70',
-											hasNote && active && 'ring-2 ring-white/40',
+											active ? 'bg-primary text-primary-foreground' : 'border border-dashboard-border bg-dashboard-inset text-espresso/70',
+											hasNote && active && 'ring-2 ring-primary-foreground/30',
 										)}
 									>
 										<button
 											type="button"
 											onClick={() => onToggleAmenity(amenity.value)}
 											className={cn(
-												'cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 text-left outline-none transition hover:bg-black/[0.06]',
-												active && 'hover:bg-white/10',
+												'cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 text-left outline-none transition hover:bg-dashboard-row-hover',
+												active && 'hover:bg-primary-foreground/10',
 											)}
 										>
 											<Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
 											<span>{amenity.label}</span>
 											{hasNote ? <NotepadText  className="h-3.5 w-3.5 opacity-80" aria-hidden="true" /> : null}
 											{hasQuantity ? (
-												<span className="rounded-full bg-black/15 px-1.5 py-0.5 text-[10px] font-semibold leading-none">
+												<span className="rounded-full bg-current/15 px-1.5 py-0.5 text-[10px] font-semibold leading-none">
 													{quantity}
 												</span>
 											) : null}
@@ -278,8 +278,8 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 											className={cn(
 												'flex w-11 shrink-0 items-center justify-center border-l outline-none transition',
 												active
-													? 'border-white/25 text-white hover:bg-white/15 cursor-pointer'
-													: 'cursor-not-allowed border-black/10 text-espresso/30',
+													? 'border-primary-foreground/25 text-primary-foreground hover:bg-primary-foreground/15 cursor-pointer'
+													: 'cursor-not-allowed border-dashboard-border text-espresso/30',
 											)}
 											aria-label={`Edit description for ${amenity.label}`}
 										>
@@ -295,7 +295,7 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 			{search.trim() && !categories.length ? (
 				<p className="mt-3 text-sm text-espresso/55">No amenities found for &quot;{search}&quot;.</p>
 			) : null}
-			<div className="mt-2 flex justify-end border-t border-black/5 pt-5">
+			<div className="mt-2 flex justify-end border-t border-dashboard-border pt-5">
 				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
 					{saving ? 'Saving...' : 'Save'}
 				</Button>
@@ -343,7 +343,7 @@ export function AmenitiesSection({ initialProperty, propertyId: propertyIdProp }
 							<span>{draftDescription.trim().length} chars</span>
 						</div>
 						<div className="mt-3">
-							<label className="mb-1.5 block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">
+							<label className="mb-2.5 block text-[10px] font-medium uppercase tracking-[0.14em] text-dashboard-muted">
 								Quantity
 							</label>
 							<Input

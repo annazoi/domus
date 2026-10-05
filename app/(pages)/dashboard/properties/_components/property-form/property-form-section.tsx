@@ -31,11 +31,13 @@ export function PropertyFormSection({ id, title, children, flat = false }: Prope
 			id={id}
 			className={cn(
 				'scroll-mt-24 space-y-4',
-				flat ? '' : 'dashboard-panel rounded-2xl p-5',
+				flat ? '' : 'dashboard-panel rounded-2xl p-5 sm:p-8',
 				fieldSurface,
 			)}
 		>
-			{title ? <h2 className="font-serif text-2xl text-espresso">{title}</h2> : null}
+			{title ? (
+				<h2 className="border-b border-dashboard-border pb-4 font-serif text-2xl text-espresso">{title}</h2>
+			) : null}
 			{children}
 		</section>
 	);

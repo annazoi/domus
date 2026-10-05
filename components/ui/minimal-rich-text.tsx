@@ -121,9 +121,9 @@ export function MinimalRichText({
 	};
 
 	return (
-		<div className="space-y-1.5">
+		<div className="space-y-2.5">
 			{label ? (
-				<label htmlFor={id} className="text-sm font-medium text-espresso">
+				<label htmlFor={id} className="block text-sm font-medium text-espresso">
 					{label}
 				</label>
 			) : null}

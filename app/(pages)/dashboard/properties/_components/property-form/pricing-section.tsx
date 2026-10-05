@@ -2,15 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { DateTime } from 'luxon';
 import { DayPicker, type DateRange } from 'react-day-picker';
-import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
 import { Button, Checkbox, ConfirmationDialog, Input, cn, useToast } from '@/components/ui';
 import { useUpdateProperty } from '@/features/property/hooks/use-property';
 import {
-	propertyAvailabilityQueryKey,
 	useClearPropertyAvailability,
 	usePropertyAvailability,
 	useUpsertPropertyAvailability,
@@ -25,7 +23,6 @@ import { toApiDate } from '@/features/property-availability/utils/date';
 import { PROPERTY_FORM_DEFAULT_VALUES } from './constants';
 import { PropertyFormSection, dashboardFormFields } from './property-form-section';
 import { pricingFormSchema, type PricingFormInput, type PricingFormValues } from './schemas';
-import { mergeAvailabilityRowsInCache } from './utils/availability-cache';
 import './availability-day-picker.css';
 
 type PricingSectionProps = {
@@ -34,12 +31,20 @@ type PricingSectionProps = {
 	propertyId?: string;
 };
 
-const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+type SelectionMode = 'single' | 'range';
+type ConfirmKind = 'selection' | 'month' | 'all';
 type RangeEntry = { id: string; value?: DateRange };
+
+const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MAX_RANGE_NIGHTS = 366;
+const VISIBLE_MONTHS = 24;
+
+const fieldLabel = 'mb-2 block text-[13px] font-semibold text-espresso';
+const fieldHelp = 'mt-1.5 text-xs text-dashboard-muted';
+const fieldControl = 'h-11 rounded-lg px-3 text-sm';
 
 export function PricingSection({ initialProperty, propertyId: propertyIdProp }: PricingSectionProps) {
 	const propertyId = propertyIdProp ?? initialProperty?.id ?? '';
-	const queryClient = useQueryClient();
 	const { push } = useToast();
 	const { mutateAsync: update, isPending: saving } = useUpdateProperty(propertyId);
 	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
@@ -56,84 +61,72 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 			maximum_rental_period_nights: defaultValues.maximum_rental_period_nights,
 		},
 	});
+
 	const today = useMemo(() => DateTime.utc().startOf('day'), []);
 	const currentMonthStart = useMemo(() => today.startOf('month'), [today]);
-	const [viewMonth, setViewMonth] = useState(() => DateTime.utc().startOf('month'));
-	const isAtCurrentMonth = viewMonth.toMillis() <= currentMonthStart.toMillis();
+	const lastMonthStart = useMemo(() => currentMonthStart.plus({ months: VISIBLE_MONTHS - 1 }), [currentMonthStart]);
+	const [viewMonth, setViewMonth] = useState<DateTime>(currentMonthStart);
+	const [selectionMode, setSelectionMode] = useState<SelectionMode>('range');
+	const [anchor, setAnchor] = useState<string | null>(null);
+	const [selected, setSelected] = useState<string[]>([]);
+	const [price, setPrice] = useState('');
+	const [isAvailable, setIsAvailable] = useState(true);
+	const [reason, setReason] = useState<AvailabilityStatusType | ''>('');
+	const [confirm, setConfirm] = useState<ConfirmKind | null>(null);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [ranges, setRanges] = useState<RangeEntry[]>([{ id: 'range-1' }]);
 	const [activeRangeId, setActiveRangeId] = useState<string | null>(null);
-	const [singleDayDate, setSingleDayDate] = useState<string | null>(null);
-	const [singleDayPrice, setSingleDayPrice] = useState('');
-	const [singleDayAvailable, setSingleDayAvailable] = useState(true);
-	const [singleDayReason, setSingleDayReason] = useState<AvailabilityStatusType | ''>('');
-	const [confirmClearOpen, setConfirmClearOpen] = useState(false);
-	const monthStart = viewMonth.startOf('month');
-	const monthEndExclusive = viewMonth.endOf('month').startOf('day').plus({ days: 1 });
-	const modalRangeEnd = useMemo(() => today.plus({ months: 24 }), [today]);
+	const [rangePrice, setRangePrice] = useState('');
+	const [rangeAvailable, setRangeAvailable] = useState(true);
+	const [rangeReason, setRangeReason] = useState<AvailabilityStatusType | ''>('');
+
 	const { data: availabilityRows = [] } = usePropertyAvailability(
 		propertyId,
-		monthStart.toISODate() ?? undefined,
-		monthEndExclusive.toISODate() ?? undefined,
+		currentMonthStart.toISODate() ?? undefined,
+		lastMonthStart.endOf('month').plus({ days: 1 }).startOf('day').toISODate() ?? undefined,
 	);
-	const { data: savedAvailabilityRows = [] } = usePropertyAvailability(
-		propertyId,
-		today.toISODate() ?? undefined,
-		modalRangeEnd.toISODate() ?? undefined,
-		modalOpen,
-	);
-	const { mutateAsync: upsertAvailability, isPending: applyingAvailability } = useUpsertPropertyAvailability(propertyId);
-	const { mutateAsync: clearAllAvailability, isPending: clearingAvailability } = useClearPropertyAvailability(propertyId);
+	const { mutateAsync: upsertAvailability, isPending: applying } = useUpsertPropertyAvailability(propertyId);
+	const { mutateAsync: clearAvailability, isPending: clearing } = useClearPropertyAvailability(propertyId);
 
-	const availabilityMap = useMemo(
-		() => new Map(availabilityRows.map((row) => [row.date, row])),
-		[availabilityRows],
-	);
-	const selectedDayRow = singleDayDate ? availabilityMap.get(singleDayDate) : undefined;
-	const hasExistingDay = Boolean(selectedDayRow);
-	const [rangePrice, setRangePrice] = useState('');
-	const [isAvailable, setIsAvailable] = useState(true);
-	const [reason, setReason] = useState<AvailabilityStatusType | ''>('');
-	const selectedRanges = useMemo(
-		() =>
-			ranges
-				.map((item) => ({ id: item.id, from: item.value?.from, to: item.value?.to }))
-				.filter((item) => item.from || item.to),
-		[ranges],
-	);
-	const hasIncompleteRanges = selectedRanges.some((item) => !item.from || !item.to);
-	const hasSelectedRangeOverlap = useMemo(() => {
-		const completeRanges = selectedRanges
-			.filter((item): item is { id: string; from: Date; to: Date } => Boolean(item.from && item.to))
-			.map((item) => ({
-				start: fromPickerDate(item.from),
-				endExclusive: fromPickerDate(item.to).plus({ days: 1 }),
-			}))
-			.sort((a, b) => a.start.toMillis() - b.start.toMillis());
-		for (let i = 1; i < completeRanges.length; i++) {
-			if (completeRanges[i].start < completeRanges[i - 1].endExclusive) return true;
+	const availabilityMap = useMemo(() => new Map(availabilityRows.map((row) => [row.date, row])), [availabilityRows]);
+
+	const isEditable = (iso: string) => {
+		if (DateTime.fromISO(iso, { zone: 'utc' }) < today) return false;
+		return availabilityMap.get(iso)?.reason !== AvailabilityStatus.BOOKED;
+	};
+	const editableDays = selected.filter(isEditable);
+	const protectedCount = selected.length - editableDays.length;
+	const busy = applying || clearing;
+
+	const isAtCurrentMonth = viewMonth <= currentMonthStart;
+	const isAtLastMonth = viewMonth >= lastMonthStart;
+
+	const { cells, label, availableNights } = useMemo(() => {
+		const first = viewMonth.startOf('month');
+		const cellList: (DateTime | null)[] = [...Array(first.weekday % 7).fill(null)];
+		let available = 0;
+		for (let day = 1; day <= (first.daysInMonth ?? 30); day++) {
+			const date = first.set({ day });
+			cellList.push(date);
+			const row = availabilityMap.get(toApiDate(date));
+			if (row?.is_available && date >= today) available++;
 		}
-		return false;
-	}, [selectedRanges]);
-	const hasOverlapWithSavedAvailability = useMemo(
-		() => selectedRangesOverlapSavedDates(selectedRanges, savedAvailabilityRows),
-		[selectedRanges, savedAvailabilityRows],
-	);
-	const rangePriceValue = Number(rangePrice);
-	const invalidRangePrice = Number.isNaN(rangePriceValue) || rangePriceValue < 0;
-	const disableApplyRanges =
-		applyingAvailability ||
-		!selectedRanges.length ||
-		hasIncompleteRanges ||
-		invalidRangePrice ||
-		hasSelectedRangeOverlap ||
-		hasOverlapWithSavedAvailability;
+		while (cellList.length % 7 !== 0) cellList.push(null);
+		return {
+			cells: cellList,
+			label: first.toFormat('LLLL yyyy'),
+			availableNights: available,
+		};
+	}, [viewMonth, availabilityMap, today]);
 
 	const handleSave = handleSubmit(async (formValues) => {
 		const payload: UpsertPropertyInput = { ...defaultValues, ...formValues };
 
 		if (!propertyId) {
-			push({ title: 'Save Basic info first to create the property.', tone: 'error' });
+			push({
+				title: 'Save Basic info first to create the property.',
+				tone: 'error',
+			});
 			return;
 		}
 		try {
@@ -145,16 +138,207 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 			});
 			push({ title: 'Saved.', tone: 'success' });
 		} catch (submitError) {
-			push({ title: submitError instanceof Error ? submitError.message : 'Could not save.', tone: 'error' });
+			push({
+				title: submitError instanceof Error ? submitError.message : 'Could not save.',
+				tone: 'error',
+			});
 		}
 	});
+
+	const syncEditorFrom = (days: string[]) => {
+		const first = days.find(isEditable);
+		const row = first ? availabilityMap.get(first) : undefined;
+		setPrice(row ? String(row.price) : '');
+		setIsAvailable(row?.is_available ?? true);
+		setReason(row?.reason ?? '');
+	};
+
+	const applySelection = (days: string[]) => {
+		const sorted = [...days].sort();
+		setSelected(sorted);
+		syncEditorFrom(sorted);
+	};
+
+	const selectDay = (iso: string) => {
+		if (!isEditable(iso)) {
+			push({
+				title: 'This date is booked or in the past and cannot be edited.',
+				tone: 'error',
+			});
+			return;
+		}
+		if (selectionMode === 'single' || anchor === null) {
+			setAnchor(selectionMode === 'single' ? null : iso);
+			applySelection([iso]);
+			return;
+		}
+		applySelection(daysBetween(anchor, iso));
+		setAnchor(null);
+	};
+
+	const changeMode = (next: SelectionMode) => {
+		setSelectionMode(next);
+		setAnchor(null);
+		if (next === 'single' && selected.length) applySelection([selected[0]]);
+	};
+
+	const changeFrom = (value: string) => {
+		if (!value) return;
+		const to = selectionMode === 'single' ? value : (selected[selected.length - 1] ?? value);
+		setRangeFromInputs(value, to < value ? value : to);
+	};
+
+	const changeThrough = (value: string) => {
+		const from = selected[0];
+		if (!value || !from) return;
+		if (value < from) {
+			push({
+				title: 'The end date must be on or after the start date.',
+				tone: 'error',
+			});
+			return;
+		}
+		setRangeFromInputs(from, value);
+	};
+
+	const setRangeFromInputs = (from: string, to: string) => {
+		const nights = daysBetween(from, to);
+		if (nights.length > MAX_RANGE_NIGHTS) {
+			push({
+				title: `Choose a range of up to ${MAX_RANGE_NIGHTS} nights.`,
+				tone: 'error',
+			});
+			return;
+		}
+		setAnchor(null);
+		applySelection(nights);
+		setViewMonth(DateTime.fromISO(from, { zone: 'utc' }).startOf('month'));
+	};
+
+	const priceValue = Number(price);
+	const invalidPrice = isAvailable && (price.trim() === '' || Number.isNaN(priceValue) || priceValue < 0);
+	const canApply = Boolean(propertyId) && editableDays.length > 0 && !invalidPrice && !busy;
+
+	const handleApply = async () => {
+		if (!canApply) return;
+		const dayPrice = (iso: string) => {
+			if (isAvailable) return priceValue;
+			const typed = price.trim() === '' ? NaN : priceValue;
+			return Number.isNaN(typed) ? (availabilityMap.get(iso)?.price ?? 0) : typed;
+		};
+		try {
+			await Promise.all(
+				toRuns(editableDays, dayPrice).map((run) =>
+					upsertAvailability({
+						start: run.start,
+						end: toApiDate(DateTime.fromISO(run.end, { zone: 'utc' }).plus({ days: 1 })),
+						price: run.price,
+						is_available: isAvailable,
+						reason: isAvailable ? null : reason || null,
+					}),
+				),
+			);
+			push({
+				title: `Updated ${editableDays.length} ${editableDays.length === 1 ? 'night' : 'nights'}.`,
+				tone: 'success',
+			});
+		} catch (submitError) {
+			push({
+				title: submitError instanceof Error ? submitError.message : 'Could not update availability.',
+				tone: 'error',
+			});
+		}
+	};
+
+	const clearDays = async (days: string[], successTitle: string) => {
+		try {
+			await Promise.all(
+				toRuns(days, () => 0).map((run) =>
+					clearAvailability({
+						start: run.start,
+						end: toApiDate(DateTime.fromISO(run.end, { zone: 'utc' }).plus({ days: 1 })),
+					}),
+				),
+			);
+			push({ title: successTitle, tone: 'success' });
+		} catch (submitError) {
+			push({
+				title: submitError instanceof Error ? submitError.message : 'Could not remove availability.',
+				tone: 'error',
+			});
+		}
+	};
+
+	const handleConfirm = async () => {
+		if (!propertyId || !confirm) return;
+		if (confirm === 'selection') {
+			await clearDays(editableDays, 'Availability cleared. Existing bookings were kept.');
+		} else if (confirm === 'month') {
+			const monthDays = cells
+				.filter((cell): cell is DateTime => Boolean(cell))
+				.map(toApiDate)
+				.filter((iso) => availabilityMap.has(iso) && isEditable(iso));
+			await clearDays(monthDays, 'Month cleared. Existing bookings were kept.');
+		} else {
+			try {
+				await clearAvailability(undefined);
+				push({ title: 'All availability was removed.', tone: 'success' });
+			} catch (submitError) {
+				push({
+					title: submitError instanceof Error ? submitError.message : 'Could not remove availability.',
+					tone: 'error',
+				});
+			}
+		}
+		setSelected([]);
+		setAnchor(null);
+	};
+
+	const selectedRanges = useMemo(
+		() =>
+			ranges
+				.map((item) => ({
+					id: item.id,
+					from: item.value?.from,
+					to: item.value?.to,
+				}))
+				.filter((item) => item.from || item.to),
+		[ranges],
+	);
+	const hasIncompleteRanges = selectedRanges.some((item) => !item.from || !item.to);
+	const hasSelectedRangeOverlap = useMemo(() => {
+		const complete = selectedRanges
+			.filter((item): item is { id: string; from: Date; to: Date } => Boolean(item.from && item.to))
+			.map((item) => ({
+				start: fromPickerDate(item.from),
+				endExclusive: fromPickerDate(item.to).plus({ days: 1 }),
+			}))
+			.sort((a, b) => a.start.toMillis() - b.start.toMillis());
+		for (let i = 1; i < complete.length; i++) {
+			if (complete[i].start < complete[i - 1].endExclusive) return true;
+		}
+		return false;
+	}, [selectedRanges]);
+	const hasOverlapWithSavedAvailability = useMemo(
+		() => selectedRangesOverlapSavedDates(selectedRanges, availabilityRows),
+		[selectedRanges, availabilityRows],
+	);
+	const rangePriceValue = Number(rangePrice);
+	const invalidRangePrice = Number.isNaN(rangePriceValue) || rangePriceValue < 0;
+	const disableApplyRanges =
+		applying ||
+		!selectedRanges.length ||
+		hasIncompleteRanges ||
+		invalidRangePrice ||
+		hasSelectedRangeOverlap ||
+		hasOverlapWithSavedAvailability;
 
 	const resetRangeModalForm = () => {
 		setRanges([{ id: 'range-1' }]);
 		setActiveRangeId(null);
 		setRangePrice('');
-		setIsAvailable(true);
-		setReason('');
+		setRangeAvailable(true);
+		setRangeReason('');
 	};
 
 	const openModal = () => {
@@ -167,108 +351,50 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		resetRangeModalForm();
 	};
 
-	const { days, label } = useMemo(() => {
-		const first = viewMonth.startOf('month');
-		const startPad = first.weekday % 7;
-		const totalDays = first.daysInMonth;
-		const cells: (DateTime | null)[] = [...Array(startPad).fill(null)];
-		for (let day = 1; day <= totalDays; day++) {
-			cells.push(first.set({ day }));
-		}
-		while (cells.length % 7 !== 0) {
-			cells.push(null);
-		}
-		return {
-			days: cells,
-			label: first.toFormat('LLLL yyyy'),
-		};
-	}, [viewMonth]);
-
-	const handleApplySingleDay = async () => {
-		if (!singleDayDate || !propertyId) return;
-
-		const nightlyPrice = Number(singleDayPrice);
-		if (Number.isNaN(nightlyPrice) || nightlyPrice < 0) {
-			push({ title: 'Price must be a non-negative number.', tone: 'error' });
-			return;
-		}
-
-		const dayStart = DateTime.fromISO(singleDayDate, { zone: 'utc' }).startOf('day');
-		const dayEnd = dayStart.plus({ days: 1 });
-
-		try {
-			const rows = await upsertAvailability({
-				start: toApiDate(dayStart),
-				end: toApiDate(dayEnd),
-				price: nightlyPrice,
-				is_available: singleDayAvailable,
-				reason: singleDayAvailable ? null : singleDayReason || null,
-			});
-			mergeAvailabilityRowsInCache({
-				queryClient,
-				propertyId,
-				start: monthStart.toISODate() ?? undefined,
-				end: monthEndExclusive.toISODate() ?? undefined,
-				rows,
-			});
-			push({ title: `Updated ${dayStart.toFormat('MMM d, yyyy')}.`, tone: 'success' });
-		} catch (submitError) {
-			push({
-				title: submitError instanceof Error ? submitError.message : 'Could not update availability.',
-				tone: 'error',
-			});
-		}
-	};
-
 	const handleApplyRanges = async () => {
 		if (!propertyId) return;
-
 		if (!selectedRanges.length) {
 			push({ title: 'Select at least one date range.', tone: 'error' });
 			return;
 		}
 		if (hasIncompleteRanges) {
-			push({ title: 'Complete all date ranges before applying.', tone: 'error' });
+			push({
+				title: 'Complete all date ranges before applying.',
+				tone: 'error',
+			});
 			return;
 		}
-
 		if (invalidRangePrice) {
 			push({ title: 'Price must be a non-negative number.', tone: 'error' });
 			return;
 		}
-
 		if (hasSelectedRangeOverlap) {
 			push({ title: 'Date ranges cannot overlap each other.', tone: 'error' });
 			return;
 		}
-
 		if (hasOverlapWithSavedAvailability) {
-			push({ title: 'Selected dates overlap existing availability. Choose dates that are not already set.', tone: 'error' });
+			push({
+				title: 'Selected dates overlap existing availability. Choose dates that are not already set.',
+				tone: 'error',
+			});
 			return;
 		}
-
 		try {
 			await Promise.all(
-				selectedRanges.map(async (rangeItem) => {
-					const from = fromPickerDate(rangeItem.from!);
-					const checkout = fromPickerDate(rangeItem.to!).plus({ days: 1 });
-					const rows = await upsertAvailability({
-						start: toApiDate(from),
-						end: toApiDate(checkout),
+				selectedRanges.map((rangeItem) =>
+					upsertAvailability({
+						start: toApiDate(fromPickerDate(rangeItem.from!)),
+						end: toApiDate(fromPickerDate(rangeItem.to!).plus({ days: 1 })),
 						price: rangePriceValue,
-						is_available: isAvailable,
-						reason: isAvailable ? null : reason || null,
-					});
-					mergeAvailabilityRowsInCache({
-						queryClient,
-						propertyId,
-						start: monthStart.toISODate() ?? undefined,
-						end: monthEndExclusive.toISODate() ?? undefined,
-						rows,
-					});
-				}),
+						is_available: rangeAvailable,
+						reason: rangeAvailable ? null : rangeReason || null,
+					}),
+				),
 			);
-			push({ title: 'Availability updated for selected ranges.', tone: 'success' });
+			push({
+				title: 'Availability updated for selected ranges.',
+				tone: 'success',
+			});
 			closeModal();
 		} catch (submitError) {
 			push({
@@ -278,338 +404,364 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 		}
 	};
 
-	const handleClearAllAvailability = async () => {
-		if (!propertyId) return;
-
-		try {
-			await clearAllAvailability(undefined);
-			queryClient.setQueryData(
-				propertyAvailabilityQueryKey.all(
-					propertyId,
-					monthStart.toISODate() ?? undefined,
-					monthEndExclusive.toISODate() ?? undefined,
-				),
-				[],
-			);
-			setSingleDayDate(null);
-			setSingleDayPrice('');
-			setSingleDayAvailable(true);
-			setSingleDayReason('');
-			resetRangeModalForm();
-			push({ title: 'All availability was removed.', tone: 'success' });
-		} catch (submitError) {
-			push({
-				title: submitError instanceof Error ? submitError.message : 'Could not remove availability.',
-				tone: 'error',
-			});
-		}
+	const confirmCopy: Record<ConfirmKind, { title: string; description: string; confirmLabel: string }> = {
+		selection: {
+			title: 'Clear selected dates?',
+			description: `Remove prices and availability from ${editableDays.length} selected ${editableDays.length === 1 ? 'night' : 'nights'}? Existing bookings will not change.`,
+			confirmLabel: 'Clear dates',
+		},
+		month: {
+			title: `Clear ${label}?`,
+			description: `Remove all unbooked prices and availability for ${label}? Existing bookings will not change.`,
+			confirmLabel: 'Clear month',
+		},
+		all: {
+			title: 'Remove all availability?',
+			description: 'This will delete all prices and availability days for this property. This action cannot be undone.',
+			confirmLabel: 'Remove all',
+		},
 	};
 
-	const handleDeleteSingleDay = async () => {
-		if (!singleDayDate || !propertyId) return;
-		const dayStart = DateTime.fromISO(singleDayDate, { zone: 'utc' }).startOf('day');
-		const dayEnd = dayStart.plus({ days: 1 });
-		try {
-			await clearAllAvailability({
-				start: toApiDate(dayStart),
-				end: toApiDate(dayEnd),
-			});
-			queryClient.setQueryData<AvailabilityDay[] | undefined>(
-				propertyAvailabilityQueryKey.all(
-					propertyId,
-					monthStart.toISODate() ?? undefined,
-					monthEndExclusive.toISODate() ?? undefined,
-				),
-				(previous) => (previous ?? []).filter((row) => row.date !== singleDayDate),
-			);
-			setSingleDayDate(null);
-			setSingleDayPrice('');
-			setSingleDayAvailable(true);
-			setSingleDayReason('');
-			push({ title: `Deleted ${dayStart.toFormat('MMM d, yyyy')}.`, tone: 'success' });
-		} catch (submitError) {
-			push({ title: submitError instanceof Error ? submitError.message : 'Could not delete day.', tone: 'error' });
-		}
-	};
-
-	const requestClearAllAvailability = () => {
-		if (!propertyId || clearingAvailability) return;
-		setConfirmClearOpen(true);
-	};
-
-	const selectedDayLabel = singleDayDate
-		? DateTime.fromISO(singleDayDate, { zone: 'utc' }).toFormat('EEEE, MMM d')
-		: null;
+	const first = selected[0];
+	const last = selected[selected.length - 1];
+	const selectionLabel = first
+		? first === last
+			? formatDay(first, true)
+			: `${formatDay(first)} — ${formatDay(last, true)}`
+		: 'No dates selected';
+	const editableLabel = `${editableDays.length} ${editableDays.length === 1 ? 'night' : 'nights'}`;
 
 	return (
 		<PropertyFormSection id="pricing-availability" title="Pricing & availability">
-			<p className="max-w-2xl text-sm leading-relaxed text-espresso/60">
-				Set booking rules, nightly rates, and availability per day. Select a date on the calendar to edit individually, or apply pricing across a range.
+			<p className="max-w-2xl text-sm leading-relaxed text-dashboard-muted">
+				Set booking rules, then pick dates on the calendar to set nightly prices or block nights.
 			</p>
 
-			<div className="overflow-hidden rounded-2xl border border-dashboard-border/70 bg-dashboard-surface shadow-[0_1px_0_rgba(26,26,26,0.04)]">
-				<div className="border-b border-dashboard-border/60 bg-dashboard-inset/50 px-5 py-3">
-					<p className="text-xs font-semibold uppercase tracking-[0.12em] text-espresso/50">Booking rules</p>
+			<div className="overflow-hidden rounded-xl border border-dashboard-border bg-dashboard-surface">
+				<div className="border-b border-dashboard-border p-5 sm:p-6">
+					<p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-dashboard-muted">Booking rules</p>
+					<div className="grid gap-5 md:grid-cols-3 md:gap-8">
+						<div>
+							<label htmlFor="minimum-advance-reservation-hours" className={fieldLabel}>
+								Advance notice
+							</label>
+							<div className="relative">
+								<Input
+									id="minimum-advance-reservation-hours"
+									type="number"
+									min={0}
+									step={1}
+									placeholder="No minimum"
+									className={cn(fieldControl, 'pr-28')}
+									{...register('minimum_advance_reservation_hours')}
+								/>
+								<span className="pointer-events-none absolute inset-y-0 right-10 flex items-center text-sm text-dashboard-muted">
+									hours
+								</span>
+							</div>
+							<p className={fieldHelp}>Time before check-in</p>
+							{errors.minimum_advance_reservation_hours?.message ? (
+								<p className="mt-1 text-xs text-red-700">{errors.minimum_advance_reservation_hours.message}</p>
+							) : null}
+						</div>
+						<div>
+							<label htmlFor="minimum-rental-period-nights" className={fieldLabel}>
+								Minimum stay
+							</label>
+							<div className="relative">
+								<Input
+									id="minimum-rental-period-nights"
+									type="number"
+									min={1}
+									step={1}
+									placeholder="No minimum"
+									className={cn(fieldControl, 'pr-28')}
+									{...register('minimum_rental_period_nights')}
+								/>
+								<span className="pointer-events-none absolute inset-y-0 right-10 flex items-center text-sm text-dashboard-muted">
+									nights
+								</span>
+							</div>
+							<p className={fieldHelp}>Shortest guest stay</p>
+							{errors.minimum_rental_period_nights?.message ? (
+								<p className="mt-1 text-xs text-red-700">{errors.minimum_rental_period_nights.message}</p>
+							) : null}
+						</div>
+						<div>
+							<label htmlFor="maximum-rental-period-nights" className={fieldLabel}>
+								Maximum stay
+							</label>
+							<div className="relative">
+								<Input
+									id="maximum-rental-period-nights"
+									type="number"
+									min={1}
+									step={1}
+									placeholder="No maximum"
+									className={cn(fieldControl, 'pr-28')}
+									{...register('maximum_rental_period_nights')}
+								/>
+								<span className="pointer-events-none absolute inset-y-0 right-10 flex items-center text-sm text-dashboard-muted">
+									nights
+								</span>
+							</div>
+							<p className={fieldHelp}>Longest guest stay</p>
+							{errors.maximum_rental_period_nights?.message ? (
+								<p className="mt-1 text-xs text-red-700">{errors.maximum_rental_period_nights.message}</p>
+							) : null}
+						</div>
+					</div>
 				</div>
-				<div className="grid gap-5 p-5 md:grid-cols-3">
-					<div className="space-y-1.5">
-						<label htmlFor="minimum-advance-reservation-hours" className="text-sm font-medium text-espresso">
-							Minimum advance reservation
-						</label>
-						<div className="relative">
-							<Input
-								id="minimum-advance-reservation-hours"
-								type="number"
-								min={0}
-								step={1}
-								placeholder="No minimum"
-								className="pr-14"
-								{...register('minimum_advance_reservation_hours')}
-							/>
-							<span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium uppercase tracking-[0.1em] text-espresso/40">
-								hours
-							</span>
-						</div>
-						<p className="text-xs leading-relaxed text-espresso/45">How far ahead guests must book before check-in.</p>
-						{errors.minimum_advance_reservation_hours?.message ? (
-							<p className="text-xs text-red-700">{errors.minimum_advance_reservation_hours.message}</p>
-						) : null}
-					</div>
-					<div className="space-y-1.5">
-						<label htmlFor="minimum-rental-period-nights" className="text-sm font-medium text-espresso">
-							Minimum rental period
-						</label>
-						<div className="relative">
-							<Input
-								id="minimum-rental-period-nights"
-								type="number"
-								min={1}
-								step={1}
-								placeholder="No minimum"
-								className="pr-14"
-								{...register('minimum_rental_period_nights')}
-							/>
-							<span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium uppercase tracking-[0.1em] text-espresso/40">
-								nights
-							</span>
-						</div>
-						<p className="text-xs leading-relaxed text-espresso/45">Shortest stay guests can book.</p>
-						{errors.minimum_rental_period_nights?.message ? (
-							<p className="text-xs text-red-700">{errors.minimum_rental_period_nights.message}</p>
-						) : null}
-					</div>
-					<div className="space-y-1.5">
-						<label htmlFor="maximum-rental-period-nights" className="text-sm font-medium text-espresso">
-							Maximum rental period
-						</label>
-						<div className="relative">
-							<Input
-								id="maximum-rental-period-nights"
-								type="number"
-								min={1}
-								step={1}
-								placeholder="No maximum"
-								className="pr-14"
-								{...register('maximum_rental_period_nights')}
-							/>
-							<span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium uppercase tracking-[0.1em] text-espresso/40">
-								nights
-							</span>
-						</div>
-						<p className="text-xs leading-relaxed text-espresso/45">Longest stay guests can book.</p>
-						{errors.maximum_rental_period_nights?.message ? (
-							<p className="text-xs text-red-700">{errors.maximum_rental_period_nights.message}</p>
-						) : null}
-					</div>
-				</div>
-			</div>
-
-			<div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_17.5rem] lg:items-start">
-				<div className="overflow-hidden rounded-2xl border border-dashboard-border/70 bg-dashboard-surface shadow-[0_1px_0_rgba(26,26,26,0.04)]">
-					<div className="flex items-center justify-between gap-3 border-b border-dashboard-border/60 px-5 py-4">
-						<Button
-							type="button"
-							variant="iconSquare"
-							onClick={() => setViewMonth((month) => month.minus({ months: 1 }))}
-							disabled={isAtCurrentMonth}
-							aria-label="Previous month"
-						>
-							<ChevronLeft className="h-5 w-5" />
-						</Button>
-						<div className="min-w-0 flex-1 text-center">
-							<p className="font-serif text-xl tracking-tight text-espresso">{label}</p>
-							<p className="mt-0.5 text-xs font-medium uppercase tracking-[0.14em] text-espresso/45">
-								Property calendar
-							</p>
-						</div>
-						<Button
-							type="button"
-							variant="iconSquare"
-							onClick={() => setViewMonth((month) => month.plus({ months: 1 }))}
-							aria-label="Next month"
-						>
-							<ChevronRight className="h-5 w-5" />
-						</Button>
-					</div>
-
-					<div className="px-4 pb-5 pt-4 sm:px-5">
-						<div className="mb-2 grid grid-cols-7 gap-1.5">
-							{weekdays.map((w) => (
-								<div
-									key={w}
-									className="py-1.5 text-center text-xs font-semibold uppercase tracking-[0.12em] text-espresso/45"
+				<div className="grid 2xl:grid-cols-[minmax(0,1fr)_20rem]">
+					<div className="min-w-0 p-4 sm:p-6">
+						<div>
+							<div className="flex items-center justify-between gap-3 pb-5">
+								<button
+									type="button"
+									onClick={() => setViewMonth((month) => month.minus({ months: 1 }))}
+									disabled={isAtCurrentMonth}
+									aria-label="Previous month"
+									className="grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-full bg-dashboard-inset text-espresso transition hover:bg-dashboard-row-hover disabled:cursor-not-allowed disabled:opacity-40"
 								>
-									{w}
+									<ChevronLeft className="h-5 w-5" />
+								</button>
+								<div className="min-w-0 text-center">
+									<p className="font-serif text-xl text-espresso">{label}</p>
+									<p className="mt-1 text-xs text-dashboard-muted">Nightly prices · USD</p>
 								</div>
-							))}
-						</div>
-						<div className="grid grid-cols-7 gap-1.5">
-							{days.map((day, i) =>
-								day ? (
-									<DayCell
-										key={i}
-										day={day}
-										today={day.hasSame(today, 'day')}
-										selected={singleDayDate === toApiDate(day)}
-										availability={availabilityMap.get(toApiDate(day))}
-										isPast={day < today}
-										onClick={() => {
-											const iso = toApiDate(day);
-											const existing = availabilityMap.get(iso);
-											setSingleDayDate(iso);
-											setSingleDayPrice(existing ? String(existing.price) : '');
-											setSingleDayAvailable(existing?.is_available ?? true);
-											setSingleDayReason(existing?.reason ?? '');
-										}}
-									/>
-								) : (
-									<div key={i} className="h-[4.5rem]" aria-hidden />
-								),
-							)}
-						</div>
-						<CalendarLegend />
-					</div>
-				</div>
-
-				<div className="flex flex-col gap-4 lg:sticky lg:top-24">
-					<div className="overflow-hidden rounded-2xl border border-dashboard-border/70 bg-dashboard-surface shadow-[0_1px_0_rgba(26,26,26,0.04)]">
-						<div className="border-b border-dashboard-border/60 bg-dashboard-inset/50 px-4 py-3">
-							<p className="text-xs font-semibold uppercase tracking-[0.12em] text-espresso/50">Bulk actions</p>
-						</div>
-						<div className="space-y-2 p-4">
-							<Button
-								type="button"
-								variant="secondary"
-								className="w-full"
-								onClick={openModal}
-								disabled={!propertyId}
-							>
-								Set dates &amp; price
-							</Button>
-							<Button
-								type="button"
-								variant="secondary"
-								className="w-full border-red-300/40 text-red-300 hover:border-red-300/60 hover:bg-red-950/20"
-								onClick={requestClearAllAvailability}
-								disabled={!propertyId || clearingAvailability}
-							>
-								{clearingAvailability ? 'Removing…' : 'Clear all availability'}
-							</Button>
-						</div>
-					</div>
-
-					<div className="overflow-hidden rounded-2xl border border-dashboard-border/70 bg-dashboard-surface shadow-[0_1px_0_rgba(26,26,26,0.04)]">
-						<div className="border-b border-dashboard-border/60 bg-dashboard-inset/50 px-4 py-3">
-							<p className="text-xs font-semibold uppercase tracking-[0.12em] text-espresso/50">Day editor</p>
-						</div>
-						<div className="p-4">
-							{selectedDayLabel ? (
-								<div className="rounded-xl border border-camel/25 bg-camel/[0.07] px-3 py-2.5">
-									<p className="text-xs font-medium uppercase tracking-[0.12em] text-camel-deep/75">Selected</p>
-									<p className="mt-1 font-serif text-base leading-snug text-espresso">{selectedDayLabel}</p>
-								</div>
-							) : (
-								<div className="rounded-xl border border-dashed border-dashboard-border/80 bg-dashboard-inset/40 px-3 py-4 text-center">
-									<p className="text-sm text-espresso/45">Select a date on the calendar</p>
-								</div>
-							)}
-
-							<div className="mt-4 space-y-3">
-								<label className="block">
-									<span className="text-xs font-medium uppercase tracking-[0.12em] text-espresso/50">
-										Nightly rate
-									</span>
-									<Input
-										type="number"
-										min={0}
-										step={0.01}
-										placeholder="0.00"
-										value={singleDayPrice}
-										onChange={(e) => setSingleDayPrice(e.target.value)}
-										className="mt-1.5"
-										disabled={!singleDayDate}
-									/>
-								</label>
-								<label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashboard-border/60 bg-dashboard-inset/30 px-3 py-2.5">
-									<Checkbox
-										checked={singleDayAvailable}
-										onChange={(e) => setSingleDayAvailable(e.target.checked)}
-										disabled={!singleDayDate}
-									/>
-									<span className="text-sm text-espresso">Available for booking</span>
-								</label>
-								<label className="block">
-									<span className="text-xs font-medium uppercase tracking-[0.12em] text-espresso/50">
-										Unavailable reason
-									</span>
-									<select
-										value={singleDayReason}
-										onChange={(e) => setSingleDayReason(e.target.value as AvailabilityStatusType | '')}
-										className="mt-1.5 h-10 w-full rounded-xl border border-dashboard-border/60 bg-dashboard-inset/30 px-3 text-sm text-espresso focus:outline-none focus:ring-1 focus:ring-camel/30"
-										disabled={!singleDayDate || singleDayAvailable}
-									>
-										<option value="">None</option>
-										<option value={AvailabilityStatus.BLOCKED}>Blocked</option>
-										<option value={AvailabilityStatus.MAINTENANCE}>Maintenance</option>
-										<option value={AvailabilityStatus.BOOKED}>Booked</option>
-									</select>
-								</label>
+								<button
+									type="button"
+									onClick={() => setViewMonth((month) => month.plus({ months: 1 }))}
+									disabled={isAtLastMonth}
+									aria-label="Next month"
+									className="grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-full bg-dashboard-inset text-espresso transition hover:bg-dashboard-row-hover disabled:cursor-not-allowed disabled:opacity-40"
+								>
+									<ChevronRight className="h-5 w-5" />
+								</button>
 							</div>
 
-							{hasExistingDay ? (
-								<div className="mt-4 flex flex-col gap-2 border-t border-dashboard-border/50 pt-4">
-									<Button
+							<div className="grid grid-cols-7 pb-2 text-center text-xs font-medium text-dashboard-muted">
+								{weekdays.map((w) => (
+									<span key={w}>{w}</span>
+								))}
+							</div>
+							<div role="group" aria-label={`${label} dates`} className="grid grid-cols-7 gap-[3px] sm:gap-[5px]">
+								{cells.map((day, i) =>
+									day ? (
+										<DayCell
+											key={i}
+											day={day}
+											isPast={day < today}
+											selected={selected.includes(toApiDate(day))}
+											availability={availabilityMap.get(toApiDate(day))}
+											onClick={() => selectDay(toApiDate(day))}
+										/>
+									) : (
+										<div key={i} className="min-h-[4.5rem] sm:min-h-[5.5rem]" aria-hidden />
+									),
+								)}
+							</div>
+							<CalendarLegend />
+						</div>
+
+						<div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+							<span className="text-xs text-dashboard-muted">
+								{availableNights} {availableNights === 1 ? 'night' : 'nights'} available
+							</span>
+							<div className="flex items-center gap-1">
+								<button
+									type="button"
+									className="cursor-pointer rounded-md px-2.5 py-2 text-[13px] text-[#c4785a] transition hover:bg-dashboard-row-hover disabled:cursor-not-allowed disabled:opacity-50"
+									disabled={!propertyId || busy}
+									onClick={() => setConfirm('month')}
+								>
+									Clear month availability
+								</button>
+								<button
+									type="button"
+									className="cursor-pointer rounded-md px-2.5 py-2 text-[13px] text-dashboard-muted transition hover:bg-dashboard-row-hover hover:text-espresso disabled:cursor-not-allowed disabled:opacity-50"
+									disabled={!propertyId || busy}
+									onClick={() => setConfirm('all')}
+								>
+									Clear all
+								</button>
+							</div>
+						</div>
+					</div>
+
+					<aside
+						aria-label="Selected date settings"
+						className="border-t border-dashboard-border bg-dashboard-bg/60 p-5 sm:p-6 2xl:border-l 2xl:border-t-0"
+					>
+						<div className="mx-auto w-full max-w-xl 2xl:max-w-none">
+							<h3 className="mb-3 text-sm font-semibold text-espresso">Selected dates</h3>
+							<div className="rounded-lg bg-camel/10 p-4">
+								<p className="text-sm font-semibold text-espresso">{selectionLabel}</p>
+								<p className="mt-1 text-xs text-dashboard-muted">
+									{selected.length} {selected.length === 1 ? 'night' : 'nights'} selected
+								</p>
+							</div>
+
+							<div
+								className="mt-4 flex gap-1 rounded-lg bg-dashboard-inset p-1"
+								role="group"
+								aria-label="Date selection mode"
+							>
+								{(['single', 'range'] as const).map((value) => (
+									<button
+										key={value}
 										type="button"
-										variant="primarySm"
-										className="w-full"
-										disabled={!singleDayDate || applyingAvailability}
-										onClick={() => void handleApplySingleDay()}
+										aria-pressed={selectionMode === value}
+										onClick={() => changeMode(value)}
+										className={cn(
+											'flex-1 cursor-pointer rounded-md px-1 py-2 text-xs transition',
+											selectionMode === value
+												? 'bg-dashboard-surface text-espresso shadow-[var(--shadow-dashboard-panel)]'
+												: 'text-dashboard-muted hover:text-espresso',
+										)}
 									>
-										{applyingAvailability ? 'Updating…' : 'Update day'}
-									</Button>
-									<Button
-										type="button"
-										variant="secondary"
-										className="w-full border-red-300/40 text-red-300 hover:bg-red-950/20"
-										disabled={!singleDayDate || clearingAvailability}
-										onClick={() => void handleDeleteSingleDay()}
-									>
-										{clearingAvailability ? 'Deleting…' : 'Remove day'}
-									</Button>
+										{value === 'single' ? 'Single date' : 'Date range'}
+									</button>
+								))}
+							</div>
+
+							<div className={cn('mt-4 grid gap-2', selectionMode === 'range' ? 'grid-cols-2' : 'grid-cols-1')}>
+								<label className="block">
+									<span className="mb-1.5 block text-xs font-semibold text-espresso">
+										{selectionMode === 'single' ? 'Date' : 'From'}
+									</span>
+									<Input
+										type="date"
+										variant="compact"
+										min={today.toISODate() ?? undefined}
+										value={first ?? ''}
+										onChange={(e) => changeFrom(e.target.value)}
+										className="h-10 min-w-0 rounded-lg px-2 text-xs"
+									/>
+								</label>
+								{selectionMode === 'range' ? (
+									<label className="block">
+										<span className="mb-1.5 block text-xs font-semibold text-espresso">Through</span>
+										<Input
+											type="date"
+											variant="compact"
+											min={first ?? today.toISODate() ?? undefined}
+											value={last ?? ''}
+											disabled={!first}
+											onChange={(e) => changeThrough(e.target.value)}
+											className="h-10 min-w-0 rounded-lg px-2 text-xs"
+										/>
+									</label>
+								) : null}
+							</div>
+
+							<div className="mt-6 space-y-5">
+								<div className="flex items-center justify-between gap-3">
+									<label htmlFor="availability-switch" className="text-sm font-semibold text-espresso">
+										Available for booking
+									</label>
+									<span className="relative h-6 w-10 shrink-0">
+										<input
+											id="availability-switch"
+											type="checkbox"
+											role="switch"
+											checked={isAvailable}
+											disabled={!editableDays.length}
+											onChange={(e) => setIsAvailable(e.target.checked)}
+											className="peer absolute inset-0 z-10 m-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+										/>
+										<span
+											aria-hidden
+											className="pointer-events-none absolute inset-0 rounded-full bg-dashboard-muted/60 transition peer-checked:bg-[#4d7c6f] peer-disabled:opacity-50 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-camel peer-checked:[&>span]:translate-x-4"
+										>
+											<span className="absolute left-[3px] top-[3px] h-[18px] w-[18px] rounded-full bg-white transition-transform" />
+										</span>
+									</span>
 								</div>
-							) : (
+
+								<div>
+									<label htmlFor="availability-price" className={fieldLabel}>
+										Nightly price
+									</label>
+									<div className="relative">
+										<span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-dashboard-muted">
+											$
+										</span>
+										<Input
+											id="availability-price"
+											type="number"
+											min={0}
+											step={0.01}
+											placeholder="0.00"
+											value={price}
+											onChange={(e) => setPrice(e.target.value)}
+											disabled={!editableDays.length}
+											className={cn(fieldControl, 'pl-8')}
+										/>
+									</div>
+								</div>
+
+								{!isAvailable ? (
+									<div>
+										<label htmlFor="availability-reason" className={fieldLabel}>
+											Why are these dates blocked?
+										</label>
+										<select
+											id="availability-reason"
+											value={reason}
+											onChange={(e) => setReason(e.target.value as AvailabilityStatusType | '')}
+											disabled={!editableDays.length}
+											className="h-11 w-full rounded-lg border border-dashboard-border bg-dashboard-surface px-3 text-sm text-espresso outline-none focus:border-camel/40 focus:ring-2 focus:ring-camel/12"
+										>
+											<option value="">Not specified</option>
+											<option value={AvailabilityStatus.BLOCKED}>Blocked</option>
+											<option value={AvailabilityStatus.MAINTENANCE}>Maintenance</option>
+											<option value={AvailabilityStatus.BOOKED}>Booked</option>
+										</select>
+									</div>
+								) : null}
+
+								{protectedCount > 0 ? (
+									<p className="text-xs text-[#c4785a]" role="status">
+										{protectedCount} booked or past {protectedCount === 1 ? 'night is' : 'nights are'} protected and
+										will not be changed.
+									</p>
+								) : null}
+							</div>
+
+							<div className="mt-8 space-y-3">
+								<Button type="button" variant="secondary" className="w-full" onClick={openModal} disabled={!propertyId}>
+									Set dates &amp; price
+								</Button>
 								<Button
 									type="button"
 									variant="primarySm"
-									className="mt-4 w-full"
-									disabled={!singleDayDate || applyingAvailability}
-									onClick={() => void handleApplySingleDay()}
+									className="w-full"
+									disabled={!canApply}
+									onClick={() => void handleApply()}
 								>
-									{applyingAvailability ? 'Applying…' : 'Apply day'}
+									{applying
+										? 'Applying…'
+										: editableDays.length
+											? `Apply to ${editableLabel}`
+											: 'Select available dates'}
 								</Button>
-							)}
+								<button
+									type="button"
+									className="w-full cursor-pointer rounded-md px-2.5 py-2 text-[13px] text-[#c4785a] transition hover:bg-dashboard-row-hover disabled:cursor-not-allowed disabled:opacity-50"
+									disabled={!editableDays.length || busy}
+									onClick={() => setConfirm('selection')}
+								>
+									Clear selected availability
+								</button>
+							</div>
 						</div>
-					</div>
+					</aside>
+				</div>
+				<div className="flex justify-end border-t border-dashboard-border bg-dashboard-bg/60 px-5 py-4 sm:px-6">
+					<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
+						{saving ? 'Saving...' : 'Save'}
+					</Button>
 				</div>
 			</div>
 
@@ -649,9 +801,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 											readOnly
 											value={formatRangeLabel(rangeItem.value)}
 											placeholder="Select dates"
-											onClick={() =>
-												setActiveRangeId((current) => (current === rangeItem.id ? null : rangeItem.id))
-											}
+											onClick={() => setActiveRangeId((current) => (current === rangeItem.id ? null : rangeItem.id))}
 											className="mt-1.5 cursor-pointer"
 											aria-expanded={activeRangeId === rangeItem.id}
 											aria-haspopup="dialog"
@@ -662,9 +812,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 											type="button"
 											variant="ghostPill"
 											className="mt-2 h-8 !px-2 flex items-center gap-1/2"
-											onClick={() =>
-												setRanges((previous) => [...previous, { id: `range-${previous.length + 1}` }])
-											}
+											onClick={() => setRanges((previous) => [...previous, { id: `range-${previous.length + 1}` }])}
 										>
 											<Plus className="mr-1 h-4 w-4" />
 											Add another range
@@ -694,19 +842,25 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 												excludeDisabled
 												disabled={[
 													{ before: today.toJSDate() },
-													...getDisabledDatesForRangePicker(ranges, rangeItem.id, savedAvailabilityRows),
+													...getDisabledDatesForRangePicker(ranges, rangeItem.id, availabilityRows),
 												]}
 												startMonth={today.toJSDate()}
 												selected={rangeItem.value}
 												onSelect={(nextRange) =>
 													setRanges((previous) =>
-														previous.map((item) =>
-															item.id === rangeItem.id ? { ...item, value: nextRange } : item,
-														),
+														previous.map((item) => (item.id === rangeItem.id ? { ...item, value: nextRange } : item)),
 													)
 												}
+												defaultMonth={rangeItem.value?.from ?? today.toJSDate()}
 												className="w-full"
 											/>
+											<p className="mt-2 rounded-lg bg-camel/10 px-3 py-2 text-xs text-espresso" role="status">
+												{rangeItem.value?.from && rangeItem.value?.to
+													? `${formatRangeLabel(rangeItem.value)} · ${nightsInRange(rangeItem.value)} nights`
+													: rangeItem.value?.from
+														? 'Now choose the last night'
+														: 'Choose the first night'}
+											</p>
 											<div className="mt-3 flex items-center justify-between gap-2 border-t border-dashboard-border/50 pt-3">
 												<Button
 													type="button"
@@ -715,9 +869,7 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 													disabled={!rangeItem.value?.from && !rangeItem.value?.to}
 													onClick={() =>
 														setRanges((previous) =>
-															previous.map((item) =>
-																item.id === rangeItem.id ? { ...item, value: undefined } : item,
-															),
+															previous.map((item) => (item.id === rangeItem.id ? { ...item, value: undefined } : item)),
 														)
 													}
 												>
@@ -749,14 +901,14 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 								/>
 							</label>
 							<label className="flex cursor-pointer items-center gap-3 rounded-lg bg-dashboard-bg px-4 py-3">
-								<Checkbox checked={isAvailable} onChange={(e) => setIsAvailable(e.target.checked)} />
+								<Checkbox checked={rangeAvailable} onChange={(e) => setRangeAvailable(e.target.checked)} />
 								<span className="text-sm text-espresso">Available for booking</span>
 							</label>
 							<label className="block text-xs font-medium uppercase tracking-[0.12em] text-dashboard-muted">
 								Reason (when unavailable)
 								<select
-									value={reason}
-									onChange={(e) => setReason(e.target.value as AvailabilityStatusType | '')}
+									value={rangeReason}
+									onChange={(e) => setRangeReason(e.target.value as AvailabilityStatusType | '')}
 									className="mt-1.5 h-10 w-full rounded-lg border-0 bg-dashboard-bg px-3 text-sm text-espresso focus:outline-none focus:ring-0"
 								>
 									<option value="">None</option>
@@ -777,40 +929,30 @@ export function PricingSection({ initialProperty, propertyId: propertyIdProp }: 
 								disabled={disableApplyRanges}
 								onClick={() => void handleApplyRanges()}
 							>
-								{applyingAvailability ? 'Applying...' : 'Apply'}
+								{applying ? 'Applying...' : 'Apply'}
 							</Button>
 						</div>
 					</div>
 				</div>
 			) : null}
 			<ConfirmationDialog
-				open={confirmClearOpen}
-				title="Remove all availability?"
-				description="This will delete all prices and availability days for this property. This action cannot be undone."
-				confirmLabel="Remove all"
+				open={confirm !== null}
+				title={confirm ? confirmCopy[confirm].title : ''}
+				description={confirm ? confirmCopy[confirm].description : ''}
+				confirmLabel={confirm ? confirmCopy[confirm].confirmLabel : ''}
 				cancelLabel="Keep data"
 				confirmVariant="danger"
-				loading={clearingAvailability}
-				onCancel={() => setConfirmClearOpen(false)}
+				loading={clearing}
+				onCancel={() => setConfirm(null)}
 				onConfirm={() => {
-					void handleClearAllAvailability().finally(() => {
-						setConfirmClearOpen(false);
-					});
+					void handleConfirm().finally(() => setConfirm(null));
 				}}
 			/>
-			<div className="mt-2 flex justify-end border-t border-black/5 pt-5">
-				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
-					{saving ? 'Saving...' : 'Save'}
-				</Button>
-			</div>
 		</PropertyFormSection>
 	);
 }
 
-function selectedRangesOverlapSavedDates(
-	selectedRanges: { from?: Date; to?: Date }[],
-	savedRows: AvailabilityDay[],
-) {
+function selectedRangesOverlapSavedDates(selectedRanges: { from?: Date; to?: Date }[], savedRows: AvailabilityDay[]) {
 	if (!savedRows.length) return false;
 	const savedDates = new Set(savedRows.map((row) => row.date));
 	for (const rangeItem of selectedRanges) {
@@ -825,11 +967,7 @@ function selectedRangesOverlapSavedDates(
 	return false;
 }
 
-function getDisabledDatesForRangePicker(
-	allRanges: RangeEntry[],
-	currentRangeId: string,
-	savedRows: AvailabilityDay[],
-) {
+function getDisabledDatesForRangePicker(allRanges: RangeEntry[], currentRangeId: string, savedRows: AvailabilityDay[]) {
 	const seen = new Set<number>();
 	const dates: Date[] = [];
 
@@ -868,27 +1006,67 @@ function formatRangeLabel(range: DateRange | undefined) {
 
 function fromPickerDate(date: Date) {
 	return DateTime.fromObject(
-		{ year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() },
+		{
+			year: date.getFullYear(),
+			month: date.getMonth() + 1,
+			day: date.getDate(),
+		},
 		{ zone: 'utc' },
 	).startOf('day');
 }
 
+function nightsInRange(range: DateRange) {
+	if (!range.from || !range.to) return 0;
+	return Math.round(fromPickerDate(range.to).diff(fromPickerDate(range.from), 'days').days) + 1;
+}
+
+function daysBetween(a: string, b: string) {
+	const [from, to] = a <= b ? [a, b] : [b, a];
+	const out: string[] = [];
+	let cursor = DateTime.fromISO(from, { zone: 'utc' }).startOf('day');
+	const end = DateTime.fromISO(to, { zone: 'utc' }).startOf('day');
+	while (cursor <= end && out.length <= MAX_RANGE_NIGHTS) {
+		out.push(toApiDate(cursor));
+		cursor = cursor.plus({ days: 1 });
+	}
+	return out;
+}
+
+/** Groups sorted ISO days into contiguous runs that share the same price. */
+function toRuns(days: string[], priceFor: (iso: string) => number) {
+	const runs: { start: string; end: string; price: number }[] = [];
+	for (const iso of [...days].sort()) {
+		const price = priceFor(iso);
+		const current = runs[runs.length - 1];
+		const nextAfterCurrent = current
+			? toApiDate(DateTime.fromISO(current.end, { zone: 'utc' }).plus({ days: 1 }))
+			: null;
+		if (current && nextAfterCurrent === iso && current.price === price) current.end = iso;
+		else runs.push({ start: iso, end: iso, price });
+	}
+	return runs;
+}
+
+function formatDay(iso: string, withYear = false) {
+	return DateTime.fromISO(iso, { zone: 'utc' }).toFormat(withYear ? 'MMM d, yyyy' : 'MMM d');
+}
+
 const legendItems = [
-	{ key: 'selected', label: 'Selected', swatch: 'border-camel/50 bg-camel/[0.08] ring-1 ring-camel/20' },
-	{ key: 'priced', label: 'Priced', swatch: 'border-dashboard-border/70 bg-dashboard-surface' },
-	{ key: 'unset', label: 'Unset', swatch: 'border-dashed border-dashboard-border/60 bg-dashboard-inset/50' },
-	{ key: 'booked', label: 'Booked', swatch: 'border-dashboard-border bg-dashboard-inset ring-1 ring-espresso/15' },
-	{ key: 'blocked', label: 'Blocked', swatch: 'border-red-300/40 bg-red-950/30' },
+	{ key: 'available', label: 'Available', dot: 'bg-[#4d7c6f]' },
+	{ key: 'blocked', label: 'Blocked', dot: 'bg-[#c4785a]' },
+	{ key: 'booked', label: 'Booked', dot: 'bg-dashboard-muted' },
+	{ key: 'selected', label: 'Selected', dot: 'bg-[#d4a853]' },
+	{ key: 'unset', label: 'No price', dot: 'bg-dashboard-border' },
 ] as const;
 
 function CalendarLegend() {
 	return (
-		<div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-dashboard-border/50 pt-4">
+		<div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-dashboard-border pt-4 text-xs text-dashboard-muted">
 			{legendItems.map((item) => (
-				<div key={item.key} className="flex items-center gap-2">
-					<span className={cn('h-3.5 w-3.5 shrink-0 rounded-[4px] border', item.swatch)} aria-hidden />
-					<span className="text-xs text-espresso/55">{item.label}</span>
-				</div>
+				<span key={item.key} className="flex items-center gap-2">
+					<i className={cn('inline-block h-2 w-2 rounded-full', item.dot)} aria-hidden />
+					{item.label}
+				</span>
 			))}
 		</div>
 	);
@@ -896,73 +1074,56 @@ function CalendarLegend() {
 
 type DayCellProps = {
 	day: DateTime;
-	today: boolean;
 	selected: boolean;
-	availability: { is_available: boolean; price: number; reason: AvailabilityStatusType | null } | undefined;
+	availability: Pick<AvailabilityDay, 'is_available' | 'price' | 'reason'> | undefined;
 	isPast: boolean;
 	onClick: () => void;
 };
 
-function DayCell({ day, today, selected, availability, isPast, onClick }: DayCellProps) {
-	const isBlocked = Boolean(availability && !availability.is_available);
+function DayCell({ day, selected, availability, isPast, onClick }: DayCellProps) {
 	const isBooked = availability?.reason === AvailabilityStatus.BOOKED;
+	const isBlocked = Boolean(availability && !availability.is_available) && !isBooked;
 	const isPriced = Boolean(availability?.is_available);
 
-	const stateClass = isPast
-		? 'cursor-not-allowed border-transparent bg-dashboard-bg/60 text-espresso/28'
-		: selected
-			? 'border-camel/55 bg-camel/[0.08] text-espresso shadow-[inset_0_0_0_1px_rgba(150,131,112,0.18)]'
-			: isBlocked && isBooked
-				? 'border-dashboard-border/70 bg-dashboard-inset text-espresso/75 hover:border-espresso/20 hover:bg-dashboard-surface'
-				: isBlocked
-					? 'border-red-300/35 bg-red-950/25 text-red-300 hover:border-red-300/50'
-					: isPriced
-						? 'border-dashboard-border/65 bg-dashboard-surface text-espresso hover:border-camel/30 hover:bg-dashboard-inset/20'
-						: 'border-dashed border-dashboard-border/55 bg-dashboard-inset/35 text-espresso/55 hover:border-camel/25 hover:bg-dashboard-inset/55';
+	const tone = isPast
+		? 'cursor-not-allowed bg-transparent text-dashboard-muted/50'
+		: isBooked
+			? 'cursor-not-allowed bg-dashboard-inset text-dashboard-muted'
+			: isBlocked
+				? 'bg-[color-mix(in_srgb,#c4785a_14%,var(--color-dashboard-surface))] text-[#c4785a]'
+				: isPriced
+					? 'bg-[color-mix(in_srgb,#4d7c6f_13%,var(--color-dashboard-surface))] text-[#4d7c6f]'
+					: 'bg-dashboard-bg text-dashboard-muted';
+
+	const caption = isPast
+		? ''
+		: isBooked
+			? 'Booked'
+			: isBlocked
+				? 'Blocked'
+				: isPriced
+					? `$${availability!.price.toFixed(0)}`
+					: '—';
 
 	return (
-		<Button
+		<button
 			type="button"
-			variant="custom"
 			onClick={onClick}
 			disabled={isPast}
+			aria-pressed={selected}
+			aria-label={`${day.toFormat('MMMM d, yyyy')}${caption ? `, ${caption}` : ''}`}
 			className={cn(
-				'relative h-[4.5rem] rounded-lg border px-0.5 py-1.5 transition-[border-color,background-color,box-shadow] duration-150',
-				stateClass,
-				today && !selected && !isPast ? 'ring-1 ring-espresso/12' : '',
+				'relative flex min-h-[4.5rem] cursor-pointer flex-col items-start justify-between rounded-md p-2 text-left transition hover:brightness-[0.97] sm:min-h-[5.5rem] sm:p-3',
+				tone,
+				selected &&
+					'outline outline-2 -outline-offset-2 outline-[#d4a853] !bg-[color-mix(in_srgb,#d4a853_16%,var(--color-dashboard-surface))] !text-espresso',
 			)}
 		>
-			<div className="flex h-full w-full flex-col items-center justify-between">
-				<span
-					className={cn(
-						'text-sm font-medium tabular-nums leading-none',
-						today && !isPast ? 'text-camel-deep' : '',
-					)}
-				>
-					{day.day}
-				</span>
-				{isPast ? (
-					<span className="h-3" />
-				) : isPriced ? (
-					<span className="text-xs font-medium tabular-nums text-espresso/55">
-						${availability!.price.toFixed(0)}
-					</span>
-				) : isBlocked ? (
-					<span
-						className={cn(
-							'max-w-full truncate px-0.5 text-xs font-medium uppercase tracking-wide',
-							isBooked ? 'text-espresso/55' : 'text-red-300',
-						)}
-					>
-						{availability!.reason ?? 'Off'}
-					</span>
-				) : (
-					<span className="h-3" />
-				)}
-			</div>
+			<span className={cn('text-sm font-semibold', isPast ? '' : 'text-espresso')}>{day.day}</span>
+			<span className="text-[10px] font-semibold tabular-nums sm:text-[13px]">{caption}</span>
 			{selected ? (
-				<span className="absolute bottom-1 left-1/2 h-0.5 w-3 -translate-x-1/2 rounded-full bg-camel" aria-hidden />
+				<Check className="absolute right-1.5 top-2 h-3 w-3 text-espresso sm:right-2 sm:top-2.5" aria-hidden />
 			) : null}
-		</Button>
+		</button>
 	);
 }

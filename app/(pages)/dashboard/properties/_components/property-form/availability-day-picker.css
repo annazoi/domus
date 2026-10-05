@@ -1,14 +1,14 @@
 .availability-day-picker {
-  --picker-band-height: 2.25rem;
-  --picker-range-band: color-mix(in srgb, var(--color-camel) 16%, var(--color-dashboard-bg));
-  --picker-range-endpoint: var(--color-camel);
+  --picker-band-height: 2.5rem;
+  --picker-range-band: color-mix(in srgb, #d4a853 20%, var(--color-dashboard-surface));
+  --picker-range-endpoint: #d4a853;
   --picker-range-endpoint-text: #2a231d;
   --picker-range-middle-text: var(--color-espresso);
 }
 
 html[data-dashboard-theme='dark'] .availability-day-picker {
-  --picker-range-band: color-mix(in srgb, var(--color-camel) 24%, var(--color-dashboard-panel));
-  --picker-range-endpoint: var(--color-camel);
+  --picker-range-band: color-mix(in srgb, #d4a853 24%, var(--color-dashboard-panel));
+  --picker-range-endpoint: #d4a853;
   --picker-range-endpoint-text: #171411;
   --picker-range-middle-text: var(--color-espresso);
 }
@@ -18,11 +18,11 @@ html[data-dashboard-theme='dark'] .availability-day-picker .rdp-root {
 }
 
 .availability-day-picker .rdp-root {
-  --rdp-day-height: 2.5rem;
-  --rdp-day-width: 2.5rem;
+  --rdp-day-height: 2.75rem;
+  --rdp-day-width: 2.75rem;
   --rdp-day_button-height: var(--picker-band-height);
   --rdp-day_button-width: var(--picker-band-height);
-  --rdp-day_button-border-radius: 9999px;
+  --rdp-day_button-border-radius: 0.5rem;
   --rdp-accent-color: var(--picker-range-endpoint);
   --rdp-selected-border: 2px solid transparent;
   --rdp-today-color: var(--color-camel-deep);
@@ -53,8 +53,9 @@ html[data-dashboard-theme='dark'] .availability-day-picker .rdp-root {
 
 .availability-day-picker .rdp-button_previous,
 .availability-day-picker .rdp-button_next {
-  border: 1px solid var(--color-dashboard-border);
-  border-radius: 0.5rem;
+  background-color: var(--color-dashboard-inset);
+  border: 0;
+  border-radius: 9999px;
   color: var(--color-espresso);
   transition: background-color 150ms ease, border-color 150ms ease;
 }
@@ -62,7 +63,6 @@ html[data-dashboard-theme='dark'] .availability-day-picker .rdp-root {
 .availability-day-picker .rdp-button_previous:hover:not(:disabled),
 .availability-day-picker .rdp-button_next:hover:not(:disabled) {
   background-color: var(--color-dashboard-row-hover);
-  border-color: color-mix(in srgb, var(--color-camel) 30%, var(--color-dashboard-border));
 }
 
 .availability-day-picker .rdp-day {
@@ -175,4 +175,20 @@ html[data-dashboard-theme='dark'] .availability-day-picker .rdp-selected:not(.rd
 
 .availability-day-picker .rdp-outside .rdp-day_button {
   color: color-mix(in srgb, var(--color-dashboard-muted) 70%, transparent);
+}
+
+/* Today: subtle ring so it reads without competing with the gold selection. */
+.availability-day-picker .rdp-today:not(.rdp-outside):not(.rdp-selected) .rdp-day_button {
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, #d4a853 70%, transparent);
+}
+
+/* Taken dates (already priced) read as unavailable, not just faded. */
+.availability-day-picker .rdp-disabled:not(.rdp-selected):not(.rdp-outside) .rdp-day_button {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.availability-day-picker .rdp-day_button:focus-visible {
+  outline: 2px solid #d4a853;
+  outline-offset: 2px;
 }

@@ -19,6 +19,8 @@ type BasicInfoSectionProps = {
 	/** Omit inner section heading (e.g. modal supplies its own title). */
 	hideSectionHeading?: boolean;
 	submitLabel?: string;
+	/** Starting values for a new listing (e.g. carried over from the homepage form). */
+	prefill?: Partial<UpsertPropertyInput>;
 };
 
 function normalizePropertyType(value: string | null | undefined, fallback: string) {
@@ -42,6 +44,7 @@ export function BasicInfoSection({
 	onPropertyCreated,
 	hideSectionHeading = false,
 	submitLabel = 'Save',
+	prefill,
 }: BasicInfoSectionProps) {
 	const { push } = useToast();
 	const [slugHelpOpen, setSlugHelpOpen] = useState(false);
@@ -49,7 +52,9 @@ export function BasicInfoSection({
 	const targetPropertyId = initialProperty?.id ?? createdPropertyId ?? '';
 	const { mutateAsync: update, isPending: updating } = useUpdateProperty(targetPropertyId);
 	const saving = creating || updating;
-	const defaultValues: UpsertPropertyInput = initialProperty ? { ...initialProperty } : PROPERTY_FORM_DEFAULT_VALUES;
+	const defaultValues: UpsertPropertyInput = initialProperty
+		? { ...initialProperty }
+		: { ...PROPERTY_FORM_DEFAULT_VALUES, ...prefill };
 	const normalizedPropertyType = normalizePropertyType(defaultValues.property_type, PROPERTY_FORM_DEFAULT_VALUES.property_type);
 	const normalizedRoomType = normalizeRoomType(defaultValues.room_type, PROPERTY_FORM_DEFAULT_VALUES.room_type);
 
@@ -161,8 +166,8 @@ export function BasicInfoSection({
 				</Button>
 			</div>
 			<div className="grid gap-4 md:grid-cols-2">
-				<div className="space-y-1.5">
-					<label htmlFor="property-title" className="text-sm font-medium text-espresso">
+				<div className="space-y-2.5">
+					<label htmlFor="property-title" className="block text-sm font-medium text-espresso">
 						Title *
 					</label>
 					<Input
@@ -172,9 +177,9 @@ export function BasicInfoSection({
 					/>
 					{errors.title?.message ? <p className="text-xs text-red-700">{errors.title.message}</p> : null}
 				</div>
-				<div className="space-y-1.5">
-					<div className="flex items-center gap-1.5">
-						<label htmlFor="property-slug" className="text-sm font-medium text-espresso">
+				<div className="space-y-2.5">
+					<div className="flex h-5 items-center gap-1.5">
+						<label htmlFor="property-slug" className="block text-sm font-medium text-espresso">
 							Slug *
 						</label>
 						<div className="group relative">
@@ -204,8 +209,8 @@ export function BasicInfoSection({
 					/>
 					{errors.slug?.message ? <p className="text-xs text-red-700">{errors.slug.message}</p> : null}
 				</div>
-				<div className="space-y-1.5">
-					<label htmlFor="property-type" className="text-sm font-medium text-espresso">
+				<div className="space-y-2.5">
+					<label htmlFor="property-type" className="block text-sm font-medium text-espresso">
 						Property type
 					</label>
 					<Select
@@ -223,8 +228,8 @@ export function BasicInfoSection({
 						))}
 					</Select>
 				</div>
-				<div className="space-y-1.5">
-					<label htmlFor="property-room-type" className="text-sm font-medium text-espresso">
+				<div className="space-y-2.5">
+					<label htmlFor="property-room-type" className="block text-sm font-medium text-espresso">
 						Room type
 					</label>
 					<Select
@@ -247,7 +252,13 @@ export function BasicInfoSection({
 			</div>
 
 			<div className="mt-2 flex justify-end pt-2">
-				<Button type="button" onClick={() => void handleSave()} disabled={saving} variant="primary">
+				<Button
+						type="button"
+						onClick={() => void handleSave()}
+						disabled={saving}
+						variant="primary"
+						className="[html[data-dashboard-theme=dark]_&]:bg-[#e8d4b0] [html[data-dashboard-theme=dark]_&]:text-[#171411] [html[data-dashboard-theme=dark]_&]:hover:bg-[#c9a978]"
+					>
 					{saving ? 'Saving...' : submitLabel}
 				</Button>
 			</div>

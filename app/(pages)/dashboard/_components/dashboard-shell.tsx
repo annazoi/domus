@@ -32,10 +32,8 @@ import {
 	X,
 } from 'lucide-react';
 import { Button } from '@/components/ui';
-import Image from 'next/image';
-import logo from '@/public/images/dash-logo.png';
 import { useAuthStore } from '@/store/auth';
-import { DashboardTheme, useDashboardThemeStore } from '@/store/dashboard-theme';
+import { useDashboardThemeStore } from '@/store/dashboard-theme';
 import { ThemeToggle } from './theme-toggle';
 
 type NavItem = {
@@ -44,21 +42,36 @@ type NavItem = {
 	icon: ReactNode;
 };
 
-const navItems: NavItem[] = [
-	{ label: 'Overview', href: '/dashboard', icon: <LayoutGrid className="h-4 w-4" /> },
-	{ label: 'Properties', href: '/dashboard/properties', icon: <Home className="h-4 w-4" /> },
-	{ label: 'Bookings', href: '/dashboard/bookings', icon: <BarChart3 className="h-4 w-4" /> },
-	{ label: 'Customers', href: '/dashboard/customers', icon: <Users className="h-4 w-4" /> },
-	{ label: 'Services', href: '/dashboard/services', icon: <Wrench className="h-4 w-4" /> },
-	{ label: 'My trips', href: '/dashboard/trips', icon: <Luggage className="h-4 w-4" /> },
-	// { label: 'Messages', href: '/dashboard/messages', icon: <MessageCircle className="h-4 w-4" /> },
-	{ label: 'Calendar', href: '/dashboard/calendar', icon: <CalendarDays className="h-4 w-4" /> },
-	{ label: 'Earnings', href: '/dashboard/earnings', icon: <Wallet className="h-4 w-4" /> },
-	{ label: 'Profile', href: '/dashboard/profile', icon: <CircleUser className="h-4 w-4" /> },
-	// { label: 'Settings', href: '/dashboard/settings', icon: <Settings className="h-4 w-4" /> },
-	{ label: 'Payments', href: '/dashboard/payments', icon: <CreditCard className="h-4 w-4" /> },
-	{ label: 'Subscription', href: '/dashboard/subscription', icon: <Repeat className="h-4 w-4" /> },
+const navGroups: { label: string; items: NavItem[] }[] = [
+	{
+		label: 'Workspace',
+		items: [
+			{ label: 'Overview', href: '/dashboard', icon: <LayoutGrid className="h-[18px] w-[18px]" /> },
+			{ label: 'Properties', href: '/dashboard/properties', icon: <Home className="h-[18px] w-[18px]" /> },
+			{ label: 'Bookings', href: '/dashboard/bookings', icon: <BarChart3 className="h-[18px] w-[18px]" /> },
+			{ label: 'Calendar', href: '/dashboard/calendar', icon: <CalendarDays className="h-[18px] w-[18px]" /> },
+			{ label: 'Customers', href: '/dashboard/customers', icon: <Users className="h-[18px] w-[18px]" /> },
+		],
+	},
+	{
+		label: 'Business',
+		items: [
+			{ label: 'Services', href: '/dashboard/services', icon: <Wrench className="h-[18px] w-[18px]" /> },
+			{ label: 'Earnings', href: '/dashboard/earnings', icon: <Wallet className="h-[18px] w-[18px]" /> },
+			{ label: 'Payments', href: '/dashboard/payments', icon: <CreditCard className="h-[18px] w-[18px]" /> },
+			{ label: 'Subscription', href: '/dashboard/subscription', icon: <Repeat className="h-[18px] w-[18px]" /> },
+		],
+	},
+	{
+		label: 'Account',
+		items: [
+			{ label: 'My trips', href: '/dashboard/trips', icon: <Luggage className="h-[18px] w-[18px]" /> },
+			{ label: 'Profile', href: '/dashboard/profile', icon: <CircleUser className="h-[18px] w-[18px]" /> },
+		],
+	},
 ];
+
+const navItems: NavItem[] = navGroups.flatMap((group) => group.items);
 
 const isItemActive = (pathname: string, href: string) =>
 	href === '/dashboard' ? pathname === href : pathname.startsWith(href);
@@ -87,6 +100,11 @@ export function useSetDashboardPageIntro() {
 export function DashboardShell({ children }: { children: ReactNode }) {
 	const pathname = usePathname();
 	const logout = useAuthStore((state) => state.logout);
+	const firstName = useAuthStore((state) => state.first_name);
+	const lastName = useAuthStore((state) => state.last_name);
+	const email = useAuthStore((state) => state.email);
+	const fullName = [firstName, lastName].filter(Boolean).join(' ') || 'Host';
+	const initials = ((firstName?.[0] ?? '') + (lastName?.[0] ?? '') || 'H').toUpperCase();
 	const theme = useDashboardThemeStore((state) => state.theme);
 	const [isCollapsed, setIsCollapsed] = useState(false);
 	const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -136,14 +154,18 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 			<div className="flex w-full">
 				<aside
 					className={[
-						'fixed inset-y-0 left-0 z-40 flex flex-col border-r border-dashboard-border bg-dashboard-bg px-3 py-6 transition-all duration-300',
+						'dashboard-sidebar fixed inset-y-0 left-0 z-40 flex flex-col border-r border-dashboard-border px-3 py-6 transition-all duration-300',
 						isCollapsed ? 'w-[84px]' : 'w-[250px]',
 						isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
 					].join(' ')}
 				>
 					<div className="flex items-center justify-between px-2">
-						<Link href="/" className={['font-serif text-2xl tracking-tight', isCollapsed ? 'hidden' : 'block'].join(' ')}>
-							<Image src={logo} alt="Hozya" width={100} height={100} className='w-15 h-auto' />
+						<Link
+							href="/"
+							aria-label="Hozya"
+							className={['font-serif text-3xl tracking-tight text-espresso', isCollapsed ? 'hidden' : 'block'].join(' ')}
+						>
+							Hozya<span className="text-camel">.</span>
 						</Link>
 						<Button
 							type="button"
@@ -165,57 +187,80 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 						</Button>
 					</div>
 
-					<nav className="mt-8 flex-1 space-y-1 overflow-y-auto pb-24">
-						{navItems.map((item) => {
-							const active = isItemActive(pathname, item.href);
-
-							return (
-								<Link
-									key={item.href}
-									href={item.href}
-									onClick={() => setIsMobileOpen(false)}
-									className={[
-										'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors duration-200',
-										active ? 'text-espresso' : 'text-dashboard-muted hover:text-espresso',
-										isCollapsed ? 'justify-center' : '',
-									].join(' ')}
-								>
-									{active ? (
-										<motion.span
-											layoutId="dashboard-nav-active"
-											className="absolute inset-0 rounded-xl bg-[color:var(--color-dashboard-nav-active)]"
-											transition={navSpring}
-										/>
-									) : null}
-									<span
-										className={[
-											'relative z-10 flex items-center gap-3',
-											isCollapsed ? 'justify-center' : '',
-										].join(' ')}
-									>
-										<span className={active ? 'text-camel' : 'text-dashboard-muted'}>{item.icon}</span>
-										<span className={isCollapsed ? 'hidden' : 'inline'}>{item.label}</span>
-									</span>
-								</Link>
-							);
-						})}
+					<nav className="mt-8 flex-1 space-y-6 overflow-y-auto pb-6">
+						{navGroups.map((group) => (
+							<div key={group.label}>
+								{!isCollapsed ? (
+									<p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-dashboard-muted/80">
+										{group.label}
+									</p>
+								) : (
+									<div className="mx-3 mb-2 h-px bg-dashboard-border" />
+								)}
+								<div className="space-y-0.5">
+									{group.items.map((item) => {
+										const active = isItemActive(pathname, item.href);
+										return (
+											<Link
+												key={item.href}
+												href={item.href}
+												title={isCollapsed ? item.label : undefined}
+												onClick={() => setIsMobileOpen(false)}
+												className={[
+													'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-200',
+													active ? 'font-semibold text-camel' : 'text-dashboard-muted hover:text-espresso',
+													isCollapsed ? 'justify-center' : '',
+												].join(' ')}
+											>
+												{active ? (
+													<motion.span
+														layoutId="dashboard-nav-active"
+														className="absolute inset-0 rounded-lg bg-[color:var(--color-dashboard-nav-active)]"
+														transition={navSpring}
+													/>
+												) : null}
+												{active && !isCollapsed ? (
+													<span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-camel" />
+												) : null}
+												<span className="relative z-10 flex items-center gap-3">
+													<span className={active ? 'text-camel' : 'text-dashboard-muted transition group-hover:text-espresso'}>
+														{item.icon}
+													</span>
+													<span className={isCollapsed ? 'hidden' : 'inline'}>{item.label}</span>
+												</span>
+											</Link>
+										);
+									})}
+								</div>
+							</div>
+						))}
 					</nav>
 
 					<div
 						className={[
-							'mt-auto flex items-center border-t border-dashboard-border pt-5',
-							isCollapsed ? 'justify-center' : 'justify-between gap-3',
+							'mt-auto flex items-center gap-3 rounded-xl border border-dashboard-border bg-dashboard-bg/70 p-2.5',
+							isCollapsed ? 'justify-center' : '',
 						].join(' ')}
 					>
+						<span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-camel text-xs font-semibold text-[#1d1916]">
+							{initials}
+						</span>
 						{!isCollapsed ? (
-							<div className="min-w-0">
-								<p className="text-[10px] font-medium uppercase tracking-[0.18em] text-dashboard-muted">Appearance</p>
-								<p className="mt-0.5 truncate text-xs text-espresso/70">
-									{theme === DashboardTheme.DARK ? 'Nocturne' : 'Daylight'}
-								</p>
-							</div>
+							<>
+								<div className="min-w-0 flex-1">
+									<p className="truncate text-sm font-semibold text-espresso">{fullName}</p>
+									<p className="truncate text-xs text-dashboard-muted">{email ?? 'Host account'}</p>
+								</div>
+								<button
+									type="button"
+									onClick={() => logout()}
+									aria-label="Log out"
+									className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-lg text-dashboard-muted transition hover:bg-dashboard-row-hover hover:text-espresso"
+								>
+									<LogOut className="h-4 w-4" />
+								</button>
+							</>
 						) : null}
-						<ThemeToggle compact={isCollapsed} />
 					</div>
 				</aside>
 
@@ -287,23 +332,26 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
 							<header className="sticky top-0 z-30 hidden min-h-16 items-center justify-between gap-6 border-b border-dashboard-border bg-[color:var(--color-dashboard-header)] px-10 py-2 backdrop-blur-md md:flex">
 								<div className="flex min-w-0 flex-1 items-center gap-5">
-									{pageIntro ? <div className="min-w-0 flex-1">{pageIntro}</div> : null}
+									{pageIntro ? (
+										<div className="min-w-0 flex-1">{pageIntro}</div>
+									) : (
+										<p className="truncate text-sm text-dashboard-muted">
+											<span>Dashboard</span>
+											<span className="mx-2 text-dashboard-border">/</span>
+											<span className="font-semibold text-espresso">{mobileTitle}</span>
+										</p>
+									)}
 								</div>
 
 								<div className="flex shrink-0 items-center gap-3">
 									<ThemeToggle />
-									<span className="hidden rounded-full bg-camel/15 px-3 py-1 text-xs font-medium text-camel sm:inline-flex">
-										Portfolio Plan
-									</span>
-									<Button
-										type="button"
-										variant="secondary"
-										onClick={() => logout()}
-										className="inline-flex items-center gap-2"
+									<Link
+										href="/dashboard/subscription"
+										className="hidden items-center gap-1.5 rounded-full border border-dashboard-border bg-dashboard-panel px-3 py-1.5 text-xs font-medium text-espresso transition hover:border-camel sm:inline-flex"
 									>
-										<LogOut className="h-4 w-4" />
-										<span className="hidden sm:inline">Log out</span>
-									</Button>
+										<span className="h-1.5 w-1.5 rounded-full bg-camel" />
+										Portfolio plan
+									</Link>
 								</div>
 							</header>
 

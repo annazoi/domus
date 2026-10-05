@@ -10,6 +10,7 @@ import { useBookings } from '@/features/bookings/hooks/use-bookings';
 import { BookingStatus } from '@/features/bookings/interfaces/booking-status';
 import type { HostBookingDetail } from '@/features/bookings/interfaces/booking.interface';
 import { formatDisplayDate } from '@/features/property-availability/utils/date';
+import { PageHeader } from '@/app/(pages)/dashboard/_components/page-header';
 import {
 	activeBookingsForDate,
 	bookingsForDate,
@@ -120,10 +121,7 @@ export default function CalendarPage() {
 
 	return (
 		<div className="space-y-8">
-			<div>
-				<p className="text-xs uppercase tracking-[0.2em] text-camel">Calendar</p>
-				<h1 className="mt-2 font-serif text-4xl tracking-tight">Reservations overview</h1>
-			</div>
+			<PageHeader eyebrow="Calendar" title="Reservations overview" />
 
 			<div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
 				<div className="dashboard-panel rounded-2xl p-5">

@@ -30,12 +30,12 @@ type DashboardDataTableSkeletonProps = {
 	headerAlignment?: (header: string) => ColumnAlignment | undefined;
 };
 
-const tableHeadRowClass = 'bg-dashboard-inset';
+const tableHeadRowClass = 'bg-dashboard-bg/70';
 
 const baseHeaderClass =
-	'px-5 py-4 text-xs font-medium uppercase tracking-[0.18em] text-dashboard-muted md:px-8 lg:px-10';
+	'px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-dashboard-muted md:px-6';
 
-const baseCellClass = 'px-5 py-5 align-middle md:px-8 lg:px-10';
+const baseCellClass = 'px-5 py-4 align-middle md:px-6';
 
 function alignmentClass(alignment?: ColumnAlignment) {
 	if (alignment === 'center') return 'text-center';
@@ -219,10 +219,9 @@ export function BookingStatusBadge({
 		<span
 			className={cn(
 				'inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium capitalize tracking-wide',
-				status === BookingStatus.CONFIRMED && 'bg-camel/12 text-camel-dark',
-				status === BookingStatus.CANCELLED &&
-					'bg-dashboard-bg text-dashboard-muted line-through decoration-dashboard-muted/40',
-				status === BookingStatus.PENDING && 'bg-dashboard-surface text-dashboard-muted',
+				status === BookingStatus.CONFIRMED && 'bg-[#4d7c6f]/14 text-[#4d7c6f]',
+				status === BookingStatus.CANCELLED && 'bg-[#c4785a]/14 text-[#c4785a]',
+				status === BookingStatus.PENDING && 'bg-[#d4a853]/22 text-[#8a6420]',
 				className,
 			)}
 		>
@@ -232,5 +231,21 @@ export function BookingStatusBadge({
 }
 
 export function GuestNameCell({ children }: { children: ReactNode }) {
-	return <span className="font-medium leading-snug text-espresso">{children}</span>;
+	const name = typeof children === 'string' ? children.trim() : '';
+	const initials = name
+		.split(/s+/)
+		.slice(0, 2)
+		.map((part) => part[0])
+		.join('')
+		.toUpperCase();
+	return (
+		<span className="flex items-center gap-3">
+			{initials ? (
+				<span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-camel/12 text-[11px] font-semibold text-camel-deep">
+					{initials}
+				</span>
+			) : null}
+			<span className="font-medium leading-snug text-espresso">{children}</span>
+		</span>
+	);
 }

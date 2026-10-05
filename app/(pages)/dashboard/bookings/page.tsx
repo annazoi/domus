@@ -15,6 +15,7 @@ import {
 	type BookingsFilters,
 } from './_components/bookings-filters';
 import { BookingsSearch, hasActiveBookingsSearch } from './_components/bookings-search';
+import { PageHeader } from '@/app/(pages)/dashboard/_components/page-header';
 import { BookingsTable, BookingsTableSkeleton } from './_components/bookings-table';
 
 const PAGE_SIZE = DEFAULT_PAGE_SIZE;
@@ -69,10 +70,7 @@ export default function BookingsPage() {
 
 	return (
 		<div className="space-y-8">
-			<div>
-				<p className="text-xs uppercase tracking-[0.2em] text-camel">Bookings</p>
-				<h1 className="mt-2 font-serif text-4xl tracking-tight">Reservation flow</h1>
-			</div>
+			<PageHeader eyebrow="Bookings" title="Reservation flow" />
 
 			<BookingsSearch value={searchQuery} onChange={setSearchQuery} />
 			<BookingsFiltersBar filters={filters} onChange={setFilters} />

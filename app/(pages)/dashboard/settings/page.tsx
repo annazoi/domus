@@ -1,4 +1,5 @@
 import { Button, Input } from '@/components/ui';
+import { PageHeader } from '@/app/(pages)/dashboard/_components/page-header';
 
 const fields = [
 	{ label: 'Profile name', placeholder: 'Zoian A.' },
@@ -11,10 +12,7 @@ const fields = [
 export default function SettingsPage() {
 	return (
 		<div className="space-y-8">
-			<div>
-				<p className="text-xs uppercase tracking-[0.2em] text-camel">Settings</p>
-				<h1 className="mt-2 font-serif text-4xl tracking-tight">Account and brand controls</h1>
-			</div>
+			<PageHeader eyebrow="Settings" title="Account and brand controls" />
 
 			<form className="space-y-5 dashboard-panel rounded-2xl p-6">
 				{fields.map((field) => (

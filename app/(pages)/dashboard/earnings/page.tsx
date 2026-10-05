@@ -10,6 +10,7 @@ import {
 	computeEarningsStats,
 	mapBookingToEarningsTransaction,
 } from '../_utils/compute-earnings-stats';
+import { PageHeader } from '@/app/(pages)/dashboard/_components/page-header';
 import { MonthlyEarningsChart } from './_components/monthly-earnings-chart';
 
 const PAGE_SIZE = DEFAULT_PAGE_SIZE;
@@ -35,10 +36,7 @@ export default function EarningsPage() {
 
 	return (
 		<div className="space-y-10">
-			<div>
-				<p className="text-xs uppercase tracking-[0.2em] text-camel">Earnings</p>
-				<h1 className="mt-2 font-serif text-4xl tracking-tight">Revenue in focus</h1>
-			</div>
+			<PageHeader eyebrow="Earnings" title="Revenue in focus" />
 
 			<section className="relative dashboard-panel overflow-hidden rounded-2xl p-6 md:p-8">
 				<div

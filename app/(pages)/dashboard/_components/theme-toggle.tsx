@@ -24,7 +24,7 @@ export function ThemeToggle({ compact = false, className }: ThemeToggleProps) {
 			className={cn(
 				'group relative inline-flex shrink-0 items-center rounded-full p-1 transition-shadow duration-300',
 				isDark
-					? 'bg-[#0f0d0b] shadow-[inset_0_1px_0_rgb(255_255_255/0.06),0_0_0_1px_rgb(255_255_255/0.08),0_12px_32px_-18px_rgb(0_0_0/0.85)]'
+					? 'bg-[#0f0d0b]'
 					: 'bg-[#ebe4d9]',
 				compact ? 'h-9 w-[4.25rem]' : 'h-10 w-[5.5rem]',
 				className,
@@ -38,8 +38,8 @@ export function ThemeToggle({ compact = false, className }: ThemeToggleProps) {
 				className={cn(
 					'absolute top-1 bottom-1 w-[calc((100%-0.5rem)/2)] rounded-full',
 					isDark
-						? 'left-1/2 bg-gradient-to-br from-[#3d342c] via-[#2a231d] to-[#171411] shadow-[0_0_18px_-4px_rgb(201_169_120/0.55),inset_0_1px_0_rgb(255_255_255/0.08)]'
-						: 'left-1 bg-gradient-to-br from-white via-[#fffdf9] to-[#f3ece2] shadow-[0_8px_18px_-10px_rgb(61_50_41/0.55),inset_0_1px_0_rgb(255_255_255/0.9)]',
+						? 'left-1/2 bg-gradient-to-br from-[#3d342c] via-[#2a231d] to-[#171411]'
+						: 'left-1 bg-gradient-to-br from-white via-[#fffdf9] to-[#f3ece2] shadow-sm',
 				)}
 			/>
 			<span className="absolute inset-1 z-10 grid grid-cols-2">

@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import heroImage from '@/public/images/landing-journal-photos.png';
 import featureVillaExteriorImage from '@/public/images/landing-feature-exterior.png';
@@ -18,6 +19,7 @@ import logo from '@/public/images/logo.png';
 import { useAuthStore } from '@/store/auth';
 import { LandingCursor } from '@/app/_components/landing-cursor';
 import { LandingNav } from '@/app/_components/landing-nav';
+import { saveLaunchDraft, type LaunchDraft } from '@/app/_lib/launch-draft';
 
 function PillArrow() {
 	return (
@@ -48,6 +50,31 @@ export default function Home() {
 	const [scrolled, setScrolled] = useState(false);
 	const rootRef = useRef<HTMLDivElement>(null);
 	const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+	const router = useRouter();
+	const [launchDraft, setLaunchDraft] = useState<LaunchDraft>({
+		fullName: '',
+		email: '',
+		propertyName: '',
+		location: '',
+		nightlyRate: '',
+	});
+	const [launching, setLaunching] = useState(false);
+
+	const updateLaunchDraft = (field: keyof LaunchDraft) => (e: React.ChangeEvent<HTMLInputElement>) =>
+		setLaunchDraft((prev) => ({ ...prev, [field]: e.target.value }));
+
+	const handleLaunchSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		if (launching) return;
+		setLaunching(true);
+		saveLaunchDraft(launchDraft);
+		if (isLoggedIn) {
+			router.push('/dashboard/properties/new');
+			return;
+		}
+		const params = new URLSearchParams({ name: launchDraft.fullName.trim(), email: launchDraft.email.trim() });
+		router.push(`/auth/sign-up?${params.toString()}`);
+	};
 
 	useEffect(() => {
 		const onScroll = () => setScrolled(window.scrollY > 32);
@@ -646,41 +673,43 @@ export default function Home() {
 
 					<form
 						className="bg-hoz-mocha rounded-3xl p-6 md:p-10"
-						onSubmit={(e) => {
-							e.preventDefault();
-							window.alert('Thanks! We will be in touch.');
-						}}
+						onSubmit={handleLaunchSubmit}
 					>
 						<div className="grid md:grid-cols-3 gap-6">
 							<div>
-								<label className="block text-sm mb-2 text-hoz-cream/70">Full name</label>
-								<input className="input" placeholder="Justin Fee" required />
+								<label htmlFor="launch-name" className="block text-sm mb-2 text-hoz-cream/70">Full name</label>
+								<input id="launch-name" name="name" autoComplete="name" className="input" placeholder="Justin Fee" required value={launchDraft.fullName} onChange={updateLaunchDraft('fullName')} />
 							</div>
 							<div>
-								<label className="block text-sm mb-2 text-hoz-cream/70">Email</label>
-								<input type="email" className="input" placeholder="your@email.com" required />
+								<label htmlFor="launch-email" className="block text-sm mb-2 text-hoz-cream/70">Email</label>
+								<input id="launch-email" name="email" type="email" autoComplete="email" className="input" placeholder="your@email.com" required value={launchDraft.email} onChange={updateLaunchDraft('email')} />
 							</div>
 							<div>
-								<label className="block text-sm mb-2 text-hoz-cream/70">Property name</label>
-								<input className="input" placeholder="Canoply Chalet" />
+								<label htmlFor="launch-property" className="block text-sm mb-2 text-hoz-cream/70">Property name</label>
+								<input id="launch-property" name="property" className="input" placeholder="Canoply Chalet" required value={launchDraft.propertyName} onChange={updateLaunchDraft('propertyName')} />
 							</div>
 							<div>
-								<label className="block text-sm mb-2 text-hoz-cream/70">Location</label>
-								<input className="input" placeholder="Mountain hills, Canada" />
+								<label htmlFor="launch-location" className="block text-sm mb-2 text-hoz-cream/70">Location</label>
+								<input id="launch-location" name="location" className="input" placeholder="Mountain hills, Canada" value={launchDraft.location} onChange={updateLaunchDraft('location')} />
 							</div>
 							<div>
-								<label className="block text-sm mb-2 text-hoz-cream/70">Nightly rate</label>
-								<input className="input" placeholder="$290 / night" />
+								<label htmlFor="launch-rate" className="block text-sm mb-2 text-hoz-cream/70">Nightly rate</label>
+								<input id="launch-rate" name="rate" inputMode="decimal" className="input" placeholder="$290 / night" value={launchDraft.nightlyRate} onChange={updateLaunchDraft('nightlyRate')} />
 							</div>
 							<div className="flex items-end">
-								<button type="submit" className="pill pill-dark w-full justify-between">
-									<span>Start free trial</span>
+								<button type="submit" disabled={launching} className="pill pill-dark w-full justify-between">
+									<span>{launching ? 'Setting things up…' : isLoggedIn ? 'Create my listing' : 'Start free trial'}</span>
 									<PillDot>
 										<PillArrow />
 									</PillDot>
 								</button>
 							</div>
 						</div>
+						<p className="book-form-hint">
+							{isLoggedIn
+								? 'We’ll pre-fill your new listing with these details.'
+								: 'Next: create your account in 30 seconds. We’ll carry these details over to your first listing.'}
+						</p>
 					</form>
 					{isLoggedIn ? (
 						<p className="book-form-auth">

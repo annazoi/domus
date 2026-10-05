@@ -99,9 +99,9 @@ export function DescriptionSection({ initialProperty, propertyId: propertyIdProp
 				)}
 			/>
 	
-			<div className="space-y-1.5">
+			<div className="space-y-2.5">
 				<div className="flex items-center gap-1.5">
-					<label htmlFor="property-location-access" className="text-sm font-medium text-espresso">
+					<label htmlFor="property-location-access" className="block text-sm font-medium text-espresso">
 						Access
 					</label>
 					<div className="group relative">

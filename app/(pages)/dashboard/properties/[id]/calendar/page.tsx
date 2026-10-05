@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { DateTime } from 'luxon';
 import { Button, Input, cn } from '@/components/ui';
 import { AvailabilityStatus, type AvailabilityDay } from '@/features/property-availability/interfaces/property-availability.interface';
+import { PageHeader } from '@/app/(pages)/dashboard/_components/page-header';
 import { listAvailability, upsertAvailability } from '@/features/property-availability/services/property-availability.services';
 
 export default function PropertyCalendarPage() {
@@ -68,10 +69,7 @@ export default function PropertyCalendarPage() {
 
 	return (
 		<div className="space-y-8">
-			<div>
-				<p className="text-xs uppercase tracking-[0.2em] text-camel">Availability</p>
-				<h1 className="mt-2 font-serif text-4xl tracking-tight">Property calendar</h1>
-			</div>
+			<PageHeader eyebrow="Availability" title="Property calendar" />
 
 			<div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
 				<div className="dashboard-panel rounded-2xl p-5">

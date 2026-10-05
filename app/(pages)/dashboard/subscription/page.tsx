@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui';
+import { PageHeader } from '@/app/(pages)/dashboard/_components/page-header';
 
 const plans = [
 	{
@@ -20,10 +21,7 @@ const plans = [
 export default function SubscriptionPage() {
 	return (
 		<div className="space-y-8">
-			<div>
-				<p className="text-xs uppercase tracking-[0.2em] text-camel">Subscription</p>
-				<h1 className="mt-2 font-serif text-4xl tracking-tight">Your plan and billing</h1>
-			</div>
+			<PageHeader eyebrow="Subscription" title="Your plan and billing" />
 
 			<div className="grid gap-5 md:grid-cols-2">
 				{plans.map((plan) => (

@@ -497,6 +497,21 @@ html:has(.hozya-landing) {
   }
 }
 
+.hozya-landing .book-form-hint {
+  margin-top: 1.25rem;
+  color: rgba(239, 233, 223, 0.55);
+  font-size: 0.875rem;
+}
+
+.hozya-landing .input:focus-visible {
+  box-shadow: 0 0 0 3px rgba(239, 233, 223, 0.35);
+}
+
+.hozya-landing .pill:disabled {
+  cursor: progress;
+  opacity: 0.65;
+}
+
 .hozya-landing .book-form-auth {
   margin-top: 1.5rem;
   color: rgba(239, 233, 223, 0.7);

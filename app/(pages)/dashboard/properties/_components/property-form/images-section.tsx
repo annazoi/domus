@@ -460,8 +460,8 @@ export function ImagesSection({
 									</p>
 								</div>
 								<div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-									<div className="space-y-1.5 sm:w-44 sm:shrink-0">
-										<label htmlFor="video-url-source" className="text-xs font-medium text-espresso">
+									<div className="space-y-2.5 sm:w-44 sm:shrink-0">
+										<label htmlFor="video-url-source" className="block text-xs font-medium text-espresso">
 											Video source
 										</label>
 										<Select
@@ -478,8 +478,8 @@ export function ImagesSection({
 											))}
 										</Select>
 									</div>
-									<div className="min-w-0 flex-1 space-y-1.5">
-										<label htmlFor="video-url-input" className="text-xs font-medium text-espresso">
+									<div className="min-w-0 flex-1 space-y-2.5">
+										<label htmlFor="video-url-input" className="block text-xs font-medium text-espresso">
 											Video URL
 										</label>
 										<Input
@@ -708,8 +708,8 @@ function StagedMediaTile({
 					</Button>
 				</div>
 			</div>
-			<div className="space-y-1.5 p-3">
-				<label className="text-xs font-medium text-espresso" htmlFor={`staged-desc-${item.id}`}>
+			<div className="space-y-2.5 p-3">
+				<label className="block text-xs font-medium text-espresso" htmlFor={`staged-desc-${item.id}`}>
 					Description
 				</label>
 				<Textarea

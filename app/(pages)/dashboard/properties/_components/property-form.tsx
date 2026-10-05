@@ -15,6 +15,7 @@ import { ImagesSection } from './property-form/images-section';
 import { LocationSection } from './property-form/location-section';
 import { PricingSection } from './property-form/pricing-section';
 import { DescriptionSection} from './property-form/description-section';
+import { PageHeader } from '@/app/(pages)/dashboard/_components/page-header';
 import { PropertyFormSidebar, type PropertyFormTabId } from './property-form/sidebar';
 
 type PropertyFormProps = {
@@ -39,27 +40,29 @@ export function PropertyForm({ mode, initialProperty }: PropertyFormProps) {
 				loadWhen={activeTab === 'location'}
 				onLoaded={() => setGoogleMapsReady(true)}
 			/>
-		<div className="min-w-0 flex flex-col gap-2 mb-10">
-				<p className="text-[10px] uppercase tracking-[0.2em] text-camel sm:text-xs">
-					{mode === 'create' ? 'Create property' : 'Edit property'}
-				</p>
-				<h1 className="truncate font-serif text-xl leading-tight text-espresso sm:text-2xl md:text-3xl">
-					{mode === 'create' ? 'New listing' : 'Property details'}
-				</h1>
-		</div>
-		<div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+		<div className="mb-6">
+				<PageHeader
+					eyebrow={mode === 'create' ? 'Create property' : 'Edit property'}
+					title={mode === 'create' ? 'New listing' : initialProperty?.title || 'Property details'}
+					description={
+						mode === 'create'
+							? 'Fill in each section. You can come back and refine them any time.'
+							: 'Update your listing section by section.'
+					}
+				/>
+			</div>
 			<PropertyFormSidebar
 				mode={mode}
 				activeTab={activeTab}
 				onTabChange={setActiveTab}
 				onEditAvailability={
 					mode === 'edit' && initialProperty
-					? () => router.push(`/dashboard/properties/${initialProperty.id}/calendar`)
-					: undefined
+						? () => router.push(`/dashboard/properties/${initialProperty.id}/calendar`)
+						: undefined
 				}
 			/>
 
-			<div className="min-h-[320px] space-y-6">
+			<div className="mt-6 min-h-[320px] space-y-6">
 				<motion.div
 					key={activeTab}
 					role="tabpanel"
@@ -110,8 +113,7 @@ export function PropertyForm({ mode, initialProperty }: PropertyFormProps) {
 						<BrandingSection initialProperty={initialProperty} propertyId={resolvedPropertyId} />
 					) : null}
 				</motion.div>
-			</div>
 		</div>
-					</>
+		</>
 	);
 }

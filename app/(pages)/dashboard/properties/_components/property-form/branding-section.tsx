@@ -171,7 +171,7 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 					<div className="flex flex-wrap items-start justify-between gap-4">
 						<div className="min-w-0">
 							<div className="flex items-center gap-2">
-								<span className="flex h-7 w-7 items-center justify-center rounded-full bg-espresso text-white">
+								<span className="flex h-7 w-7 items-center justify-center rounded-full bg-espresso text-cream">
 									<Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
 								</span>
 								<p className="text-sm font-medium tracking-tight text-espresso">Site logo</p>
@@ -321,8 +321,8 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 										) : null}
 										<p className="text-xs leading-relaxed text-espresso/45">SVG, PNG, WebP · max recommended height 64px</p>
 										{displayLogoUrl ? (
-											<div className="space-y-1.5">
-												<label htmlFor="logo-alt" className="text-xs font-medium text-espresso">
+											<div className="space-y-2.5">
+												<label htmlFor="logo-alt" className="block text-xs font-medium text-espresso">
 													Title
 												</label>
 												<Input
@@ -399,7 +399,7 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 									className="object-cover"
 								/>
 								{active ? (
-									<span className="absolute left-3 top-3 rounded-full bg-camel px-3 py-1 text-xs font-medium text-white">
+									<span className="absolute left-3 top-3 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
 										Selected
 									</span>
 								) : null}
@@ -428,7 +428,7 @@ export function BrandingSection({ initialProperty, propertyId: propertyIdProp }:
 									className={cn(
 										'flex max-w-fit justify-center text-center text-xs hover:!translate-y-0 active:!translate-y-0',
 										active &&
-											'pointer-events-none border-primary bg-primary text-white hover:border-primary hover:bg-primary disabled:opacity-100',
+											'pointer-events-none border-primary bg-primary text-primary-foreground hover:border-primary hover:bg-primary disabled:opacity-100',
 									)}
 								>
 									{active ? 'Selected' : 'Select'}

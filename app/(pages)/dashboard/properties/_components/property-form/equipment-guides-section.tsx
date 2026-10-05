@@ -404,7 +404,7 @@ export function EquipmentGuidesSection({ initialProperty, propertyId: propertyId
 						</h3>
 						<div className="mt-4 space-y-4">
 							<div>
-								<label htmlFor="equipment-guide-title" className="mb-1.5 block text-sm font-medium text-espresso">
+								<label htmlFor="equipment-guide-title" className="mb-2.5 block text-sm font-medium text-espresso">
 									Title
 								</label>
 								<Input
@@ -416,7 +416,7 @@ export function EquipmentGuidesSection({ initialProperty, propertyId: propertyId
 							</div>
 							<div className="space-y-2">
 								<div className="flex items-center justify-between">
-									<label className="text-sm font-medium text-espresso">Photo</label>
+									<label className="block text-sm font-medium text-espresso">Photo</label>
 									<span className="text-xs text-dashboard-muted">Optional reference image</span>
 								</div>
 								{editingImagePreview ? (

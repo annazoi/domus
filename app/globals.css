@@ -182,6 +182,14 @@ html[data-dashboard-theme='dark'] {
   --earnings-chart-glow-b: color-mix(in srgb, var(--color-camel) 8%, transparent);
 }
 
+/* Portaled dashboard UI (modals) has .dashboard-root but no data-theme; keep dark overrides from the light block. */
+html[data-dashboard-theme='dark'] .dashboard-root {
+  --color-primary-foreground: #171411;
+  --color-dashboard-nav-active: rgb(255 255 255 / 0.06);
+  --color-dashboard-overlay: rgb(0 0 0 / 0.52);
+  --color-dashboard-header: rgb(18 16 14 / 0.94);
+}
+
 .dashboard-root ::selection {
   background-color: rgb(184 151 117 / 0.22);
   color: var(--color-espresso);
@@ -274,4 +282,19 @@ html[data-dashboard-theme='dark'] {
 .pac-item-query {
   color: rgb(61 50 41);
   font-weight: 600;
+}
+/* Dashboard sidebar: deep brown surface with ivory text and gold accents (same in light and dark). */
+.dashboard-root .dashboard-sidebar {
+  --color-dashboard-bg: #1d1916;
+  --color-dashboard-surface: #26211d;
+  --color-dashboard-inset: #2e2823;
+  --color-espresso: #fcfcfa;
+  --color-dashboard-muted: rgb(252 252 250 / 0.62);
+  --color-dashboard-border: rgb(252 252 250 / 0.1);
+  --color-dashboard-row-hover: rgb(252 252 250 / 0.06);
+  --color-dashboard-nav-active: rgb(212 168 83 / 0.14);
+  --color-camel: #d4a853;
+  --color-camel-deep: #d4a853;
+  background-color: #1d1916;
+  color: #fcfcfa;
 }

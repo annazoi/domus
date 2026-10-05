@@ -15,6 +15,7 @@ import {
 import { CustomerSearch } from './_components/customer-search';
 import { CustomersTable, CustomersTableSkeleton } from './_components/customers-table';
 import { HostCustomersList } from './_components/host-customers-list';
+import { PageHeader } from '@/app/(pages)/dashboard/_components/page-header';
 import { CUSTOMER_SEARCH_MIN_LENGTH } from './_utils/filter-host-customers';
 
 const PAGE_SIZE = DEFAULT_PAGE_SIZE;
@@ -64,10 +65,7 @@ function CustomersPageContent() {
 
 	return (
 		<div className="space-y-8">
-			<div>
-				<p className="text-xs uppercase tracking-[0.2em] text-camel">Customers</p>
-				<h1 className="mt-2 font-serif text-4xl tracking-tight">Your guests</h1>
-			</div>
+			<PageHeader eyebrow="Customers" title="Your guests" />
 
 			{customerId && customerLoading ? (
 				<div className="space-y-4 dashboard-panel rounded-2xl px-5 py-6 sm:px-8">
@@ -135,10 +133,7 @@ export default function CustomersPage() {
 		<Suspense
 			fallback={
 				<div className="space-y-8">
-					<div>
-						<p className="text-xs uppercase tracking-[0.2em] text-camel">Customers</p>
-						<h1 className="mt-2 font-serif text-4xl tracking-tight">Your guests</h1>
-					</div>
+					<PageHeader eyebrow="Customers" title="Your guests" />
 					<CustomersTableSkeleton />
 				</div>
 			}

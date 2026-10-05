@@ -68,8 +68,8 @@ export function CapacitySection({ initialProperty, propertyId: propertyIdProp }:
 		<PropertyFormSection id="capacity" title="Capacity">
 			<div className="grid gap-4 md:grid-cols-4">
 				{capacityFields.map((field) => (
-					<div key={field.key} className="space-y-1.5">
-						<label htmlFor={`capacity-${field.key}`} className="text-sm font-medium text-espresso">
+					<div key={field.key} className="space-y-2.5">
+						<label htmlFor={`capacity-${field.key}`} className="block text-sm font-medium text-espresso">
 							{field.label}
 						</label>
 						<Input

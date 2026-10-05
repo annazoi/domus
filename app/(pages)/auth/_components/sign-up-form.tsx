@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { loadLaunchDraft, splitFullName } from '@/app/_lib/launch-draft';
 import { Loader2 } from 'lucide-react';
 import axios from 'axios';
 import axiosInstance from '@/config/api/axios';
@@ -14,9 +15,13 @@ export function SignUpForm() {
 	const router = useRouter();
 	const setLogin = useAuthStore((state) => state.login);
 
-	const [first_name, setFirstName] = useState('');
-	const [last_name, setLastName] = useState('');
-	const [email, setEmail] = useState('');
+	const searchParams = useSearchParams();
+	const prefilledName = splitFullName(searchParams.get('name') ?? '');
+	const hasLaunchPrefill = Boolean(searchParams.get('name') || searchParams.get('email'));
+
+	const [first_name, setFirstName] = useState(prefilledName.firstName);
+	const [last_name, setLastName] = useState(prefilledName.lastName);
+	const [email, setEmail] = useState(searchParams.get('email') ?? '');
 	const [password, setPassword] = useState('');
 	const [error, setError] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +50,7 @@ export function SignUpForm() {
 				email: userData.email,
 			});
 
-			router.push('/dashboard');
+			router.push(loadLaunchDraft() ? '/dashboard/properties/new' : '/dashboard');
 		} catch (err: unknown) {
 			if (axios.isAxiosError(err)) {
 				setError(err.response?.data?.message || 'Could not create account. Please try again.');
@@ -64,6 +69,11 @@ export function SignUpForm() {
 
 			<form onSubmit={handleSubmit}>
 				{error ? <div className="login-alert">{error}</div> : null}
+				{hasLaunchPrefill ? (
+					<div className="login-note">
+						Almost there! Just choose a password, then we&apos;ll set up your first listing.
+					</div>
+				) : null}
 
 				<div className="field">
 					<label htmlFor="first_name">First name</label>

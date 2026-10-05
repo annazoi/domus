@@ -9,6 +9,7 @@ import type { Booking } from '@/features/bookings/interfaces/booking.interface';
 import { formatEuropeanDateRange } from '@/features/property-availability/utils/date';
 import { DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import { useAuthStore } from '@/store/auth';
+import { PageHeader } from '@/app/(pages)/dashboard/_components/page-header';
 import { TripDetailModal, TripRowChevron } from './_components/trip-detail-modal';
 
 const PAGE_SIZE = DEFAULT_PAGE_SIZE;
@@ -37,10 +38,7 @@ export default function TripsPage() {
 
 	return (
 		<div className="space-y-8">
-			<div>
-				<p className="text-xs uppercase tracking-[0.2em] text-camel">Stays</p>
-				<h1 className="mt-2 font-serif text-4xl tracking-tight">My trips</h1>
-			</div>
+			<PageHeader eyebrow="Stays" title="My trips" />
 
 			{loading ? (
 				<div className="dashboard-panel overflow-hidden rounded-2xl">
